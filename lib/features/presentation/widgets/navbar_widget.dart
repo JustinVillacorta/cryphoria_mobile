@@ -1,26 +1,52 @@
-import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
+class CustomNavBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
 
-class NavBarwidget extends CupertinoTabBar {
-  NavBarwidget({super.key, required int currentIndex})
-      : super(
-          backgroundColor: CupertinoColors.systemBackground.withOpacity(0.0),
-          currentIndex: currentIndex,
-          onTap: (int idx) {
-            selectedPageNotifer.value = idx;
-          },
-          items: const [
-            BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.house), label: 'Home'),
-            BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.money_dollar_circle), label: 'Payroll'),
-            BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.doc_text), label: 'Invoice'),
-            BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.chart_bar), label: 'Reports'),
-            BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.person), label: 'Profile'),
+  const CustomNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0, left: 20.0, right: 20.0),
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: CupertinoColors.systemBackground.withOpacity(0.1), // Semi-transparent
+          borderRadius: BorderRadius.circular(30.0), // Rounded corners
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.10),
+              blurRadius: 10,
+              offset: const Offset(0, -2), // Elevation effect
+            ),
           ],
-        );
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(CupertinoIcons.house, 0),
+            _buildNavItem(CupertinoIcons.money_dollar_circle, 1),
+            _buildNavItem(CupertinoIcons.doc_text, 2),
+            _buildNavItem(CupertinoIcons.chart_bar, 3),
+            _buildNavItem(CupertinoIcons.person, 4),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, int index) {
+    return IconButton(
+      icon: Icon(icon),
+      color: currentIndex == index ? Colors.white : Colors.grey,
+      onPressed: () => onTap(index),
+    );
+  }
 }

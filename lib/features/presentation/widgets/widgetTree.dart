@@ -6,7 +6,7 @@ import 'package:cryphoria_mobile/features/presentation/pages/Reports/Reports_Vie
 import 'package:cryphoria_mobile/features/presentation/pages/UserProfile/UserProfile_Views/userProfile_Views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/navbar_widget.dart';
 import 'package:flutter/cupertino.dart';
-
+import 'package:flutter/material.dart';
 
 List<Widget> pages = [HomeScreen(), InvoiceScreen(), payrollScreen(), reportsScreen(), userProfile()];
 
@@ -18,18 +18,26 @@ class WidgetTree extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: selectedPageNotifer,
       builder: (context, selectedPage, child) {
-        return CupertinoTabScaffold(
-          tabBar: NavBarwidget(currentIndex: selectedPage),
-          tabBuilder: (context, index) {
-            return CupertinoTabView(
-              builder: (context) => CupertinoPageScaffold(
-                navigationBar: const CupertinoNavigationBar(
-                  middle: Text('test'),
+        return Scaffold(
+          backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor, // Match theme
+          body: Stack(
+            children: [
+              // Display the selected page
+              pages[selectedPage],
+              // Position the custom navigation bar at the bottom
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: CustomNavBar(
+                  currentIndex: selectedPage,
+                  onTap: (index) {
+                    selectedPageNotifer.value = index;
+                  },
                 ),
-                child: pages.elementAt(index),
               ),
-            );
-          },
+            ],
+          ),
         );
       },
     );
