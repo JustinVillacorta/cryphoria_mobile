@@ -1,3 +1,3 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
-ValueNotifier selectedPageNotifer = ValueNotifier(0);
+ValueNotifier<int> selectedPageNotifer = ValueNotifier<int>(0);
