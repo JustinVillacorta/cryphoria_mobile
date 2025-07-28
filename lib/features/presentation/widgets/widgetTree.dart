@@ -1,4 +1,3 @@
-
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_views/homeView.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Invoice/InvoiceViews/invoice_views.dart';
@@ -7,7 +6,6 @@ import 'package:cryphoria_mobile/features/presentation/pages/Reports/Reports_Vie
 import 'package:cryphoria_mobile/features/presentation/pages/UserProfile/UserProfile_Views/userProfile_Views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/navbar_widget.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 
 List<Widget> pages = [HomeScreen(), InvoiceScreen(), payrollScreen(), reportsScreen(), userProfile()];
