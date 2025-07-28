@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:cryphoria_mobile/features/auth/data/notifiers/notifiers.dart';
+import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:flutter/material.dart';
 
 class NavBarwidget extends StatefulWidget {
