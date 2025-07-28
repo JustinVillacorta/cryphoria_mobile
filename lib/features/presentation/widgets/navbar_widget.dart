@@ -18,7 +18,7 @@ class CustomNavBar extends StatelessWidget {
       child: Container(
         height: 60,
         decoration: BoxDecoration(
-          color: CupertinoColors.systemBackground.withOpacity(0.1), // Semi-transparent
+          color: CupertinoColors.white.withOpacity(0.1), // Semi-transparent
           borderRadius: BorderRadius.circular(30.0), // Rounded corners
           boxShadow: [
             BoxShadow(
