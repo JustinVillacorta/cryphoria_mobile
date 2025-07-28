@@ -1,9 +1,11 @@
 import 'package:cryphoria_mobile/features/presentation/widgets/widgetTree.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 void main() {
-  runApp(MaterialApp(
-    home: WidgetTree(),
-    debugShowCheckedModeBanner: false,
-  ));
+  runApp(
+    const CupertinoApp(
+      home: WidgetTree(),
+      debugShowCheckedModeBanner: false,
+    ),
+  );
 }
