@@ -168,9 +168,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                             fillColor: const Color(0xFF5B50FF),
                             selectedColor: Colors.white,
                             color: Colors.white70,
-                            constraints: BoxConstraints(
-                              minHeight: 40,
-                              minWidth: buttonWidth,
+                            constraints: BoxConstraints.tightFor(
+                              height: 40,
+                              width: buttonWidth,
                             ),
 
                             children: _filters
