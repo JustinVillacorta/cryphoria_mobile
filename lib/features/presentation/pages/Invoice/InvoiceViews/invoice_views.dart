@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:cryphoria_mobile/features/presentation/widgets/cardwallet.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/invoice_ItemCard.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/refresh_icon.dart';
 import 'package:flutter/material.dart';
 
@@ -78,7 +79,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      GlassRefreshIcon(onTap: () {}),
+                      GlassRefreshIcon(onTap: () {
+
+                      }),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -199,87 +202,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (ctx, idx) {
                         final inv = _invoices[idx];
-                        return GlassCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Left side: text + badges
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        inv['title']!,
-                                        style: const TextStyle(
-                                          color: Colors.white54,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        inv['description']!,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Wrap(
-                                        spacing: 8,
-                                        runSpacing: 4,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white12,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: Text(
-                                              inv['status']!,
-                                              style: const TextStyle(
-                                                color: Colors.white54,
-                                              ),
-                                            ),
-                                          ),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white12,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: const Text(
-                                              'View receipt',
-                                              style: TextStyle(
-                                                color: Colors.white54,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Right side: amount
-                                Text(
-                                  inv['amount']!,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        return InvoiceItemCard(
+                          title:       inv['title']!,
+    description: inv['description']!,
+    status:      inv['status']!,
+    amount:      inv['amount']!,
+    onViewReceipt: () {
+      // navigate or show receipt…
+    },
                         );
                       },
                     ),
