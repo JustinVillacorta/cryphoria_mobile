@@ -20,7 +20,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     (i) => {
       'title': 'Expenses',
       'description': 'You paid for Payroll. Please view receipt.',
-      'amount': '₱12,950',
+      'amount': '₱12,95000',
       'status': 'Paid',
     },
   );
@@ -102,7 +102,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                                   '₱12,340',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 20,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -201,7 +201,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                         final inv = _invoices[idx];
                         return GlassCard(
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(6),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
