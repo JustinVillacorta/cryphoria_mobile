@@ -144,44 +144,49 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   // Segmented control
                   // inside your Column, replacing the old ToggleButtons:
                   Center(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color:
-                            Colors.white12, // dark pill background for unselected
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: ToggleButtons(
-                        isSelected: List.generate(
-                          _filters.length,
-                          (i) => i == _selectedFilter,
-                        ),
-                        onPressed: (i) => setState(() => _selectedFilter = i),
-                        borderRadius: BorderRadius.circular(20),
-                        borderWidth: 0, // no border lines
-                        selectedBorderColor: Colors.transparent,
-                        borderColor: Colors.transparent,
-                        splashColor: Colors.transparent, // no splash ripple
-                        highlightColor: Colors.transparent,
-                    
-                        // colors
-                        fillColor: const Color(
-                          0xFF5B50FF,
-                        ), // purple for the selected pill
-                        selectedColor: Colors.white, // text color when selected
-                        color: Colors.white70, // text color when unselected
-                        // sizing
-                        constraints: const BoxConstraints(
-                          minHeight: 40,
-                          minWidth: 100,
-                        ),
-                    
-                        children: _filters.map((f) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(f),
-                          );
-                        }).toList(),
-                      ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final buttonWidth = constraints.maxWidth / _filters.length;
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white12,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: ToggleButtons(
+                            isSelected: List.generate(
+                              _filters.length,
+                              (i) => i == _selectedFilter,
+                            ),
+                            onPressed: (i) => setState(() => _selectedFilter = i),
+                            borderRadius: BorderRadius.circular(20),
+                            borderWidth: 0,
+                            selectedBorderColor: Colors.transparent,
+                            borderColor: Colors.transparent,
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+
+                            fillColor: const Color(0xFF5B50FF),
+                            selectedColor: Colors.white,
+                            color: Colors.white70,
+                            constraints: BoxConstraints(
+                              minHeight: 40,
+                              minWidth: buttonWidth,
+                            ),
+
+                            children: _filters
+                                .map(
+                                  (f) => Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    child: Text(
+                                      f,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        );
+                      },
                     ),
                   ),
 
@@ -220,7 +225,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 8),
-                                      Row(
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 4,
                                         children: [
                                           Container(
                                             padding: const EdgeInsets.symmetric(
@@ -239,7 +246,6 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(width: 8),
                                           Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 8,
