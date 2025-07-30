@@ -2,9 +2,11 @@ import 'dart:ui';
 import 'package:cryphoria_mobile/features/presentation/widgets/notification_icon.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/refresh_icon.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../widgets/invoice_ItemCard.dart';
 import '../../../widgets/line_chart.dart';
 import '../../../widgets/navbar_widget.dart';
 
@@ -20,7 +22,7 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: HomeScreen(),
     );
@@ -28,7 +30,19 @@ class HomeView extends StatelessWidget {
 }
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+   HomeScreen({super.key});
+
+
+  final _invoices = List.generate(
+    3,
+    // Dummy data
+        (i) => {
+      'title': 'Expenses',
+      'description': 'You paid for Payroll. Please view receipt.',
+      'amount': '₱12,950',
+      'status': 'Paid',
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -217,8 +231,8 @@ class HomeScreen extends StatelessWidget {
                     "Quick Actions",
                     style: TextStyle(
                       color: Color(0xFFfcfcfc),
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -367,21 +381,21 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 14),
 
                 // Transaction Summary Label
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(left: 20),
                   child: Text(
                     "Transactions Summary",
                     style: TextStyle(
                       color: Color(0xFFfcfcfc),
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 10),
                 Padding(
-                  padding:const EdgeInsets.symmetric(horizontal: 20),
+                  padding:const EdgeInsets.symmetric(horizontal:0),
                   child: SizedBox(
                     height: 188,
                     child:
@@ -389,6 +403,7 @@ class HomeScreen extends StatelessWidget {
                         scrollDirection: Axis.horizontal,
                         child: Row(
                           children: [
+                            SizedBox(width: 20),
                             GlassCard(
                               height: 188,
                               width: 280,
@@ -410,10 +425,11 @@ class HomeScreen extends StatelessWidget {
                                             shape: BoxShape.circle,
                                           ),
                                           child: Center(
-                                            child: Icon(
-                                              MdiIcons.cashFast,
+                                            child: SvgPicture.asset(
+                                              'assets/icons/transaction.svg',
+                                              width: 28,
+                                              height: 28,
                                               color: Colors.white,
-                                              size: 22,
                                             ),
                                           ),
                                         ),
@@ -526,8 +542,8 @@ class HomeScreen extends StatelessWidget {
                                             shape: BoxShape.circle,
                                           ),
                                           child: Center(
-                                            child: Image.asset(
-                                              'assets/icons/cash_inflow.svg',
+                                            child: SvgPicture.asset(
+                                              'assets/icons/crypto_inflow.svg',
                                               width: 28,
                                               height: 28,
                                               color: Colors.white,
@@ -644,10 +660,11 @@ class HomeScreen extends StatelessWidget {
                                             shape: BoxShape.circle,
                                           ),
                                           child: Center(
-                                            child: Icon(
-                                              MdiIcons.cashFast,
+                                            child: SvgPicture.asset(
+                                              'assets/icons/crypto_inflow.svg',
+                                              width: 28,
+                                              height: 28,
                                               color: Colors.white,
-                                              size: 22,
                                             ),
                                           ),
                                         ),
@@ -738,11 +755,77 @@ class HomeScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            SizedBox(width: 20),
+
                           ],
                         ),
                       ),
 
                   ),
+                ),
+                SizedBox(height: 20),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Text(
+                    "Tax Estimates",
+                    style: TextStyle(
+                      color: Color(0xFFfcfcfc),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: GlassCard(
+                    height: 200,
+                    child: Padding(padding: EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: []
+                        
+                      ),
+                    
+                    )
+                  ),
+                  
+                ),
+                SizedBox(height: 20),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Text(
+                    "Invoices",
+                    style: TextStyle(
+                      color: Color(0xFFfcfcfc),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: _invoices
+                        .map(
+                          (inv) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: InvoiceItemCard(
+                          title: inv['title']!,
+                          description: inv['description']!,
+                          status: inv['status']!,
+                          amount: inv['amount']!,
+                          onViewReceipt: () {},
+                        ),
+                      ),
+                    )
+                        .toList(),
+                  ),
+
+
                 ),
               ],
             ),

@@ -31,7 +31,7 @@ class InvoiceItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       child: Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -40,10 +40,39 @@ class InvoiceItemCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: Colors.white54)),
+                  Text(
+                    title,
+                    style: const TextStyle(color: Colors.white54),
+                  ),
                   const SizedBox(height: 4),
-                  Text(description, style: const TextStyle(color: Colors.white)),
+
+                  // Description and amount on same row, wraps if needed
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Flexible description
+                      Expanded(
+                        child: Text(
+                          description,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // Aligned amount (top right)
+                      Text(
+                        amount,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 8),
+
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
@@ -59,14 +88,6 @@ class InvoiceItemCard extends StatelessWidget {
               ),
             ),
 
-            // amount on right
-            Text(
-              amount,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
           ],
         ),
       ),

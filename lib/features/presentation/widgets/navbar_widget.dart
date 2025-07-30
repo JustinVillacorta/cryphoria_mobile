@@ -22,9 +22,9 @@ class CustomNavBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(30.0), // Rounded corners
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.10),
-              blurRadius: 10,
-              offset: const Offset(0, -2), // Elevation effect
+              color: Colors.black87.withValues(alpha: 1.80),
+              blurRadius: 20,
+              offset: const Offset(0, -0.10), // Elevation effect
             ),
           ],
         ),
