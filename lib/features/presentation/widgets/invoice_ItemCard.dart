@@ -3,19 +3,10 @@ import 'package:cryphoria_mobile/features/presentation/widgets/cardwallet.dart';
 
 /// A reusable “glass” invoice‑item card.
 class InvoiceItemCard extends StatelessWidget {
-  /// e.g. “Expenses”
   final String title;
-
-  /// e.g. “You paid for Payroll. Please view receipt.”
   final String description;
-
-  /// e.g. “Paid”
   final String status;
-
-  /// e.g. “₱12,950”
   final String amount;
-
-  /// Called when the user taps “View receipt”
   final VoidCallback? onViewReceipt;
 
   const InvoiceItemCard({

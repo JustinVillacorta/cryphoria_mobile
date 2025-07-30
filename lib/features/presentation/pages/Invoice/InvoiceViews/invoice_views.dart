@@ -79,9 +79,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      GlassRefreshIcon(onTap: () {
-
-                      }),
+                      GlassRefreshIcon(onTap: () {}),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -149,7 +147,8 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   Center(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final buttonWidth = constraints.maxWidth / _filters.length;
+                        final buttonWidth =
+                            constraints.maxWidth / _filters.length;
                         return Container(
                           decoration: BoxDecoration(
                             color: Colors.white12,
@@ -160,7 +159,8 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                               _filters.length,
                               (i) => i == _selectedFilter,
                             ),
-                            onPressed: (i) => setState(() => _selectedFilter = i),
+                            onPressed: (i) =>
+                                setState(() => _selectedFilter = i),
                             borderRadius: BorderRadius.circular(20),
                             borderWidth: 0,
                             selectedBorderColor: Colors.transparent,
@@ -179,11 +179,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                             children: _filters
                                 .map(
                                   (f) => Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                                    child: Text(
-                                      f,
-                                      textAlign: TextAlign.center,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
                                     ),
+                                    child: Text(f, textAlign: TextAlign.center),
                                   ),
                                 )
                                 .toList(),
@@ -203,13 +202,13 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       itemBuilder: (ctx, idx) {
                         final inv = _invoices[idx];
                         return InvoiceItemCard(
-                          title:       inv['title']!,
-    description: inv['description']!,
-    status:      inv['status']!,
-    amount:      inv['amount']!,
-    onViewReceipt: () {
-      // navigate or show receipt…
-    },
+                          title: inv['title']!,
+                          description: inv['description']!,
+                          status: inv['status']!,
+                          amount: inv['amount']!,
+                          onViewReceipt: () {
+                            // navigate or show receipt…
+                          },
                         );
                       },
                     ),
