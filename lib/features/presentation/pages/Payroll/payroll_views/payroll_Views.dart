@@ -5,6 +5,7 @@ import 'package:cryphoria_mobile/features/presentation/widgets/historyWidget.dar
 import 'package:cryphoria_mobile/features/presentation/widgets/payroll_ItemWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/cardwallet.dart'; // your GlassCard
+import 'package:cryphoria_mobile/features/presentation/widgets/summary_glass_card.dart';
 
 class payrollScreen extends StatelessWidget {
   const payrollScreen({super.key});
@@ -91,53 +92,27 @@ class payrollScreen extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: GlassCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Text(
-                                  'Total Payroll',
-                                  style: TextStyle(color: Colors.white54),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  '₱12,340',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        child: SummaryGlassCard(
+                          title: 'Total Payroll',
+                          value: '₱12,340',
+                          padding: const EdgeInsets.all(10),
+                          valueStyle: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: GlassCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Text(
-                                  'Next Payroll Due',
-                                  style: TextStyle(color: Colors.white54),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  '26 August 2025',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        child: SummaryGlassCard(
+                          title: 'Next Payroll Due',
+                          value: '26 August 2025',
+                          padding: const EdgeInsets.all(10),
+                          valueStyle: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
