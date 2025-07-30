@@ -15,10 +15,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   int _selectedFilter = 0;
   final _filters = ['All', 'Last 30 days', 'Custom'];
 
-  // Dummy data
   final _invoices = List.generate(
     10,
-    (i) => {
+    // Dummy data
+        (i) => {
       'title': 'Expenses',
       'description': 'You paid for Payroll. Please view receipt.',
       'amount': '₱12,95000',
@@ -171,12 +171,21 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       itemBuilder: (ctx, idx) {
                         final inv = _invoices[idx];
                         return InvoiceItemCard(
+<<<<<<< HEAD
                           title: inv['title']!,
                           description: inv['description']!,
                           status: inv['status']!,
                           amount: inv['amount']!,
                           onViewReceipt: () {
                             // navigate or show receipt…
+=======
+                          title:       inv['title']!,
+                          description: inv['description']!,
+                          status:      inv['status']!,
+                          amount:      inv['amount']!,
+                          onViewReceipt: () {
+                          // navigate or show receipt…
+>>>>>>> 7724f89 (home home homee)
                           },
                         );
                       },
