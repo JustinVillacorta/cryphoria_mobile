@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:cryphoria_mobile/features/presentation/widgets/cardwallet.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/summary_glass_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/invoice_ItemCard.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/refresh_icon.dart';
 import 'package:flutter/material.dart';
@@ -88,53 +89,22 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: GlassCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Text(
-                                  'Total Billed Amount',
-                                  style: TextStyle(color: Colors.white54),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  '₱12,340',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        child: SummaryGlassCard(
+                          title: 'Total Billed Amount',
+                          value: '₱12,340',
+                          padding: const EdgeInsets.all(20),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: GlassCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Text(
-                                  'Paid Invoices',
-                                  style: TextStyle(color: Colors.white54),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  '10',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        child: SummaryGlassCard(
+                          title: 'Paid Invoices',
+                          value: '10',
+                          padding: const EdgeInsets.all(20),
+                          valueStyle: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
