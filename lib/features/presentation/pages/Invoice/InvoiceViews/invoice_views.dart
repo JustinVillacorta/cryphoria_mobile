@@ -171,21 +171,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       itemBuilder: (ctx, idx) {
                         final inv = _invoices[idx];
                         return InvoiceItemCard(
-<<<<<<< HEAD
+
                           title: inv['title']!,
                           description: inv['description']!,
                           status: inv['status']!,
                           amount: inv['amount']!,
                           onViewReceipt: () {
                             // navigate or show receipt…
-=======
-                          title:       inv['title']!,
-                          description: inv['description']!,
-                          status:      inv['status']!,
-                          amount:      inv['amount']!,
-                          onViewReceipt: () {
-                          // navigate or show receipt…
->>>>>>> 7724f89 (home home homee)
+
                           },
                         );
                       },

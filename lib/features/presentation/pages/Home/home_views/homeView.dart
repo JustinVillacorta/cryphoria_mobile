@@ -13,21 +13,7 @@ import '../../../widgets/navbar_widget.dart';
 import '../../../widgets/cardwallet.dart';
 
 
-void main() {
-  runApp(const HomeView());
-}
 
-class HomeView extends StatelessWidget {
-  const HomeView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
-    );
-  }
-}
 
 class HomeScreen extends StatelessWidget {
    HomeScreen({super.key});

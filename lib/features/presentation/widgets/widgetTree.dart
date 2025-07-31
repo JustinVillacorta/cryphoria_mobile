@@ -8,7 +8,7 @@ import 'package:cryphoria_mobile/features/presentation/widgets/navbar_widget.dar
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-List<Widget> pages = [HomeView(), InvoiceScreen(), payrollScreen(), reportsScreen(), userProfile()];
+List<Widget> pages = [HomeScreen(), InvoiceScreen(), payrollScreen(), reportsScreen(), userProfile()];
 
 class WidgetTree extends StatelessWidget {
   const WidgetTree({super.key});
