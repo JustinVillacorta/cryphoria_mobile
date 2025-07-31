@@ -1,6 +1,7 @@
 // lib/features/presentation/pages/payroll_screen.dart
 
 import 'dart:ui';
+import 'package:cryphoria_mobile/features/presentation/pages/payroll_history/payrollHistory_Views/payroll_history_views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/historyWidget.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payroll_ItemWidget.dart';
 import 'package:flutter/material.dart';
@@ -82,7 +83,18 @@ class payrollScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      glassHistoryIcon(onTap: () {}),
+                      glassHistoryIcon(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return PayrollHistory();
+                              },
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
