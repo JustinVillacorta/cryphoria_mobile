@@ -1,23 +1,6 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const LogInPage());
-}
-
-class LogInPage extends StatelessWidget {
-  const LogInPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const LogIn(),
-    );
-  }
-}
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -39,12 +22,11 @@ class _LogInState extends State<LogIn> {
 
   void _onViewModelChanged() {
     if (_viewModel.authUser != null) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const WidgetTree()),
-      );
+      Navigator.of(context).pushReplacementNamed('/home');
     } else if (_viewModel.error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(_viewModel.error!)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_viewModel.error!)));
     }
   }
 
@@ -72,7 +54,11 @@ class _LogInState extends State<LogIn> {
                 // Title
                 const Text(
                   'Welcome back!',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 // Subtitle
@@ -82,9 +68,16 @@ class _LogInState extends State<LogIn> {
                 ),
                 const SizedBox(height: 30),
                 // Input Fields
-                buildInputField('Username or email', controller: _usernameController),
+                buildInputField(
+                  'Username or email',
+                  controller: _usernameController,
+                ),
                 const SizedBox(height: 16),
-                buildInputField('Password', controller: _passwordController, obscure: true),
+                buildInputField(
+                  'Password',
+                  controller: _passwordController,
+                  obscure: true,
+                ),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -112,7 +105,9 @@ class _LogInState extends State<LogIn> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9747FF),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     onPressed: () {
                       _viewModel.login(
@@ -122,24 +117,34 @@ class _LogInState extends State<LogIn> {
                     },
                     child: const Text(
                       'Log In',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // Login redirect
+                // Sign Up redirect
                 Center(
-                  child: RichText(
-                    text: const TextSpan(
-                      text: 'Already have an Account? ',
-                      style: TextStyle(color: Colors.white),
-                      children: [
-                        TextSpan(
-                          text: 'Sign Up',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      ],
+                  child: GestureDetector(
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, '/signup'),
+                    child: RichText(
+                      text: const TextSpan(
+                        text: 'Don\'t have an Account? ',
+                        style: TextStyle(color: Colors.white),
+                        children: [
+                          TextSpan(
+                            text: 'Sign Up',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -152,14 +157,20 @@ class _LogInState extends State<LogIn> {
   }
 
   //hihiwalay to sa widget
-  Widget buildInputField(String hint,
-      {required TextEditingController controller, bool obscure = false}) {
+  Widget buildInputField(
+    String hint, {
+    required TextEditingController controller,
+    bool obscure = false,
+  }) {
     return TextField(
       controller: controller,
       obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
