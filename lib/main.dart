@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/widgetTree.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 
 void main() {
   runApp(MyApp());

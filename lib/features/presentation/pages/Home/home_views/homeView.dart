@@ -1,12 +1,16 @@
 import 'dart:ui';
 import 'package:cryphoria_mobile/features/presentation/widgets/notification_icon.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/payroll_history_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/refresh_icon.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
-import '../../../widgets/invoice_ItemCard.dart';
+import 'package:cryphoria_mobile/features/domain/entities/payroll_history.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/fake_payroll_data.dart';
+import '../../../widgets/invoice_detail_card.dart';
+import '../../../widgets/glass_payroll_history_item.dart';
 import '../../../widgets/line_chart.dart';
-import '../../../widgets/cardwallet.dart';
+import '../../../widgets/glass_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'status': 'Paid',
     },
   );
+  final FakePayrollDataSource _payrollDataSource = FakePayrollDataSource();
 
   late ScrollController _scrollController;
   double _scrollOffset = 0.0;
@@ -49,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final List<PayrollHistory> payrolls = _payrollDataSource.getPayrollHistory();    return Scaffold(
       backgroundColor: const Color(0xFF121212),
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
@@ -131,14 +136,15 @@ class _HomeScreenState extends State<HomeScreen> {
           SingleChildScrollView(
             controller: _scrollController,
             padding: const EdgeInsets.only(bottom: 100),
-            child: _buildMainContent(),
+            child: _buildMainContent(payrolls),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMainContent() {
+  Widget _buildMainContent(List<PayrollHistory> payrolls) {
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -854,21 +860,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         SizedBox(height: 10),
-
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20),
-          child: GlassCard(
-              height: 100,
-              child: Padding(padding: EdgeInsets.all(8),
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: []
-
+          child: Column(
+            children: payrolls
+                .map(
+                  (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: GlassPayrollHistoryItem(
+                  payroll: item,
+                  onTap: () {
+                    // Optional tap logic
+                  },
                 ),
-
-              )
+              ),
+            )
+                .toList(),
           ),
-
         ),
 
         ],

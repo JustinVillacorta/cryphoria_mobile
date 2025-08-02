@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'cardwallet.dart';
+import 'glass_card.dart';
 
 /// A simple glass-style summary card used across invoice and payroll screens.
 class SummaryGlassCard extends StatelessWidget {

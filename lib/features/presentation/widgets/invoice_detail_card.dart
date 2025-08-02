@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/cardwallet.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/glass_card.dart';
 
 /// A reusable “glass” invoice‑item card.
 class InvoiceItemCard extends StatelessWidget {

@@ -1,34 +1,22 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/cardwallet.dart';
+import '../../domain/entities/payroll_history.dart';
+import 'glass_card.dart';
 
 /// A frosted-glass card for one payroll history entry.
-/// • Sent items are compact (height 64).
-/// • Failed items expand (height 120) to show the reason row.
+/// • Sent items are compact (height 93).
+/// • Failed items expand (height 150) to show the reason row.
 class PayrollHistoryItem extends StatelessWidget {
-  final String avatarUrl;
-  final String name;
-  final String subtitle;
-  final String amount;
-  final String date;
-  final bool isFailed;
-  final String? reason;
+  final PayrollHistory payroll;
   final VoidCallback? onTap;
 
-   PayrollHistoryItem({
+  PayrollHistoryItem({
     Key? key,
-    required this.avatarUrl,
-    required this.name,
-    required this.subtitle,
-    required this.amount,
-    required this.date,
-    this.isFailed = false,
-    this.reason,
+    required this.payroll,
     this.onTap,
-  })  : assert(
-          !isFailed || (reason != null && reason.isNotEmpty),
-          'Provide a non-empty reason when isFailed is true',
-        ),
+  }) : assert(
+  !payroll.isFailed || (payroll.reason != null && payroll.reason!.isNotEmpty),
+  'Provide a non-empty reason when isFailed is true',
+  ),
         super(key: key);
 
   @override
@@ -40,12 +28,12 @@ class PayrollHistoryItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        height: isFailed ? failedHeight : sentHeight,
+        height: payroll.isFailed ? failedHeight : sentHeight,
         child: GlassCard(
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: 16,
-              vertical: isFailed ? 12 : 8, // tighter padding for sent
+              vertical: payroll.isFailed ? 12 : 8, // tighter padding for sent
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -56,7 +44,7 @@ class PayrollHistoryItem extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundImage: NetworkImage(avatarUrl),
+                      backgroundImage: NetworkImage(payroll.avatarUrl),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -64,11 +52,15 @@ class PayrollHistoryItem extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(name,
-                              style: const TextStyle(color: Colors.white)),
+                          Text(
+                            payroll.name,
+                            style: const TextStyle(color: Colors.white),
+                          ),
                           const SizedBox(height: 2),
-                          Text(subtitle,
-                              style: const TextStyle(color: Colors.white54)),
+                          Text(
+                            payroll.subtitle,
+                            style: const TextStyle(color: Colors.white54),
+                          ),
                         ],
                       ),
                     ),
@@ -77,21 +69,24 @@ class PayrollHistoryItem extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(amount,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            )),
+                        Text(
+                          payroll.amount,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 2),
-                        Text(date,
-                            style: const TextStyle(color: Colors.white54)),
+                        Text(
+                          payroll.date,
+                          style: const TextStyle(color: Colors.white54),
+                        ),
                       ],
                     ),
                   ],
                 ),
-
                 // ─── Failure row (only for failed items) ───────────
-                if (isFailed) ...[
+                if (payroll.isFailed) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -100,7 +95,7 @@ class PayrollHistoryItem extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Reason: $reason',
+                          'Reason: ${payroll.reason}',
                           style: const TextStyle(color: Colors.redAccent),
                         ),
                       ),

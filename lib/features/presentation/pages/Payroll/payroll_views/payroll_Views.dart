@@ -2,32 +2,14 @@
 
 import 'dart:ui';
 import 'package:cryphoria_mobile/features/presentation/pages/payroll_history/payrollHistory_Views/payroll_history_views.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/historyWidget.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/payroll_ItemWidget.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/history_icon.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/payroll_detail_card.dart';
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/summary_glass_card.dart';
 
 class payrollScreen extends StatelessWidget {
   const payrollScreen({super.key});
 
-  // Dummy data
-  final _employees = const [
-    {
-      'name': 'Yuno Cruz',
-      'subtitle': '0x238…c68',
-      'amount': '+\$123',
-      'frequency': 'Monthly',
-      'avatarUrl': '',
-    },
-    {
-      'name': 'Jane Doe',
-      'subtitle': '0xABC…123',
-      'amount': '+\$200',
-      'frequency': 'Bi‑Weekly',
-      'avatarUrl': '',
-    },
-    // … add more …
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -83,18 +65,7 @@ class payrollScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      glassHistoryIcon(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) {
-                                return PayrollHistory();
-                              },
-                            ),
-                          );
-                        },
-                      ),
+
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -181,25 +152,7 @@ class payrollScreen extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // ─── Scrollable List ─────────────────────
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: _employees.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (ctx, i) {
-                        final e = _employees[i];
-                        return PayrollItemwidget(
-                          avatarUrl: e['avatarUrl']!,
-                          name: e['name']!,
-                          subtitle: e['subtitle']!,
-                          amount: e['amount']!,
-                          frequency: e['frequency']!,
-                          onTap: () {
-                            // optional: navigate to employee detail…
-                          },
-                        );
-                      },
-                    ),
-                  ),
+
                 ],
               ),
             ),

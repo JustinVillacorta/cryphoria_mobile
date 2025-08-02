@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:cryphoria_mobile/features/presentation/widgets/summary_glass_card.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/invoice_ItemCard.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/invoice_detail_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/refresh_icon.dart';
 import 'package:flutter/material.dart';
 
