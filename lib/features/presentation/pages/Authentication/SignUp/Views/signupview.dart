@@ -1,3 +1,6 @@
+import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/SignUp/ViewModel/signup_ViewModel.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -16,8 +19,47 @@ class SignUpPage extends StatelessWidget {
   }
 }
 
-class SignUp extends StatelessWidget {
+class SignUp extends StatefulWidget {
   const SignUp({super.key});
+
+  @override
+  State<SignUp> createState() => _SignUpState();
+}
+
+class _SignUpState extends State<SignUp> {
+  final TextEditingController _businessController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final SignupViewModel _viewModel = sl<SignupViewModel>();
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel.addListener(_onViewModelChanged);
+  }
+
+  void _onViewModelChanged() {
+    if (_viewModel.authUser != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const WidgetTree()),
+      );
+    } else if (_viewModel.error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_viewModel.error!)));
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.dispose();
+    _businessController.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,13 +86,13 @@ class SignUp extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
                 // Input Fields
-                buildInputField('Business Name'),
+                buildInputField('Business Name', controller: _businessController),
                 const SizedBox(height: 16),
-                buildInputField('Username'),
+                buildInputField('Username', controller: _usernameController),
                 const SizedBox(height: 16),
-                buildInputField('Email'),
+                buildInputField('Email', controller: _emailController),
                 const SizedBox(height: 24),
-                buildInputField('Password'),
+                buildInputField('Password', controller: _passwordController, obscure: true),
                 const SizedBox(height: 24),
                 // Sign Up Button
                 SizedBox(
@@ -61,7 +103,13 @@ class SignUp extends StatelessWidget {
                       backgroundColor: const Color(0xFF9747FF),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      _viewModel.signup(
+                        _usernameController.text,
+                        _passwordController.text,
+                        _emailController.text,
+                      );
+                    },
                     child: const Text(
                       'Sign Up',
                       style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
@@ -120,8 +168,11 @@ class SignUp extends StatelessWidget {
   }
 
   // Reusable text input
-  Widget buildInputField(String hint) {
+  Widget buildInputField(String hint,
+      {required TextEditingController controller, bool obscure = false}) {
     return TextField(
+      controller: controller,
+      obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -136,7 +187,7 @@ class SignUp extends StatelessWidget {
     String? iconUrl,
     required String text,
     required Color color,
-    MainAxisAlignment alignment = MainAxisAlignment.start
+    MainAxisAlignment alignment = MainAxisAlignment.start,
   }) {
     return SizedBox(
       width: double.infinity,
