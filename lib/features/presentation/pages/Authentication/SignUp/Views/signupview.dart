@@ -1,23 +1,6 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/SignUp/ViewModel/signup_ViewModel.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const SignUpPage());
-}
-
-class SignUpPage extends StatelessWidget {
-  const SignUpPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const SignUp(),
-    );
-  }
-}
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -41,12 +24,11 @@ class _SignUpState extends State<SignUp> {
 
   void _onViewModelChanged() {
     if (_viewModel.authUser != null) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const WidgetTree()),
-      );
+      Navigator.of(context).pushReplacementNamed('/home');
     } else if (_viewModel.error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(_viewModel.error!)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_viewModel.error!)));
     }
   }
 
@@ -76,7 +58,11 @@ class _SignUpState extends State<SignUp> {
                 // Title
                 const Text(
                   'Create Account',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 // Subtitle
@@ -86,13 +72,20 @@ class _SignUpState extends State<SignUp> {
                 ),
                 const SizedBox(height: 30),
                 // Input Fields
-                buildInputField('Business Name', controller: _businessController),
+                buildInputField(
+                  'Business Name',
+                  controller: _businessController,
+                ),
                 const SizedBox(height: 16),
                 buildInputField('Username', controller: _usernameController),
                 const SizedBox(height: 16),
                 buildInputField('Email', controller: _emailController),
                 const SizedBox(height: 24),
-                buildInputField('Password', controller: _passwordController, obscure: true),
+                buildInputField(
+                  'Password',
+                  controller: _passwordController,
+                  obscure: true,
+                ),
                 const SizedBox(height: 24),
                 // Sign Up Button
                 SizedBox(
@@ -101,7 +94,9 @@ class _SignUpState extends State<SignUp> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9747FF),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     onPressed: () {
                       _viewModel.signup(
@@ -112,7 +107,10 @@ class _SignUpState extends State<SignUp> {
                     },
                     child: const Text(
                       'Sign Up',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -126,7 +124,8 @@ class _SignUpState extends State<SignUp> {
                       child: Text(
                         'OR',
                         style: TextStyle(
-                          color: Colors.white60, // 👈 change this to any color you want
+                          color: Colors
+                              .white60, // 👈 change this to any color you want
                           fontWeight: FontWeight.normal,
                         ),
                       ),
@@ -137,24 +136,32 @@ class _SignUpState extends State<SignUp> {
                 const SizedBox(height: 20),
                 // Social Buttons
                 buildSocialButton(
-                  iconUrl: 'https://img.icons8.com/?size=100&id=Oi106YG9IoLv&format=png&color=000000',
+                  iconUrl:
+                      'https://img.icons8.com/?size=100&id=Oi106YG9IoLv&format=png&color=000000',
                   text: 'Connect Metamask',
                   color: const Color(0xFF1A1A2E),
                 ),
 
                 const SizedBox(height: 30),
-                // Login redirect
+                // Log In redirect
                 Center(
-                  child: RichText(
-                    text: const TextSpan(
-                      text: 'Already have an Account? ',
-                      style: TextStyle(color: Colors.white),
-                      children: [
-                        TextSpan(
-                          text: 'Log In',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      ],
+                  child: GestureDetector(
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, '/login'),
+                    child: RichText(
+                      text: const TextSpan(
+                        text: 'Already have an Account? ',
+                        style: TextStyle(color: Colors.white),
+                        children: [
+                          TextSpan(
+                            text: 'Log In',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -168,14 +175,20 @@ class _SignUpState extends State<SignUp> {
   }
 
   // Reusable text input
-  Widget buildInputField(String hint,
-      {required TextEditingController controller, bool obscure = false}) {
+  Widget buildInputField(
+    String hint, {
+    required TextEditingController controller,
+    bool obscure = false,
+  }) {
     return TextField(
       controller: controller,
       obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
@@ -208,17 +221,11 @@ class _SignUpState extends State<SignUp> {
                 width: 24,
                 height: 24,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const Icon(
-                  Icons.error,
-                  size: 24,
-                ),
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.error, size: 24),
               )
             else
-              Icon(
-                icon ?? Icons.error,
-                color: Colors.white,
-                size: 24,
-              ),
+              Icon(icon ?? Icons.error, color: Colors.white, size: 24),
             const SizedBox(width: 8),
             Text(
               text,

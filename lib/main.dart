@@ -1,6 +1,8 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/SignUp/Views/signupview.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 
 Future<void> main() async {
@@ -11,7 +13,7 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,7 +22,12 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.purple,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: const WidgetTree(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => const LogIn(),
+        '/signup': (context) => const SignUp(),
+        '/home': (context) => const WidgetTree(),
+      },
     );
   }
 }
