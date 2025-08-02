@@ -1,14 +1,17 @@
+import 'package:cryphoria_mobile/dependency_injection/di.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 
-void main() {
-  runApp(MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await di.init();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
+  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
