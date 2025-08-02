@@ -1,3 +1,6 @@
+import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -16,8 +19,43 @@ class LogInPage extends StatelessWidget {
   }
 }
 
-class LogIn extends StatelessWidget {
-  const LogIn ({super.key});
+class LogIn extends StatefulWidget {
+  const LogIn({super.key});
+
+  @override
+  State<LogIn> createState() => _LogInState();
+}
+
+class _LogInState extends State<LogIn> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final LoginViewModel _viewModel = sl<LoginViewModel>();
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel.addListener(_onViewModelChanged);
+  }
+
+  void _onViewModelChanged() {
+    if (_viewModel.authUser != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const WidgetTree()),
+      );
+    } else if (_viewModel.error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_viewModel.error!)));
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +82,9 @@ class LogIn extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
                 // Input Fields
-                buildInputField('Username or email'),
+                buildInputField('Username or email', controller: _usernameController),
                 const SizedBox(height: 16),
-                buildInputField('Password'),
+                buildInputField('Password', controller: _passwordController, obscure: true),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -76,7 +114,12 @@ class LogIn extends StatelessWidget {
                       backgroundColor: const Color(0xFF9747FF),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      _viewModel.login(
+                        _usernameController.text,
+                        _passwordController.text,
+                      );
+                    },
                     child: const Text(
                       'Log In',
                       style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
@@ -84,7 +127,6 @@ class LogIn extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-
 
                 // Login redirect
                 Center(
@@ -110,8 +152,11 @@ class LogIn extends StatelessWidget {
   }
 
   //hihiwalay to sa widget
-  Widget buildInputField(String hint) {
+  Widget buildInputField(String hint,
+      {required TextEditingController controller, bool obscure = false}) {
     return TextField(
+      controller: controller,
+      obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
