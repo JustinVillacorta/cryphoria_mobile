@@ -1,7 +1,7 @@
+import 'package:cryphoria_mobile/core/error/exceptions.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Register/register_use_case.dart';
 import 'package:flutter/foundation.dart';
-
 
 class SignupViewModel extends ChangeNotifier {
   final Register registerUseCase;
@@ -18,11 +18,11 @@ class SignupViewModel extends ChangeNotifier {
     try {
       _authUser = await registerUseCase.execute(username, password, email);
       _error = null;
+    } on ServerException catch (e) {
+      _error = e.message;
     } catch (e) {
       _error = "Registration failed";
     }
     notifyListeners();
   }
 }
-
-  

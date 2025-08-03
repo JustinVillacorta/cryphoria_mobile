@@ -1,6 +1,5 @@
-import 'package:cryphoria_mobile/core/error/excemptions.dart';
+import 'package:cryphoria_mobile/core/error/exceptions.dart';
 import 'package:dio/dio.dart';
-
 
 abstract class AuthRemoteDataSource {
   Future<String> login(String username, String password);
@@ -22,11 +21,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
       if (response.statusCode == 200) {
         return response.data['token'];
-      } else {
-        throw ServerException();
       }
-    } on DioError catch (_) {
-      throw ServerException();
+      throw ServerException(response.data['detail']?.toString() ?? 'Login failed');
+    } on DioException catch (e) {
+      final message = e.response?.data['detail']?.toString() ?? 'Login failed';
+      throw ServerException(message);
     }
   }
 
@@ -39,11 +38,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
       if (response.statusCode == 200) {
         return response.data['token'];
-      } else {
-        throw ServerException();
       }
-    } on DioError catch (_) {
-      throw ServerException();
+      throw ServerException(response.data['detail']?.toString() ?? 'Registration failed');
+    } on DioException catch (e) {
+      final message = e.response?.data['detail']?.toString() ?? 'Registration failed';
+      throw ServerException(message);
     }
   }
 }
