@@ -13,22 +13,25 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({required this.dio, required this.baseUrl});
 
   @override
-Future<String> login(String username, String password) async {
-  try {
-    final response = await dio.post(
-      '$baseUrl/api/auth/login/',
-      data: {'username': username, 'password': password},
-    );
-    print('Login response: ${response.data}'); // Debug print
-    if (response.statusCode == 200 && response.data['token'] != null) {
-      return response.data['token'];
+  Future<String> login(String username, String password) async {
+    try {
+      final response = await dio.post(
+        '$baseUrl/api/auth/login/',
+        data: {'username': username, 'password': password},
+      );
+      print('Login response: ${response.data}');
+      if (response.statusCode == 200) {
+        final token = response.data['token'] ?? response.data['data']?['token'];
+        if (token != null) {
+          return token;
+        }
+      }
+      throw ServerException(response.data['detail']?.toString() ?? 'Login failed');
+    } on DioException catch (e) {
+      final message = e.response?.data['detail']?.toString() ?? 'Login failed';
+      throw ServerException(message);
     }
-    throw ServerException(response.data['detail']?.toString() ?? 'Login failed');
-  } on DioException catch (e) {
-    final message = e.response?.data['detail']?.toString() ?? 'Login failed';
-    throw ServerException(message);
   }
-}
   @override
   Future<String> register(String username, String password, String email) async {
     try {
@@ -37,7 +40,10 @@ Future<String> login(String username, String password) async {
         data: {'username': username, 'password': password, 'email': email},
       );
       if (response.statusCode == 200) {
-        return response.data['token'];
+        final token = response.data['token'] ?? response.data['data']?['token'];
+        if (token != null) {
+          return token;
+        }
       }
       throw ServerException(response.data['detail']?.toString() ?? 'Registration failed');
     } on DioException catch (e) {
