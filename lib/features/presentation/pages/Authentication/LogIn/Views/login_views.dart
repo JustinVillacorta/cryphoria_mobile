@@ -1,6 +1,6 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/SignUp/Views/signupview.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/Views/register_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
@@ -103,7 +103,7 @@ class _LogInState extends State<LogIn> {
                   ],
                 ),
 
-                // Sign Up Button
+                // Log In Button
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -131,12 +131,12 @@ class _LogInState extends State<LogIn> {
                 ),
                 const SizedBox(height: 24),
 
-                // Sign Up redirect
+                // Register redirect
                 Center(
                   child: GestureDetector(
                     onTap: () =>
                         Navigator.push(context, MaterialPageRoute(
-                          builder: (context) => const SignUp(),
+                          builder: (context) => const RegisterView(),
                         )),
                     child: RichText(
                       text: const TextSpan(
@@ -144,7 +144,7 @@ class _LogInState extends State<LogIn> {
                         style: TextStyle(color: Colors.white),
                         children: [
                           TextSpan(
-                            text: 'Sign Up',
+                            text: 'Register',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,

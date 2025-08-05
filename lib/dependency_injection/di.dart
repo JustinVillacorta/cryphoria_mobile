@@ -7,7 +7,7 @@ import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.da
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Register/register_use_case.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/SignUp/ViewModel/signup_ViewModel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,5 +50,5 @@ Future<void> init() async {
 
   // ViewModels
   sl.registerFactory(() => LoginViewModel(loginUseCase: sl()));
-  sl.registerFactory(() => SignupViewModel(registerUseCase: sl()));
+  sl.registerFactory(() => RegisterViewModel(registerUseCase: sl()));
 }
