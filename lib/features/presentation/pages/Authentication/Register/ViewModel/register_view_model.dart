@@ -3,7 +3,7 @@ import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Register/register_use_case.dart';
 import 'package:flutter/foundation.dart';
 
-class SignupViewModel extends ChangeNotifier {
+class RegisterViewModel extends ChangeNotifier {
   final Register registerUseCase;
 
   AuthUser? _authUser;
@@ -12,9 +12,10 @@ class SignupViewModel extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  SignupViewModel({required this.registerUseCase});
+  RegisterViewModel({required this.registerUseCase});
 
-  Future<void> signup(String username, String password, String email) async {
+  Future<void> register(
+      String username, String password, String email) async {
     try {
       _authUser = await registerUseCase.execute(username, password, email);
       _error = null;

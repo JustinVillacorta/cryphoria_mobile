@@ -1,21 +1,21 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/SignUp/ViewModel/signup_ViewModel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:flutter/material.dart';
 
-class SignUp extends StatefulWidget {
-  const SignUp({super.key});
+class RegisterView extends StatefulWidget {
+  const RegisterView({super.key});
 
   @override
-  State<SignUp> createState() => _SignUpState();
+  State<RegisterView> createState() => _RegisterViewState();
 }
 
-class _SignUpState extends State<SignUp> {
+class _RegisterViewState extends State<RegisterView> {
   final TextEditingController _businessController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final SignupViewModel _viewModel = sl<SignupViewModel>();
+  final RegisterViewModel _viewModel = sl<RegisterViewModel>();
 
   @override
   void initState() {
@@ -25,7 +25,10 @@ class _SignUpState extends State<SignUp> {
 
   void _onViewModelChanged() {
     if (_viewModel.authUser != null) {
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LogIn()),
+      );
     } else if (_viewModel.error != null) {
       ScaffoldMessenger.of(
         context,
@@ -68,7 +71,7 @@ class _SignUpState extends State<SignUp> {
                 const SizedBox(height: 8),
                 // Subtitle
                 const Text(
-                  'Sign up and simplify crypto bookkeeping and invoicing.',
+                  'Register and simplify crypto bookkeeping and invoicing.',
                   style: TextStyle(fontSize: 13, color: Colors.white),
                 ),
                 const SizedBox(height: 30),
@@ -88,7 +91,7 @@ class _SignUpState extends State<SignUp> {
                   obscure: true,
                 ),
                 const SizedBox(height: 24),
-                // Sign Up Button
+                // Register Button
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -100,14 +103,14 @@ class _SignUpState extends State<SignUp> {
                       ),
                     ),
                     onPressed: () {
-                      _viewModel.signup(
+                      _viewModel.register(
                         _usernameController.text,
                         _passwordController.text,
                         _emailController.text,
                       );
                     },
                     child: const Text(
-                      'Sign Up',
+                      'Register',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -147,13 +150,7 @@ class _SignUpState extends State<SignUp> {
                 // Log In redirect
                 Center(
                   child: GestureDetector(
-                    onTap: () =>
-                       Navigator.pop(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LogIn(),
-                        ),
-                       ),
+                    onTap: () => Navigator.pop(context),
                     child: RichText(
                       text: const TextSpan(
                         text: 'Already have an Account? ',
