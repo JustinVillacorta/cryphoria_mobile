@@ -18,27 +18,7 @@ class _RegisterViewState extends State<RegisterView> {
   final RegisterViewModel _viewModel = sl<RegisterViewModel>();
 
   @override
-  void initState() {
-    super.initState();
-    _viewModel.addListener(_onViewModelChanged);
-  }
-
-  void _onViewModelChanged() {
-    if (_viewModel.authUser != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LogIn()),
-      );
-    } else if (_viewModel.error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_viewModel.error!)));
-    }
-  }
-
-  @override
   void dispose() {
-    _viewModel.removeListener(_onViewModelChanged);
     _viewModel.dispose();
     _businessController.dispose();
     _usernameController.dispose();
@@ -102,12 +82,27 @@ class _RegisterViewState extends State<RegisterView> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    onPressed: () {
-                      _viewModel.register(
+                    onPressed: () async {
+                      await _viewModel.register(
                         _usernameController.text,
                         _passwordController.text,
                         _emailController.text,
                       );
+                      if (!mounted) return;
+                      if (_viewModel.authUser != null) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LogIn(),
+                          ),
+                        );
+                      } else if (_viewModel.error != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(_viewModel.error!),
+                          ),
+                        );
+                      }
                     },
                     child: const Text(
                       'Register',
