@@ -22,12 +22,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.purple,
         scaffoldBackgroundColor: Colors.black,
       ),
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => const LogIn(),
-        '/signup': (context) => const SignUp(),
-        '/home': (context) => const WidgetTree(),
-      },
+      home: const LogIn(),
     );
   }
 }

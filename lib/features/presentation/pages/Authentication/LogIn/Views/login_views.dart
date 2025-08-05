@@ -1,5 +1,7 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/SignUp/Views/signupview.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
 class LogIn extends StatefulWidget {
@@ -22,7 +24,10 @@ class _LogInState extends State<LogIn> {
 
   void _onViewModelChanged() {
     if (_viewModel.authUser != null) {
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const WidgetTree()),
+    );
     } else if (_viewModel.error != null) {
       ScaffoldMessenger.of(
         context,
@@ -130,7 +135,9 @@ class _LogInState extends State<LogIn> {
                 Center(
                   child: GestureDetector(
                     onTap: () =>
-                        Navigator.pushReplacementNamed(context, '/signup'),
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (context) => const SignUp(),
+                        )),
                     child: RichText(
                       text: const TextSpan(
                         text: 'Don\'t have an Account? ',

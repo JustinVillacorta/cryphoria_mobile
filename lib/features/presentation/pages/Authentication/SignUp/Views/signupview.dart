@@ -1,4 +1,5 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/SignUp/ViewModel/signup_ViewModel.dart';
 import 'package:flutter/material.dart';
 
@@ -147,7 +148,12 @@ class _SignUpState extends State<SignUp> {
                 Center(
                   child: GestureDetector(
                     onTap: () =>
-                        Navigator.pushReplacementNamed(context, '/login'),
+                       Navigator.pop(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LogIn(),
+                        ),
+                       ),
                     child: RichText(
                       text: const TextSpan(
                         text: 'Already have an Account? ',
