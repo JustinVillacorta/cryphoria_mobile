@@ -61,7 +61,13 @@ class WalletRemoteDataSource {
     final url = '$baseUrl/connect_$type/';
     final response = await dio.post(
       url,
+
       data: {'address': address, 'signature': signature},
+      data: {
+        'address': address,
+        'signature': signature,
+        'wallet_name': walletName,
+      },
     );
     return Wallet.fromJson(response.data['data']);
   }
