@@ -3,11 +3,15 @@ import 'dart:io';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/AuthRepositoryImpl.dart';
+import 'package:cryphoria_mobile/features/data/repositories_impl/walletRepositoryimpl.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
+import 'package:cryphoria_mobile/features/domain/repositories/wallet_repository.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Register/register_use_case.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/wallet/wallet_usecase.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,4 +55,19 @@ Future<void> init() async {
   // ViewModels
   sl.registerFactory(() => LoginViewModel(loginUseCase: sl()));
   sl.registerFactory(() => RegisterViewModel(registerUseCase: sl()));
+}
+
+void setupDependencies() {
+  // Repository implementation
+  sl.registerLazySingleton<WalletRepository>(
+    () => WalletRepositoryImpl(),
+  );
+
+  // Use Case
+  sl.registerLazySingleton(() => GetWalletsUseCase(sl()));
+
+  // ViewModel – register as factory so each view gets a new instance if required
+  sl.registerFactory(() => WalletViewModel(getWalletsUseCase: sl()));
+  
+  // ...other registrations
 }

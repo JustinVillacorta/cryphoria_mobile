@@ -33,22 +33,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
   @override
-  Future<String> register(String username, String password, String email) async {
-    try {
-      final response = await dio.post(
-        '$baseUrl/api/auth/register/',
-        data: {'username': username, 'password': password, 'email': email},
-      );
-      if (response.statusCode == 200) {
-        final token = response.data['token'] ?? response.data['data']?['token'];
-        if (token != null) {
-          return token;
-        }
+Future<String> register(String username, String password, String email) async {
+  try {
+    final response = await dio.post(
+      '$baseUrl/api/auth/register/',
+      data: {'username': username, 'password': password, 'email': email},
+    );
+    print('Register response code: ${response.statusCode}');
+    print('Register response body: ${response.data}');
+
+    // Treat 200–299 as success:
+    if (response.statusCode != null && response.statusCode! >= 201 && response.statusCode! < 300) {
+      final token = response.data['token'] 
+                     ?? response.data['data']?['token'];
+      if (token != null) {
+        return token;
       }
-      throw ServerException(response.data['detail']?.toString() ?? 'Registration failed');
-    } on DioException catch (e) {
-      final message = e.response?.data['detail']?.toString() ?? 'Registration failed';
-      throw ServerException(message);
     }
+    // If we get here, either no token or unexpected status
+    throw ServerException(
+      response.data['detail']?.toString() 
+        ?? 'Registration failed with status ${response.statusCode}'
+    );
+  } on DioException catch (e) {
+    final message = e.response?.data['detail']?.toString() 
+                    ?? 'Registration failed'; 
+    throw ServerException(message);
   }
+}
 }
