@@ -34,7 +34,8 @@ class WalletViewModel extends ChangeNotifier {
   }
   Future<void> connectWallet({
     required String walletType,
-    required String privateKey,
+    required String address,
+    required String signature,
     String walletName = '',
   }) async {
     _isLoading = true;
@@ -42,7 +43,8 @@ class WalletViewModel extends ChangeNotifier {
     try {
       final newWallet = await connectWalletUseCase.execute(
         walletType: walletType,
-        privateKey: privateKey,
+        address: address,
+        signature: signature,
         walletName: walletName,
       );
       _wallets.insert(0, newWallet);

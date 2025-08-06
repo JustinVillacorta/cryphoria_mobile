@@ -6,7 +6,8 @@ abstract class WalletRepository {
   Future<Wallet> addWallet(Wallet wallet);
   Future<Wallet> connectWallet({
     required String walletType,
-    required String privateKey,
+    required String address,
+    required String signature,
     String walletName = '',
   });
 }

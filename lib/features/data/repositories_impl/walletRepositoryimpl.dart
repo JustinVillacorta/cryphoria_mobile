@@ -20,12 +20,14 @@ class WalletRepositoryImpl implements WalletRepository {
  @override
   Future<Wallet> connectWallet({
     required String walletType,
-    required String privateKey,
+    required String address,
+    required String signature,
     String walletName = '',
   }) {
     return remoteDataSource.connectWallet(
       walletType: walletType,
-      privateKey: privateKey,
+      address: address,
+      signature: signature,
       walletName: walletName,
     );
   }
