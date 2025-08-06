@@ -5,6 +5,7 @@ import 'package:cryphoria_mobile/features/data/data_sources/AuthRemoteDataSource
 import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/AuthRepositoryImpl.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/walletRepositoryimpl.dart';
+import 'package:cryphoria_mobile/features/data/services/wallet_connector_service.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/wallet_repository.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
@@ -28,6 +29,11 @@ Future<void> init() async {
   // Core
   sl.registerLazySingleton<AuthLocalDataSource>(() => AuthLocalDataSourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton(() => DioClient(localDataSource: sl(), dio: Dio()));
+
+  // Wallet connector service
+  sl.registerLazySingleton(
+    () => WalletConnectorService(projectId: 'YOUR_PROJECT_ID'),
+  );
 
   String _baseUrl() {
     if (Platform.isAndroid) {
