@@ -7,18 +7,23 @@ import 'package:flutter/material.dart';
 
 class WalletViewModel extends ChangeNotifier {
   final GetWalletsUseCase getWalletsUseCase;
+  final ConnectWalletUseCase connectWalletUseCase;
 
-  WalletViewModel({required this.getWalletsUseCase});
+  WalletViewModel({
+    required this.getWalletsUseCase,
+    required this.connectWalletUseCase,
+  });
 
-  List<Wallet> _wallets = [];
-  List<Wallet> get wallets => _wallets;
-
+ List<Wallet> _wallets = [];
   bool _isLoading = false;
+  List<Wallet> get wallets => _wallets;
   bool get isLoading => _isLoading;
-
-  Future<void> fetchWallets() async {
-    _isLoading = true;
+  set isLoading(bool value) {
+    _isLoading = value;
     notifyListeners();
+  }
+  Future<void> fetchWallets() async {
+    isLoading = true;
     try {
       _wallets = await getWalletsUseCase.call();
     } catch (e) {
@@ -27,4 +32,28 @@ class WalletViewModel extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+  Future<void> connectWallet({
+    required String walletType,
+    required String privateKey,
+    String walletName = '',
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final newWallet = await connectWalletUseCase.execute(
+        walletType: walletType,
+        privateKey: privateKey,
+        walletName: walletName,
+      );
+      _wallets.insert(0, newWallet);
+    } catch (e) {
+      // handle error
+    }
+    _isLoading = false;
+    notifyListeners();
+  }
+
+
+
+
 }

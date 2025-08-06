@@ -16,4 +16,24 @@ class WalletRepositoryImpl implements WalletRepository {
   Future<Wallet> addWallet(Wallet wallet) async {
     return await remoteDataSource.createWallet(wallet);
   }
+
+ @override
+  Future<Wallet> connectWallet({
+    required String walletType,
+    required String privateKey,
+    String walletName = '',
+  }) {
+    return remoteDataSource.connectWallet(
+      walletType: walletType,
+      privateKey: privateKey,
+      walletName: walletName,
+    );
+  }
+
+
+
+
+
+
+
 }

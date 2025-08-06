@@ -51,4 +51,18 @@ class WalletRemoteDataSource {
       throw Exception("Failed to add wallet: ${e.response?.statusCode}");
     }
   }
+
+  Future<Wallet> connectWallet({
+    required String walletType, // e.g. 'metamask', 'coinbase', 'trust_wallet'
+    required String privateKey,
+    String walletName = '',
+  }) async {
+    final type = walletType.toLowerCase();
+    final url = '$baseUrl/connect_$type/';
+    final response = await dio.post(
+      url,
+      data: {'private_key': privateKey, 'wallet_name': walletName},
+    );
+    return Wallet.fromJson(response.data['data']);
+  }
 }

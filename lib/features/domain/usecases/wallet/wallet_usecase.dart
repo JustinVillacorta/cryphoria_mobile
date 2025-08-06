@@ -10,3 +10,20 @@ class GetWalletsUseCase {
     return repository.getWallets();
   }
 }
+
+class ConnectWalletUseCase {
+  final WalletRepository repository;
+  ConnectWalletUseCase(this.repository);
+
+  Future<Wallet> execute({
+    required String walletType,
+    required String privateKey,
+    String walletName = '',
+  }) {
+    return repository.connectWallet(
+      walletType: walletType,
+      privateKey: privateKey,
+      walletName: walletName,
+    );
+  }
+}

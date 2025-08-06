@@ -1,8 +1,6 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart' as di;
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

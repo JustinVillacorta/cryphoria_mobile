@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:cryphoria_mobile/features/presentation/widgets/notification_icon.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/payroll_history_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/refresh_icon.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -50,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!sl.isRegistered<WalletViewModel>()) {
       sl.registerLazySingleton<WalletViewModel>(
-            () => WalletViewModel(getWalletsUseCase: sl()),
+            () => WalletViewModel(getWalletsUseCase: sl(), connectWalletUseCase: sl()),
       );
     } else {
       sl<WalletViewModel>().fetchWallets();

@@ -8,6 +8,7 @@ class WalletCard extends StatelessWidget {
   final String convertedAmount;
   final String currency;
   final VoidCallback? onCurrencyTap;
+  final VoidCallback? onConnectTap;    // ← new
 
   const WalletCard({
     super.key,
@@ -15,18 +16,19 @@ class WalletCard extends StatelessWidget {
     required this.convertedAmount,
     required this.currency,
     this.onCurrencyTap,
+    this.onConnectTap,                // ← new
   });
 
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      height: 180,
+      height: 200, // bumped to make room for the button
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top row
+            // Top row (wallet info)
             Row(
               children: [
                 Column(
@@ -62,7 +64,7 @@ class WalletCard extends StatelessWidget {
 
             const Spacer(),
 
-            // Bottom row
+            // Converted row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -109,10 +111,21 @@ class WalletCard extends StatelessWidget {
                 ),
               ],
             ),
+
+            // ← new “Connect Wallet” button
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: onConnectTap,
+                child: const Text(
+                  'Connect Wallet',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
-
