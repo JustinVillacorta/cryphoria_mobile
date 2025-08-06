@@ -7,10 +7,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/domain/entities/payroll_history.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/fake_payroll_data.dart';
+import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 import '../../../widgets/invoice_detail_card.dart';
 import '../../../widgets/glass_payroll_history_item.dart';
 import '../../../widgets/line_chart.dart';
 import '../../../widgets/glass_card.dart';
+import '../../../widgets/wallet_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late ScrollController _scrollController;
   double _scrollOffset = 0.0;
+  late WalletViewModel _walletViewModel;
 
   @override
   void initState() {
@@ -43,11 +47,17 @@ class _HomeScreenState extends State<HomeScreen> {
           _scrollOffset = _scrollController.offset;
         });
       });
+
+    if (!sl.isRegistered<WalletViewModel>()) {
+      setupDependencies();
+    }
+    _walletViewModel = sl<WalletViewModel>()..fetchWallets();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _walletViewModel.dispose();
     super.dispose();
   }
 
@@ -151,96 +161,31 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 140),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GlassCard(
-                height: 180,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Top row
-                      Row(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Current Wallet",
-                                style: TextStyle(color: Colors.white70, fontSize: 14),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(
-                                    MdiIcons.ethereum,
-                                    size: 32,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Text(
-                                    "0.48 ETH",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      const Spacer(),
-
-                      // Bottom row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                "Converted to",
-                                style: TextStyle(color: Colors.white70, fontSize: 14),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                "₱ 82,400.00",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 20),
-                            child: Row(
-                              children: const [
-                                Text(
-                                  "PHP",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.keyboard_arrow_down,
-                                  color: Colors.white70,
-                                  size: 18,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+              child: AnimatedBuilder(
+                animation: _walletViewModel,
+                builder: (context, _) {
+                  if (_walletViewModel.isLoading) {
+                    return const SizedBox(
+                      height: 180,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  if (_walletViewModel.wallets.isEmpty) {
+                    return const SizedBox(
+                      height: 180,
+                      child: Center(child: Text('No wallet')),
+                    );
+                  }
+                  final wallet = _walletViewModel.wallets.first;
+                  const rate = 171666.67;
+                  final converted = (wallet.balance * rate).toStringAsFixed(2);
+                  return WalletCard(
+                    balance: '${wallet.balance} ETH',
+                    convertedAmount: '₱ $converted',
+                    currency: 'PHP',
+                    onCurrencyTap: () {},
+                  );
+                },
               ),
             ),
 
