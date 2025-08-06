@@ -56,12 +56,13 @@ class WalletRemoteDataSource {
     required String walletType, // e.g. 'metamask', 'coinbase', 'trust_wallet'
     required String address,
     required String signature,
-    String walletName = '',
   }) async {
     final type = walletType.toLowerCase();
     final url = '$baseUrl/connect_$type/';
     final response = await dio.post(
       url,
+
+      data: {'address': address, 'signature': signature},
       data: {
         'address': address,
         'signature': signature,

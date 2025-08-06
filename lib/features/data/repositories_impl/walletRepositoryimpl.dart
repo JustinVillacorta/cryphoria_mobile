@@ -22,13 +22,11 @@ class WalletRepositoryImpl implements WalletRepository {
     required String walletType,
     required String address,
     required String signature,
-    String walletName = '',
   }) {
     return remoteDataSource.connectWallet(
       walletType: walletType,
       address: address,
       signature: signature,
-      walletName: walletName,
     );
   }
 

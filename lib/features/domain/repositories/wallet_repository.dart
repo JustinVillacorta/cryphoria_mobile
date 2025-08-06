@@ -8,6 +8,5 @@ abstract class WalletRepository {
     required String walletType,
     required String address,
     required String signature,
-    String walletName = '',
   });
 }

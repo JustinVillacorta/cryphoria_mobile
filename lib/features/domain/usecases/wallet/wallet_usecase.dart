@@ -19,13 +19,11 @@ class ConnectWalletUseCase {
     required String walletType,
     required String address,
     required String signature,
-    String walletName = '',
   }) {
     return repository.connectWallet(
       walletType: walletType,
       address: address,
       signature: signature,
-      walletName: walletName,
     );
   }
 }
