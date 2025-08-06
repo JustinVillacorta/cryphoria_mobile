@@ -13,6 +13,7 @@ import 'package:cryphoria_mobile/features/domain/usecases/wallet/wallet_usecase.
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
+import 'package:cryphoria_mobile/core/services/wallet_connector_service.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -77,10 +78,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ConnectWalletUseCase(sl()));  // <-- add this
 
   // Wallet ViewModel now takes two use-cases
+  sl.registerLazySingleton(() => WalletConnectorService());
+
   sl.registerLazySingleton(
     () => WalletViewModel(
       getWalletsUseCase: sl(),
-      connectWalletUseCase: sl(), // <-- updated
+      connectWalletUseCase: sl(),
+      walletConnectorService: sl(),
     ),
   );
 }

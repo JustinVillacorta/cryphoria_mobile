@@ -853,8 +853,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (walletType != null) {
-      await _walletViewModel.fetchWallets();
-      setState(() {});
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      try {
+        final connectionData =
+            await _walletViewModel.initiateWalletConnect(walletType);
+        await _walletViewModel.connectWallet(
+          walletType: walletType,
+          address: connectionData['address'] ?? '',
+          signature: connectionData['signature'] ?? '',
+        );
+        setState(() {});
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to connect wallet')),
+        );
+      } finally {
+        Navigator.of(context).pop();
+      }
     }
   }
 }

@@ -4,14 +4,17 @@
 import 'package:cryphoria_mobile/features/domain/entities/wallet.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/wallet/wallet_usecase.dart';
 import 'package:flutter/material.dart';
+import 'package:cryphoria_mobile/core/services/wallet_connector_service.dart';
 
 class WalletViewModel extends ChangeNotifier {
   final GetWalletsUseCase getWalletsUseCase;
   final ConnectWalletUseCase connectWalletUseCase;
+  final WalletConnectorService walletConnectorService;
 
   WalletViewModel({
     required this.getWalletsUseCase,
     required this.connectWalletUseCase,
+    required this.walletConnectorService,
   });
 
  List<Wallet> _wallets = [];
@@ -32,25 +35,33 @@ class WalletViewModel extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+  /// Initiates a WalletConnect flow via [WalletConnectorService] and returns
+  /// the resulting wallet address and signature.
+  Future<Map<String, String>> initiateWalletConnect(String walletType) async {
+    return await walletConnectorService.connect(walletType);
+  }
+
   Future<void> connectWallet({
     required String walletType,
-    required String privateKey,
-    String walletName = '',
+    required String address,
+    required String signature,
   }) async {
     _isLoading = true;
     notifyListeners();
     try {
       final newWallet = await connectWalletUseCase.execute(
         walletType: walletType,
-        privateKey: privateKey,
-        walletName: walletName,
+        address: address,
+        signature: signature,
       );
       _wallets.insert(0, newWallet);
     } catch (e) {
       // handle error
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-    _isLoading = false;
-    notifyListeners();
   }
 
 
