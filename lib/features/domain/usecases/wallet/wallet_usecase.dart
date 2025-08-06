@@ -17,12 +17,14 @@ class ConnectWalletUseCase {
 
   Future<Wallet> execute({
     required String walletType,
-    required String privateKey,
+    required String address,
+    required String signature,
     String walletName = '',
   }) {
     return repository.connectWallet(
       walletType: walletType,
-      privateKey: privateKey,
+      address: address,
+      signature: signature,
       walletName: walletName,
     );
   }
