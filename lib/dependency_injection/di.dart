@@ -32,7 +32,7 @@ Future<void> init() async {
 
   // Wallet connector service
   sl.registerLazySingleton(
-    () => WalletConnectorService(projectId: 'YOUR_PROJECT_ID'),
+    () => WalletConnectorService.create(projectId: 'YOUR_PROJECT_ID'),
   );
 
   String _baseUrl() {

@@ -62,11 +62,16 @@ class WalletRemoteDataSource {
     final response = await dio.post(
       url,
 
-      data: {'address': address, 'signature': signature},
+      options: Options(
+        headers: {
+          "Authorization": "Token $token",
+          "Content-Type": "application/json",
+        },
+      ),
       data: {
         'address': address,
         'signature': signature,
-        'wallet_name': walletName,
+        'wallet_name': walletType,
       },
     );
     return Wallet.fromJson(response.data['data']);
