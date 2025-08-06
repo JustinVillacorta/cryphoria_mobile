@@ -4,7 +4,7 @@
 import 'package:cryphoria_mobile/features/domain/entities/wallet.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/wallet/wallet_usecase.dart';
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/core/services/wallet_connector_service.dart';
+import 'package:cryphoria_mobile/features/data/services/wallet_connector_service.dart';
 
 class WalletViewModel extends ChangeNotifier {
   final GetWalletsUseCase getWalletsUseCase;
@@ -38,7 +38,11 @@ class WalletViewModel extends ChangeNotifier {
   /// Initiates a WalletConnect flow via [WalletConnectorService] and returns
   /// the resulting wallet address and signature.
   Future<Map<String, String>> initiateWalletConnect(String walletType) async {
-    return await walletConnectorService.connect(walletType);
+    final (address, signature) = await walletConnectorService.connectAndSign(
+      wallet: walletType,
+      message: 'Connect to Cryphoria',
+    );
+    return {'address': address, 'signature': signature};
   }
 
   Future<void> connectWallet({
