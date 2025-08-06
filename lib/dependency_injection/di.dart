@@ -31,8 +31,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DioClient(localDataSource: sl(), dio: Dio()));
 
   // Wallet connector service
-  sl.registerLazySingleton(
-    () => WalletConnectorService.create(projectId: 'YOUR_PROJECT_ID'),
+  sl.registerSingletonAsync<WalletConnectorService>(
+    () async => WalletConnectorService.create(
+      projectId: 'a6ae708b14c911a7920025033c8a5a99',
+    ),
   );
 
   String _baseUrl() {
