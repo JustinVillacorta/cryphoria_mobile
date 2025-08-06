@@ -77,10 +77,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ConnectWalletUseCase(sl()));  // <-- add this
 
   // Wallet ViewModel now takes two use-cases
-  sl.registerFactory(
+  sl.registerLazySingleton(
     () => WalletViewModel(
       getWalletsUseCase: sl(),
-      connectWalletUseCase: sl(),   // <-- updated
+      connectWalletUseCase: sl(), // <-- updated
     ),
   );
 }
