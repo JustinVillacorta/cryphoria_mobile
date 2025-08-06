@@ -47,20 +47,12 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       });
 
-    if (!sl.isRegistered<WalletViewModel>()) {
-      sl.registerLazySingleton<WalletViewModel>(
-            () => WalletViewModel(getWalletsUseCase: sl(), connectWalletUseCase: sl()),
-      );
-    } else {
-      sl<WalletViewModel>().fetchWallets();
-    }
-    _walletViewModel = sl<WalletViewModel>()..fetchWallets();
+    _walletViewModel = sl<WalletViewModel>();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _walletViewModel.dispose();
     super.dispose();
   }
 
@@ -174,9 +166,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   }
                   if (_walletViewModel.wallets.isEmpty) {
-                    return const SizedBox(
+                    return SizedBox(
                       height: 180,
-                      child: Center(child: Text('No wallet')),
+                      child: Center(
+                        child: ElevatedButton(
+                          onPressed: _showConnectWalletDialog,
+                          child: const Text('Connect Wallet'),
+                        ),
+                      ),
                     );
                   }
                   final wallet = _walletViewModel.wallets.first;
@@ -829,5 +826,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
         ],
     );
+  }
+
+  Future<void> _showConnectWalletDialog() async {
+    final walletType = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Text('Connect Wallet'),
+          children: [
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, 'metamask'),
+              child: const Text('MetaMask'),
+            ),
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, 'coinbase'),
+              child: const Text('Coinbase'),
+            ),
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, 'trust_wallet'),
+              child: const Text('Trust Wallet'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (walletType != null) {
+      await _walletViewModel.fetchWallets();
+      setState(() {});
+    }
   }
 }

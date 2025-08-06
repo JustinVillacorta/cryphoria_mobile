@@ -1,6 +1,8 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/Views/register_view.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
@@ -22,12 +24,15 @@ class _LogInState extends State<LogIn> {
     _viewModel.addListener(_onViewModelChanged);
   }
 
-  void _onViewModelChanged() {
+  void _onViewModelChanged() async {
     if (_viewModel.authUser != null) {
+      // Update wallet token and fetch wallets for authenticated user
+      sl<WalletRemoteDataSource>().token = _viewModel.authUser!.token;
+      await sl<WalletViewModel>().fetchWallets();
       Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const WidgetTree()),
-    );
+        context,
+        MaterialPageRoute(builder: (_) => const WidgetTree()),
+      );
     } else if (_viewModel.error != null) {
       ScaffoldMessenger.of(
         context,

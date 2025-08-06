@@ -3,7 +3,7 @@ import '../../domain/entities/wallet.dart';
 
 class WalletRemoteDataSource {
   final String baseUrl;
-  final String token;
+  String token;
   final Dio dio;
 
   WalletRemoteDataSource({
