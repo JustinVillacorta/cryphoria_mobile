@@ -57,18 +57,24 @@ Future<void> init() async {
   sl.registerFactory(() => LoginViewModel(loginUseCase: sl()));
   sl.registerFactory(() => RegisterViewModel(registerUseCase: sl()));
 
+  // Wallet feature
+  final token = await sl<AuthLocalDataSource>().getToken() ?? "";
 
+  sl.registerLazySingleton<WalletRemoteDataSource>(
+    () => WalletRemoteDataSource(
+      baseUrl: '${_baseUrl()}/api/wallets/',
+      token: token,
+      dio: sl<DioClient>().dio,
+    ),
+  );
 
-sl.registerLazySingletonAsync<WalletRemoteDataSource>(
-  () async => WalletRemoteDataSource(
-    token: await sl<AuthLocalDataSource>().getToken() ?? "", // await async token retrieval
-    dio: sl<DioClient>().dio,
-  ),
-);
-  
+  sl.registerLazySingleton<WalletRepository>(
+    () => WalletRepositoryImpl(remoteDataSource: sl()),
+  );
+
   // Register use case
   sl.registerLazySingleton(() => GetWalletsUseCase(sl()));
-  
+
   // Register WalletViewModel as a factory so you get a new instance when needed.
   sl.registerFactory(() => WalletViewModel(getWalletsUseCase: sl()));
 }
