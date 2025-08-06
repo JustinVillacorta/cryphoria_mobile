@@ -49,7 +49,11 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
     if (!sl.isRegistered<WalletViewModel>()) {
-      setupDependencies();
+      sl.registerLazySingleton<WalletViewModel>(
+            () => WalletViewModel(getWalletsUseCase: sl()),
+      );
+    } else {
+      sl<WalletViewModel>().fetchWallets();
     }
     _walletViewModel = sl<WalletViewModel>()..fetchWallets();
   }

@@ -1,26 +1,19 @@
-// filepath: lib/features/data/repositories_impl/wallet_repository_impl.dart
-import '../../domain/entities/wallet.dart';
-import '../../domain/repositories/wallet_repository.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
+import 'package:cryphoria_mobile/features/domain/entities/wallet.dart';
+import 'package:cryphoria_mobile/features/domain/repositories/wallet_repository.dart';
 
 class WalletRepositoryImpl implements WalletRepository {
-  // You can inject your API client here if needed.
-  
+  final WalletRemoteDataSource remoteDataSource;
+
+  WalletRepositoryImpl({required this.remoteDataSource});
+
   @override
   Future<List<Wallet>> getWallets() async {
-    // Replace with your logic to fetch wallets
-    return [
-      Wallet(
-        id: "1",
-        name: "Main Wallet",
-        address: "0x123...",
-        balance: 0.48,
-      )
-    ];
+    return await remoteDataSource.fetchWallets();
   }
 
   @override
   Future<Wallet> addWallet(Wallet wallet) async {
-    // Replace with your logic for creating a wallet
-    return wallet;
+    return await remoteDataSource.createWallet(wallet);
   }
 }
