@@ -1,5 +1,5 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
-import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
+import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/Views/register_view.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
@@ -26,8 +26,9 @@ class _LogInState extends State<LogIn> {
 
   void _onViewModelChanged() async {
     if (_viewModel.authUser != null) {
-      // Reconnect stored wallet if any
-      await sl<WalletViewModel>().reconnect();
+      if (await sl<WalletService>().hasStoredWallet()) {
+        await sl<WalletViewModel>().reconnect();
+      }
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const WidgetTree()),

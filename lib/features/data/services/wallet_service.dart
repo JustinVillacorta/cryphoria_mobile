@@ -28,6 +28,11 @@ class WalletService {
     return Wallet(id: '', name: walletName, address: address, balance: balance);
   }
 
+  Future<bool> hasStoredWallet() async {
+    final key = await storage.readKey();
+    return key != null && key.isNotEmpty;
+  }
+
   Future<Wallet?> reconnect() async {
     final key = await storage.readKey();
     if (key == null || key.isEmpty) return null;
