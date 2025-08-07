@@ -75,7 +75,7 @@ class WalletRemoteDataSource {
   }
 
   Future<double> getBalance(String walletAddress) async {
-    final url = '${baseUrl}get_specific_wallet_balance/';
+    final url = '${baseUrl}get_wallet_balance/';
     try {
       final response = await dio.post(
         url,
