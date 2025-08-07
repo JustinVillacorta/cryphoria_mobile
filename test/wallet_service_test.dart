@@ -1,19 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
+import 'package:web3dart/credentials.dart';
 import 'private_key_storage_test.dart';
 
 class FakeRemote extends WalletRemoteDataSource {
-  FakeRemote() : super(token: '');
-  @override
-  Future<String> connectWithPrivateKey({required String endpoint, required String privateKey, required String walletName}) async {
-    return 'addr';
-  }
+  FakeRemote() : super();
 
   @override
-  Future<String> reconnectWithPrivateKey(String privateKey) async {
-    return 'addr';
-  }
+  Future<void> registerWallet({
+    required String endpoint,
+    required String walletAddress,
+    required String walletName,
+  }) async {}
 
   @override
   Future<double> getBalance(String walletAddress) async {
@@ -23,22 +22,27 @@ class FakeRemote extends WalletRemoteDataSource {
 
 void main() {
   test('connect stores key and returns wallet', () async {
+    const key =
+        '0x8f2a559490cc2a7ab61c32ed3d8060216ee02e4960a83f97bde6ceb39d4b4d5e';
     final service = WalletService(
       remoteDataSource: FakeRemote(),
       storage: MemoryStorage(),
     );
-    final wallet = await service.connectWithPrivateKey(
-      'k',
+    final wallet = await service.connectWallet(
+      key,
       endpoint: 'connect_trust_wallet/',
       walletName: 'Mobile Wallet',
     );
-    expect(wallet.address, 'addr');
+    final expected = EthPrivateKey.fromHex(key).address.hexEip55;
+    expect(wallet.address, expected);
     expect(wallet.balance, 5.0);
   });
 
   test('reconnect uses stored key', () async {
+    const key =
+        '0x8f2a559490cc2a7ab61c32ed3d8060216ee02e4960a83f97bde6ceb39d4b4d5e';
     final storage = MemoryStorage();
-    await storage.saveKey('k');
+    await storage.saveKey(key);
     final service = WalletService(
       remoteDataSource: FakeRemote(),
       storage: storage,
@@ -47,3 +51,4 @@ void main() {
     expect(wallet?.balance, 5.0);
   });
 }
+

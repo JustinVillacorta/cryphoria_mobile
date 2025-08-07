@@ -1,4 +1,4 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 abstract class AuthLocalDataSource {
   Future<void> cacheToken(String token);
@@ -6,18 +6,18 @@ abstract class AuthLocalDataSource {
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
-  final SharedPreferences sharedPreferences;
+  final FlutterSecureStorage secureStorage;
   static const _tokenKey = 'auth_token';
 
-  AuthLocalDataSourceImpl({required this.sharedPreferences});
+  AuthLocalDataSourceImpl({required this.secureStorage});
 
   @override
   Future<void> cacheToken(String token) async {
-    await sharedPreferences.setString(_tokenKey, token);
+    await secureStorage.write(key: _tokenKey, value: token);
   }
 
   @override
   Future<String?> getToken() async {
-    return sharedPreferences.getString(_tokenKey);
+    return secureStorage.read(key: _tokenKey);
   }
 }

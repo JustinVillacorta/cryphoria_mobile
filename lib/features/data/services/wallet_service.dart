@@ -1,6 +1,7 @@
 import '../data_sources/walletRemoteDataSource.dart';
 import '../../domain/entities/wallet.dart';
 import 'private_key_storage.dart';
+import 'package:web3dart/credentials.dart';
 
 class WalletService {
   final WalletRemoteDataSource remoteDataSource;
@@ -8,17 +9,19 @@ class WalletService {
 
   WalletService({required this.remoteDataSource, required this.storage});
 
-  Future<Wallet> connectWithPrivateKey(
+  Future<Wallet> connectWallet(
     String privateKey, {
     required String endpoint,
     required String walletName,
   }) async {
-    final address = await remoteDataSource.connectWithPrivateKey(
+    final creds = EthPrivateKey.fromHex(privateKey);
+    final address = creds.address.hexEip55;
+    await storage.saveKey(privateKey);
+    await remoteDataSource.registerWallet(
       endpoint: endpoint,
-      privateKey: privateKey,
+      walletAddress: address,
       walletName: walletName,
     );
-    await storage.saveKey(privateKey);
     final balance = await remoteDataSource.getBalance(address);
     return Wallet(id: '', name: walletName, address: address, balance: balance);
   }
@@ -26,7 +29,7 @@ class WalletService {
   Future<Wallet?> reconnect() async {
     final key = await storage.readKey();
     if (key == null) return null;
-    final address = await remoteDataSource.reconnectWithPrivateKey(key);
+    final address = EthPrivateKey.fromHex(key).address.hexEip55;
     final balance = await remoteDataSource.getBalance(address);
     return Wallet(id: '', name: 'Stored Wallet', address: address, balance: balance);
   }

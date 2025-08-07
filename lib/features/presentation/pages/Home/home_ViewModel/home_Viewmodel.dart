@@ -22,7 +22,7 @@ class WalletViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      _wallet = await walletService.connectWithPrivateKey(
+      _wallet = await walletService.connectWallet(
         privateKey,
         endpoint: endpoint,
         walletName: walletName,
