@@ -37,7 +37,12 @@ class WalletService {
     final key = await storage.readKey();
     if (key == null || key.isEmpty) return null;
     final address = EthPrivateKey.fromHex(key).address.hexEip55;
-    final balance = await remoteDataSource.getBalance(address);
-    return Wallet(id: '', name: 'Stored Wallet', address: address, balance: balance);
+    try {
+      final balance = await remoteDataSource.getBalance(address);
+      return Wallet(
+          id: '', name: 'Stored Wallet', address: address, balance: balance);
+    } on WalletNotFoundException {
+      return null;
+    }
   }
 }

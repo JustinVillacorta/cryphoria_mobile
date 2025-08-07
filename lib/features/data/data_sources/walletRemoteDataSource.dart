@@ -1,6 +1,15 @@
 import 'package:dio/dio.dart';
 import '../../domain/entities/wallet.dart';
 
+class WalletNotFoundException implements Exception {
+  final String message;
+
+  WalletNotFoundException([this.message = 'Wallet not found']);
+
+  @override
+  String toString() => 'WalletNotFoundException: ' + message;
+}
+
 class WalletRemoteDataSource {
   final String baseUrl;
   final Dio dio;
@@ -92,6 +101,9 @@ class WalletRemoteDataSource {
           response.data['balance'] ?? response.data['data']?['balance'] ?? 0;
       return (balance as num).toDouble();
     } on DioError catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw WalletNotFoundException();
+      }
       throw Exception('Failed to load balance: ${e.response?.statusCode}');
     }
   }
