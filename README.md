@@ -4,13 +4,17 @@
 
 The app connects to a user wallet using a simple private–key dialog. On a
 successful connection the key is stored locally in encrypted storage and the
-wallet balance is fetched from the backend.
+wallet balance is fetched from the backend. Callers must now specify which
+wallet to connect by providing both the API endpoint and wallet name. Use the
+`connect_trust_wallet/` endpoint with the name `Mobile Wallet` for Trust Wallet
+or `connect_metamask/` with the name `MetaMask` for MetaMask.
 
 ### Endpoints
 
 | Action | Endpoint |
 |--------|----------|
-| Connect | `POST /api/wallets/connect_trust_wallet/` |
+| Connect (Trust Wallet) | `POST /api/wallets/connect_trust_wallet/` |
+| Connect (MetaMask) | `POST /api/wallets/connect_metamask/` |
 | Get Balance | `POST /api/wallets/get_specific_wallet_balance/` |
 | Reconnect | `POST /api/wallets/reconnect_wallet_with_private_key/` |
 

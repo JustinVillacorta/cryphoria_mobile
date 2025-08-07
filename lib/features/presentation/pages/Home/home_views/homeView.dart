@@ -830,26 +830,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showConnectWalletDialog() async {
     final controller = TextEditingController();
+    String selectedWallet = 'Trust Wallet';
+
     final shouldConnect = await showDialog<bool>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Enter private key'),
-          content: TextField(
-            controller: controller,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'Private key'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Connect'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Enter private key'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: 'Private key'),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButton<String>(
+                    value: selectedWallet,
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Trust Wallet',
+                        child: Text('Trust Wallet'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'MetaMask',
+                        child: Text('MetaMask'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => selectedWallet = value);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Connect'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -861,7 +891,16 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
       try {
-        await _walletViewModel.connect(controller.text);
+        final endpoint = selectedWallet == 'MetaMask'
+            ? 'connect_metamask/'
+            : 'connect_trust_wallet/';
+        final walletName =
+            selectedWallet == 'MetaMask' ? 'MetaMask' : 'Mobile Wallet';
+        await _walletViewModel.connect(
+          controller.text,
+          endpoint: endpoint,
+          walletName: walletName,
+        );
         setState(() {});
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(

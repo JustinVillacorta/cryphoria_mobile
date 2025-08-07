@@ -8,11 +8,16 @@ class WalletService {
 
   WalletService({required this.remoteDataSource, required this.storage});
 
-  Future<Wallet> connectWithPrivateKey(String privateKey,
-      {String endpoint = 'connect_trust_wallet/',
-      String walletName = 'Mobile Wallet'}) async {
+  Future<Wallet> connectWithPrivateKey(
+    String privateKey, {
+    required String endpoint,
+    required String walletName,
+  }) async {
     final address = await remoteDataSource.connectWithPrivateKey(
-        endpoint: endpoint, privateKey: privateKey, walletName: walletName);
+      endpoint: endpoint,
+      privateKey: privateKey,
+      walletName: walletName,
+    );
     await storage.saveKey(privateKey);
     final balance = await remoteDataSource.getBalance(address);
     return Wallet(id: '', name: walletName, address: address, balance: balance);
