@@ -18,6 +18,7 @@ class WalletViewModel extends ChangeNotifier {
     String privateKey, {
     required String endpoint,
     required String walletName,
+    required String walletType,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -26,6 +27,7 @@ class WalletViewModel extends ChangeNotifier {
         privateKey,
         endpoint: endpoint,
         walletName: walletName,
+        walletType: walletType,
       );
     } finally {
       _isLoading = false;

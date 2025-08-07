@@ -900,6 +900,7 @@ class _HomeScreenState extends State<HomeScreen> {
           controller.text,
           endpoint: endpoint,
           walletName: walletName,
+          walletType: selectedWallet,
         );
         setState(() {});
       } catch (e) {

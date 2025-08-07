@@ -12,6 +12,7 @@ class FakeRemote extends WalletRemoteDataSource {
     required String endpoint,
     required String walletAddress,
     required String walletName,
+    required String walletType,
   }) async {}
 
   @override
@@ -32,6 +33,7 @@ void main() {
       key,
       endpoint: 'connect_trust_wallet/',
       walletName: 'Mobile Wallet',
+      walletType: 'Trust Wallet',
     );
     final expected = EthPrivateKey.fromHex(key).address.hexEip55;
     expect(wallet.address, expected);
