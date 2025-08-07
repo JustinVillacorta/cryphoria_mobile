@@ -733,22 +733,27 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "15.0.0"
-  wallet:
-    dependency: transitive
-    description:
-      name: wallet
-      sha256: "687fd89a16557649b26189e597792962f405797fc64113e8758eabc2c2605c32"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.13"
-  walletconnect_flutter_v2:
+  flutter_secure_storage:
     dependency: "direct main"
     description:
-      name: walletconnect_flutter_v2
-      sha256: "373348d8d0b6d3cabff067f00b7e48c234c000a6a5d4db20deea3636fa45b4fb"
+      name: flutter_secure_storage
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.1"
+    version: "9.0.0"
+  mockito:
+    dependency: "direct dev"
+    description:
+      name: mockito
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.4.2"
+  test:
+    dependency: "direct dev"
+    description:
+      name: test
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.24.0"
   web:
     dependency: transitive
     description:

@@ -26,9 +26,9 @@ class _LogInState extends State<LogIn> {
 
   void _onViewModelChanged() async {
     if (_viewModel.authUser != null) {
-      // Update wallet token and fetch wallets for authenticated user
+      // Update wallet token and reconnect stored wallet if any
       sl<WalletRemoteDataSource>().token = _viewModel.authUser!.token;
-      await sl<WalletViewModel>().fetchWallets();
+      await sl<WalletViewModel>().reconnect();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const WidgetTree()),

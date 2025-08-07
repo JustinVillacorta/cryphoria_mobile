@@ -1,16 +1,26 @@
-# cryphoria_mobile
+# Cryphoria Mobile
 
-A new Flutter project.
+## Wallet Connection Flow
 
-## Getting Started
+The app connects to a user wallet using a simple private–key dialog. On a
+successful connection the key is stored locally in encrypted storage and the
+wallet balance is fetched from the backend.
 
-This project is a starting point for a Flutter application.
+### Endpoints
 
-A few resources to get you started if this is your first Flutter project:
+| Action | Endpoint |
+|--------|----------|
+| Connect | `POST /api/wallets/connect_trust_wallet/` |
+| Get Balance | `POST /api/wallets/get_specific_wallet_balance/` |
+| Reconnect | `POST /api/wallets/reconnect_wallet_with_private_key/` |
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Running Tests
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```
+flutter test
+```
+
+If Flutter or Dart are not installed the command will fail. Install the
+Flutter SDK and run the tests again after fetching packages with
+`flutter pub get`.
+
