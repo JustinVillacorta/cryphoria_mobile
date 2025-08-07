@@ -1,6 +1,7 @@
+import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
+import 'package:cryphoria_mobile/features/domain/entities/wallet.dart';
 import 'package:flutter/material.dart';
-import '../../../domain/entities/wallet.dart';
-import '../../../data/services/wallet_service.dart';
+
 
 class WalletViewModel extends ChangeNotifier {
   final WalletService walletService;
