@@ -13,11 +13,19 @@ class WalletViewModel extends ChangeNotifier {
   Wallet? get wallet => _wallet;
   bool get isLoading => _isLoading;
 
-  Future<void> connect(String privateKey) async {
+  Future<void> connect(
+    String privateKey, {
+    required String endpoint,
+    required String walletName,
+  }) async {
     _isLoading = true;
     notifyListeners();
     try {
-      _wallet = await walletService.connectWithPrivateKey(privateKey);
+      _wallet = await walletService.connectWithPrivateKey(
+        privateKey,
+        endpoint: endpoint,
+        walletName: walletName,
+      );
     } finally {
       _isLoading = false;
       notifyListeners();

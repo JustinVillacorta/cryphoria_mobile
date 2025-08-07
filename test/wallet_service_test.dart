@@ -27,7 +27,11 @@ void main() {
       remoteDataSource: FakeRemote(),
       storage: MemoryStorage(),
     );
-    final wallet = await service.connectWithPrivateKey('k');
+    final wallet = await service.connectWithPrivateKey(
+      'k',
+      endpoint: 'connect_trust_wallet/',
+      walletName: 'Mobile Wallet',
+    );
     expect(wallet.address, 'addr');
     expect(wallet.balance, 5.0);
   });
