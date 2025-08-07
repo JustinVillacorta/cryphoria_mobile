@@ -14,22 +14,24 @@ import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Regi
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../core/network/dio_client.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  final sharedPreferences = await SharedPreferences.getInstance();
-  sl.registerLazySingleton(() => sharedPreferences);
+  sl.registerLazySingleton<FlutterSecureStorage>(
+      () => const FlutterSecureStorage());
 
   // Core
-  sl.registerLazySingleton<AuthLocalDataSource>(() => AuthLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<AuthLocalDataSource>(
+      () => AuthLocalDataSourceImpl(secureStorage: sl()));
   sl.registerLazySingleton(() => DioClient(localDataSource: sl(), dio: Dio()));
 
   // Wallet services
-  sl.registerLazySingleton<PrivateKeyStorage>(() => PrivateKeyStorage());
+  sl.registerLazySingleton<PrivateKeyStorage>(
+      () => PrivateKeyStorage(storage: sl()));
 
   String _baseUrl() {
     if (Platform.isAndroid) {
@@ -60,12 +62,9 @@ Future<void> init() async {
   sl.registerFactory(() => RegisterViewModel(registerUseCase: sl()));
 
   // Wallet feature
- final token = await sl<AuthLocalDataSource>().getToken() ?? "";
-
   sl.registerLazySingleton<WalletRemoteDataSource>(
     () => WalletRemoteDataSource(
       baseUrl: '${_baseUrl()}/api/wallets/',
-      token: token,
       dio: sl<DioClient>().dio,
     ),
   );

@@ -3,12 +3,10 @@ import '../../domain/entities/wallet.dart';
 
 class WalletRemoteDataSource {
   final String baseUrl;
-  String token;
   final Dio dio;
 
   WalletRemoteDataSource({
     this.baseUrl = "http://localhost:8000/api/wallets/",
-    required this.token,
     Dio? dio,
   }) : dio = dio ?? Dio();
 
@@ -18,7 +16,6 @@ class WalletRemoteDataSource {
         baseUrl,
         options: Options(
           headers: {
-            "Authorization": "Token $token",
             "Content-Type": "application/json",
           },
         ),
@@ -41,7 +38,6 @@ class WalletRemoteDataSource {
         },
         options: Options(
           headers: {
-            "Authorization": "Token $token",
             "Content-Type": "application/json",
           },
         ),
@@ -52,50 +48,27 @@ class WalletRemoteDataSource {
     }
   }
 
-  Future<String> connectWithPrivateKey({
+  Future<void> registerWallet({
     required String endpoint,
-    required String privateKey,
+    required String walletAddress,
     required String walletName,
   }) async {
     final url = '$baseUrl$endpoint';
     try {
-      final response = await dio.post(
+      await dio.post(
         url,
         options: Options(
           headers: {
-            "Authorization": "Token $token",
             "Content-Type": "application/json",
           },
         ),
         data: {
-          'private_key': privateKey,
+          'wallet_address': walletAddress,
           'wallet_name': walletName,
         },
       );
-      return response.data['wallet_address'] as String;
     } on DioError catch (e) {
       throw Exception('Failed to connect wallet: ${e.response?.statusCode}');
-    }
-  }
-
-  Future<String> reconnectWithPrivateKey(String privateKey) async {
-    final url = '${baseUrl}reconnect_wallet_with_private_key/';
-    try {
-      final response = await dio.post(
-        url,
-        options: Options(
-          headers: {
-            "Authorization": "Token $token",
-            "Content-Type": "application/json",
-          },
-        ),
-        data: {
-          'private_key': privateKey,
-        },
-      );
-      return response.data['wallet_address'] as String;
-    } on DioError catch (e) {
-      throw Exception('Failed to reconnect wallet: ${e.response?.statusCode}');
     }
   }
 
@@ -106,7 +79,6 @@ class WalletRemoteDataSource {
         url,
         options: Options(
           headers: {
-            "Authorization": "Token $token",
             "Content-Type": "application/json",
           },
         ),
