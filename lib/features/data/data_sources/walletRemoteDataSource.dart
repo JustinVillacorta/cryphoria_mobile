@@ -77,14 +77,14 @@ class WalletRemoteDataSource {
   Future<double> getBalance(String walletAddress) async {
     final url = '${baseUrl}get_wallet_balance/';
     try {
-      final response = await dio.post(
+      final response = await dio.get(
         url,
         options: Options(
           headers: {
             "Content-Type": "application/json",
           },
         ),
-        data: {
+        queryParameters: {
           'wallet_address': walletAddress,
         },
       );

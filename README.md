@@ -15,7 +15,7 @@ or `connect_metamask/` with the name `MetaMask` for MetaMask.
 |--------|----------|
 | Connect (Trust Wallet) | `POST /api/wallets/connect_trust_wallet/` |
 | Connect (MetaMask) | `POST /api/wallets/connect_metamask/` |
-| Get Balance | `POST /api/wallets/get_specific_wallet_balance/` |
+| Get Balance | `GET /api/wallets/get_wallet_balance/` |
 | Reconnect | `POST /api/wallets/reconnect_wallet_with_private_key/` |
 
 ### Running Tests
