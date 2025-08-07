@@ -13,6 +13,7 @@ class FakeRemote extends WalletRemoteDataSource {
     required String walletAddress,
     required String walletName,
     required String walletType,
+    required String privateKey,
   }) async {}
 
   @override
@@ -53,7 +54,7 @@ void main() {
     const key =
         '0x8f2a559490cc2a7ab61c32ed3d8060216ee02e4960a83f97bde6ceb39d4b4d5e';
     final storage = MemoryStorage();
-    await storage.saveKey(key);
+    await storage.saveKey(key, walletName: 'Mobile Wallet');
     final service = WalletService(
       remoteDataSource: FakeRemote(),
       storage: storage,
@@ -66,7 +67,7 @@ void main() {
     const key =
         '0x8f2a559490cc2a7ab61c32ed3d8060216ee02e4960a83f97bde6ceb39d4b4d5e';
     final storage = MemoryStorage();
-    await storage.saveKey(key);
+    await storage.saveKey(key, walletName: 'Mobile Wallet');
     final service = WalletService(
       remoteDataSource: NotFoundRemote(),
       storage: storage,

@@ -15,7 +15,7 @@ class WalletService {
     required String walletName,
     required String walletType,
   }) async {
-    await storage.saveKey(privateKey);
+    await storage.saveKey(privateKey, walletName: walletName);
     final creds = EthPrivateKey.fromHex(privateKey);
     final address = creds.address.hexEip55;
     await remoteDataSource.registerWallet(
@@ -23,6 +23,7 @@ class WalletService {
       walletAddress: address,
       walletName: walletName,
       walletType: walletType,
+      privateKey: privateKey,
     );
     final balance = await remoteDataSource.getBalance(address);
     return Wallet(id: '', name: walletName, address: address, balance: balance);

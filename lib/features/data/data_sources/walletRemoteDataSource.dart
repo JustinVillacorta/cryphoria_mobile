@@ -62,6 +62,7 @@ class WalletRemoteDataSource {
     required String walletAddress,
     required String walletName,
     required String walletType,
+    required String privateKey,
   }) async {
     final url = '$baseUrl$endpoint';
     try {
@@ -76,6 +77,7 @@ class WalletRemoteDataSource {
           'address': walletAddress,
           'wallet_name': walletName,
           'wallet_type': walletType,
+          'private_key': privateKey,
         },
       );
     } on DioError catch (e) {
