@@ -52,28 +52,73 @@ class WalletRemoteDataSource {
     }
   }
 
-  Future<Wallet> connectWallet({
-    required String walletType, // e.g. 'metamask', 'coinbase', 'trust_wallet'
-    required String address,
-    required String signature,
+  Future<String> connectWithPrivateKey({
+    required String endpoint,
+    required String privateKey,
+    required String walletName,
   }) async {
-    final type = walletType.toLowerCase();
-    final url = '$baseUrl/connect_$type/';
-    final response = await dio.post(
-      url,
-
-      options: Options(
-        headers: {
-          "Authorization": "Token $token",
-          "Content-Type": "application/json",
+    final url = '$baseUrl$endpoint';
+    try {
+      final response = await dio.post(
+        url,
+        options: Options(
+          headers: {
+            "Authorization": "Token $token",
+            "Content-Type": "application/json",
+          },
+        ),
+        data: {
+          'private_key': privateKey,
+          'wallet_name': walletName,
         },
-      ),
-      data: {
-        'address': address,
-        'signature': signature,
-        'wallet_name': walletType,
-      },
-    );
-    return Wallet.fromJson(response.data['data']);
+      );
+      return response.data['wallet_address'] as String;
+    } on DioError catch (e) {
+      throw Exception('Failed to connect wallet: ${e.response?.statusCode}');
+    }
+  }
+
+  Future<String> reconnectWithPrivateKey(String privateKey) async {
+    final url = '${baseUrl}reconnect_wallet_with_private_key/';
+    try {
+      final response = await dio.post(
+        url,
+        options: Options(
+          headers: {
+            "Authorization": "Token $token",
+            "Content-Type": "application/json",
+          },
+        ),
+        data: {
+          'private_key': privateKey,
+        },
+      );
+      return response.data['wallet_address'] as String;
+    } on DioError catch (e) {
+      throw Exception('Failed to reconnect wallet: ${e.response?.statusCode}');
+    }
+  }
+
+  Future<double> getBalance(String walletAddress) async {
+    final url = '${baseUrl}get_specific_wallet_balance/';
+    try {
+      final response = await dio.post(
+        url,
+        options: Options(
+          headers: {
+            "Authorization": "Token $token",
+            "Content-Type": "application/json",
+          },
+        ),
+        data: {
+          'wallet_address': walletAddress,
+        },
+      );
+      final balance =
+          response.data['balance'] ?? response.data['data']?['balance'] ?? 0;
+      return (balance as num).toDouble();
+    } on DioError catch (e) {
+      throw Exception('Failed to load balance: ${e.response?.statusCode}');
+    }
   }
 }

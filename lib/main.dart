@@ -1,12 +1,10 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart' as di;
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/data/services/wallet_connector_service.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
-  await di.sl.isReady<WalletConnectorService>();
   runApp(const MyApp());
 }
 

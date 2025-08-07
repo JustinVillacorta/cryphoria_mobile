@@ -4,13 +4,11 @@ import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.
 import 'package:cryphoria_mobile/features/data/data_sources/AuthRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/AuthRepositoryImpl.dart';
-import 'package:cryphoria_mobile/features/data/repositories_impl/walletRepositoryimpl.dart';
-import 'package:cryphoria_mobile/features/data/services/wallet_connector_service.dart';
+import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
+import 'package:cryphoria_mobile/features/data/services/private_key_storage.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
-import 'package:cryphoria_mobile/features/domain/repositories/wallet_repository.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Register/register_use_case.dart';
-import 'package:cryphoria_mobile/features/domain/usecases/wallet/wallet_usecase.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
@@ -30,12 +28,8 @@ Future<void> init() async {
   sl.registerLazySingleton<AuthLocalDataSource>(() => AuthLocalDataSourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton(() => DioClient(localDataSource: sl(), dio: Dio()));
 
-  // Wallet connector service
-  sl.registerSingletonAsync<WalletConnectorService>(
-    () async => WalletConnectorService.create(
-      projectId: 'a6ae708b14c911a7920025033c8a5a99',
-    ),
-  );
+  // Wallet services
+  sl.registerLazySingleton<PrivateKeyStorage>(() => PrivateKeyStorage());
 
   String _baseUrl() {
     if (Platform.isAndroid) {
@@ -76,22 +70,14 @@ Future<void> init() async {
     ),
   );
 
-  sl.registerLazySingleton<WalletRepository>(
-    () => WalletRepositoryImpl(remoteDataSource: sl()),
-  );
+    // Wallet service depends on remote data source and storage
+    sl.registerLazySingleton<WalletService>(() => WalletService(
+          remoteDataSource: sl(),
+          storage: sl(),
+        ));
 
-  // Wallet use-cases
-  sl.registerLazySingleton(() => GetWalletsUseCase(sl()));
-  sl.registerLazySingleton(() => ConnectWalletUseCase(sl()));  // <-- add this
-
-  // Wallet ViewModel now takes two use-cases
-  sl.registerLazySingleton(
-    () => WalletViewModel(
-      getWalletsUseCase: sl(),
-      connectWalletUseCase: sl(),
-      walletConnectorService: sl(),
-    ),
-  );
+  // Wallet ViewModel
+  sl.registerLazySingleton(() => WalletViewModel(walletService: sl()));
 }
 
 

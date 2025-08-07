@@ -165,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Center(child: CircularProgressIndicator()),
                     );
                   }
-                  if (_walletViewModel.wallets.isEmpty) {
+                  if (_walletViewModel.wallet == null) {
                     return SizedBox(
                       height: 180,
                       child: Center(
@@ -176,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   }
-                  final wallet = _walletViewModel.wallets.first;
+                  final wallet = _walletViewModel.wallet!;
                   const rate = 171666.67;
                   final converted = (wallet.balance * rate).toStringAsFixed(2);
                   return WalletCard(
@@ -829,43 +829,39 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showConnectWalletDialog() async {
-    final walletType = await showDialog<String>(
+    final controller = TextEditingController();
+    final shouldConnect = await showDialog<bool>(
       context: context,
       builder: (context) {
-        return SimpleDialog(
-          title: const Text('Connect Wallet'),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, 'metamask'),
-              child: const Text('MetaMask'),
+        return AlertDialog(
+          title: const Text('Enter private key'),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            decoration: const InputDecoration(labelText: 'Private key'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
             ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, 'coinbase'),
-              child: const Text('Coinbase'),
-            ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, 'trust_wallet'),
-              child: const Text('Trust Wallet'),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Connect'),
             ),
           ],
         );
       },
     );
 
-    if (walletType != null) {
+    if (shouldConnect == true) {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
       try {
-        final connectionData =
-            await _walletViewModel.initiateWalletConnect(walletType);
-        await _walletViewModel.connectWallet(
-          walletType: walletType,
-          address: connectionData['address'] ?? '',
-          signature: connectionData['signature'] ?? '',
-        );
+        await _walletViewModel.connect(controller.text);
         setState(() {});
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
