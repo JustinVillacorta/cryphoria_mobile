@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/domain/entities/payroll_history.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/fake_payroll_data.dart';
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 import '../../../widgets/invoice_detail_card.dart';
 import '../../../widgets/glass_payroll_history_item.dart';
@@ -48,6 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
     _walletViewModel = sl<WalletViewModel>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (await sl<WalletService>().hasStoredWallet()) {
+        await _walletViewModel.reconnect();
+      }
+    });
   }
 
   @override
