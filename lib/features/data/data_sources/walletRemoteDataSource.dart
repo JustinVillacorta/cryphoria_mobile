@@ -101,7 +101,7 @@ class WalletRemoteDataSource {
           response.data['balance'] ?? response.data['data']?['balance'] ?? 0;
       return (balance as num).toDouble();
     } on DioError catch (e) {
-      if (e.response?.statusCode == 404) {
+      if (e.response?.statusCode == 403) {
         throw WalletNotFoundException();
       }
       throw Exception('Failed to load balance: ${e.response?.statusCode}');

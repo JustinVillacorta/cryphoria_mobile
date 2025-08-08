@@ -15,7 +15,7 @@ class DioClient {
     this.dio.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) async {
       final token = await localDataSource.getToken();
       if (token != null) {
-        options.headers['Authorization'] = 'Bearer $token';
+        options.headers['Authorization'] = 'Token $token';
       }
       handler.next(options);
     }));
