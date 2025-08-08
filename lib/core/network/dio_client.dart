@@ -19,5 +19,15 @@ class DioClient {
       }
       handler.next(options);
     }));
+    this.dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+      requestHeader: true,
+      responseHeader: false,
+      error: true,
+      logPrint: (message) {
+        print('DioClient Log: $message');
+      },
+    ));
   }
 }

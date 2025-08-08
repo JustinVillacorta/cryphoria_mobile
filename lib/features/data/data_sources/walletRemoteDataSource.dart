@@ -31,8 +31,9 @@ class WalletRemoteDataSource {
       );
       final walletsJson = response.data["data"]["wallets"] as List;
       return walletsJson.map((json) => Wallet.fromJson(json)).toList();
-    } on DioError catch (e) {
-      throw Exception("Failed to fetch wallets: ${e.response?.statusCode}");
+    } on DioException catch (e) {
+      final msg = e.response?.data ?? e.message;
+      throw Exception("Failed to fetch wallets: ${e.response?.statusCode} $msg");
     }
   }
 
@@ -42,8 +43,9 @@ class WalletRemoteDataSource {
         baseUrl,
         data: {
           "wallet_name": wallet.name,
-          "private_key": wallet.address,
-          // Include additional fields if needed.
+          // NOTE: This looks wrong; `wallet.address` is not a private key.
+          // Confirm backend contract before sending private keys to server.
+          "private_key": wallet.private_key,
         },
         options: Options(
           headers: {
@@ -52,14 +54,15 @@ class WalletRemoteDataSource {
         ),
       );
       return Wallet.fromJson(response.data["data"]);
-    } on DioError catch (e) {
-      throw Exception("Failed to add wallet: ${e.response?.statusCode}");
+    } on DioException catch (e) {
+      final msg = e.response?.data ?? e.message;
+      throw Exception("Failed to add wallet: ${e.response?.statusCode} $msg");
     }
   }
 
   Future<void> registerWallet({
     required String endpoint,
-    required String walletAddress,
+    required String privateKey,
     required String walletName,
     required String walletType,
   }) async {
@@ -73,13 +76,16 @@ class WalletRemoteDataSource {
           },
         ),
         data: {
-          'address': walletAddress,
+          // Server expects the private key
+          'private_key': privateKey,
           'wallet_name': walletName,
           'wallet_type': walletType,
         },
       );
-    } on DioError catch (e) {
-      throw Exception('Failed to connect wallet: ${e.response?.statusCode}');
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      final status = e.response?.statusCode;
+      throw Exception('Failed to connect wallet: $status $body');
     }
   }
 
@@ -97,15 +103,14 @@ class WalletRemoteDataSource {
           'wallet_address': walletAddress,
         },
       );
-      final balance = response.data['data']?['wallet']?['balances']?['ETH']?
-              ['balance'] ??
-          0;
+      final balance = response.data['data']?['wallet']?['balances']?['ETH']?['balance'] ?? 0;
       return double.tryParse(balance.toString()) ?? 0;
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       if (e.response?.statusCode == 403 || e.response?.statusCode == 404) {
         throw WalletNotFoundException();
       }
-      throw Exception('Failed to load balance: ${e.response?.statusCode}');
+      final msg = e.response?.data ?? e.message;
+      throw Exception('Failed to load balance: ${e.response?.statusCode} $msg');
     }
   }
 }

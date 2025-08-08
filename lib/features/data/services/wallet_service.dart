@@ -18,14 +18,17 @@ class WalletService {
     await storage.saveKey(privateKey);
     final creds = EthPrivateKey.fromHex(privateKey);
     final address = creds.address.hexEip55;
+
     await remoteDataSource.registerWallet(
       endpoint: endpoint,
-      walletAddress: address,
+      privateKey: privateKey, // send private_key to server
       walletName: walletName,
       walletType: walletType,
     );
+
+    // Use address for balance lookup
     final balance = await remoteDataSource.getBalance(address);
-    return Wallet(id: '', name: walletName, address: address, balance: balance);
+    return Wallet(id: '', name: walletName, private_key: privateKey, balance: balance);
   }
 
   Future<bool> hasStoredWallet() async {
@@ -36,11 +39,11 @@ class WalletService {
   Future<Wallet?> reconnect() async {
     final key = await storage.readKey();
     if (key == null || key.isEmpty) return null;
+
     final address = EthPrivateKey.fromHex(key).address.hexEip55;
     try {
       final balance = await remoteDataSource.getBalance(address);
-      return Wallet(
-          id: '', name: 'Stored Wallet', address: address, balance: balance);
+      return Wallet(id: '', name: 'Stored Wallet', private_key: key, balance: balance);
     } on WalletNotFoundException {
       return null;
     }

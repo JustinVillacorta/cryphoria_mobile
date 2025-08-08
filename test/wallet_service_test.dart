@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
-import 'package:web3dart/credentials.dart';
 import 'private_key_storage_test.dart';
 
 class FakeRemote extends WalletRemoteDataSource {
@@ -10,11 +9,11 @@ class FakeRemote extends WalletRemoteDataSource {
   @override
   Future<void> registerWallet({
     required String endpoint,
-    required String walletAddress,
+    required String privateKey,
     required String walletName,
     required String walletType,
   }) async {}
-
+  
   @override
   Future<double> getBalance(String walletAddress) async {
     return 5.0;
@@ -44,8 +43,7 @@ void main() {
       walletName: 'Mobile Wallet',
       walletType: 'Trust Wallet',
     );
-    final expected = EthPrivateKey.fromHex(key).address.hexEip55;
-    expect(wallet.address, expected);
+    expect(wallet.private_key, key);
     expect(wallet.balance, 5.0);
   });
 
@@ -75,4 +73,3 @@ void main() {
     expect(wallet, isNull);
   });
 }
-

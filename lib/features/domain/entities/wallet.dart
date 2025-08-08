@@ -1,13 +1,13 @@
 class Wallet {
   final String id;
   final String name;
-  final String address;
+  final String private_key;
   final double balance;
 
   Wallet({
     required this.id,
     required this.name,
-    required this.address,
+    required this.private_key,
     required this.balance,
   });
 
@@ -15,7 +15,7 @@ class Wallet {
     return Wallet(
       id: json['id'] as String,
       name: json['name'] as String,
-      address: json['address'] as String,
+      private_key: json['private_key'] as String,
       balance: json['balance'] is int
           ? (json['balance'] as int).toDouble()
           : json['balance'] as double,
@@ -26,7 +26,7 @@ class Wallet {
     return {
       'id': id,
       'name': name,
-      'address': address,
+      'private_key': private_key,
       'balance': balance,
     };
   }

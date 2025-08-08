@@ -8,7 +8,7 @@ class WalletCard extends StatelessWidget {
   final String convertedAmount;
   final String currency;
   final VoidCallback? onCurrencyTap;
-  final VoidCallback? onConnectTap;    // ← new
+
 
   const WalletCard({
     super.key,
@@ -16,7 +16,7 @@ class WalletCard extends StatelessWidget {
     required this.convertedAmount,
     required this.currency,
     this.onCurrencyTap,
-    this.onConnectTap,                // ← new
+
   });
 
   @override
@@ -113,16 +113,7 @@ class WalletCard extends StatelessWidget {
             ),
 
             // ← new “Connect Wallet” button
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: onConnectTap,
-                child: const Text(
-                  'Connect Wallet',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
+            
           ],
         ),
       ),
