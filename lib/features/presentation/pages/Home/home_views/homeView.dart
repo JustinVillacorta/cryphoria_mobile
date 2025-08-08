@@ -834,7 +834,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
     );
   }
-
+  
+// Show dialog to connect wallet
   Future<void> _showConnectWalletDialog() async {
     final controller = TextEditingController();
     String selectedWallet = 'MetaMask';
@@ -914,7 +915,7 @@ class _HomeScreenState extends State<HomeScreen> {
           default:
             endpoint = 'connect_trust_wallet/';
         }
-        final walletName = 'Main Trading $selectedWallet';
+        final walletName = selectedWallet;
         await _walletViewModel.connect(
           controller.text,
           endpoint: endpoint,

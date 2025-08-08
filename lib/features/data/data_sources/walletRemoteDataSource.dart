@@ -41,8 +41,8 @@ class WalletRemoteDataSource {
       final response = await dio.post(
         baseUrl,
         data: {
-          "name": wallet.name,
-          "address": wallet.address,
+          "wallet_name": wallet.name,
+          "private_key": wallet.address,
           // Include additional fields if needed.
         },
         options: Options(

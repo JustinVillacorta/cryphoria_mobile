@@ -20,7 +20,6 @@ class _RegisterViewState extends State<RegisterView> {
   @override
   void dispose() {
     _viewModel.dispose();
-    _businessController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -55,11 +54,7 @@ class _RegisterViewState extends State<RegisterView> {
                   style: TextStyle(fontSize: 13, color: Colors.white),
                 ),
                 const SizedBox(height: 30),
-                // Input Fields
-                buildInputField(
-                  'Business Name',
-                  controller: _businessController,
-                ),
+                
                 const SizedBox(height: 16),
                 buildInputField('Username', controller: _usernameController),
                 const SizedBox(height: 16),
@@ -133,13 +128,7 @@ class _RegisterViewState extends State<RegisterView> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                // Social Buttons
-                buildSocialButton(
-                  iconUrl:
-                      'https://img.icons8.com/?size=100&id=Oi106YG9IoLv&format=png&color=000000',
-                  text: 'Connect Metamask',
-                  color: const Color(0xFF1A1A2E),
-                ),
+                
 
                 const SizedBox(height: 30),
                 // Log In redirect
