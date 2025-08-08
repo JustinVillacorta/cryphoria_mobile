@@ -84,24 +84,25 @@ class WalletRemoteDataSource {
   }
 
   Future<double> getBalance(String walletAddress) async {
-    final url = '${baseUrl}get_wallet_balance/';
+    final url = '${baseUrl}get_specific_wallet_balance/';
     try {
-      final response = await dio.get(
+      final response = await dio.post(
         url,
         options: Options(
           headers: {
             "Content-Type": "application/json",
           },
         ),
-        queryParameters: {
+        data: {
           'wallet_address': walletAddress,
         },
       );
-      final balance =
-          response.data['balance'] ?? response.data['data']?['balance'] ?? 0;
-      return (balance as num).toDouble();
+      final balance = response.data['data']?['wallet']?['balances']?['ETH']?
+              ['balance'] ??
+          0;
+      return double.tryParse(balance.toString()) ?? 0;
     } on DioError catch (e) {
-      if (e.response?.statusCode == 403) {
+      if (e.response?.statusCode == 403 || e.response?.statusCode == 404) {
         throw WalletNotFoundException();
       }
       throw Exception('Failed to load balance: ${e.response?.statusCode}');
