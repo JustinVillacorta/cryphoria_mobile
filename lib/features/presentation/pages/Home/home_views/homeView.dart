@@ -837,7 +837,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showConnectWalletDialog() async {
     final controller = TextEditingController();
-    String selectedWallet = 'Trust Wallet';
+    String selectedWallet = 'MetaMask';
 
     final shouldConnect = await showDialog<bool>(
       context: context,
@@ -859,12 +859,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     value: selectedWallet,
                     items: const [
                       DropdownMenuItem(
+                        value: 'MetaMask',
+                        child: Text('MetaMask'),
+                      ),
+                      DropdownMenuItem(
                         value: 'Trust Wallet',
                         child: Text('Trust Wallet'),
                       ),
                       DropdownMenuItem(
-                        value: 'MetaMask',
-                        child: Text('MetaMask'),
+                        value: 'Coinbase',
+                        child: Text('Coinbase'),
                       ),
                     ],
                     onChanged: (value) {
@@ -898,11 +902,19 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
       try {
-        final endpoint = selectedWallet == 'MetaMask'
-            ? 'connect_metamask/'
-            : 'connect_trust_wallet/';
-        final walletName =
-            selectedWallet == 'MetaMask' ? 'MetaMask' : 'Mobile Wallet';
+        String endpoint;
+        switch (selectedWallet) {
+          case 'MetaMask':
+            endpoint = 'connect_metamask/';
+            break;
+          case 'Coinbase':
+            endpoint = 'connect_coinbase/';
+            break;
+          case 'Trust Wallet':
+          default:
+            endpoint = 'connect_trust_wallet/';
+        }
+        final walletName = 'Main Trading $selectedWallet';
         await _walletViewModel.connect(
           controller.text,
           endpoint: endpoint,
