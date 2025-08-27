@@ -1,6 +1,8 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/ApprovalPending/approval_pending_view.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
 class RegisterView extends StatefulWidget {
@@ -84,13 +86,31 @@ class _RegisterViewState extends State<RegisterView> {
                         _emailController.text,
                       );
                       if (!mounted) return;
+                      
                       if (_viewModel.authUser != null) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const LogIn(),
-                          ),
-                        );
+                        // Check if approval is pending (shouldn't happen for registration, but just in case)
+                        if (_viewModel.isApprovalPending) {
+                          // Navigate to approval pending screen
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ApprovalPendingView(
+                                authUser: _viewModel.authUser!,
+                                onRetry: () => {},
+                                onLogout: () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const LogIn()),
+                                ),
+                              ),
+                            ),
+                          );
+                        } else {
+                          // User is approved (normal case for registration), go to main app
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const WidgetTree()),
+                          );
+                        }
                       } else if (_viewModel.error != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

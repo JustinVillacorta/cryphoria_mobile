@@ -1,6 +1,6 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart' as di;
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.purple,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: const LogIn(),
+      home: const AuthWrapper(),
     );
   }
 }

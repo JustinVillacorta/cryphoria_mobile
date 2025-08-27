@@ -1,4 +1,4 @@
-import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
+import 'package:cryphoria_mobile/features/domain/entities/login_response.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 
 /// Use case for registering a new user.
@@ -7,7 +7,7 @@ class Register {
   final AuthRepository repository;
   Register(this.repository);
 
-  Future<AuthUser> execute(String username, String password, String email) {
-    return repository.register(username, password, email);
+  Future<LoginResponse> execute(String username, String password, String email, {String? deviceName, String? deviceId}) {
+    return repository.register(username, password, email, deviceName: deviceName, deviceId: deviceId);
   }
 }

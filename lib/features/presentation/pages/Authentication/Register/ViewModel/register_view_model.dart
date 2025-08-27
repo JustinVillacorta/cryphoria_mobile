@@ -1,29 +1,61 @@
 import 'package:cryphoria_mobile/core/error/exceptions.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
+import 'package:cryphoria_mobile/features/domain/entities/login_response.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Register/register_use_case.dart';
+import 'package:cryphoria_mobile/features/data/services/device_info_service.dart';
 import 'package:flutter/foundation.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final Register registerUseCase;
+  final DeviceInfoService deviceInfoService;
 
   AuthUser? _authUser;
   AuthUser? get authUser => _authUser;
 
+  LoginResponse? _registerResponse;
+  LoginResponse? get registerResponse => _registerResponse;
+
   String? _error;
   String? get error => _error;
 
-  RegisterViewModel({required this.registerUseCase});
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
-  Future<void> register(
-      String username, String password, String email) async {
+  RegisterViewModel({
+    required this.registerUseCase,
+    required this.deviceInfoService,
+  });
+
+  Future<void> register(String username, String password, String email) async {
     try {
-      _authUser = await registerUseCase.execute(username, password, email);
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      // Get device information for registration
+      final deviceName = await deviceInfoService.getDeviceName();
+      final deviceId = await deviceInfoService.getDeviceId();
+
+      _registerResponse = await registerUseCase.execute(
+        username, 
+        password, 
+        email,
+        deviceName: deviceName,
+        deviceId: deviceId,
+      );
+      _authUser = _registerResponse!.data;
       _error = null;
     } on ServerException catch (e) {
       _error = e.message;
     } catch (e) {
-      _error = "Registration failed";
+      _error = "Registration failed: ${e.toString()}";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-    notifyListeners();
   }
+
+  bool get isApprovalPending => _registerResponse?.data.approved == false;
+  
+  String get registerMessage => _registerResponse?.message ?? '';
 }

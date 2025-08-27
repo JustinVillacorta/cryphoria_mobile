@@ -1,6 +1,7 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/Views/register_view.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/ApprovalPending/approval_pending_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
@@ -24,15 +25,49 @@ class _LogInState extends State<LogIn> {
 
   void _onViewModelChanged() async {
     if (_viewModel.authUser != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const WidgetTree()),
-      );
+      // Check if approval is pending
+      if (_viewModel.isApprovalPending) {
+        // Navigate to approval pending screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ApprovalPendingView(
+              authUser: _viewModel.authUser!,
+              onRetry: () => _checkApprovalStatus(),
+              onLogout: () => _logout(),
+            ),
+          ),
+        );
+      } else {
+        // User is approved, go to main app
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const WidgetTree()),
+        );
+      }
     } else if (_viewModel.error != null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(_viewModel.error!)));
     }
+  }
+
+  void _checkApprovalStatus() async {
+    // This will be handled by the ApprovalPendingView's polling mechanism
+    // Just refresh the current state
+    if (_viewModel.authUser != null && !_viewModel.isApprovalPending) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const WidgetTree()),
+      );
+    }
+  }
+
+  void _logout() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LogIn()),
+    );
   }
 
   @override
