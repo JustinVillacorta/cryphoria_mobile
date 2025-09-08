@@ -2,6 +2,7 @@ class AuthUser {
   final String userId;
   final String username;
   final String email;
+  final String role;
   final String token;
   final String sessionId;
   final bool approved;
@@ -12,6 +13,7 @@ class AuthUser {
     required this.userId,
     required this.username,
     required this.email,
+    required this.role,
     required this.token,
     required this.sessionId,
     required this.approved,
@@ -24,6 +26,7 @@ class AuthUser {
       userId: json['user_id'] as String,
       username: json['username'] as String,
       email: json['email'] as String,
+      role: json['role'] as String? ?? 'Employee', // Default to Employee if not provided
       token: json['token'] as String,
       sessionId: json['session_id'] as String,
       approved: json['approved'] as bool,
@@ -37,6 +40,7 @@ class AuthUser {
       'user_id': userId,
       'username': username,
       'email': email,
+      'role': role,
       'token': token,
       'session_id': sessionId,
       'approved': approved,

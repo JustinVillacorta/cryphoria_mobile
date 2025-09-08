@@ -7,6 +7,6 @@ class GetSessions {
   GetSessions(this.repository);
 
   Future<List<UserSession>> execute() async {
-    return await repository.getSessions();
+    return await repository.getTransferableSessions();
   }
 }

@@ -1,10 +1,9 @@
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 
-/// Use case for force logging out the current user.
-/// It interacts with the [AuthRepository] to perform the force logout operation.
-class Logout {
+class LogoutForce {
   final AuthRepository repository;
-  Logout(this.repository);
+
+  LogoutForce(this.repository);
 
   Future<bool> execute() {
     return repository.logoutForce();

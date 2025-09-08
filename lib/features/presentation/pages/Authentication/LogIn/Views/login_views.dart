@@ -3,6 +3,7 @@ import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogI
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/Views/register_view.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/ApprovalPending/approval_pending_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:flutter/material.dart';
 
 class LogIn extends StatefulWidget {
@@ -63,11 +64,23 @@ class _LogInState extends State<LogIn> {
     }
   }
 
-  void _logout() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LogIn()),
-    );
+  void _logout() async {
+    try {
+      // Clear authentication data first to prevent issues
+      final authDataSource = sl<AuthLocalDataSource>();
+      await authDataSource.clearAuthData();
+      print('Login logout: Local authentication data cleared successfully');
+    } catch (e) {
+      print('Login logout: Error clearing authentication data: $e');
+    }
+    
+    // Navigate to login screen
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LogIn()),
+      );
+    }
   }
 
   @override

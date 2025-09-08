@@ -6,6 +6,6 @@ class ApproveSession {
   ApproveSession(this.repository);
 
   Future<bool> execute(String sessionId) async {
-    return await repository.approveSession(sessionId);
+    return await repository.transferMainDevice(sessionId);
   }
 }

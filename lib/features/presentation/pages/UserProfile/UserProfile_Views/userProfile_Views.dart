@@ -48,52 +48,55 @@ class _userProfileState extends State<userProfile> {
         ),
       );
 
-      // Call API logout endpoint
-      final logoutUseCase = sl<Logout>();
-      final success = await logoutUseCase.execute();
+      // ALWAYS clear local data first (most important for UX)
+      final authDataSource = sl<AuthLocalDataSource>();
+      await authDataSource.clearAuthData();
+      print('Logout: Local authentication data cleared');
+
+      // Then attempt API logout (best effort)
+      try {
+        final logoutUseCase = sl<Logout>();
+        final success = await logoutUseCase.execute();
+        
+        if (success) {
+          print('Logout: API logout successful');
+        } else {
+          print('Logout: API logout failed, but local data already cleared');
+        }
+      } catch (apiError) {
+        print('Logout: API logout error: $apiError, but local data already cleared');
+        // Don't rethrow - local logout is more important than API logout
+      }
       
       // Close loading indicator
       if (mounted) Navigator.of(context).pop();
       
-      if (success) {
-        // Navigate to login screen
-        if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const LogIn()),
-            (route) => false,
-          );
-        }
-      } else {
-        // Show error message but still clear local data and navigate
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Logout failed, but local session cleared'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const LogIn()),
-            (route) => false,
-          );
-        }
+      // Always navigate to login screen (local data is cleared)
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LogIn()),
+          (route) => false,
+        );
       }
     } catch (e) {
       // Close loading indicator
       if (mounted) Navigator.of(context).pop();
       
-      // Show error but still clear local data
-      print('Logout error: $e');
-      final authDataSource = sl<AuthLocalDataSource>();
-      await authDataSource.clearAuthData();
+      // Fallback: ensure local data is cleared even if something went wrong above
+      try {
+        final authDataSource = sl<AuthLocalDataSource>();
+        await authDataSource.clearAuthData();
+        print('Logout: Fallback local data clear completed');
+      } catch (clearError) {
+        print('Logout: Critical error - could not clear local data: $clearError');
+      }
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Logout error: ${e.toString()}, but local session cleared'),
-            backgroundColor: Colors.red,
+            content: Text('Logout completed with issues: ${e.toString()}'),
+            backgroundColor: Colors.orange,
           ),
         );
         Navigator.pushAndRemoveUntil(

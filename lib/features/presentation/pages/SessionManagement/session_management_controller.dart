@@ -19,6 +19,7 @@ class SessionManagementController {
     required this.viewModel,
   });
 
+  // Legacy methods for backward compatibility with existing views
   Future<void> loadSessions() async {
     try {
       viewModel.setLoading(true);
@@ -71,6 +72,29 @@ class SessionManagementController {
     } catch (e) {
       _showMessage('Failed to revoke other sessions: ${e.toString()}');
     }
+  }
+
+  // New backend-aligned methods (delegate to legacy for now)
+  Future<void> loadTransferableSessions() async {
+    await loadSessions();
+  }
+
+  Future<void> transferMainDeviceToSession(String sessionId) async {
+    await approveSessionById(sessionId);
+  }
+
+  Future<bool> confirmUserPassword(String password) async {
+    _showMessage('Password confirmation not implemented');
+    return false;
+  }
+
+  Future<Map<String, dynamic>> checkLogoutStatus() async {
+    _showMessage('Logout status check not implemented');
+    return {'success': false, 'message': 'Not implemented'};
+  }
+
+  Future<void> forceLogout() async {
+    _showMessage('Force logout not implemented');
   }
 
   void _showMessage(String message) {

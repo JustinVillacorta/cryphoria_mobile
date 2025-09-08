@@ -78,46 +78,31 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
           as _i4.Future<_i2.LoginResponse>);
 
   @override
-  _i4.Future<_i2.LoginResponse> register(
-    String? username,
-    String? password,
-    String? email, {
-    String? deviceName,
-    String? deviceId,
-  }) =>
+  _i4.Future<Map<String, dynamic>> logoutCheck() =>
       (super.noSuchMethod(
-            Invocation.method(
-              #register,
-              [username, password, email],
-              {#deviceName: deviceName, #deviceId: deviceId},
+            Invocation.method(#logoutCheck, []),
+            returnValue: _i4.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
             ),
-            returnValue: _i4.Future<_i2.LoginResponse>.value(
-              _FakeLoginResponse_0(
-                this,
-                Invocation.method(
-                  #register,
-                  [username, password, email],
-                  {#deviceName: deviceName, #deviceId: deviceId},
-                ),
-              ),
-            ),
-            returnValueForMissingStub: _i4.Future<_i2.LoginResponse>.value(
-              _FakeLoginResponse_0(
-                this,
-                Invocation.method(
-                  #register,
-                  [username, password, email],
-                  {#deviceName: deviceName, #deviceId: deviceId},
-                ),
-              ),
+            returnValueForMissingStub: _i4.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
             ),
           )
-          as _i4.Future<_i2.LoginResponse>);
+          as _i4.Future<Map<String, dynamic>>);
 
   @override
-  _i4.Future<List<_i5.UserSession>> getSessions() =>
+  _i4.Future<bool> logoutForce() =>
       (super.noSuchMethod(
-            Invocation.method(#getSessions, []),
+            Invocation.method(#logoutForce, []),
+            returnValue: _i4.Future<bool>.value(false),
+            returnValueForMissingStub: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
+
+  @override
+  _i4.Future<List<_i5.UserSession>> getTransferableSessions() =>
+      (super.noSuchMethod(
+            Invocation.method(#getTransferableSessions, []),
             returnValue: _i4.Future<List<_i5.UserSession>>.value(
               <_i5.UserSession>[],
             ),
@@ -128,36 +113,9 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
           as _i4.Future<List<_i5.UserSession>>);
 
   @override
-  _i4.Future<bool> approveSession(String? sessionId) =>
+  _i4.Future<bool> transferMainDevice(String? sessionId) =>
       (super.noSuchMethod(
-            Invocation.method(#approveSession, [sessionId]),
-            returnValue: _i4.Future<bool>.value(false),
-            returnValueForMissingStub: _i4.Future<bool>.value(false),
-          )
-          as _i4.Future<bool>);
-
-  @override
-  _i4.Future<bool> revokeSession(String? sessionId) =>
-      (super.noSuchMethod(
-            Invocation.method(#revokeSession, [sessionId]),
-            returnValue: _i4.Future<bool>.value(false),
-            returnValueForMissingStub: _i4.Future<bool>.value(false),
-          )
-          as _i4.Future<bool>);
-
-  @override
-  _i4.Future<bool> revokeOtherSessions() =>
-      (super.noSuchMethod(
-            Invocation.method(#revokeOtherSessions, []),
-            returnValue: _i4.Future<bool>.value(false),
-            returnValueForMissingStub: _i4.Future<bool>.value(false),
-          )
-          as _i4.Future<bool>);
-
-  @override
-  _i4.Future<bool> logout() =>
-      (super.noSuchMethod(
-            Invocation.method(#logout, []),
+            Invocation.method(#transferMainDevice, [sessionId]),
             returnValue: _i4.Future<bool>.value(false),
             returnValueForMissingStub: _i4.Future<bool>.value(false),
           )
@@ -167,6 +125,15 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
   _i4.Future<bool> confirmPassword(String? password) =>
       (super.noSuchMethod(
             Invocation.method(#confirmPassword, [password]),
+            returnValue: _i4.Future<bool>.value(false),
+            returnValueForMissingStub: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
+
+  @override
+  _i4.Future<bool> validateSession() =>
+      (super.noSuchMethod(
+            Invocation.method(#validateSession, []),
             returnValue: _i4.Future<bool>.value(false),
             returnValueForMissingStub: _i4.Future<bool>.value(false),
           )

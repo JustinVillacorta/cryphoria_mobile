@@ -3,6 +3,7 @@ import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogI
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/ApprovalPending/approval_pending_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:flutter/material.dart';
 
 class RegisterView extends StatefulWidget {
@@ -97,10 +98,24 @@ class _RegisterViewState extends State<RegisterView> {
                               builder: (_) => ApprovalPendingView(
                                 authUser: _viewModel.authUser!,
                                 onRetry: () => {},
-                                onLogout: () => Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const LogIn()),
-                                ),
+                                onLogout: () async {
+                                  try {
+                                    // Clear authentication data first to prevent issues
+                                    final authDataSource = sl<AuthLocalDataSource>();
+                                    await authDataSource.clearAuthData();
+                                    print('Register logout: Local authentication data cleared successfully');
+                                  } catch (e) {
+                                    print('Register logout: Error clearing authentication data: $e');
+                                  }
+                                  
+                                  // Navigate to login screen
+                                  if (mounted) {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const LogIn()),
+                                    );
+                                  }
+                                },
                               ),
                             ),
                           );

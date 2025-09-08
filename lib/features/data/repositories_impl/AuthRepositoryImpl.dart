@@ -20,35 +20,20 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<LoginResponse> register(String username, String password, String email, {String? deviceName, String? deviceId}) async {
-    final loginResponse = await remoteDataSource.register(username, password, email, deviceName: deviceName, deviceId: deviceId);
-    await localDataSource.cacheAuthUser(loginResponse.data);
-    return loginResponse;
+  Future<LoginResponse> register(String username, String password, String email, {String? role, String? deviceName, String? deviceId}) async {
+    final registerResponse = await remoteDataSource.register(username, password, email, role: role, deviceName: deviceName, deviceId: deviceId);
+    await localDataSource.cacheAuthUser(registerResponse.data);
+    return registerResponse;
   }
 
   @override
-  Future<List<UserSession>> getSessions() async {
-    return await remoteDataSource.getSessions();
+  Future<Map<String, dynamic>> logoutCheck() async {
+    return await remoteDataSource.logoutCheck();
   }
 
   @override
-  Future<bool> approveSession(String sessionId) async {
-    return await remoteDataSource.approveSession(sessionId);
-  }
-
-  @override
-  Future<bool> revokeSession(String sessionId) async {
-    return await remoteDataSource.revokeSession(sessionId);
-  }
-
-  @override
-  Future<bool> revokeOtherSessions() async {
-    return await remoteDataSource.revokeOtherSessions();
-  }
-
-  @override
-  Future<bool> logout() async {
-    final success = await remoteDataSource.logout();
+  Future<bool> logoutForce() async {
+    final success = await remoteDataSource.logoutForce();
     if (success) {
       await localDataSource.clearAuthData();
     }
@@ -56,8 +41,23 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<List<UserSession>> getTransferableSessions() async {
+    return await remoteDataSource.getTransferableSessions();
+  }
+
+  @override
+  Future<bool> transferMainDevice(String sessionId) async {
+    return await remoteDataSource.transferMainDevice(sessionId);
+  }
+
+  @override
   Future<bool> confirmPassword(String password) async {
     return await remoteDataSource.confirmPassword(password);
+  }
+
+  @override
+  Future<bool> validateSession() async {
+    return await remoteDataSource.validateSession();
   }
 
   @override

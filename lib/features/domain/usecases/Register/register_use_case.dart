@@ -7,7 +7,7 @@ class Register {
   final AuthRepository repository;
   Register(this.repository);
 
-  Future<LoginResponse> execute(String username, String password, String email, {String? deviceName, String? deviceId}) {
-    return repository.register(username, password, email, deviceName: deviceName, deviceId: deviceId);
+  Future<LoginResponse> execute(String username, String password, String email, {String? role, String? deviceName, String? deviceId}) {
+    return repository.register(username, password, email, role: role, deviceName: deviceName, deviceId: deviceId);
   }
 }
