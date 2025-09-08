@@ -24,8 +24,8 @@ class DioClient {
     this.dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         // Don't add auth token to login/register endpoints
-        final isAuthEndpoint = options.path.contains('/auth/login/') || 
-                               options.path.contains('/auth/register/');
+        final isAuthEndpoint = options.path.contains('/api/auth/login/') || 
+                               options.path.contains('/api/auth/register/');
         
         if (!isAuthEndpoint) {
           final token = await localDataSource.getToken();
