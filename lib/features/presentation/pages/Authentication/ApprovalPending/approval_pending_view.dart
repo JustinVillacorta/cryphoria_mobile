@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../domain/entities/auth_user.dart';
 import '../../../../../dependency_injection/di.dart';
 import '../../../../domain/usecases/Session/get_sessions_usecase.dart';
+import '../../../../data/services/device_approval_cache.dart';
+import '../../../../data/services/device_info_service.dart';
 import '../../../widgets/widget_tree.dart';
 
 class ApprovalPendingView extends StatefulWidget {
@@ -24,11 +26,15 @@ class ApprovalPendingView extends StatefulWidget {
 class _ApprovalPendingViewState extends State<ApprovalPendingView> {
   Timer? _pollingTimer;
   bool _isChecking = false;
+  bool? _wasPreviouslyApproved;
   final GetSessions _getSessions = sl<GetSessions>();
+  final DeviceApprovalCache _deviceApprovalCache = sl<DeviceApprovalCache>();
+  final DeviceInfoService _deviceInfoService = sl<DeviceInfoService>();
 
   @override
   void initState() {
     super.initState();
+    _checkIfPreviouslyApproved();
     _startPolling();
   }
 
@@ -43,6 +49,28 @@ class _ApprovalPendingViewState extends State<ApprovalPendingView> {
     _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _checkApprovalStatus();
     });
+  }
+
+  Future<void> _checkIfPreviouslyApproved() async {
+    try {
+      final deviceId = await _deviceInfoService.getDeviceId();
+      final wasApproved = await _deviceApprovalCache.isDeviceApproved(
+        widget.authUser.username, 
+        deviceId
+      );
+      
+      if (mounted) {
+        setState(() {
+          _wasPreviouslyApproved = wasApproved;
+        });
+      }
+      
+      if (wasApproved) {
+        print('ApprovalPendingView: This device was previously approved');
+      }
+    } catch (e) {
+      print('ApprovalPendingView: Error checking previous approval: $e');
+    }
   }
 
   Future<void> _checkApprovalStatus() async {
@@ -126,7 +154,9 @@ class _ApprovalPendingViewState extends State<ApprovalPendingView> {
                 
                 // Message
                 Text(
-                  'Your device login is pending approval from another authorized device.',
+                  _wasPreviouslyApproved == true
+                    ? 'This device was previously approved but now requires re-approval for security reasons. Please approve this session from another authorized device.'
+                    : 'Your device login is pending approval from another authorized device.',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Colors.grey[300],
                   ),

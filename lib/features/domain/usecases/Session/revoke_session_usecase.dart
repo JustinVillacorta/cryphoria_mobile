@@ -6,6 +6,6 @@ class RevokeSession {
   RevokeSession(this.repository);
 
   Future<bool> execute(String sessionId) async {
-    return await repository.revokeSession(sessionId);
+    throw UnimplementedError('Revoke session functionality is not available in the current backend API');
   }
 }

@@ -6,6 +6,6 @@ class RevokeOtherSessions {
   RevokeOtherSessions(this.repository);
 
   Future<bool> execute() async {
-    return await repository.revokeOtherSessions();
+    throw UnimplementedError('Revoke other sessions functionality is not available in the current backend API');
   }
 }

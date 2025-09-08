@@ -11,12 +11,17 @@ import 'package:cryphoria_mobile/features/data/services/device_approval_cache.da
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_check_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_force_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Register/register_use_case.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Session/get_sessions_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Session/get_transferable_sessions_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Session/transfer_main_device_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Session/approve_session_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Session/revoke_session_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Session/revoke_other_sessions_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Session/confirm_password_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Session/validate_session_usecase.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
@@ -77,15 +82,20 @@ Future<void> init() async {
     () => AuthRepositoryImpl(sl<AuthRemoteDataSource>(), sl<AuthLocalDataSource>()),
   );
 
-  // Use cases
+  // Use cases - aligned with backend API
   sl.registerLazySingleton(() => Login(sl<AuthRepository>()));
   sl.registerLazySingleton(() => Logout(sl<AuthRepository>()));
   sl.registerLazySingleton(() => Register(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => LogoutCheck(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => LogoutForce(sl<AuthRepository>()));
   sl.registerLazySingleton(() => GetSessions(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => GetTransferableSessions(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => TransferMainDevice(sl<AuthRepository>()));
   sl.registerLazySingleton(() => ApproveSession(sl<AuthRepository>()));
   sl.registerLazySingleton(() => RevokeSession(sl<AuthRepository>()));
   sl.registerLazySingleton(() => RevokeOtherSessions(sl<AuthRepository>()));
   sl.registerLazySingleton(() => ConfirmPassword(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => ValidateSession(sl<AuthRepository>()));
 
   // ViewModels
   sl.registerFactory(() => LoginViewModel(

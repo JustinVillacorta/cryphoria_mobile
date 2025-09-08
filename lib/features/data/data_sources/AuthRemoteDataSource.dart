@@ -5,15 +5,15 @@ import 'package:dio/dio.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponse> login(String username, String password, {String? deviceName, String? deviceId});
-  Future<LoginResponse> register(String username, String password, String email, {String? deviceName, String? deviceId});
+  Future<LoginResponse> register(String username, String password, String email, {String? role, String? deviceName, String? deviceId});
   
-  // Session management
-  Future<List<UserSession>> getSessions();
-  Future<bool> approveSession(String sessionId);
-  Future<bool> revokeSession(String sessionId);
-  Future<bool> revokeOtherSessions();
-  Future<bool> logout();
+  // Session management - aligned with backend API
+  Future<Map<String, dynamic>> logoutCheck(); // Check if safe logout is possible
+  Future<bool> logoutForce(); // Force logout without transfer check
+  Future<List<UserSession>> getTransferableSessions(); // List transferable sessions
+  Future<bool> transferMainDevice(String sessionId); // Transfer main device privileges
   Future<bool> confirmPassword(String password);
+  Future<bool> validateSession(); // Session validation endpoint
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -61,7 +61,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<LoginResponse> register(String username, String password, String email, {String? deviceName, String? deviceId}) async {
+  Future<LoginResponse> register(String username, String password, String email, {String? role, String? deviceName, String? deviceId}) async {
     try {
       final data = {
         'username': username,
@@ -69,7 +69,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'email': email,
       };
       
-      // Add device info to request body if provided (in addition to headers)
+      // Add role if provided (defaults to "Employee" as per backend)
+      if (role != null) {
+        data['role'] = role;
+      }
+      
+      // Add device info to request body if provided
       if (deviceName != null) {
         data['device_name'] = deviceName;
       }
@@ -86,22 +91,56 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       print('Register response code: ${response.statusCode}');
       print('Register response body: ${response.data}');
 
-      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
-        return LoginResponse.fromJson(response.data);
+      if (response.statusCode == 201) {
+        // Registration successful, return user data
+        // Note: Backend returns different format for register vs login
+        return LoginResponse.fromJson({
+          'success': true,
+          'message': 'Registration successful',
+          'data': response.data
+        });
       }
       
       throw ServerException(
-        response.data['detail']?.toString() ?? 'Registration failed with status ${response.statusCode}'
+        response.data['error']?.toString() ?? 'Registration failed with status ${response.statusCode}'
       );
     } on DioException catch (e) {
       print('Register DioException: ${e.response?.statusCode} - ${e.response?.data}');
-      final message = e.response?.data['detail']?.toString() ?? 'Registration failed'; 
+      final message = e.response?.data['error']?.toString() ?? 'Registration failed'; 
       throw ServerException(message);
     }
   }
 
   @override
-  Future<List<UserSession>> getSessions() async {
+  Future<Map<String, dynamic>> logoutCheck() async {
+    try {
+      final response = await dio.post('$baseUrl/api/auth/logout/');
+      
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+      
+      throw ServerException('Logout check failed');
+    } on DioException catch (e) {
+      final message = e.response?.data['detail']?.toString() ?? 'Logout check failed';
+      throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<bool> logoutForce() async {
+    try {
+      final response = await dio.post('$baseUrl/api/auth/logout/');
+      
+      return response.statusCode == 200 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final message = e.response?.data['detail']?.toString() ?? 'Force logout failed';
+      throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<List<UserSession>> getTransferableSessions() async {
     try {
       final response = await dio.get('$baseUrl/api/auth/sessions/');
       
@@ -112,15 +151,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return sessions;
       }
       
-      throw ServerException('Failed to fetch sessions');
+      throw ServerException('Failed to fetch transferable sessions');
     } on DioException catch (e) {
-      final message = e.response?.data['detail']?.toString() ?? 'Failed to fetch sessions';
+      final message = e.response?.data['detail']?.toString() ?? 'Failed to fetch transferable sessions';
       throw ServerException(message);
     }
   }
 
   @override
-  Future<bool> approveSession(String sessionId) async {
+  Future<bool> transferMainDevice(String sessionId) async {
     try {
       final response = await dio.post(
         '$baseUrl/api/auth/sessions/approve/',
@@ -129,46 +168,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       
       return response.statusCode == 200 && response.data['success'] == true;
     } on DioException catch (e) {
-      final message = e.response?.data['detail']?.toString() ?? 'Failed to approve session';
-      throw ServerException(message);
-    }
-  }
-
-  @override
-  Future<bool> revokeSession(String sessionId) async {
-    try {
-      final response = await dio.post(
-        '$baseUrl/api/auth/sessions/revoke/',
-        data: {'session_id': sessionId},
-      );
-      
-      return response.statusCode == 200 && response.data['success'] == true;
-    } on DioException catch (e) {
-      final message = e.response?.data['detail']?.toString() ?? 'Failed to revoke session';
-      throw ServerException(message);
-    }
-  }
-
-  @override
-  Future<bool> revokeOtherSessions() async {
-    try {
-      final response = await dio.post('$baseUrl/api/auth/sessions/revoke-others/');
-      
-      return response.statusCode == 200 && response.data['success'] == true;
-    } on DioException catch (e) {
-      final message = e.response?.data['detail']?.toString() ?? 'Failed to revoke other sessions';
-      throw ServerException(message);
-    }
-  }
-
-  @override
-  Future<bool> logout() async {
-    try {
-      final response = await dio.post('$baseUrl/api/auth/logout/');
-      
-      return response.statusCode == 200 && response.data['success'] == true;
-    } on DioException catch (e) {
-      final message = e.response?.data['detail']?.toString() ?? 'Logout failed';
+      final message = e.response?.data['detail']?.toString() ?? 'Failed to transfer main device';
       throw ServerException(message);
     }
   }
@@ -184,6 +184,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return response.statusCode == 200 && response.data['success'] == true;
     } on DioException catch (e) {
       final message = e.response?.data['detail']?.toString() ?? 'Password confirmation failed';
+      throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<bool> validateSession() async {
+    try {
+      final response = await dio.get('$baseUrl/api/auth/sessions/validate/');
+      
+      return response.statusCode == 200;
+    } on DioException catch (e) {
+      final message = e.response?.data['detail']?.toString() ?? 'Session validation failed';
       throw ServerException(message);
     }
   }

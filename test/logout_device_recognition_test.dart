@@ -30,35 +30,35 @@ void main() {
 
     test('should logout successfully and call API endpoint', () async {
       // Arrange
-      when(mockAuthRepository.logout()).thenAnswer((_) async => true);
+      when(mockAuthRepository.logoutForce()).thenAnswer((_) async => true);
 
       // Act
       final result = await logoutUseCase.execute();
 
       // Assert
       expect(result, true);
-      verify(mockAuthRepository.logout()).called(1);
+      verify(mockAuthRepository.logoutForce()).called(1);
     });
 
     test('should handle logout failure gracefully', () async {
       // Arrange
-      when(mockAuthRepository.logout()).thenAnswer((_) async => false);
+      when(mockAuthRepository.logoutForce()).thenAnswer((_) async => false);
 
       // Act
       final result = await logoutUseCase.execute();
 
       // Assert
       expect(result, false);
-      verify(mockAuthRepository.logout()).called(1);
+      verify(mockAuthRepository.logoutForce()).called(1);
     });
 
     test('should handle logout API error gracefully', () async {
       // Arrange
-      when(mockAuthRepository.logout()).thenThrow(Exception('Network error'));
+      when(mockAuthRepository.logoutForce()).thenThrow(Exception('Network error'));
 
       // Act & Assert
       expect(() => logoutUseCase.execute(), throwsException);
-      verify(mockAuthRepository.logout()).called(1);
+      verify(mockAuthRepository.logoutForce()).called(1);
     });
 
     test('device should be recognized as approved after logout and login again', () async {
@@ -74,6 +74,7 @@ void main() {
         userId: 'user123',
         username: 'testuser',
         email: 'test@example.com',
+        role: 'Employee',
         token: 'new-token-after-relogin',
         sessionId: 'new-session-id',
         approved: true, // Should be true for previously approved device
@@ -126,6 +127,7 @@ void main() {
         userId: 'user123',
         username: 'testuser',
         email: 'test@example.com',
+        role: 'Employee',
         token: 'pending-token',
         sessionId: 'pending-session-id',
         approved: false, // Should be false for new device
