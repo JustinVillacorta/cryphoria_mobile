@@ -1,4 +1,5 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart' as di;
+import 'package:cryphoria_mobile/features/presentation/pages/Home/home_views/homeView.dart';
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
 
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.purple,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: const AuthWrapper(),
+      home: const HomeView(),
     );
   }
 }

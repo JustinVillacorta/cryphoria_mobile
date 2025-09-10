@@ -25,10 +25,12 @@ import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/s
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/fake_transactions_data.dart';
+
 
 import '../core/network/dio_client.dart';
 
-final sl = GetIt.instance;
+final GetIt sl = GetIt.instance;
 
 Future<void> init() async {
   // Core
@@ -65,6 +67,9 @@ Future<void> init() async {
       dio: sl<DioClient>().dio,
       baseUrl: _baseUrl(),
     ),
+  );
+  sl.registerLazySingleton<FakeTransactionsDataSource>(
+        () => FakeTransactionsDataSource(),
   );
 
   // Repository
@@ -115,8 +120,14 @@ Future<void> init() async {
           storage: sl(),
         ));
 
+
   // Wallet ViewModel
-  sl.registerLazySingleton(() => WalletViewModel(walletService: sl()));
+  sl.registerFactory<WalletViewModel>(
+        () => WalletViewModel(
+      walletService: sl<WalletService>(),
+      transactionsDataSource: sl<FakeTransactionsDataSource>(),
+    ),
+  );
 }
 
 
