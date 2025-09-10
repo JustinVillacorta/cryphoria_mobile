@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/generate_report_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Invest/invest_main_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Audit/audit_contract_main_screen.dart';
 
 class QuickActions extends StatefulWidget {
   const QuickActions({super.key});
@@ -71,7 +72,12 @@ class _QuickActionsState extends State<QuickActions> {
                   onTap: () => showPayrollBottomSheet(context),
                 ),
                 const SizedBox(width: 16),
-                _buildQuickActionItem(Icons.description, 'Audit\nContract', Colors.teal),
+                _buildQuickActionItem(
+                  Icons.description, 
+                  'Audit\nContract', 
+                  Colors.teal,
+                  onTap: () => _navigateToAuditScreen(context),
+                ),
                 const SizedBox(width: 16),
                 _buildQuickActionItem(
                   Icons.bar_chart, 
@@ -213,6 +219,15 @@ class _QuickActionsState extends State<QuickActions> {
       context,
       MaterialPageRoute(
         builder: (context) => const InvestMainScreen(),
+      ),
+    );
+  }
+
+  void _navigateToAuditScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AuditContractMainScreen(),
       ),
     );
   }
