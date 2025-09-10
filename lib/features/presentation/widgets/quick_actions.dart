@@ -2,6 +2,7 @@ import 'package:cryphoria_mobile/features/presentation/widgets/payroll_bottom_sh
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/generate_report_bottom_sheet.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Invest/invest_main_screen.dart';
 
 class QuickActions extends StatefulWidget {
   const QuickActions({super.key});
@@ -78,8 +79,13 @@ class _QuickActionsState extends State<QuickActions> {
                   Colors.green,
                   onTap: () => showGenerateReportBottomSheet(context),
                 ),
+                _buildQuickActionItem(
+                  Icons.trending_up,
+                  'Invest\nSmart',
+                  Colors.purple,
+                  onTap: () => _navigateToInvestScreen(context),
+                ),
                 const SizedBox(width: 16),
-                _buildQuickActionItem(Icons.trending_up, 'Invest', Colors.purple),
               ],
             ),
           ),
@@ -199,6 +205,15 @@ class _QuickActionsState extends State<QuickActions> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const GenerateReportBottomSheet(),
+    );
+  }
+
+  void _navigateToInvestScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const InvestMainScreen(),
+      ),
     );
   }
 }
