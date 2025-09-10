@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Home/home_viewmodel/home_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 
 class RecentTransactions extends StatelessWidget {
   const RecentTransactions({super.key});

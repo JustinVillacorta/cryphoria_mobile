@@ -2,7 +2,7 @@ import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Home/home_viewmodel/home_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/quick_actions.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/recent_transactions.dart';
