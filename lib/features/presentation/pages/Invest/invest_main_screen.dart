@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Invest/industry_selection_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Invest/investment_portfolio_screen.dart';
 
 class InvestMainScreen extends StatelessWidget {
   const InvestMainScreen({super.key});
@@ -105,10 +106,10 @@ class InvestMainScreen extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Navigate to portfolio view
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Portfolio view coming soon!'),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const InvestmentPortfolioScreen(),
                           ),
                         );
                       },

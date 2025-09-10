@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/generate_report_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Invest/invest_main_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Invest/investment_portfolio_screen.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Audit/audit_contract_main_screen.dart';
 
 class QuickActions extends StatefulWidget {
@@ -90,6 +91,13 @@ class _QuickActionsState extends State<QuickActions> {
                   'Invest\nSmart',
                   Colors.purple,
                   onTap: () => _navigateToInvestScreen(context),
+                ),
+                const SizedBox(width: 16),
+                _buildQuickActionItem(
+                  Icons.pie_chart,
+                  'View\nPortfolio',
+                  Colors.blue,
+                  onTap: () => _navigateToPortfolioScreen(context),
                 ),
                 const SizedBox(width: 16),
               ],
@@ -228,6 +236,15 @@ class _QuickActionsState extends State<QuickActions> {
       context,
       MaterialPageRoute(
         builder: (context) => const AuditContractMainScreen(),
+      ),
+    );
+  }
+
+  void _navigateToPortfolioScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const InvestmentPortfolioScreen(),
       ),
     );
   }
