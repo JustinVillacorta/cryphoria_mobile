@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.purple,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: const AuthWrapper(),
+     home: const AuthWrapper(),
     );
   }
 }

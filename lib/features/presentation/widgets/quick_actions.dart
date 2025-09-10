@@ -1,6 +1,7 @@
 import 'package:cryphoria_mobile/features/presentation/widgets/payroll_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payment_bottom_sheet.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/generate_report_bottom_sheet.dart';
 
 class QuickActions extends StatefulWidget {
   const QuickActions({super.key});
@@ -71,7 +72,12 @@ class _QuickActionsState extends State<QuickActions> {
                 const SizedBox(width: 16),
                 _buildQuickActionItem(Icons.description, 'Audit\nContract', Colors.teal),
                 const SizedBox(width: 16),
-                _buildQuickActionItem(Icons.bar_chart, 'Generate\nReport', Colors.green),
+                _buildQuickActionItem(
+                  Icons.bar_chart, 
+                  'Generate\nReport', 
+                  Colors.green,
+                  onTap: () => showGenerateReportBottomSheet(context),
+                ),
                 const SizedBox(width: 16),
                 _buildQuickActionItem(Icons.trending_up, 'Invest', Colors.purple),
               ],
@@ -185,6 +191,14 @@ class _QuickActionsState extends State<QuickActions> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => PayrollBottomSheet(),
+    );
+  }
+  void showGenerateReportBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const GenerateReportBottomSheet(),
     );
   }
 }
