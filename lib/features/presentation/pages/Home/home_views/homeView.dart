@@ -123,14 +123,14 @@ class _HomeViewState extends State<HomeView> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   WalletCard(),
-                  SizedBox(height: 24),
-                  QuickActions(),
-                  SizedBox(height: 24),
-                  RecentTransactions(),
-                  SizedBox(height: 24),
-                  RevenueChart(),
+                  const SizedBox(height: 24),
+                  const QuickActions(),
+                  const SizedBox(height: 24),
+                  const RecentTransactions(),
+                  const SizedBox(height: 24),
+                  const RevenueChart(),
                 ],
               ),
             );

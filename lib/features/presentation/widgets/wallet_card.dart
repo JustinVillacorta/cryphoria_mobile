@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 
-class WalletCard extends StatelessWidget {
+class WalletCard extends StatefulWidget {
   const WalletCard({super.key});
+  
+  @override
+  _WalletCardState createState() => _WalletCardState();
+}
+
+class _WalletCardState extends State<WalletCard> {
+  bool _showUSD = false; // Toggle between PHP and USD
 
   @override
   Widget build(BuildContext context) {
@@ -78,11 +85,48 @@ class WalletCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Current Wallet',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Current Wallet',
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                      const SizedBox(height: 4),
+                      if (viewModel.wallet != null) ...[
+                        Text(
+                          viewModel.wallet!.name,
+                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                        if (viewModel.wallet!.address.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            viewModel.wallet!.displayAddress,
+                            style: const TextStyle(color: Colors.white60, fontSize: 12),
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
+                  if (viewModel.wallet != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        viewModel.wallet!.walletType,
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Container(
@@ -96,25 +140,56 @@ class WalletCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                viewModel.wallet != null ? '${viewModel.wallet!.balance} ETH' : 'No Wallet Connected',
+                viewModel.wallet != null 
+                    ? '${viewModel.wallet!.balance.toStringAsFixed(6)} ETH' 
+                    : 'No Wallet Connected',
                 style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
-              const Text('Converted to', style: TextStyle(color: Colors.white70, fontSize: 12)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Converted to ${_showUSD ? 'USD' : 'PHP'}', 
+                    style: const TextStyle(color: Colors.white70, fontSize: 12)
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _showUSD = !_showUSD),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _showUSD ? 'USD' : 'PHP',
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 2),
-              const Text('12,230 PHP', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+              Text(
+                viewModel.wallet != null 
+                    ? (_showUSD 
+                        ? '\$${viewModel.wallet!.balanceInUSD.toStringAsFixed(2)}'
+                        : '₱${viewModel.wallet!.balanceInPHP.toStringAsFixed(2)}')
+                    : (_showUSD ? '\$0.00' : '₱0.00'),
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 20),
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
-                  onPressed: () => _showConnectWalletDialog(context, viewModel),
+                  onPressed: () => _showWalletOptionsDialog(context, viewModel),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white.withOpacity(0.2),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
-                  child: const Text('Connect Wallet'),
+                  child: Text(viewModel.wallet != null ? 'Wallet Options' : 'Connect Wallet'),
                 ),
               ),
             ],
@@ -122,6 +197,84 @@ class WalletCard extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _showWalletOptionsDialog(BuildContext context, WalletViewModel viewModel) async {
+    if (viewModel.wallet == null) {
+      // No wallet connected, show connect dialog
+      return _showConnectWalletDialog(context, viewModel);
+    }
+
+    // Wallet is connected, show options
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Wallet Options'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.refresh),
+                title: Text('Refresh Balance'),
+                subtitle: Text('Update ETH balance and PHP conversion'),
+                onTap: () => Navigator.pop(context, 'refresh'),
+              ),
+              ListTile(
+                leading: Icon(Icons.swap_horiz),
+                title: Text('Switch Wallet'),
+                subtitle: Text('Connect a different wallet'),
+                onTap: () => Navigator.pop(context, 'switch'),
+              ),
+              ListTile(
+                leading: Icon(Icons.logout, color: Colors.red),
+                title: Text('Disconnect Wallet'),
+                subtitle: Text('Remove wallet connection'),
+                onTap: () => Navigator.pop(context, 'disconnect'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null) {
+      switch (result) {
+        case 'refresh':
+          await viewModel.refreshWallet();
+          if (viewModel.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to refresh: ${viewModel.error}')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Wallet balance refreshed')),
+            );
+          }
+          break;
+        case 'switch':
+          await _showConnectWalletDialog(context, viewModel);
+          break;
+        case 'disconnect':
+          await viewModel.disconnectWallet();
+          if (viewModel.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to disconnect: ${viewModel.error}')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Wallet disconnected')),
+            );
+          }
+          break;
+      }
+    }
   }
 
   Future<void> _showConnectWalletDialog(BuildContext context, WalletViewModel viewModel) async {
@@ -176,11 +329,31 @@ class WalletCard extends StatelessWidget {
     );
 
     if (shouldConnect == true) {
+      // Check if wallet is already connected with same private key
+      if (viewModel.wallet != null && 
+          viewModel.wallet!.private_key == controller.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Wallet already connected!')),
+        );
+        return;
+      }
+      
+      // Show loading dialog
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+        builder: (_) => AlertDialog(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text('Connecting wallet...'),
+            ],
+          ),
+        ),
       );
+      
       try {
         String endpoint;
         switch (selectedWallet) {
@@ -194,18 +367,35 @@ class WalletCard extends StatelessWidget {
           default:
             endpoint = 'connect_trust_wallet/';
         }
+        
         await viewModel.connect(
           controller.text,
           endpoint: endpoint,
           walletName: selectedWallet,
           walletType: selectedWallet,
         );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to connect wallet')),
-        );
-      } finally {
+        
+        // Always dismiss loading dialog first
         Navigator.of(context).pop();
+        
+        // Check if connection was successful
+        if (viewModel.wallet != null && viewModel.error == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Wallet connected successfully!')),
+          );
+        } else if (viewModel.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to connect: ${viewModel.error}')),
+          );
+        }
+      } catch (e) {
+        // Always dismiss loading dialog first
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to connect wallet: $e')),
+        );
       }
     }
   }

@@ -8,6 +8,7 @@ import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/data/services/private_key_storage.dart';
 import 'package:cryphoria_mobile/features/data/services/device_info_service.dart';
 import 'package:cryphoria_mobile/features/data/services/device_approval_cache.dart';
+import 'package:cryphoria_mobile/features/data/services/currency_conversion_service.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_usecase.dart';
@@ -47,6 +48,8 @@ Future<void> init() async {
       () => DeviceInfoServiceImpl());
   sl.registerLazySingleton<DeviceApprovalCache>(
       () => DeviceApprovalCache(storage: sl()));
+  sl.registerLazySingleton<CurrencyConversionService>(
+      () => CurrencyConversionService());
   sl.registerLazySingleton<AuthLocalDataSource>(
       () => AuthLocalDataSourceImpl(secureStorage: sl()));
   sl.registerLazySingleton(() => DioClient(
@@ -128,6 +131,7 @@ Future<void> init() async {
     sl.registerLazySingleton<WalletService>(() => WalletService(
           remoteDataSource: sl(),
           storage: sl(),
+          currencyService: sl(),
         ));
 
 

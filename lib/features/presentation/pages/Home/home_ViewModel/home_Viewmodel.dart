@@ -121,9 +121,44 @@ class WalletViewModel extends ChangeNotifier {
     }
   }
 
-  /// Clears error state
+  /// Clears the current error state
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  /// Refreshes the current wallet balance and PHP conversion
+  Future<void> refreshWallet() async {
+    if (_wallet == null) return;
+    
+    _isLoading = true;
+    notifyListeners();
+    
+    try {
+      // Reconnect to refresh balance and conversion
+      final refreshedWallet = await walletService.reconnect();
+      if (refreshedWallet != null) {
+        _wallet = refreshedWallet;
+      }
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Disconnects the current wallet
+  Future<void> disconnectWallet() async {
+    try {
+      await walletService.disconnect();
+      _wallet = null;
+      _error = null;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
   }
 }
