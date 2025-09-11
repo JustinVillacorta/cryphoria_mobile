@@ -28,6 +28,7 @@ import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Regi
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_controller.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Employee/employee_viewmodel/employee_viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -142,6 +143,9 @@ Future<void> init() async {
       transactionsDataSource: sl<FakeTransactionsDataSource>(),
     ),
   );
+
+  // Employee ViewModel
+  sl.registerFactory<EmployeeViewModel>(() => EmployeeViewModel());
 }
 
 
