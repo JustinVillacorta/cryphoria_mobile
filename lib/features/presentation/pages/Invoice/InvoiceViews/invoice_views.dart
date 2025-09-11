@@ -1,194 +1,376 @@
-import 'dart:ui';
-import 'package:cryphoria_mobile/features/presentation/widgets/summary_glass_card.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/invoice_detail_card.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/refresh_icon.dart';
 import 'package:flutter/material.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Invoice/invoice_views/invoice_detail_screen.dart';
+
+class Invoice {
+  final String id;
+  final String clientName;
+  final String amount;
+  final String status;
+  final String date;
+  final String description;
+
+  Invoice({
+    required this.id,
+    required this.clientName, 
+    required this.amount,
+    required this.status,
+    required this.date,
+    required this.description,
+  });
+}
 
 class InvoiceScreen extends StatefulWidget {
   const InvoiceScreen({super.key});
 
   @override
-  _InvoiceScreenState createState() => _InvoiceScreenState();
+  State<InvoiceScreen> createState() => _InvoiceScreenState();
 }
 
 class _InvoiceScreenState extends State<InvoiceScreen> {
-  int _selectedFilter = 0;
-  final _filters = ['All', 'Last 30 days', 'Custom'];
+  String selectedFilter = 'All';
+  String searchQuery = '';
+  final TextEditingController searchController = TextEditingController();
+  
+  // Sample invoice data that matches your screenshots
+  final List<Invoice> invoices = [
+    Invoice(
+      id: 'INV-2023-004',
+      clientName: 'Tech Solutions Inc.',
+      amount: '\$1,120.00',
+      status: 'Paid',
+      date: 'June 15, 2023',
+      description: 'IT Consulting Services',
+    ),
+    Invoice(
+      id: 'INV-2023-003',
+      clientName: 'Office Depot',
+      amount: '\$350.75',
+      status: 'Paid', 
+      date: 'June 10, 2023',
+      description: 'Office Supplies',
+    ),
+    Invoice(
+      id: 'INV-2023-005',
+      clientName: 'John Smith',
+      amount: '\$2,500.00',
+      status: 'Pending',
+      date: 'June 20, 2023',
+      description: 'Monthly Salary - June 2023',
+    ),
+  ];
 
-  final _invoices = List.generate(
-    10,
-    // Dummy data
-        (i) => {
-      'title': 'Expenses',
-      'description': 'You paid for Payroll. Please view receipt.',
-      'amount': '₱12,95000',
-      'status': 'Paid',
-    },
-  );
+  List<Invoice> get filteredInvoices {
+    List<Invoice> filtered = invoices;
+    
+    // Apply search filter
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered.where((invoice) =>
+        invoice.clientName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+        invoice.id.toLowerCase().contains(searchQuery.toLowerCase())
+      ).toList();
+    }
+    
+    // Apply status filter
+    if (selectedFilter != 'All') {
+      filtered = filtered.where((invoice) => 
+        invoice.status == selectedFilter
+      ).toList();
+    }
+    
+    return filtered;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // ---- blurred radial background ----
-          Positioned(
-            top: -180,
-            left: -100,
-            right: -100,
-            child: Container(
-              height: 300,
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topCenter,
-                  radius: 1.2,
-                  colors: [
-                    Color(0xFF5B50FF),
-                    Color(0xFF7142FF),
-                    Color(0xFF9747FF),
-                    Colors.transparent,
-                  ],
-                  stops: [0.2, 0.4, 0.6, 1.0],
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              const Text(
+                'Invoices',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
                 ),
               ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
-                child: Container(color: Colors.transparent),
+              const SizedBox(height: 8),
+              Text(
+                'Invoices are automatically generated from transactions like payroll, payments sent through "Send Payment", and client payments received.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  height: 1.4,
+                ),
               ),
-            ),
-          ),
+              const SizedBox(height: 24),
 
-          // ---- main content ----
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+              // Search Bar
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search invoices...',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Filter Tabs
+              Row(
+                children: [
+                  _buildFilterTab('All'),
+                  const SizedBox(width: 12),
+                  _buildFilterTab('Paid'),
+                  const SizedBox(width: 12),
+                  _buildFilterTab('Pending'),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Invoice List
+              Expanded(
+                child: filteredInvoices.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.receipt_long,
+                              size: 64,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No invoices found',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Try adjusting your search or filter',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: filteredInvoices.length,
+                        itemBuilder: (context, index) {
+                          final invoice = filteredInvoices[index];
+                          return _buildInvoiceCard(invoice);
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterTab(String filter) {
+    final isSelected = selectedFilter == filter;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedFilter = filter;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF8B5CF6) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF8B5CF6) : Colors.grey[300]!,
+          ),
+        ),
+        child: Text(
+          filter,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInvoiceCard(Invoice invoice) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => InvoiceDetailScreen(invoice: invoice),
+            ),
+          );
+        },
+        child: Row(
+          children: [
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Invoice',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                      Text(
+                        invoice.clientName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
                       ),
-                      GlassRefreshIcon(onTap: () {}),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: invoice.status == 'Paid' 
+                              ? Colors.green[100]
+                              : Colors.orange[100],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          invoice.status,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: invoice.status == 'Paid'
+                                ? Colors.green[700]
+                                : Colors.orange[700],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Two summary cards
+                  const SizedBox(height: 4),
+                  Text(
+                    invoice.id,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Date: ${invoice.date}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                      Text(
+                        invoice.amount,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      Expanded(
-                        child: SummaryGlassCard(
-                          title: 'Total Billed Amount',
-                          value: '₱12,340',
-                          padding: const EdgeInsets.all(20),
+                      Text(
+                        invoice.description,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: SummaryGlassCard(
-                          title: 'Paid Invoices',
-                          value: '10',
-                          padding: const EdgeInsets.all(20),
-                          valueStyle: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => InvoiceDetailScreen(invoice: invoice),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B5CF6),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'View Details',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Segmented control
-                  // inside your Column, replacing the old ToggleButtons:
-                  Center(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final buttonWidth =
-                            constraints.maxWidth / _filters.length;
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white12,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: ToggleButtons(
-                            isSelected: List.generate(
-                              _filters.length,
-                              (i) => i == _selectedFilter,
-                            ),
-                            onPressed: (i) =>
-                                setState(() => _selectedFilter = i),
-                            borderRadius: BorderRadius.circular(20),
-                            borderWidth: 0,
-                            selectedBorderColor: Colors.transparent,
-                            borderColor: Colors.transparent,
-                            splashColor: Colors.transparent,
-                            highlightColor: Colors.transparent,
-
-                            fillColor: const Color(0xFF5B50FF),
-                            selectedColor: Colors.white,
-                            color: Colors.white70,
-                            constraints: BoxConstraints.tightFor(
-                              height: 40,
-                              width: buttonWidth,
-                            ),
-
-                            children: _filters
-                                .map(
-                                  (f) => Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                    ),
-                                    child: Text(f, textAlign: TextAlign.center),
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Scrollable list of invoice items
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: _invoices.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (ctx, idx) {
-                        final inv = _invoices[idx];
-                        return InvoiceItemCard(
-
-                          title: inv['title']!,
-                          description: inv['description']!,
-                          status: inv['status']!,
-                          amount: inv['amount']!,
-                          onViewReceipt: () {
-                            // navigate or show receipt…
-
-                          },
-                        );
-                      },
-                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

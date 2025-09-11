@@ -47,8 +47,8 @@ class CustomNavBar extends StatelessWidget {
               children: [
                 _buildNavItem(CupertinoIcons.house, 0),
                 _buildNavItem(CupertinoIcons.person_2, 1),
-                _buildNavItem(CupertinoIcons.mail, 2), // Changed from doc_text to person_2 for employee management
-                _buildNavItem(CupertinoIcons.chart_bar, 3),
+                _buildNavItem(CupertinoIcons.mail, 2), // Payroll
+                _buildNavItem(CupertinoIcons.chart_bar, 3), // Invoices  
                 _buildNavItem(CupertinoIcons.person, 4),
               ],
             ),
