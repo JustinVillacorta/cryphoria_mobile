@@ -105,44 +105,93 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen>
 
   Widget _buildProgressIndicator() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
-          _buildTabIndicator('Basic Info', 0),
-          const SizedBox(width: 8),
-          _buildTabIndicator('Employment\nDetails', 1),
-          const SizedBox(width: 8),
-          _buildTabIndicator('Payroll Setup', 2),
+          _buildStepIndicator('Basic Info', 0),
+          _buildConnector(0),
+          _buildStepIndicator('Employment\nDetails', 1),
+          _buildConnector(1),
+          _buildStepIndicator('Payroll Setup', 2),
         ],
       ),
     );
   }
 
-  Widget _buildTabIndicator(String title, int index) {
+  Widget _buildStepIndicator(String title, int index) {
     bool isActive = _currentTabIndex == index;
     bool isCompleted = _currentTabIndex > index;
     
     return Expanded(
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: isActive || isCompleted 
-              ? const Color(0xFF8E24AA) 
-              : const Color(0xFFE5E5E5),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Center(
-          child: Text(
+      flex: 2,
+      child: Column(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isCompleted 
+                  ? const Color(0xFF8E24AA)
+                  : isActive 
+                      ? const Color(0xFF8E24AA)
+                      : const Color(0xFFE5E5E5),
+              border: Border.all(
+                color: isActive && !isCompleted 
+                    ? const Color(0xFF8E24AA)
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: Center(
+              child: isCompleted
+                  ? const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 18,
+                    )
+                  : Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: isActive 
+                            ? Colors.white
+                            : const Color(0xFF9E9E9E),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
             title,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: isActive || isCompleted 
-                  ? Colors.white 
+                  ? const Color(0xFF8E24AA)
                   : const Color(0xFF9E9E9E),
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConnector(int index) {
+    bool isCompleted = _currentTabIndex > index;
+    
+    return Expanded(
+      flex: 1,
+      child: Container(
+        height: 2,
+        margin: const EdgeInsets.only(bottom: 24),
+        decoration: BoxDecoration(
+          color: isCompleted 
+              ? const Color(0xFF8E24AA)
+              : const Color(0xFFE5E5E5),
+          borderRadius: BorderRadius.circular(1),
         ),
       ),
     );
@@ -367,39 +416,65 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen>
               ),
             ),
           ),
-          // Next Button
+          // Bottom Navigation
           Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 20),
-            child: ElevatedButton(
-              onPressed: () {
-                if (_currentTabIndex < 2) {
-                  _tabController.animateTo(_currentTabIndex + 1);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8E24AA),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Next',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF8E24AA),
+                      side: const BorderSide(color: Color(0xFF8E24AA)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 20),
-                ],
-              ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_currentTabIndex < 2) {
+                        _tabController.animateTo(_currentTabIndex + 1);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8E24AA),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
