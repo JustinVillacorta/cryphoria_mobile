@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Audit/contract_setup_screen.dart';
+import '../../../../core/utils/responsive_helper.dart';
+import 'contract_setup_screen.dart';
 
 class AuditContractMainScreen extends StatelessWidget {
   const AuditContractMainScreen({super.key});
@@ -15,18 +16,18 @@ class AuditContractMainScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Smart Audit Contract',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 18,
+            fontSize: context.fontSize(18),
             fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: false,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: context.safePadding(all: 24),
         child: Column(
           children: [
             // Progress indicator
@@ -42,7 +43,7 @@ class AuditContractMainScreen extends StatelessWidget {
               ],
             ),
             
-            const SizedBox(height: 12),
+            SizedBox(height: context.spacing(12)),
             
             // Progress labels
             const Row(
@@ -134,25 +135,39 @@ class AuditContractMainScreen extends StatelessWidget {
   }
 
   Widget _buildProgressStep(int step, bool isActive, bool isCompleted) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: isActive || isCompleted ? Colors.purple : Colors.grey[300],
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: isCompleted
-            ? const Icon(Icons.check, color: Colors.white, size: 18)
-            : Text(
-                '$step',
-                style: TextStyle(
-                  color: isActive ? Colors.white : Colors.grey[600],
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-      ),
+    return Builder(
+      builder: (context) {
+        final stepSize = context.responsiveValue(
+          mobile: 28.0,
+          tablet: 32.0,
+          desktop: 36.0,
+        );
+        
+        return Container(
+          width: stepSize,
+          height: stepSize,
+          decoration: BoxDecoration(
+            color: isActive || isCompleted ? Colors.purple : Colors.grey[300],
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: isCompleted
+                ? Icon(
+                    Icons.check, 
+                    color: Colors.white, 
+                    size: context.iconSize(18),
+                  )
+                : Text(
+                    '$step',
+                    style: TextStyle(
+                      color: isActive ? Colors.white : Colors.grey[600],
+                      fontSize: context.fontSize(14),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
+        );
+      }
     );
   }
 

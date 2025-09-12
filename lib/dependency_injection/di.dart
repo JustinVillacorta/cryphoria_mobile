@@ -3,13 +3,17 @@ import 'dart:io';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/audit_remote_data_source.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/AuthRepositoryImpl.dart';
+import 'package:cryphoria_mobile/features/data/repositories_impl/audit_repository_impl.dart';
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/data/services/private_key_storage.dart';
 import 'package:cryphoria_mobile/features/data/services/device_info_service.dart';
 import 'package:cryphoria_mobile/features/data/services/device_approval_cache.dart';
 import 'package:cryphoria_mobile/features/data/services/currency_conversion_service.dart';
+import 'package:cryphoria_mobile/features/data/notifiers/audit_notifier.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
+import 'package:cryphoria_mobile/features/domain/repositories/audit_repository.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_check_usecase.dart';
@@ -23,6 +27,10 @@ import 'package:cryphoria_mobile/features/domain/usecases/Session/revoke_session
 import 'package:cryphoria_mobile/features/domain/usecases/Session/revoke_other_sessions_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Session/confirm_password_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Session/validate_session_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Audit/submit_audit_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Audit/get_audit_report_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Audit/get_audit_status_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Audit/upload_contract_usecase.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
@@ -65,7 +73,7 @@ Future<void> init() async {
 
   String _baseUrl() {
     if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8000';
+      return 'http://192.168.5.59:8000';
     }
     return 'http://127.0.0.1:8000';
   }
@@ -146,6 +154,33 @@ Future<void> init() async {
 
   // Employee ViewModel
   sl.registerFactory<EmployeeViewModel>(() => EmployeeViewModel());
+
+  // Audit feature
+  // Data Sources
+  sl.registerLazySingleton<AuditRemoteDataSource>(
+    () => AuditRemoteDataSourceImpl(
+      dio: sl<DioClient>().dio..options.baseUrl = _baseUrl(),
+    ),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<AuditRepository>(
+    () => AuditRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => SubmitAuditUseCase(sl<AuditRepository>()));
+  sl.registerLazySingleton(() => GetAuditReportUseCase(sl<AuditRepository>()));
+  sl.registerLazySingleton(() => GetAuditStatusUseCase(sl<AuditRepository>()));
+  sl.registerLazySingleton(() => UploadContractUseCase(sl<AuditRepository>()));
+
+  // Notifiers
+  sl.registerFactory(() => AuditNotifier(
+    submitAuditUseCase: sl(),
+    getAuditReportUseCase: sl(),
+    getAuditStatusUseCase: sl(),
+    uploadContractUseCase: sl(),
+  ));
 }
 
 

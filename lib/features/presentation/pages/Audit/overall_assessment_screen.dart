@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../data/notifiers/audit_notifier.dart';
+import '../../../domain/entities/audit_report.dart';
 
 class OverallAssessmentScreen extends StatelessWidget {
   final String contractName;
@@ -31,7 +34,99 @@ class OverallAssessmentScreen extends StatelessWidget {
         ),
         centerTitle: false,
       ),
-      body: Column(
+      body: Consumer<AuditNotifier>(
+        builder: (context, auditNotifier, child) {
+          final auditReport = auditNotifier.currentAuditReport;
+          
+          if (auditReport == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.assessment, size: 64, color: Colors.purple[300]),
+                  const SizedBox(height: 16),
+                  const CircularProgressIndicator(color: Colors.purple),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Loading assessment data...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return _buildAssessmentContent(context, auditReport);
+        },
+      ),
+    );
+  }
+
+  Widget _buildAssessmentContent(BuildContext context, AuditReport auditReport) {
+    // Calculate assessment data from real audit report
+    final totalVulnerabilities = auditReport.vulnerabilities.length;
+    final criticalVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.critical).length;
+    final highVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.high).length;
+    final mediumVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.medium).length;
+    final lowVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.low).length;
+    
+    final gasOptimizations = auditReport.gasOptimization.suggestions.length;
+    final overallScore = auditReport.overallScore;
+    
+    // Determine risk level
+    String riskLevel;
+    MaterialColor riskColor;
+    String riskMessage;
+    
+    if (criticalVulns > 0) {
+      riskLevel = 'Critical';
+      riskColor = Colors.red;
+      riskMessage = 'This contract has critical vulnerabilities that could lead to significant financial loss or security breaches.';
+    } else if (highVulns > 0) {
+      riskLevel = 'High';
+      riskColor = Colors.orange;
+      riskMessage = 'This contract has high-severity vulnerabilities that should be addressed before deployment.';
+    } else if (mediumVulns > 0) {
+      riskLevel = 'Medium';
+      riskColor = Colors.amber;
+      riskMessage = 'This contract has medium-severity vulnerabilities that should be reviewed and addressed.';
+    } else if (lowVulns > 0) {
+      riskLevel = 'Low';
+      riskColor = Colors.blue;
+      riskMessage = 'This contract has minor vulnerabilities that pose minimal risk but should be considered.';
+    } else {
+      riskLevel = 'Secure';
+      riskColor = Colors.green;
+      riskMessage = 'This contract passed all security checks with no vulnerabilities detected.';
+    }
+
+    // Gas optimization level
+    String gasOptLevel;
+    MaterialColor gasOptColor;
+    String gasOptMessage;
+    
+    if (gasOptimizations == 0) {
+      gasOptLevel = 'Optimized';
+      gasOptColor = Colors.green;
+      gasOptMessage = 'Your contract is already well-optimized for gas usage. No significant improvements needed.';
+    } else if (gasOptimizations <= 2) {
+      gasOptLevel = 'Good';
+      gasOptColor = Colors.blue;
+      gasOptMessage = 'Few optimization opportunities identified. Implementing these could provide modest gas savings.';
+    } else if (gasOptimizations <= 5) {
+      gasOptLevel = 'Moderate';
+      gasOptColor = Colors.orange;
+      gasOptMessage = 'Several opportunities to optimize gas usage were identified. Implementing these changes could reduce transaction costs by approximately 15-25%.';
+    } else {
+      gasOptLevel = 'Poor';
+      gasOptColor = Colors.red;
+      gasOptMessage = 'Many optimization opportunities identified. Significant gas savings possible with proper optimization.';
+    }
+
+    return Column(
         children: [
           // Header with progress
           Padding(
@@ -102,9 +197,9 @@ class OverallAssessmentScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.red[50],
+                      color: riskColor[50],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red[200]!),
+                      border: Border.all(color: riskColor[200]!),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,16 +209,25 @@ class OverallAssessmentScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.red[100],
+                                color: riskColor[100],
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
-                                'Critical',
+                                riskLevel,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.red[800],
+                                  color: riskColor[800],
                                 ),
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              'Score: ${overallScore.toStringAsFixed(0)}/100',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: riskColor[800],
                               ),
                             ),
                           ],
@@ -144,12 +248,16 @@ class OverallAssessmentScreen extends StatelessWidget {
                         
                         Row(
                           children: [
-                            Icon(Icons.warning, color: Colors.red[700], size: 20),
+                            Icon(
+                              totalVulnerabilities > 0 ? Icons.warning : Icons.security,
+                              color: riskColor[700], 
+                              size: 20
+                            ),
                             const SizedBox(width: 8),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'This contract has several critical vulnerabilities that could lead to financial loss.',
-                                style: TextStyle(
+                                riskMessage,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
                                   height: 1.4,
@@ -172,9 +280,24 @@ class OverallAssessmentScreen extends StatelessWidget {
                         
                         const SizedBox(height: 12),
                         
-                        _buildKeyFinding('3 vulnerabilities detected (2 critical)'),
-                        _buildKeyFinding('Gas optimization opportunities identified'),
-                        _buildKeyFinding('Contract requires access control improvements'),
+                        if (totalVulnerabilities > 0) ...[
+                          _buildKeyFinding('$totalVulnerabilities vulnerabilities detected' +
+                            (criticalVulns > 0 ? ' ($criticalVulns critical)' : 
+                             highVulns > 0 ? ' ($highVulns high severity)' : '')),
+                          if (criticalVulns > 0)
+                            _buildKeyFinding('Immediate action required for critical vulnerabilities'),
+                          if (mediumVulns > 0 || lowVulns > 0)
+                            _buildKeyFinding('Medium and low severity issues require attention'),
+                        ] else
+                          _buildKeyFinding('No security vulnerabilities detected'),
+                        
+                        if (gasOptimizations > 0)
+                          _buildKeyFinding('$gasOptimizations gas optimization opportunities identified')
+                        else
+                          _buildKeyFinding('Contract is already well-optimized for gas usage'),
+                        
+                        if (auditReport.recommendations.isNotEmpty)
+                          _buildKeyFinding('${auditReport.recommendations.length} recommendations provided'),
                       ],
                     ),
                   ),
@@ -186,16 +309,20 @@ class OverallAssessmentScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.green[50],
+                      color: gasOptColor[50],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green[200]!),
+                      border: Border.all(color: gasOptColor[200]!),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.check_circle, color: Colors.green[700], size: 24),
+                            Icon(
+                              gasOptimizations == 0 ? Icons.check_circle : Icons.speed, 
+                              color: gasOptColor[700], 
+                              size: 24
+                            ),
                             const SizedBox(width: 12),
                             const Text(
                               'Gas Optimization',
@@ -224,15 +351,15 @@ class OverallAssessmentScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.orange[100],
+                                color: gasOptColor[100],
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
-                                'Moderate',
+                                gasOptLevel,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.orange[800],
+                                  color: gasOptColor[800],
                                 ),
                               ),
                             ),
@@ -241,26 +368,25 @@ class OverallAssessmentScreen extends StatelessWidget {
                         
                         const SizedBox(height: 16),
                         
-                        const Text(
-                          'Several opportunities to optimize gas usage were identified. Implementing these changes could reduce transaction costs by approximately 15-25%.',
-                          style: TextStyle(
+                        Text(
+                          gasOptMessage,
+                          style: const TextStyle(
                             fontSize: 16,
                             color: Colors.black,
                             height: 1.4,
                           ),
                         ),
                         
-                        const SizedBox(height: 16),
-                        
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildOptimizationPoint('Replace memory with calldata for read-only function parameters'),
-                            _buildOptimizationPoint('Use uint256 instead of smaller uints when possible'),
-                            _buildOptimizationPoint('Avoid unnecessary storage reads in loops'),
-                            _buildOptimizationPoint('Consider using assembly for complex operations'),
-                          ],
-                        ),
+                        if (auditReport.gasOptimization.suggestions.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: auditReport.gasOptimization.suggestions.take(4).map((suggestion) =>
+                              _buildOptimizationPoint(suggestion.suggestion)
+                            ).toList(),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -279,39 +405,89 @@ class OverallAssessmentScreen extends StatelessWidget {
                   
                   const SizedBox(height: 16),
                   
-                  _buildRecommendationCard(
-                    'Critical Priority',
-                    'Add proper access control mechanisms to the withdraw function to prevent unauthorized withdrawals.',
-                    Colors.red[100]!,
-                    Colors.red[800]!,
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  _buildRecommendationCard(
-                    'High Priority',
-                    'Implement SafeMath library or use Solidity 0.8+ built-in overflow checks for all arithmetic operations.',
-                    Colors.orange[100]!,
-                    Colors.orange[800]!,
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  _buildRecommendationCard(
-                    'Medium Priority',
-                    'Apply the checks-effects-interactions pattern and consider using ReentrancyGuard to prevent reentrancy attacks.',
-                    Colors.blue[100]!,
-                    Colors.blue[800]!,
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  _buildRecommendationCard(
-                    'Gas Optimization',
-                    'Replace memory with calldata for read-only function parameters and optimize storage access patterns.',
-                    Colors.green[100]!,
-                    Colors.green[800]!,
-                  ),
+                  // Build recommendations from real audit data
+                  if (auditReport.recommendations.isNotEmpty) ...[
+                    ...auditReport.recommendations.map((recommendation) {
+                      MaterialColor recColor;
+                      switch (recommendation.priority) {
+                        case Priority.high:
+                          recColor = Colors.red;
+                          break;
+                        case Priority.medium:
+                          recColor = Colors.orange;
+                          break;
+                        case Priority.low:
+                          recColor = Colors.blue;
+                          break;
+                      }
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildRecommendationCard(
+                          '${recommendation.priority.name.toUpperCase()} Priority',
+                          recommendation.description,
+                          recColor[100]!,
+                          recColor[800]!,
+                        ),
+                      );
+                    }).toList(),
+                  ] else ...[
+                    // Show vulnerability-based recommendations if no specific recommendations
+                    if (criticalVulns > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildRecommendationCard(
+                          'Critical Priority',
+                          'Address critical vulnerabilities immediately. These pose significant security risks and should be fixed before deployment.',
+                          Colors.red[100]!,
+                          Colors.red[800]!,
+                        ),
+                      ),
+                    
+                    if (highVulns > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildRecommendationCard(
+                          'High Priority',
+                          'Fix high-severity vulnerabilities to prevent potential security breaches and ensure contract safety.',
+                          Colors.orange[100]!,
+                          Colors.orange[800]!,
+                        ),
+                      ),
+                    
+                    if (mediumVulns > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildRecommendationCard(
+                          'Medium Priority',
+                          'Review and address medium-severity vulnerabilities to improve overall contract security.',
+                          Colors.blue[100]!,
+                          Colors.blue[800]!,
+                        ),
+                      ),
+                    
+                    if (gasOptimizations > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildRecommendationCard(
+                          'Gas Optimization',
+                          'Implement the identified gas optimization suggestions to reduce transaction costs for users.',
+                          Colors.green[100]!,
+                          Colors.green[800]!,
+                        ),
+                      ),
+                      
+                    if (totalVulnerabilities == 0 && gasOptimizations == 0)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildRecommendationCard(
+                          'Best Practices',
+                          'Your contract is secure and well-optimized. Continue following security best practices for future development.',
+                          Colors.green[100]!,
+                          Colors.green[800]!,
+                        ),
+                      ),
+                  ],
                   
                   const SizedBox(height: 32),
                 ],
@@ -383,8 +559,7 @@ class OverallAssessmentScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildProgressStep(int step, bool isActive, bool isCompleted) {

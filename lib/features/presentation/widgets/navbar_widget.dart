@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utils/responsive_helper.dart';
 
 class CustomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -14,14 +15,26 @@ class CustomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navBarHeight = context.responsiveValue(
+      mobile: 55.0,
+      tablet: 60.0,
+      desktop: 65.0,
+    );
+    
+    final navBarMargin = context.responsiveValue(
+      mobile: const EdgeInsets.only(bottom: 8.0, left: 16.0, right: 16.0),
+      tablet: const EdgeInsets.only(bottom: 10.0, left: 20.0, right: 20.0),
+      desktop: const EdgeInsets.only(bottom: 12.0, left: 24.0, right: 24.0),
+    );
+    
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0, left: 20.0, right: 20.0),
+      padding: navBarMargin,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30.0),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
           child: Container(
-            height: 60,
+            height: navBarHeight,
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.12), // Darker with higher opacity
               borderRadius: BorderRadius.circular(30.0),
@@ -59,10 +72,25 @@ class CustomNavBar extends StatelessWidget {
   }
 
   Widget _buildNavItem(IconData icon, int index) {
-    return IconButton(
-      icon: Icon(icon),
-      color: currentIndex == index ? Colors.white : Colors.grey,
-      onPressed: () => onTap(index),
+    return Builder(
+      builder: (context) {
+        final iconSize = context.responsiveValue(
+          mobile: 22.0,
+          tablet: 24.0,
+          desktop: 26.0,
+        );
+        
+        return IconButton(
+          icon: Icon(icon, size: iconSize),
+          color: currentIndex == index ? Colors.white : Colors.grey,
+          onPressed: () => onTap(index),
+          padding: EdgeInsets.all(context.responsiveValue(
+            mobile: 8.0,
+            tablet: 10.0,
+            desktop: 12.0,
+          )),
+        );
+      }
     );
   }
 }

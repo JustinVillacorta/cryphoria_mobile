@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Audit/audit_results_screen.dart';
+import 'package:provider/provider.dart';
+import '../../../data/notifiers/audit_notifier.dart';
+import '../../../domain/entities/smart_contract.dart';
+import '../../../domain/entities/audit_report.dart';
+import 'audit_results_screen.dart';
 
 class AiAnalysisScreen extends StatefulWidget {
   final String contractName;
@@ -35,7 +39,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
   void initState() {
     super.initState();
     _progressController = AnimationController(
-      duration: const Duration(seconds: 8),
+      duration: const Duration(seconds: 8), // Original UI timing for smooth progress
       vsync: this,
     );
     _rotationController = AnimationController(
@@ -51,7 +55,10 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
       curve: Curves.easeInOut,
     ));
 
-    _startAnalysis();
+    // Start analysis after the frame is built to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startAnalysis();
+    });
   }
 
   @override
@@ -61,29 +68,161 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
     super.dispose();
   }
 
-  void _startAnalysis() async {
+  Future<void> _startAnalysis() async {
+    final auditNotifier = Provider.of<AuditNotifier>(context, listen: false);
+    
+    print("🔄 AiAnalysisScreen._startAnalysis: Starting analysis");
+    print("📋 Contract name: ${widget.contractName}");
+    print("📄 File name: ${widget.fileName}");
+    
+    // Create audit request using data from the notifier
+    final auditRequest = AuditRequest(
+      contractId: auditNotifier.currentContract?.id ?? '',
+      contractName: widget.contractName,
+      fileName: widget.fileName,
+      sourceCode: auditNotifier.currentContract?.sourceCode ?? '',
+      options: const AuditOptions(),
+      requestedAt: DateTime.now(),
+    );
+
+    try {
+      // Submit audit request to backend first
+      await auditNotifier.submitAuditRequest(auditRequest);
+      
+      // Start the UI animation and polling simultaneously
+      _startUIAnimation();
+      
+      // Start real-time polling for audit completion (this will handle navigation)
+      await _pollForAuditCompletion(auditNotifier);
+      
+    } catch (e) {
+      print("❌ AiAnalysisScreen._startAnalysis: Error - $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Analysis failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _startUIAnimation() async {
+    print("🎨 AiAnalysisScreen._startUIAnimation: Starting UI animation");
+    
+    // Animate through the analysis steps for visual feedback
     for (int i = 0; i < _analysisSteps.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 1200));
+      await Future.delayed(const Duration(milliseconds: 800));
       if (mounted) {
         setState(() {
           _currentStep = i;
         });
-        _progressController.animateTo((i + 1) / _analysisSteps.length);
+        
+        // Calculate progress based on current step
+        double progress = (i + 1) / _analysisSteps.length;
+        print("📊 AiAnalysisScreen._startUIAnimation: Step $i, Progress: ${(progress * 100).toInt()}%");
+        
+        // Animate to the progress and wait for it to complete
+        await _progressController.animateTo(progress, duration: const Duration(milliseconds: 600));
+        
+        // Don't complete the last step automatically - wait for actual completion
+        if (i == _analysisSteps.length - 1) {
+          print("⏸️ AiAnalysisScreen._startUIAnimation: Reached final step, waiting for backend completion");
+          break;
+        }
       }
     }
+  }
+
+  Future<void> _pollForAuditCompletion(AuditNotifier auditNotifier) async {
+    int attempts = 0;
+    const maxAttempts = 30; // 30 seconds maximum wait
+    const pollInterval = Duration(seconds: 1);
     
-    await Future.delayed(const Duration(milliseconds: 1000));
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AuditResultsScreen(
-            contractName: widget.contractName,
-            fileName: widget.fileName,
-          ),
-        ),
-      );
+    print("🔄 AiAnalysisScreen._pollForAuditCompletion: Starting polling");
+    print("📊 Polling for audit ID: ${auditNotifier.currentAuditId}");
+    
+    while (attempts < maxAttempts && mounted) {
+      // Check if audit is completed
+      if (auditNotifier.currentAuditId != null) {
+        print("📤 AiAnalysisScreen._pollForAuditCompletion: Checking status for audit ID: ${auditNotifier.currentAuditId}");
+        
+        await auditNotifier.getAuditStatus(auditNotifier.currentAuditId!);
+        
+        print("📥 AiAnalysisScreen._pollForAuditCompletion: Current status: ${auditNotifier.currentAuditStatus}");
+        
+        if (auditNotifier.currentAuditStatus == AuditStatus.completed) {
+          print("✅ AiAnalysisScreen._pollForAuditCompletion: Audit completed! Getting report...");
+          
+          // Try to get the audit report, but don't fail navigation if it fails
+          try {
+            await auditNotifier.getAuditReport(auditNotifier.currentAuditId!);
+            print("📄 AiAnalysisScreen._pollForAuditCompletion: Report retrieved successfully");
+          } catch (e) {
+            print("⚠️ AiAnalysisScreen._pollForAuditCompletion: Report parsing failed: $e");
+            print("🎯 AiAnalysisScreen._pollForAuditCompletion: Proceeding with navigation anyway...");
+          }
+          
+          print("🔍 AiAnalysisScreen._pollForAuditCompletion: Checking mounted state: $mounted");
+          
+          if (mounted) {
+            print("🎯 AiAnalysisScreen._pollForAuditCompletion: Starting navigation to results");
+            
+            try {
+              // Ensure progress animation is at 100% (should already be there from UI animation)
+              await _progressController.animateTo(1.0, duration: const Duration(milliseconds: 300));
+              setState(() {
+                _currentStep = _analysisSteps.length - 1;
+              });
+              
+              print("🎨 AiAnalysisScreen._pollForAuditCompletion: Animation completed at 100%");
+              
+              // Wait a bit for visual feedback
+              await Future.delayed(const Duration(milliseconds: 800));
+              
+              print("🚀 AiAnalysisScreen._pollForAuditCompletion: Attempting navigation...");
+              
+              // Navigate to results even if report parsing failed
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AuditResultsScreen(
+                    contractName: widget.contractName,
+                    fileName: widget.fileName,
+                  ),
+                ),
+              );
+              
+              print("✅ AiAnalysisScreen._pollForAuditCompletion: Navigation completed successfully");
+              return;
+            } catch (navigationError) {
+              print("❌ AiAnalysisScreen._pollForAuditCompletion: Navigation error: $navigationError");
+              rethrow;
+            }
+          } else {
+            print("❌ AiAnalysisScreen._pollForAuditCompletion: Widget not mounted, cannot navigate");
+          }
+        }
+        
+        if (auditNotifier.currentAuditStatus == AuditStatus.failed) {
+          print("❌ AiAnalysisScreen._pollForAuditCompletion: Audit failed");
+          throw Exception('Audit failed on server');
+        }
+      } else {
+        print("⚠️ AiAnalysisScreen._pollForAuditCompletion: No audit ID available yet");
+      }
+      
+      // Wait before next poll
+      await Future.delayed(pollInterval);
+      attempts++;
+      
+      print("⏳ AiAnalysisScreen._pollForAuditCompletion: Poll attempt $attempts/$maxAttempts");
     }
+    
+    // If we get here, polling timed out
+    print("⏰ AiAnalysisScreen._pollForAuditCompletion: Polling timed out after $attempts attempts");
+    throw Exception('Analysis timed out. Please try again.');
   }
 
   @override
@@ -107,10 +246,18 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
         ),
         centerTitle: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - 
+                        MediaQuery.of(context).padding.top - 
+                        kToolbarHeight - 48, // Account for padding
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
             // Progress indicator
             Row(
               children: [
@@ -140,7 +287,8 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
             const SizedBox(height: 60),
             
             // Analysis animation
-            Expanded(
+            SizedBox(
+              height: MediaQuery.of(context).size.height - 200, // Constrain height
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -296,16 +444,18 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
                                 
                                 const SizedBox(width: 12),
                                 
-                                Text(
-                                  _analysisSteps[index],
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isCompleted || isCurrent
-                                        ? Colors.black
-                                        : Colors.grey[600],
-                                    fontWeight: isCurrent 
-                                        ? FontWeight.w600 
-                                        : FontWeight.normal,
+                                Expanded(
+                                  child: Text(
+                                    _analysisSteps[index],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isCompleted || isCurrent
+                                          ? Colors.black
+                                          : Colors.grey[600],
+                                      fontWeight: isCurrent 
+                                          ? FontWeight.w600 
+                                          : FontWeight.normal,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -321,7 +471,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
           ],
         ),
       ),
-    );
+    )));
   }
 
   Widget _buildProgressStep(int step, bool isActive, bool isCompleted) {

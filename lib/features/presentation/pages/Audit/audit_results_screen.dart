@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Audit/overall_assessment_screen.dart';
+import 'package:cryphoria_mobile/features/data/notifiers/audit_notifier.dart';
+import 'package:cryphoria_mobile/features/domain/entities/audit_report.dart';
 
 class AuditResultsScreen extends StatefulWidget {
   final String contractName;
@@ -18,11 +21,23 @@ class AuditResultsScreen extends StatefulWidget {
 class _AuditResultsScreenState extends State<AuditResultsScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  bool _hasTriedToFetchReport = false;
   
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  void _tryFetchReportIfNeeded(AuditNotifier auditNotifier) {
+    if (!_hasTriedToFetchReport && 
+        auditNotifier.currentAuditReport == null && 
+        auditNotifier.currentAuditId != null && 
+        !auditNotifier.isLoading) {
+      _hasTriedToFetchReport = true;
+      print("🔄 AuditResultsScreen: Attempting to fetch missing audit report...");
+      auditNotifier.getAuditReport(auditNotifier.currentAuditId!);
+    }
   }
 
   @override
@@ -52,7 +67,93 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
         ),
         centerTitle: false,
       ),
-      body: Column(
+      body: Consumer<AuditNotifier>(
+        builder: (context, auditNotifier, child) {
+          final auditReport = auditNotifier.currentAuditReport;
+          
+          // Try to fetch the report if it's missing
+          _tryFetchReportIfNeeded(auditNotifier);
+          
+          if (auditReport == null) {
+            // Show different message based on whether we have an error or are still loading
+            String loadingMessage = 'Loading audit results...';
+            IconData loadingIcon = Icons.hourglass_empty;
+            
+            if (auditNotifier.error != null) {
+              loadingMessage = 'Fetching audit results...';
+              loadingIcon = Icons.refresh;
+            } else if (auditNotifier.currentAuditId != null && !auditNotifier.isLoading) {
+              loadingMessage = 'Processing audit data...';
+              loadingIcon = Icons.analytics;
+            }
+            
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(loadingIcon, size: 48, color: Colors.purple),
+                  const SizedBox(height: 16),
+                  const CircularProgressIndicator(color: Colors.purple),
+                  const SizedBox(height: 16),
+                  Text(
+                    loadingMessage,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  if (auditNotifier.error != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Retrying...',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                  if (auditNotifier.currentAuditId != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Audit ID: ${auditNotifier.currentAuditId}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }
+
+          // Calculate summary data from real audit report
+          final totalVulnerabilities = auditReport.vulnerabilities.length;
+          final criticalVulnerabilities = auditReport.vulnerabilities
+              .where((v) => v.severity == Severity.critical)
+              .length;
+          final gasOptimizations = auditReport.gasOptimization.suggestions.length;
+          
+          // Determine risk level based on vulnerabilities
+          String getRiskLevel() {
+            if (criticalVulnerabilities > 0) return 'Critical Risk';
+            if (auditReport.vulnerabilities.where((v) => v.severity == Severity.high).isNotEmpty) return 'High Risk';
+            if (auditReport.vulnerabilities.where((v) => v.severity == Severity.medium).isNotEmpty) return 'Medium Risk';
+            return 'Low Risk';
+          }
+          
+          Color getRiskColor() {
+            final riskLevel = getRiskLevel();
+            switch (riskLevel) {
+              case 'Critical Risk': return Colors.red;
+              case 'High Risk': return Colors.orange;
+              case 'Medium Risk': return Colors.yellow[700]!;
+              default: return Colors.green;
+            }
+          }
+
+          return Column(
         children: [
           // Header with progress
           Padding(
@@ -102,15 +203,15 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.red[100],
+                        color: getRiskColor().withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
-                        'Critical Risk',
+                        getRiskLevel(),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.red[800],
+                          color: getRiskColor().withOpacity(0.8),
                         ),
                       ),
                     ),
@@ -119,36 +220,28 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
                 
                 const SizedBox(height: 24),
                 
-                // Summary cards
+                // Summary cards with real data
                 Row(
                   children: [
                     Expanded(
                       child: _buildSummaryCard(
                         'Vulnerabilities',
-                        '3',
+                        totalVulnerabilities.toString(),
                         'Issues\nDetected',
-                        Colors.red[100]!,
-                        Colors.red[800]!,
+                        Colors.red[50]!,
+                        Colors.red[700]!,
+                        Icons.warning_rounded,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: _buildSummaryCard(
                         'Gas\nOptimization',
-                        '4',
+                        gasOptimizations.toString(),
                         'Improvements\nPossible',
-                        Colors.green[100]!,
-                        Colors.green[800]!,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildSummaryCard(
-                        'Overall\nScore',
-                        'D',
-                        'Security\nRating',
-                        Colors.blue[100]!,
-                        Colors.blue[800]!,
+                        Colors.green[50]!,
+                        Colors.green[700]!,
+                        Icons.speed_rounded,
                       ),
                     ),
                   ],
@@ -168,7 +261,6 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
               tabs: const [
                 Tab(text: 'Vulnerabilities'),
                 Tab(text: 'Gas Optimization'),
-                Tab(text: 'Code Quality'),
               ],
             ),
           ),
@@ -178,9 +270,8 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildVulnerabilitiesTab(),
-                _buildGasOptimizationTab(),
-                _buildCodeQualityTab(),
+                _buildVulnerabilitiesTab(auditReport),
+                _buildGasOptimizationTab(auditReport),
               ],
             ),
           ),
@@ -228,6 +319,8 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
             ),
           ),
         ],
+      );
+        },
       ),
     );
   }
@@ -264,7 +357,7 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
     );
   }
 
-  Widget _buildSummaryCard(String title, String value, String subtitle, Color bgColor, Color textColor) {
+  Widget _buildSummaryCard(String title, String value, String subtitle, Color bgColor, Color textColor, [IconData? icon]) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -273,6 +366,14 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
       ),
       child: Column(
         children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 24,
+              color: textColor,
+            ),
+            const SizedBox(height: 8),
+          ],
           Text(
             title,
             style: TextStyle(
@@ -305,192 +406,302 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
     );
   }
 
-  Widget _buildVulnerabilitiesTab() {
+  Widget _buildVulnerabilitiesTab(AuditReport auditReport) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '3 vulnerabilities were detected in the smart contract. These issues should be addressed before deployment.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.4,
+          // Summary section with enhanced information
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue[200]!),
             ),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          _buildVulnerabilityCard(
-            'Unprotected Ether Withdrawal',
-            'Critical',
-            'Line 21',
-            Colors.red[100]!,
-            Colors.red[800]!,
-            true,
-          ),
-          
-          const SizedBox(height: 16),
-          
-          _buildVulnerabilityCard(
-            'Integer Overflow',
-            'High',
-            'Line 45',
-            Colors.orange[100]!,
-            Colors.orange[800]!,
-            true,
-          ),
-          
-          const SizedBox(height: 16),
-          
-          _buildVulnerabilityCard(
-            'Reentrancy Vulnerability',
-            'Critical',
-            'Line 78',
-            Colors.red[100]!,
-            Colors.red[800]!,
-            true,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGasOptimizationTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'The following gas optimization opportunities were identified to reduce transaction costs.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.4,
-            ),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          _buildOptimizationCard(
-            'Replace memory with calldata for read-only function parameters',
-            Colors.green[100]!,
-            Colors.green[800]!,
-          ),
-          
-          const SizedBox(height: 16),
-          
-          _buildOptimizationCard(
-            'Use uint256 instead of smaller uints when possible',
-            Colors.green[100]!,
-            Colors.green[800]!,
-          ),
-          
-          const SizedBox(height: 16),
-          
-          _buildOptimizationCard(
-            'Avoid unnecessary storage reads in loops',
-            Colors.green[100]!,
-            Colors.green[800]!,
-          ),
-          
-          const SizedBox(height: 16),
-          
-          _buildOptimizationCard(
-            'Consider using assembly for complex operations',
-            Colors.green[100]!,
-            Colors.green[800]!,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCodeQualityTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Code quality assessment evaluates the readability, maintainability, and structure of your contract.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.4,
-            ),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          _buildCodeQualityCard('Documentation', 'Insufficient documentation for key functions. Consider adding NatSpec comments.'),
-          const SizedBox(height: 16),
-          _buildCodeQualityCard('Function Complexity', 'Some functions have high cyclomatic complexity. Consider breaking them down into smaller functions.'),
-          const SizedBox(height: 16),
-          _buildCodeQualityCard('Code Duplication', 'Minimal code duplication detected. Good use of modular functions.'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVulnerabilityCard(String title, String severity, String location, Color bgColor, Color textColor, bool isExpandable) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: textColor.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.warning, color: textColor, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
                 Row(
                   children: [
+                    Icon(Icons.info, color: Colors.blue[700], size: 20),
+                    const SizedBox(width: 8),
                     Text(
-                      severity,
+                      'Vulnerability Analysis Summary',
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: textColor,
-                      ),
-                    ),
-                    Text(' • ', style: TextStyle(color: textColor)),
-                    Text(
-                      location,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue[800],
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Text(
+                  auditReport.vulnerabilities.isEmpty 
+                    ? 'Great news! No vulnerabilities were detected in your smart contract. This indicates good security practices.'
+                    : '${auditReport.vulnerabilities.length} vulnerabilities were detected in the smart contract. These issues should be addressed before deployment to ensure security and reliability.',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
+                ),
+                if (auditReport.vulnerabilities.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      _buildSeverityChip('Critical', auditReport.vulnerabilities.where((v) => v.severity == Severity.critical).length, Colors.red),
+                      _buildSeverityChip('High', auditReport.vulnerabilities.where((v) => v.severity == Severity.high).length, Colors.orange),
+                      _buildSeverityChip('Medium', auditReport.vulnerabilities.where((v) => v.severity == Severity.medium).length, Colors.yellow[700]!),
+                      _buildSeverityChip('Low', auditReport.vulnerabilities.where((v) => v.severity == Severity.low).length, Colors.blue),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
-          if (isExpandable)
-            Icon(Icons.expand_more, color: textColor),
+          
+          const SizedBox(height: 24),
+          
+          // Vulnerabilities list or empty state
+          if (auditReport.vulnerabilities.isEmpty) ...[
+            Center(
+              child: Column(
+                children: [
+                  Icon(Icons.security, size: 64, color: Colors.green[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Vulnerabilities Found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green[700],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your smart contract passed all security checks.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            // Build vulnerability cards from real data
+            ...auditReport.vulnerabilities.asMap().entries.map((entry) {
+              final index = entry.key;
+              final vulnerability = entry.value;
+              Color bgColor;
+              Color textColor;
+              
+              switch (vulnerability.severity) {
+                case Severity.critical:
+                  bgColor = Colors.red[100]!;
+                  textColor = Colors.red[800]!;
+                  break;
+                case Severity.high:
+                  bgColor = Colors.orange[100]!;
+                  textColor = Colors.orange[800]!;
+                  break;
+                case Severity.medium:
+                  bgColor = Colors.yellow[100]!;
+                  textColor = Colors.yellow[800]!;
+                  break;
+                case Severity.low:
+                  bgColor = Colors.blue[100]!;
+                  textColor = Colors.blue[800]!;
+                  break;
+                default:
+                  bgColor = Colors.grey[100]!;
+                  textColor = Colors.grey[800]!;
+              }
+              
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildVulnerabilityCard(
+                  vulnerability.title,
+                  vulnerability.severity.name.toUpperCase(),
+                  vulnerability.lineNumbers.isNotEmpty 
+                    ? 'Line ${vulnerability.lineNumbers.join(", ")}'
+                    : 'Multiple locations',
+                  bgColor,
+                  textColor,
+                  true,
+                  description: vulnerability.description,
+                  remediation: vulnerability.remediation,
+                  vulnerabilityId: vulnerability.id,
+                  category: vulnerability.category,
+                  index: index + 1,
+                ),
+              );
+            }).toList(),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildOptimizationCard(String title, Color bgColor, Color textColor) {
+  Widget _buildGasOptimizationTab(AuditReport auditReport) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Summary section
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green[200]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.speed, color: Colors.green[700], size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Gas Optimization Analysis',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green[800],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  auditReport.gasOptimization.suggestions.isEmpty
+                    ? 'Your smart contract is already well-optimized for gas usage. No significant improvements found.'
+                    : 'The following ${auditReport.gasOptimization.suggestions.length} gas optimization opportunities were identified to reduce transaction costs.',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
+                ),
+                if (auditReport.gasOptimization.estimatedGasSaved > 0) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.savings, color: Colors.green[700], size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Estimated Total Savings: ${auditReport.gasOptimization.estimatedGasSaved.toStringAsFixed(0)} gas',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Optimization suggestions or empty state
+          if (auditReport.gasOptimization.suggestions.isEmpty) ...[
+            Center(
+              child: Column(
+                children: [
+                  Icon(Icons.check_circle, size: 64, color: Colors.green[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Already Optimized',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green[700],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your contract follows gas optimization best practices.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            // Build optimization cards from real data
+            ...auditReport.gasOptimization.suggestions.asMap().entries.map((entry) {
+              final index = entry.key;
+              final suggestion = entry.value;
+              
+              // Color based on priority
+              Color bgColor;
+              Color textColor;
+              switch (suggestion.priority) {
+                case Priority.high:
+                  bgColor = Colors.orange[100]!;
+                  textColor = Colors.orange[800]!;
+                  break;
+                case Priority.medium:
+                  bgColor = Colors.blue[100]!;
+                  textColor = Colors.blue[800]!;
+                  break;
+                case Priority.low:
+                  bgColor = Colors.green[100]!;
+                  textColor = Colors.green[800]!;
+                  break;
+              }
+              
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildOptimizationCard(
+                  suggestion.suggestion,
+                  bgColor,
+                  textColor,
+                  function: suggestion.function,
+                  estimatedSaving: suggestion.estimatedSaving,
+                  priority: suggestion.priority.name.toUpperCase(),
+                  index: index + 1,
+                ),
+              );
+            }).toList(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVulnerabilityCard(
+    String title, 
+    String severity, 
+    String location, 
+    Color bgColor, 
+    Color textColor, 
+    bool isExpandable, {
+    String? description,
+    String? remediation,
+    String? vulnerabilityId,
+    String? category,
+    int? index,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -498,54 +709,345 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: textColor.withOpacity(0.3)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Icon(Icons.check_circle, color: textColor, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: textColor,
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: textColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: index != null
+                    ? Text(
+                        '$index',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                      )
+                    : Icon(Icons.warning, color: textColor, size: 18),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: textColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            severity,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: textColor,
+                            ),
+                          ),
+                        ),
+                        if (location.isNotEmpty) ...[
+                          Text(' • ', style: TextStyle(color: textColor)),
+                          Text(
+                            location,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: textColor,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              if (isExpandable)
+                Icon(Icons.expand_more, color: textColor),
+            ],
+          ),
+          if (category != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.category, size: 16, color: textColor.withOpacity(0.7)),
+                const SizedBox(width: 4),
+                Text(
+                  'Category: $category',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: textColor.withOpacity(0.7),
+                  ),
+                ),
+                if (vulnerabilityId != null && vulnerabilityId.isNotEmpty) ...[
+                  const SizedBox(width: 16),
+                  Icon(Icons.fingerprint, size: 16, color: textColor.withOpacity(0.7)),
+                  const SizedBox(width: 4),
+                  Text(
+                    'ID: $vulnerabilityId',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      color: textColor.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+          if (description != null && description.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Description',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: textColor.withOpacity(0.9),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
+          ],
+          if (remediation != null && remediation.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.lightbulb, size: 16, color: textColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Recommendation',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    remediation,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: textColor.withOpacity(0.9),
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildCodeQualityCard(String title, String description) {
+  Widget _buildOptimizationCard(
+    String title, 
+    Color bgColor, 
+    Color textColor, {
+    String? function,
+    int? estimatedSaving,
+    String? priority,
+    int? index,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: bgColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: textColor.withOpacity(0.3)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: textColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: index != null
+                    ? Text(
+                        '$index',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                      )
+                    : Icon(Icons.check_circle, color: textColor, size: 18),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: textColor,
+                      ),
+                    ),
+                    if (priority != null) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: textColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$priority PRIORITY',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-              height: 1.4,
+          if (function != null || estimatedSaving != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  if (function != null) ...[
+                    Row(
+                      children: [
+                        Icon(Icons.code, size: 16, color: textColor.withOpacity(0.7)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Function',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      function,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontFamily: 'monospace',
+                        color: textColor.withOpacity(0.9),
+                      ),
+                    ),
+                    if (estimatedSaving != null) const SizedBox(height: 8),
+                  ],
+                  if (estimatedSaving != null) ...[
+                    Row(
+                      children: [
+                        Icon(Icons.trending_down, size: 16, color: textColor.withOpacity(0.7)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Estimated Gas Saving',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${estimatedSaving.toStringAsFixed(0)} gas',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildSeverityChip(String label, int count, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        '$label: $count',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
