@@ -25,15 +25,28 @@ class WalletService {
     final creds = EthPrivateKey.fromHex(privateKey);
     final address = creds.address.hexEip55;
 
-    await remoteDataSource.registerWallet(
+    // Connect wallet and get wallet data from backend
+    final walletData = await remoteDataSource.registerWallet(
       endpoint: endpoint,
-      privateKey: privateKey, // send private_key to server
+      privateKey: privateKey,
       walletName: walletName,
       walletType: walletType,
     );
 
-    // Use address for balance lookup
-    final balance = await remoteDataSource.getBalance(address);
+    // Extract balance from backend response or use blockchain endpoint as fallback
+    double balance = 0.0;
+    try {
+      // Try to get balance from wallet data first
+      balance = double.tryParse(walletData['balances']?['ETH']?['balance']?.toString() ?? '0') ?? 0.0;
+      
+      // If no balance in wallet data, fall back to blockchain endpoint
+      if (balance == 0.0) {
+        balance = await remoteDataSource.getBalance(address);
+      }
+    } catch (e) {
+      // Fallback to blockchain endpoint if wallet data parsing fails
+      balance = await remoteDataSource.getBalance(address);
+    }
     
     // Convert ETH balance to both PHP and USD
     final rates = await currencyService.getETHRates();
@@ -41,7 +54,7 @@ class WalletService {
     final balanceInUSD = balance * (rates['usd'] ?? 3200.0);
 
     return Wallet(
-      id: '', 
+      id: walletData['wallet_id']?.toString() ?? '', 
       name: walletName, 
       private_key: privateKey, 
       balance: balance,
@@ -67,7 +80,25 @@ class WalletService {
 
     final address = EthPrivateKey.fromHex(key).address.hexEip55;
     try {
-      final balance = await remoteDataSource.getBalance(address);
+      // Use backend's reconnect endpoint to validate and get wallet data
+      final walletData = await remoteDataSource.reconnectWallet(
+        privateKey: key,
+      );
+      
+      // Extract balance from backend response or use blockchain endpoint as fallback
+      double balance = 0.0;
+      try {
+        // Try to get balance from wallet data first
+        balance = double.tryParse(walletData['balances']?['ETH']?['balance']?.toString() ?? '0') ?? 0.0;
+        
+        // If no balance in wallet data, fall back to blockchain endpoint
+        if (balance == 0.0) {
+          balance = await remoteDataSource.getBalance(address);
+        }
+      } catch (e) {
+        // Fallback to blockchain endpoint if wallet data parsing fails
+        balance = await remoteDataSource.getBalance(address);
+      }
       
       // Convert ETH balance to both PHP and USD
       final rates = await currencyService.getETHRates();
@@ -75,14 +106,14 @@ class WalletService {
       final balanceInUSD = balance * (rates['usd'] ?? 3200.0);
       
       return Wallet(
-        id: '', 
-        name: 'Stored Wallet', 
+        id: walletData['wallet_id']?.toString() ?? '', 
+        name: walletData['name']?.toString() ?? 'Stored Wallet', 
         private_key: key, 
         balance: balance,
         balanceInPHP: balanceInPHP,
         balanceInUSD: balanceInUSD,
         address: address,
-        walletType: 'MetaMask', // Default type for stored wallets
+        walletType: walletData['wallet_type']?.toString() ?? 'MetaMask', // Default type for stored wallets
       );
     } on WalletNotFoundException {
       return null;

@@ -7,12 +7,39 @@ class FakeRemote extends WalletRemoteDataSource {
   FakeRemote() : super();
 
   @override
-  Future<void> registerWallet({
+  Future<Map<String, dynamic>> registerWallet({
     required String endpoint,
     required String privateKey,
     required String walletName,
     required String walletType,
-  }) async {}
+  }) async {
+    return {
+      'wallet_id': 'test_wallet_id',
+      'name': walletName,
+      'wallet_type': walletType,
+      'balances': {
+        'ETH': {
+          'balance': '5.0'
+        }
+      }
+    };
+  }
+  
+  @override
+  Future<Map<String, dynamic>> reconnectWallet({
+    required String privateKey,
+  }) async {
+    return {
+      'wallet_id': 'test_wallet_id',
+      'name': 'Stored Wallet',
+      'wallet_type': 'MetaMask',
+      'balances': {
+        'ETH': {
+          'balance': '5.0'
+        }
+      }
+    };
+  }
   
   @override
   Future<double> getBalance(String walletAddress) async {
@@ -22,6 +49,23 @@ class FakeRemote extends WalletRemoteDataSource {
 
 class NotFoundRemote extends WalletRemoteDataSource {
   NotFoundRemote() : super();
+
+  @override
+  Future<Map<String, dynamic>> registerWallet({
+    required String endpoint,
+    required String privateKey,
+    required String walletName,
+    required String walletType,
+  }) async {
+    throw WalletNotFoundException();
+  }
+
+  @override
+  Future<Map<String, dynamic>> reconnectWallet({
+    required String privateKey,
+  }) async {
+    throw WalletNotFoundException();
+  }
 
   @override
   Future<double> getBalance(String walletAddress) async {

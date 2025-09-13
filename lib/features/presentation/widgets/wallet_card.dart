@@ -244,33 +244,39 @@ class _WalletCardState extends State<WalletCard> {
       },
     );
 
-    if (result != null) {
+    if (result != null && mounted) {
       switch (result) {
         case 'refresh':
           await viewModel.refreshWallet();
-          if (viewModel.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to refresh: ${viewModel.error}')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Wallet balance refreshed')),
-            );
+          if (mounted) {
+            if (viewModel.error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to refresh: ${viewModel.error}')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Wallet balance refreshed')),
+              );
+            }
           }
           break;
         case 'switch':
-          await _showConnectWalletDialog(context, viewModel);
+          if (mounted) {
+            await _showConnectWalletDialog(context, viewModel);
+          }
           break;
         case 'disconnect':
           await viewModel.disconnectWallet();
-          if (viewModel.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to disconnect: ${viewModel.error}')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Wallet disconnected')),
-            );
+          if (mounted) {
+            if (viewModel.error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to disconnect: ${viewModel.error}')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Wallet disconnected')),
+              );
+            }
           }
           break;
       }
@@ -329,30 +335,37 @@ class _WalletCardState extends State<WalletCard> {
     );
 
     if (shouldConnect == true) {
+      // Check if widget is still mounted before proceeding
+      if (!mounted) return;
+      
       // Check if wallet is already connected with same private key
       if (viewModel.wallet != null && 
           viewModel.wallet!.private_key == controller.text) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Wallet already connected!')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Wallet already connected!')),
+          );
+        }
         return;
       }
       
       // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          content: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text('Connecting wallet...'),
-            ],
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text('Connecting wallet...'),
+              ],
+            ),
           ),
-        ),
-      );
+        );
+      }
       
       try {
         String endpoint;
@@ -375,27 +388,35 @@ class _WalletCardState extends State<WalletCard> {
           walletType: selectedWallet,
         );
         
-        // Always dismiss loading dialog first
-        Navigator.of(context).pop();
-        
-        // Check if connection was successful
-        if (viewModel.wallet != null && viewModel.error == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Wallet connected successfully!')),
-          );
-        } else if (viewModel.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to connect: ${viewModel.error}')),
-          );
-        }
-      } catch (e) {
-        // Always dismiss loading dialog first
-        if (Navigator.canPop(context)) {
+        // Always dismiss loading dialog first if widget is still mounted
+        if (mounted && Navigator.canPop(context)) {
           Navigator.of(context).pop();
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to connect wallet: $e')),
-        );
+        
+        // Check if connection was successful and widget is still mounted
+        if (mounted) {
+          if (viewModel.wallet != null && viewModel.error == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Wallet connected successfully!')),
+            );
+          } else if (viewModel.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to connect: ${viewModel.error}')),
+            );
+          }
+        }
+      } catch (e) {
+        // Always dismiss loading dialog first if widget is still mounted
+        if (mounted && Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
+        
+        // Show error message if widget is still mounted
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to connect wallet: $e')),
+          );
+        }
       }
     }
   }

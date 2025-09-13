@@ -60,15 +60,18 @@ class WalletRemoteDataSource {
     }
   }
 
-  Future<void> registerWallet({
+  /// Connect wallet using private key and return wallet data
+  Future<Map<String, dynamic>> registerWallet({
     required String endpoint,
     required String privateKey,
     required String walletName,
     required String walletType,
   }) async {
-    final url = '$baseUrl$endpoint';
+    // Use the documented connect_wallet_with_private_key endpoint
+    // regardless of the wallet type passed from the UI
+    final url = '${baseUrl}connect_wallet_with_private_key/';
     try {
-      await dio.post(
+      final response = await dio.post(
         url,
         options: Options(
           headers: {
@@ -82,6 +85,13 @@ class WalletRemoteDataSource {
           'wallet_type': walletType,
         },
       );
+      
+      // Return the wallet data from backend response
+      if (response.data['success'] == true) {
+        return response.data['data'] ?? {};
+      } else {
+        throw Exception('Failed to connect wallet: ${response.data['error'] ?? 'Unknown error'}');
+      }
     } on DioException catch (e) {
       final body = e.response?.data;
       final status = e.response?.statusCode;
@@ -89,8 +99,11 @@ class WalletRemoteDataSource {
     }
   }
 
-  Future<double> getBalance(String walletAddress) async {
-    final url = '${baseUrl}get_specific_wallet_balance/';
+  /// Reconnect to an existing wallet (for device switching) and return wallet data
+  Future<Map<String, dynamic>> reconnectWallet({
+    required String privateKey,
+  }) async {
+    final url = '${baseUrl}reconnect_wallet_with_private_key/';
     try {
       final response = await dio.post(
         url,
@@ -100,11 +113,49 @@ class WalletRemoteDataSource {
           },
         ),
         data: {
-          'wallet_address': walletAddress,
+          'private_key': privateKey,
         },
       );
-      final balance = response.data['data']?['wallet']?['balances']?['ETH']?['balance'] ?? 0;
-      return double.tryParse(balance.toString()) ?? 0;
+      
+      // Return the wallet data from backend response
+      if (response.data['success'] == true) {
+        return response.data['data'] ?? {};
+      } else {
+        throw Exception('Failed to reconnect wallet: ${response.data['error'] ?? 'Unknown error'}');
+      }
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      final status = e.response?.statusCode;
+      throw Exception('Failed to reconnect wallet: $status $body');
+    }
+  }
+
+  Future<double> getBalance(String walletAddress) async {
+    // Use the WalletViewSet's get_wallet_balance endpoint
+    final url = '${baseUrl}get_wallet_balance/';
+    try {
+      final response = await dio.get(
+        url,
+        options: Options(
+          headers: {
+            "Content-Type": "application/json",
+          },
+        ),
+      );
+      
+      // Backend returns all wallets for the authenticated user
+      final wallets = response.data['data']?['wallets'] as List? ?? [];
+      
+      // Find the specific wallet by address
+      for (final wallet in wallets) {
+        if (wallet['address']?.toLowerCase() == walletAddress.toLowerCase()) {
+          final balance = wallet['balances']?['ETH']?['balance'] ?? 0;
+          return double.tryParse(balance.toString()) ?? 0;
+        }
+      }
+      
+      // If wallet not found, return 0 (or throw WalletNotFoundException)
+      return 0;
     } on DioException catch (e) {
       if (e.response?.statusCode == 403 || e.response?.statusCode == 404) {
         throw WalletNotFoundException();
