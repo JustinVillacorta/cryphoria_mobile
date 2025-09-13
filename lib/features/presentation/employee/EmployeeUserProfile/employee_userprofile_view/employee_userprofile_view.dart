@@ -1,4 +1,11 @@
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/currency_preference/currency_preference_view/currency_preference_view.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/edit_profile/edit_profile_view/edit_profile_view.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/help/help_view/help_view.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/security/security_view/security_view.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/wallet/wallet_view/wallet_view.dart';
 import 'package:flutter/material.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/compliance/compliance_view/compliance_view.dart';
+
 
 class EmployeeUserProfileScreen extends StatelessWidget {
   const EmployeeUserProfileScreen({Key? key}) : super(key: key);
@@ -59,6 +66,14 @@ class EmployeeUserProfileScreen extends StatelessWidget {
                       icon: Icons.account_balance_wallet_outlined,
                       title: 'Wallet',
                       iconColor: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => WalletConnectScreen(),
+                          ),
+                        );
+                      },
                     ),
 
                     SizedBox(height: screenHeight * 0.015), // 1.5% of screen height
@@ -68,6 +83,14 @@ class EmployeeUserProfileScreen extends StatelessWidget {
                       icon: Icons.assessment_outlined,
                       title: 'Compliance',
                       iconColor: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ComplianceScreen(),
+                          ),
+                        );
+                      },
                     ),
 
                     SizedBox(height: screenHeight * 0.015),
@@ -78,6 +101,14 @@ class EmployeeUserProfileScreen extends StatelessWidget {
                       title: 'Currency',
                       subtitle: 'ETH/USD',
                       iconColor: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CurrencyScreen(),
+                          ),
+                        );
+                      },
                     ),
 
                     SizedBox(height: screenHeight * 0.015),
@@ -87,6 +118,14 @@ class EmployeeUserProfileScreen extends StatelessWidget {
                       icon: Icons.security_outlined,
                       title: 'Security',
                       iconColor: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SecurityScreen(),
+                          ),
+                        );
+                      },
                     ),
 
                     SizedBox(height: screenHeight * 0.015),
@@ -96,9 +135,16 @@ class EmployeeUserProfileScreen extends StatelessWidget {
                       icon: Icons.help_outline,
                       title: 'Help',
                       iconColor: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HelpScreen(),
+                          ),
+                        );
+                      },
                     ),
 
-                    const Spacer(),
 
                     // Sign Out Button
                     Container(
@@ -211,16 +257,27 @@ class EmployeeUserProfileScreen extends StatelessWidget {
           ),
 
           // Edit Icon
-          Container(
-            padding: EdgeInsets.all(screenWidth * 0.02),
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.edit_outlined,
-              color: Colors.white,
-              size: screenWidth * 0.04,
+          // Edit Icon
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditProfileScreen(),
+                ),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.all(screenWidth * 0.02),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: screenWidth * 0.04,
+              ),
             ),
           ),
         ],
@@ -234,71 +291,75 @@ class EmployeeUserProfileScreen extends StatelessWidget {
     required String title,
     String? subtitle,
     required Color iconColor,
+    required VoidCallback onTap, // Added onTap parameter
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(screenWidth * 0.04), // 4% of screen width
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: screenWidth * 0.1, // 10% of screen width
-            height: screenWidth * 0.1,
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: onTap, // Made the entire container tappable
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(screenWidth * 0.04), // 4% of screen width
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: screenWidth * 0.05, // 5% of screen width
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: screenWidth * 0.1, // 10% of screen width
+              height: screenWidth * 0.1,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: screenWidth * 0.05, // 5% of screen width
+              ),
             ),
-          ),
-          SizedBox(width: screenWidth * 0.04), // 4% of screen width
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.04, // 4% of screen width
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  SizedBox(height: screenHeight * 0.005), // 0.5% of screen height
+            SizedBox(width: screenWidth * 0.04), // 4% of screen width
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    subtitle,
+                    title,
                     style: TextStyle(
-                      fontSize: screenWidth * 0.035, // 3.5% of screen width
-                      color: Colors.grey,
+                      fontSize: screenWidth * 0.04, // 4% of screen width
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
                     ),
                   ),
+                  if (subtitle != null) ...[
+                    SizedBox(height: screenHeight * 0.005), // 0.5% of screen height
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.035, // 3.5% of screen width
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          Icon(
-            Icons.chevron_right,
-            color: Colors.grey,
-            size: screenWidth * 0.045, // 4.5% of screen width
-          ),
-        ],
+            Icon(
+              Icons.chevron_right,
+              color: Colors.grey,
+              size: screenWidth * 0.045, // 4.5% of screen width
+            ),
+          ],
+        ),
       ),
     );
   }

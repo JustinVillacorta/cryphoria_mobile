@@ -1,4 +1,6 @@
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_dart.dart';
 import 'package:flutter/material.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_view/home_employee_view.dart';
 
 class SalaryTransactionsScreen extends StatefulWidget {
   const SalaryTransactionsScreen({Key? key}) : super(key: key);
@@ -83,7 +85,7 @@ class _SalaryTransactionsScreenState extends State<SalaryTransactionsScreen> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: Column(
         children: [
-          // Sticky Header (only Salary Transactions)
+          // Sticky Header with Back Navigation
           Container(
             color: Colors.white,
             child: SafeArea(
@@ -91,14 +93,24 @@ class _SalaryTransactionsScreenState extends State<SalaryTransactionsScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
-                  children: const [
-                    Icon(
-                      Icons.arrow_back,
-                      color: Colors.black,
-                      size: 24,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EmployeeWidgetTree(),
+                          ),
+                        );
+                      },
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.black,
+                        size: 24,
+                      ),
                     ),
-                    SizedBox(width: 16),
-                    Text(
+                    const SizedBox(width: 16),
+                    const Text(
                       'Salary Transactions',
                       style: TextStyle(
                         color: Colors.black,

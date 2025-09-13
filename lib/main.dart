@@ -1,4 +1,5 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart' as di;
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
 
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-     home: const AuthWrapper(),
+     home: const EmployeeWidgetTree(),
     );
   }
 }

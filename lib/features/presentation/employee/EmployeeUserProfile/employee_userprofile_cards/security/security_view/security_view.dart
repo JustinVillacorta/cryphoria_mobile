@@ -1,3 +1,4 @@
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/security/security_view/change_password_view.dart';
 import 'package:flutter/material.dart';
 
 class SecurityScreen extends StatefulWidget {
@@ -64,13 +65,13 @@ class _SecurityScreenState extends State<SecurityScreen> {
 
             const SizedBox(height: 16),
 
-            // Password Setting
+            // Password Setting - Updated to navigate to ChangePasswordScreen
             _buildSecurityItem(
               icon: Icons.lock_outline,
               title: 'Password',
-              onTap: () => _showChangePasswordDialog(),
+              onTap: () => _navigateToChangePassword(),
               trailing: TextButton(
-                onPressed: () => _showChangePasswordDialog(),
+                onPressed: () => _navigateToChangePassword(),
                 child: Text(
                   'Change Password',
                   style: TextStyle(
@@ -371,57 +372,13 @@ class _SecurityScreenState extends State<SecurityScreen> {
     );
   }
 
-  void _showChangePasswordDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Change Password'),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Current Password',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'New Password',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Confirm New Password',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Password changed successfully')),
-                );
-              },
-              child: const Text('Change Password'),
-            ),
-          ],
-        );
-      },
+  // Updated method to navigate to ChangePasswordScreen instead of showing dialog
+  void _navigateToChangePassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChangePasswordScreen(), // Use the correct class name
+      ),
     );
   }
 

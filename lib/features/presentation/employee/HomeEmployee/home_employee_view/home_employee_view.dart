@@ -1,5 +1,8 @@
+import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/notification_view/notification_view.dart';
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_transaction_bottom_sheet.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/salary_transactions_view/salary_transactions_view.dart';
+
 class HomeEmployeeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -46,23 +49,33 @@ class HomeEmployeeScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Container(
-                      padding: EdgeInsets.all(screenWidth * 0.02),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => NotificationsScreen(),
                           ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.notifications_outlined,
-                        color: Colors.grey[700],
-                        size: isTablet ? 24 : screenWidth * 0.05,
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(screenWidth * 0.02),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.notifications_outlined,
+                          color: Colors.grey[700],
+                          size: isTablet ? 24 : screenWidth * 0.05,
+                        ),
                       ),
                     ),
                   ],
@@ -290,7 +303,7 @@ class HomeEmployeeScreen extends StatelessWidget {
 
                 SizedBox(height: screenHeight * 0.02),
 
-                // Recent Transactions Header
+                // Recent Transactions Header with Navigation
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -302,23 +315,33 @@ class HomeEmployeeScreen extends StatelessWidget {
                         color: Colors.black87,
                       ),
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          'View All',
-                          style: TextStyle(
-                            fontSize: isTablet ? 16 : screenWidth * 0.035,
-                            color: Color(0xFF9747FF),
-                            fontWeight: FontWeight.w500,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SalaryTransactionsScreen(),
                           ),
-                        ),
-                        SizedBox(width: 4),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: isTablet ? 14 : screenWidth * 0.03,
-                          color: Color(0xFF9747FF),
-                        ),
-                      ],
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Text(
+                            'View All',
+                            style: TextStyle(
+                              fontSize: isTablet ? 16 : screenWidth * 0.035,
+                              color: Color(0xFF9747FF),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: isTablet ? 14 : screenWidth * 0.03,
+                            color: Color(0xFF9747FF),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
