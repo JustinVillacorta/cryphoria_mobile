@@ -171,44 +171,60 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     print("📋 Request data: name=$name, fileName=$fileName, sourceCode=${sourceCode.length} chars");
     
     try {
-      print("📤 Making POST request to /api/ai/audit-contract/");
+      print("📤 Making POST request to /api/ai/upload-contract/ for validation");
       
+      // Use the upload endpoint for validation only (doesn't start audit)
       final response = await dio.post(
-        '/api/ai/audit-contract/',
-        data: {
-          'contract_code': sourceCode,
+        '/api/ai/upload-contract/',
+        data: FormData.fromMap({
+          'contract_file': MultipartFile.fromString(
+            sourceCode,
+            filename: fileName,
+            contentType: DioMediaType('text', 'plain'),
+          ),
           'contract_name': name,
-          'contract_address': '', // Optional for auditing
-          'upload_method': 'text',
-        },
+        }),
         options: Options(
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'multipart/form-data',
           },
         ),
       );
 
-      print("📥 Response received:");
+      print("📥 Upload validation response:");
       print("📊 Status code: ${response.statusCode}");
       print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
-        // Convert the audit response to a SmartContract model
         final responseData = response.data;
         
-        // Create a SmartContract model from the audit response
-        final contractData = {
-          'id': responseData['audit_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-          'name': name,
-          'fileName': fileName,
-          'sourceCode': sourceCode,
-          'uploadedAt': DateTime.now().toIso8601String(),
-          'status': 'uploaded',
-        };
-        
-        return SmartContractModel.fromJson(contractData);
+        if (responseData['success'] == true) {
+          print("✅ Contract validation successful");
+          
+          // Create a SmartContract model with unique ID for local storage
+          final contractId = 'contract_${DateTime.now().millisecondsSinceEpoch}';
+          
+          final contractData = {
+            'id': contractId,
+            'name': name,
+            'fileName': fileName,
+            'sourceCode': sourceCode,
+            'uploadedAt': DateTime.now().toIso8601String(),
+            'status': 'validated',
+            'fileInfo': responseData['file_info'] ?? {},
+          };
+          
+          print("🏗️ Created contract data: $contractData");
+          
+          final contractModel = SmartContractModel.fromJson(contractData);
+          print("✅ Successfully created SmartContractModel: ${contractModel.id}");
+          
+          return contractModel;
+        } else {
+          throw Exception('Contract validation failed: ${responseData['error'] ?? 'Unknown error'}');
+        }
       } else {
-        throw Exception('Failed to upload contract: ${response.statusMessage}');
+        throw Exception('Failed to validate contract: ${response.statusMessage}');
       }
     } on DioException catch (e) {
       print("❌ DioException in uploadContract:");

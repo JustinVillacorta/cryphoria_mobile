@@ -33,10 +33,14 @@ import 'package:cryphoria_mobile/features/domain/usecases/Audit/get_audit_status
 import 'package:cryphoria_mobile/features/domain/usecases/Audit/upload_contract_usecase.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_controller.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Employee/employee_viewmodel/employee_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_contract_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_analysis_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_results_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_main_viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -174,7 +178,24 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetAuditStatusUseCase(sl<AuditRepository>()));
   sl.registerLazySingleton(() => UploadContractUseCase(sl<AuditRepository>()));
 
-  // Notifiers
+  // Audit ViewModels (proper MVVM)
+  sl.registerFactory(() => AuditContractViewModel(
+    uploadContractUseCase: sl(),
+  ));
+  
+  sl.registerFactory(() => AuditAnalysisViewModel(
+    submitAuditUseCase: sl(),
+    getAuditStatusUseCase: sl(),
+  ));
+  
+  sl.registerFactory(() => AuditResultsViewModel(
+    getAuditReportUseCase: sl(),
+  ));
+  
+  // Main ViewModel as lazy singleton for shared state across audit flow
+  sl.registerLazySingleton(() => AuditMainViewModel());
+
+  // Legacy Notifier (to be deprecated)
   sl.registerFactory(() => AuditNotifier(
     submitAuditUseCase: sl(),
     getAuditReportUseCase: sl(),
