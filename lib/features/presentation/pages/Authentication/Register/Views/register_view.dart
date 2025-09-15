@@ -3,7 +3,9 @@ import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogI
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/ApprovalPending/approval_pending_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_dart.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
+import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:flutter/material.dart';
 
 class RegisterView extends StatefulWidget {
@@ -14,11 +16,13 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView> {
-  final TextEditingController _businessController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final RegisterViewModel _viewModel = sl<RegisterViewModel>();
+  
+  // Role selection state
+  String _selectedRole = 'Employee'; // Default to Employee
 
   @override
   void dispose() {
@@ -62,6 +66,9 @@ class _RegisterViewState extends State<RegisterView> {
                 buildInputField('Username', controller: _usernameController),
                 const SizedBox(height: 16),
                 buildInputField('Email', controller: _emailController),
+                const SizedBox(height: 16),
+                // Role Selection Dropdown
+                buildRoleSelector(),
                 const SizedBox(height: 24),
                 buildInputField(
                   'Password',
@@ -85,6 +92,7 @@ class _RegisterViewState extends State<RegisterView> {
                         _usernameController.text,
                         _passwordController.text,
                         _emailController.text,
+                        _selectedRole,
                       );
                       if (!mounted) return;
                       
@@ -120,11 +128,24 @@ class _RegisterViewState extends State<RegisterView> {
                             ),
                           );
                         } else {
-                          // User is approved (normal case for registration), go to main app
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (_) => const WidgetTree()),
-                          );
+                          // Role-based navigation after successful registration
+                          if (_viewModel.authUser!.role == 'Manager') {
+                            // Reset page notifiers to default before navigation
+                            selectedPageNotifer.value = 0;
+                            selectedEmployeePageNotifer.value = 0;
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const WidgetTree()),
+                            );
+                          } else {
+                            // Reset page notifiers to default before navigation
+                            selectedPageNotifer.value = 0;
+                            selectedEmployeePageNotifer.value = 0;
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const EmployeeWidgetTree()),
+                            );
+                          }
                         }
                       } else if (_viewModel.error != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -190,6 +211,56 @@ class _RegisterViewState extends State<RegisterView> {
                 const SizedBox(height: 30),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Role selector dropdown
+  Widget buildRoleSelector() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedRole,
+          hint: const Text(
+            'Select Role',
+            style: TextStyle(color: Colors.grey),
+          ),
+          dropdownColor: Colors.grey[800],
+          style: const TextStyle(color: Colors.white),
+          items: const [
+            DropdownMenuItem(
+              value: 'Manager',
+              child: Text(
+                'Manager',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 'Employee',
+              child: Text(
+                'Employee',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedRole = newValue;
+              });
+            }
+          },
+          icon: const Icon(
+            Icons.arrow_drop_down,
+            color: Colors.white,
           ),
         ),
       ),

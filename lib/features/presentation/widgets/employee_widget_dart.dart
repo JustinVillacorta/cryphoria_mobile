@@ -20,7 +20,7 @@ class EmployeeWidgetTree extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: selectedPageNotifer, // You can reuse the same notifier or create a separate one
+      valueListenable: selectedEmployeePageNotifer, // Use separate notifier for employee pages
       builder: (context, selectedPage, child) {
         return Scaffold(
           backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor, // Match theme
@@ -36,7 +36,7 @@ class EmployeeWidgetTree extends StatelessWidget {
                 child: EmployeeNavBar(
                   currentIndex: selectedPage,
                   onTap: (index) {
-                    selectedPageNotifer.value = index;
+                    selectedEmployeePageNotifer.value = index;
                   },
                 ),
               ),

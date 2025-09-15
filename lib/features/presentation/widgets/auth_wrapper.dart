@@ -4,6 +4,8 @@ import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_dart.dart';
+import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:cryphoria_mobile/debug/auth_debug_helper.dart';
 
 class AuthWrapper extends StatefulWidget {
@@ -162,6 +164,21 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       );
     }
 
-    return _isAuthenticated ? const WidgetTree() : const LogIn();
+    if (_isAuthenticated && _cachedAuthUser != null) {
+      // Reset page notifiers to default before navigation
+      selectedPageNotifer.value = 0;
+      selectedEmployeePageNotifer.value = 0;
+      
+      // Role-based navigation
+      if (_cachedAuthUser!.role == 'Manager') {
+        print('🔀 AuthWrapper: Navigating to Manager screens for user: ${_cachedAuthUser!.username}');
+        return const WidgetTree();
+      } else {
+        print('🔀 AuthWrapper: Navigating to Employee screens for user: ${_cachedAuthUser!.username}');
+        return const EmployeeWidgetTree();
+      }
+    }
+
+    return const LogIn();
   }
 }

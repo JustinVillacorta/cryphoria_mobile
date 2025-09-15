@@ -26,7 +26,7 @@ class RegisterViewModel extends ChangeNotifier {
     required this.deviceInfoService,
   });
 
-  Future<void> register(String username, String password, String email) async {
+  Future<void> register(String username, String password, String email, String role) async {
     try {
       _isLoading = true;
       _error = null;
@@ -40,6 +40,7 @@ class RegisterViewModel extends ChangeNotifier {
         username, 
         password, 
         email,
+        role: role,
         deviceName: deviceName,
         deviceId: deviceId,
       );

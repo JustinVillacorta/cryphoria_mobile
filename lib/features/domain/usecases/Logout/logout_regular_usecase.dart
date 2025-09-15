@@ -1,10 +1,9 @@
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 
-/// Use case for logging out the current user.
-/// It interacts with the [AuthRepository] to perform the regular logout operation.
-class Logout {
+/// Use case for regular logout
+class LogoutRegular {
   final AuthRepository repository;
-  Logout(this.repository);
+  LogoutRegular(this.repository);
 
   Future<bool> execute() {
     return repository.logout();

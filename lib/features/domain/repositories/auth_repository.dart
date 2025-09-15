@@ -7,6 +7,7 @@ abstract class AuthRepository {
   Future<LoginResponse> register(String username, String password, String email, {String? role, String? deviceName, String? deviceId});
   
   // Session management - aligned with backend API
+  Future<bool> logout(); // Regular logout
   Future<Map<String, dynamic>> logoutCheck(); // Check if safe logout is possible
   Future<bool> logoutForce(); // Force logout without transfer check
   Future<List<UserSession>> getTransferableSessions(); // List transferable sessions

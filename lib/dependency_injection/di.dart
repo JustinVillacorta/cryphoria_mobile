@@ -33,6 +33,7 @@ import 'package:cryphoria_mobile/features/domain/usecases/Audit/get_audit_status
 import 'package:cryphoria_mobile/features/domain/usecases/Audit/upload_contract_usecase.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_controller.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
@@ -122,6 +123,12 @@ Future<void> init() async {
   sl.registerFactory(() => RegisterViewModel(
     registerUseCase: sl(),
     deviceInfoService: sl(),
+  ));
+  sl.registerFactory(() => LogoutViewModel(
+    logoutUseCase: sl(),
+    logoutForceUseCase: sl(),
+    logoutCheckUseCase: sl(),
+    authLocalDataSource: sl(),
   ));
   sl.registerFactory(() => SessionManagementViewModel());
   sl.registerFactory(() => SessionManagementController(

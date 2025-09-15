@@ -8,6 +8,7 @@ abstract class AuthRemoteDataSource {
   Future<LoginResponse> register(String username, String password, String email, {String? role, String? deviceName, String? deviceId});
   
   // Session management - aligned with backend API
+  Future<bool> logout(); // Regular logout
   Future<Map<String, dynamic>> logoutCheck(); // Check if safe logout is possible
   Future<bool> logoutForce(); // Force logout without transfer check
   Future<List<UserSession>> getTransferableSessions(); // List transferable sessions
@@ -112,9 +113,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> logoutCheck() async {
+  Future<bool> logout() async {
     try {
       final response = await dio.post('$baseUrl/api/auth/logout/');
+      
+      return response.statusCode == 200 && response.data['success'] == true;
+    } on DioException catch (e) {
+      // If endpoint not found, just clear local data
+      if (e.response?.statusCode == 404) {
+        print('Regular logout endpoint not implemented (404), considering local logout');
+        return true; // Allow local logout even if backend doesn't support it
+      }
+      final message = e.response?.data['detail']?.toString() ?? 'Logout failed';
+      throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> logoutCheck() async {
+    try {
+      final response = await dio.post('$baseUrl/api/auth/logout/check/');
       
       if (response.statusCode == 200) {
         return response.data;
@@ -130,10 +148,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<bool> logoutForce() async {
     try {
-      final response = await dio.post('$baseUrl/api/auth/logout/');
+      final response = await dio.post('$baseUrl/api/auth/logout/force/');
       
       return response.statusCode == 200 && response.data['success'] == true;
     } on DioException catch (e) {
+      // If endpoint not found, just clear local data
+      if (e.response?.statusCode == 404) {
+        print('Force logout endpoint not implemented (404), considering local logout');
+        return true; // Allow local logout even if backend doesn't support it
+      }
       final message = e.response?.data['detail']?.toString() ?? 'Force logout failed';
       throw ServerException(message);
     }

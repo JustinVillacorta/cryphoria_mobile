@@ -4,7 +4,8 @@ import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/profile_session_management_view.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
-import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_usecase.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
+import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 
 class userProfile extends StatefulWidget {
   const userProfile({super.key});
@@ -16,11 +17,56 @@ class userProfile extends StatefulWidget {
 class _userProfileState extends State<userProfile> {
   String? _username;
   String? _email;
+  late LogoutViewModel _logoutViewModel;
 
   @override
   void initState() {
     super.initState();
+    _logoutViewModel = sl<LogoutViewModel>();
+    _logoutViewModel.addListener(_onLogoutStateChanged);
     _loadUserData();
+  }
+
+  @override
+  void dispose() {
+    _logoutViewModel.removeListener(_onLogoutStateChanged);
+    super.dispose();
+  }
+
+  void _onLogoutStateChanged() {
+    if (!mounted) return; // Ensure widget is still mounted
+    
+    if (_logoutViewModel.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_logoutViewModel.error!),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    
+    if (_logoutViewModel.message != null) {
+      // Logout successful, navigate to login
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Navigator.canPop(context)) {
+          selectedPageNotifer.value = 0;
+          selectedEmployeePageNotifer.value = 0;
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LogIn()),
+            (route) => false,
+          );
+        } else if (mounted) {
+          // If no routes to pop, just push replacement
+          selectedPageNotifer.value = 0;
+          selectedEmployeePageNotifer.value = 0;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const LogIn()),
+          );
+        }
+      });
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -37,74 +83,134 @@ class _userProfileState extends State<userProfile> {
 
   Future<void> _logout() async {
     try {
-      // Show loading indicator
-      showDialog(
+      // Show confirmation dialog
+      final shouldLogout = await showDialog<bool>(
         context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Text('Logout', style: TextStyle(color: Colors.white)),
+          content: const Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(color: Colors.white70),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Logout', style: TextStyle(color: Colors.red)),
+            ),
+          ],
         ),
       );
 
-      // ALWAYS clear local data first (most important for UX)
-      final authDataSource = sl<AuthLocalDataSource>();
-      await authDataSource.clearAuthData();
-      print('Logout: Local authentication data cleared');
-
-      // Then attempt API logout (best effort)
-      try {
-        final logoutUseCase = sl<Logout>();
-        final success = await logoutUseCase.execute();
-        
-        if (success) {
-          print('Logout: API logout successful');
-        } else {
-          print('Logout: API logout failed, but local data already cleared');
-        }
-      } catch (apiError) {
-        print('Logout: API logout error: $apiError, but local data already cleared');
-        // Don't rethrow - local logout is more important than API logout
-      }
-      
-      // Close loading indicator
-      if (mounted) Navigator.of(context).pop();
-      
-      // Always navigate to login screen (local data is cleared)
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LogIn()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      // Close loading indicator
-      if (mounted) Navigator.of(context).pop();
-      
-      // Fallback: ensure local data is cleared even if something went wrong above
-      try {
-        final authDataSource = sl<AuthLocalDataSource>();
-        await authDataSource.clearAuthData();
-        print('Logout: Fallback local data clear completed');
-      } catch (clearError) {
-        print('Logout: Critical error - could not clear local data: $clearError');
-      }
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Logout completed with issues: ${e.toString()}'),
-            backgroundColor: Colors.orange,
+      if (shouldLogout == true) {
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+            ),
           ),
         );
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LogIn()),
-          (route) => false,
-        );
+
+        // Use smart logout
+        final success = await _logoutViewModel.smartLogout();
+        
+        // Close loading dialog
+        if (mounted) Navigator.of(context).pop();
+        
+        if (!success && _logoutViewModel.needsTransfer) {
+          // Show transfer dialog
+          _showTransferDialog();
+        }
       }
+    } catch (e) {
+      // Close loading dialog if open
+      if (mounted) Navigator.of(context).pop();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logout error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showTransferDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('Main Device Transfer Required', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'You are the main device for this account. You need to transfer main device privileges to another session before logging out.',
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'What would you like to do?',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileSessionManagementView()),
+              );
+            },
+            child: const Text('Manage Sessions', style: TextStyle(color: Colors.blue)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _forceLogout();
+            },
+            child: const Text('Force Logout', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _forceLogout() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+        ),
+      ),
+    );
+
+    await _logoutViewModel.forceLogout();
+    
+    if (mounted) {
+      Navigator.of(context).pop();
+      
+      // Navigate to login screen
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LogIn()),
+        (route) => false,
+      );
     }
   }
 

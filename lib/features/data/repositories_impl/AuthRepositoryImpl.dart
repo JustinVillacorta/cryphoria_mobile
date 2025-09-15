@@ -27,6 +27,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<bool> logout() async {
+    final success = await remoteDataSource.logout();
+    if (success) {
+      await localDataSource.clearAuthData();
+    }
+    return success;
+  }
+
+  @override
   Future<Map<String, dynamic>> logoutCheck() async {
     return await remoteDataSource.logoutCheck();
   }

@@ -3,7 +3,9 @@ import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogI
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/Views/register_view.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/ApprovalPending/approval_pending_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_dart.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
+import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:flutter/material.dart';
 
 class LogIn extends StatefulWidget {
@@ -40,11 +42,24 @@ class _LogInState extends State<LogIn> {
           ),
         );
       } else {
-        // User is approved, go to main app
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const WidgetTree()),
-        );
+        // Role-based navigation after successful login
+        if (_viewModel.authUser!.role == 'Manager') {
+          // Reset page notifiers to default before navigation
+          selectedPageNotifer.value = 0;
+          selectedEmployeePageNotifer.value = 0;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const WidgetTree()),
+          );
+        } else {
+          // Reset page notifiers to default before navigation
+          selectedPageNotifer.value = 0;
+          selectedEmployeePageNotifer.value = 0;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const EmployeeWidgetTree()),
+          );
+        }
       }
     } else if (_viewModel.error != null) {
       ScaffoldMessenger.of(
@@ -57,10 +72,24 @@ class _LogInState extends State<LogIn> {
     // This will be handled by the ApprovalPendingView's polling mechanism
     // Just refresh the current state
     if (_viewModel.authUser != null && !_viewModel.isApprovalPending) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const WidgetTree()),
-      );
+      // Role-based navigation after approval
+      if (_viewModel.authUser!.role == 'Manager') {
+        // Reset page notifiers to default before navigation
+        selectedPageNotifer.value = 0;
+        selectedEmployeePageNotifer.value = 0;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const WidgetTree()),
+        );
+      } else {
+        // Reset page notifiers to default before navigation
+        selectedPageNotifer.value = 0;
+        selectedEmployeePageNotifer.value = 0;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const EmployeeWidgetTree()),
+        );
+      }
     }
   }
 

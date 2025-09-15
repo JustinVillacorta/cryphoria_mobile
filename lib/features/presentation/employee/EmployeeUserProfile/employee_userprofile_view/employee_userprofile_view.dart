@@ -5,10 +5,135 @@ import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProf
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/wallet/wallet_view/wallet_view.dart';
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/compliance/compliance_view/compliance_view.dart';
+import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 
 
-class EmployeeUserProfileScreen extends StatelessWidget {
+class EmployeeUserProfileScreen extends StatefulWidget {
   const EmployeeUserProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  State<EmployeeUserProfileScreen> createState() => _EmployeeUserProfileScreenState();
+}
+
+class _EmployeeUserProfileScreenState extends State<EmployeeUserProfileScreen> {
+  late LogoutViewModel _logoutViewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _logoutViewModel = sl<LogoutViewModel>();
+    _logoutViewModel.addListener(_onLogoutStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _logoutViewModel.removeListener(_onLogoutStateChanged);
+    super.dispose();
+  }
+
+  void _onLogoutStateChanged() {
+    if (!mounted) return; // Ensure widget is still mounted
+    
+    if (_logoutViewModel.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_logoutViewModel.error!),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    
+    if (_logoutViewModel.message != null) {
+      // Logout successful, navigate to login
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Navigator.canPop(context)) {
+          selectedPageNotifer.value = 0;
+          selectedEmployeePageNotifer.value = 0;
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LogIn()),
+            (route) => false,
+          );
+        } else if (mounted) {
+          // If no routes to pop, just push replacement
+          selectedPageNotifer.value = 0;
+          selectedEmployeePageNotifer.value = 0;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const LogIn()),
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> _logout() async {
+    try {
+      // Show confirmation dialog
+      final shouldLogout = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Text('Logout', style: TextStyle(color: Colors.white)),
+          content: const Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Logout', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldLogout == true) {
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+            ),
+          ),
+        );
+
+        // Use smart logout (employees typically don't need transfer checks)
+        final success = await _logoutViewModel.forceLogout();
+        
+        // Close loading dialog
+        if (mounted) Navigator.of(context).pop();
+        
+        if (!success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Logout failed: ${_logoutViewModel.error ?? "Unknown error"}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading dialog if open
+      if (mounted) Navigator.of(context).pop();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logout error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,9 +276,7 @@ class EmployeeUserProfileScreen extends StatelessWidget {
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
                       child: TextButton(
-                        onPressed: () {
-                          // Handle sign out
-                        },
+                        onPressed: _logout,
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.red,
                           padding: EdgeInsets.zero,
