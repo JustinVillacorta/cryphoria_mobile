@@ -1,11 +1,6 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/ApprovalPending/approval_pending_view.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_dart.dart';
-import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
-import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
 import 'package:flutter/material.dart';
 
 class RegisterView extends StatefulWidget {
@@ -36,179 +31,266 @@ class _RegisterViewState extends State<RegisterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black38,
+      backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: SingleChildScrollView(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // For tablets/desktop, show side-by-side layout
+            if (constraints.maxWidth > 800) {
+              return Row(
+                children: [
+                  // Left side - Sign Up
+                  Expanded(
+                    child: _buildRegisterForm(context),
+                  ),
+                  // Right side - Log In (hidden for now, show register)
+                  Expanded(
+                    child: Container(
+                      color: Colors.white,
+                      child: const Center(
+                        child: Text(
+                          'Log In',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            } else {
+              // For mobile, show full screen register
+              return _buildRegisterForm(context);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRegisterForm(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(32),
+      child: Center(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 40),
                 // Title
                 const Text(
                   'Create Account',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Colors.black87,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
+                
                 // Subtitle
                 const Text(
-                  'Register and simplify crypto bookkeeping and invoicing.',
-                  style: TextStyle(fontSize: 13, color: Colors.white),
-                ),
-                const SizedBox(height: 30),
-                
-                const SizedBox(height: 16),
-                buildInputField('Username', controller: _usernameController),
-                const SizedBox(height: 16),
-                buildInputField('Email', controller: _emailController),
-                const SizedBox(height: 16),
-                // Role Selection Dropdown
-                buildRoleSelector(),
-                const SizedBox(height: 24),
-                buildInputField(
-                  'Password',
-                  controller: _passwordController,
-                  obscure: true,
-                ),
-                const SizedBox(height: 24),
-                // Register Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF9747FF),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () async {
-                      await _viewModel.register(
-                        _usernameController.text,
-                        _passwordController.text,
-                        _emailController.text,
-                        _selectedRole,
-                      );
-                      if (!mounted) return;
-                      
-                      if (_viewModel.authUser != null) {
-                        // Check if approval is pending (shouldn't happen for registration, but just in case)
-                        if (_viewModel.isApprovalPending) {
-                          // Navigate to approval pending screen
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ApprovalPendingView(
-                                authUser: _viewModel.authUser!,
-                                onRetry: () => {},
-                                onLogout: () async {
-                                  try {
-                                    // Clear authentication data first to prevent issues
-                                    final authDataSource = sl<AuthLocalDataSource>();
-                                    await authDataSource.clearAuthData();
-                                    print('Register logout: Local authentication data cleared successfully');
-                                  } catch (e) {
-                                    print('Register logout: Error clearing authentication data: $e');
-                                  }
-                                  
-                                  // Navigate to login screen
-                                  if (mounted) {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const LogIn()),
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          );
-                        } else {
-                          // Role-based navigation after successful registration
-                          if (_viewModel.authUser!.role == 'Manager') {
-                            // Reset page notifiers to default before navigation
-                            selectedPageNotifer.value = 0;
-                            selectedEmployeePageNotifer.value = 0;
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (_) => const WidgetTree()),
-                            );
-                          } else {
-                            // Reset page notifiers to default before navigation
-                            selectedPageNotifer.value = 0;
-                            selectedEmployeePageNotifer.value = 0;
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (_) => const EmployeeWidgetTree()),
-                            );
-                          }
-                        }
-                      } else if (_viewModel.error != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(_viewModel.error!),
-                          ),
-                        );
-                      }
-                    },
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+                  'Sign up and simplify crypto bookkeeping and invoicing.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
-                // Divider with OR
+                const SizedBox(height: 40),
+
+                // Role Selection Cards
                 Row(
                   children: [
-                    Expanded(child: Divider(color: Colors.grey.shade300)),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        'OR',
-                        style: TextStyle(
-                          color: Colors
-                              .white60, // 👈 change this to any color you want
-                          fontWeight: FontWeight.normal,
+                    Expanded(
+                      child: _buildRoleCard(
+                        role: 'Manager',
+                        icon: Icons.manage_accounts,
+                        title: 'Manager',
+                        subtitle: 'Create invoices, manage employees\nand manage employee workflow.',
+                        isSelected: _selectedRole == 'Manager',
+                        onTap: () => setState(() => _selectedRole = 'Manager'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildRoleCard(
+                        role: 'Employee',
+                        icon: Icons.person,
+                        title: 'Employee',
+                        subtitle: 'Manage wallets, track\nexpenses, and check payment history.',
+                        isSelected: _selectedRole == 'Employee',
+                        onTap: () => setState(() => _selectedRole = 'Employee'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+
+                // Username field
+                _buildTextField(
+                  controller: _usernameController,
+                  label: 'Username',
+                  icon: Icons.person_outline,
+                ),
+                const SizedBox(height: 20),
+
+                // Email field
+                _buildTextField(
+                  controller: _emailController,
+                  label: 'Email',
+                  icon: Icons.email_outlined,
+                ),
+                const SizedBox(height: 20),
+
+                // Password field
+                _buildTextField(
+                  controller: _passwordController,
+                  label: 'Password',
+                  icon: Icons.lock_outline,
+                  isPassword: true,
+                ),
+                const SizedBox(height: 20),
+
+                // Confirm Password field
+                _buildTextField(
+                  controller: TextEditingController(), // You may want to add this controller
+                  label: 'Confirm Password',
+                  icon: Icons.lock_outline,
+                  isPassword: true,
+                ),
+                const SizedBox(height: 24),
+
+                // Terms and Conditions
+                Row(
+                  children: [
+                    SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: Checkbox(
+                        value: true, // You may want to track this state
+                        onChanged: (value) {
+                          // Handle checkbox state
+                        },
+                        activeColor: const Color(0xFF8B5CF6),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: RichText(
+                        text: const TextSpan(
+                          text: 'I agree to the ',
+                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                          children: [
+                            TextSpan(
+                              text: 'Terms and Conditions',
+                              style: TextStyle(
+                                color: Color(0xFF8B5CF6),
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                            TextSpan(text: ' and '),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: TextStyle(
+                                color: Color(0xFF8B5CF6),
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                            TextSpan(text: '.'),
+                          ],
                         ),
                       ),
                     ),
-                    Expanded(child: Divider(color: Colors.white60)),
                   ],
                 ),
-                const SizedBox(height: 20),
-                
+                const SizedBox(height: 32),
 
-                const SizedBox(height: 30),
-                // Log In redirect
-                Center(
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: RichText(
-                      text: const TextSpan(
-                        text: 'Already have an Account? ',
-                        style: TextStyle(color: Colors.white),
-                        children: [
-                          TextSpan(
-                            text: 'Log In',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                // Sign Up Button
+                ElevatedButton(
+                  onPressed: _viewModel.isLoading ? null : _register,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: _viewModel.isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
-                        ],
+                        )
+                      : const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 24),
+
+                // Log In link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Already have an Account? ',
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 14,
                       ),
                     ),
-                  ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Log In',
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 30),
+
+                // Error message
+                if (_viewModel.error != null && _viewModel.error!.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.shade200),
+                    ),
+                    child: Text(
+                      _viewModel.error!,
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -217,116 +299,144 @@ class _RegisterViewState extends State<RegisterView> {
     );
   }
 
-  // Role selector dropdown
-  Widget buildRoleSelector() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedRole,
-          hint: const Text(
-            'Select Role',
-            style: TextStyle(color: Colors.grey),
+  Widget _buildRoleCard({
+    required String role,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF8B5CF6).withOpacity(0.1) : Colors.white,
+          border: Border.all(
+            color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFE5E7EB),
+            width: isSelected ? 2 : 1,
           ),
-          dropdownColor: Colors.grey[800],
-          style: const TextStyle(color: Colors.white),
-          items: const [
-            DropdownMenuItem(
-              value: 'Manager',
-              child: Text(
-                'Manager',
-                style: TextStyle(color: Colors.white),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.black54,
+                size: 24,
               ),
             ),
-            DropdownMenuItem(
-              value: 'Employee',
-              child: Text(
-                'Employee',
-                style: TextStyle(color: Colors.white),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? const Color(0xFF8B5CF6) : Colors.black87,
               ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black54,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
-          onChanged: (String? newValue) {
-            if (newValue != null) {
-              setState(() {
-                _selectedRole = newValue;
-              });
-            }
-          },
-          icon: const Icon(
-            Icons.arrow_drop_down,
-            color: Colors.white,
-          ),
         ),
       ),
     );
   }
 
-  // Reusable text input
-  Widget buildInputField(
-    String hint, {
+  Widget _buildTextField({
     required TextEditingController controller,
-    bool obscure = false,
+    required String label,
+    required IconData icon,
+    bool isPassword = false,
   }) {
     return TextField(
       controller: controller,
-      obscureText: obscure,
+      obscureText: isPassword,
       decoration: InputDecoration(
-        hintText: hint,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+        labelText: label,
+        prefixIcon: Icon(
+          icon,
+          color: Colors.black54,
+          size: 20,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        labelStyle: const TextStyle(
+          color: Colors.black54,
+          fontSize: 14,
+        ),
+        filled: true,
+        fillColor: const Color(0xFFF8F9FA),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+      style: const TextStyle(
+        color: Colors.black87,
+        fontSize: 14,
       ),
     );
   }
 
-  // Reusable social button
-  Widget buildSocialButton({
-    IconData? icon,
-    String? iconUrl,
-    required String text,
-    required Color color,
-    MainAxisAlignment alignment = MainAxisAlignment.start,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: alignment,
-          children: [
-            if (iconUrl != null)
-              Image.network(
-                iconUrl,
-                width: 24,
-                height: 24,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.error, size: 24),
-              )
-            else
-              Icon(icon ?? Icons.error, color: Colors.white, size: 24),
-            const SizedBox(width: 8),
-            Text(
-              text,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _register() async {
+    if (_usernameController.text.isNotEmpty && 
+        _emailController.text.isNotEmpty && 
+        _passwordController.text.isNotEmpty) {
+      
+      await _viewModel.register(
+        _usernameController.text,
+        _passwordController.text,
+        _emailController.text,
+        _selectedRole,
+      );
+      
+      // Check if registration was successful and redirect to login
+      if (!mounted) return;
+      
+      if (_viewModel.error == null && _viewModel.registerResponse != null) {
+        // Registration successful - redirect to login screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Please log in.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LogIn()),
+        );
+      } else if (_viewModel.error != null) {
+        // Show error message - this is already handled by the UI
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_viewModel.error!),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

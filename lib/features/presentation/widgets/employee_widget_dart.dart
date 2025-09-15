@@ -19,31 +19,41 @@ class EmployeeWidgetTree extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: selectedEmployeePageNotifer, // Use separate notifier for employee pages
-      builder: (context, selectedPage, child) {
-        return Scaffold(
-          backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor, // Match theme
-          body: Stack(
-            children: [
-              // Display the selected page
-              employeePages[selectedPage],
-              // Position the employee navigation bar at the bottom
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: EmployeeNavBar(
-                  currentIndex: selectedPage,
-                  onTap: (index) {
-                    selectedEmployeePageNotifer.value = index;
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
+    return PopScope(
+      canPop: false, // Prevent default back button behavior
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          // Handle back button press - you can show a confirmation dialog or just ignore
+          // For now, we'll ignore the back press to prevent accidental app closure
+          print('Back button pressed on employee main screen - ignoring to prevent app closure');
+        }
       },
+      child: ValueListenableBuilder(
+        valueListenable: selectedEmployeePageNotifer, // Use separate notifier for employee pages
+        builder: (context, selectedPage, child) {
+          return Scaffold(
+            backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor, // Match theme
+            body: Stack(
+              children: [
+                // Display the selected page
+                employeePages[selectedPage],
+                // Position the employee navigation bar at the bottom
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: EmployeeNavBar(
+                    currentIndex: selectedPage,
+                    onTap: (index) {
+                      selectedEmployeePageNotifer.value = index;
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

@@ -15,31 +15,41 @@ class WidgetTree extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: selectedPageNotifer,
-      builder: (context, selectedPage, child) {
-        return Scaffold(
-          backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor, // Match theme
-          body: Stack(
-            children: [
-              // Display the selected page
-              pages[selectedPage],
-              // Position the custom navigation bar at the bottom
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: CustomNavBar(
-                  currentIndex: selectedPage,
-                  onTap: (index) {
-                    selectedPageNotifer.value = index;
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
+    return PopScope(
+      canPop: false, // Prevent default back button behavior
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          // Handle back button press - you can show a confirmation dialog or just ignore
+          // For now, we'll ignore the back press to prevent accidental app closure
+          print('Back button pressed on main screen - ignoring to prevent app closure');
+        }
       },
+      child: ValueListenableBuilder(
+        valueListenable: selectedPageNotifer,
+        builder: (context, selectedPage, child) {
+          return Scaffold(
+            backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor, // Match theme
+            body: Stack(
+              children: [
+                // Display the selected page
+                pages[selectedPage],
+                // Position the custom navigation bar at the bottom
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: CustomNavBar(
+                    currentIndex: selectedPage,
+                    onTap: (index) {
+                      selectedPageNotifer.value = index;
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

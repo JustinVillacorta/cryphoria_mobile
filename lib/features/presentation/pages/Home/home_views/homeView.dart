@@ -56,6 +56,7 @@ class _HomeViewState extends State<HomeView> {
           child: AppBar(
             backgroundColor: Colors.grey[50],
             elevation: 0,
+            automaticallyImplyLeading: false,
             flexibleSpace: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

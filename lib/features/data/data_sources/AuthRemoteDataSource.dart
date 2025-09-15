@@ -92,13 +92,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       print('Register response code: ${response.statusCode}');
       print('Register response body: ${response.data}');
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         // Registration successful, return user data
         // Note: Backend returns different format for register vs login
+        // Registration response doesn't include token/session data, so we need to create a mock AuthUser
+        final registerData = response.data;
+        
         return LoginResponse.fromJson({
           'success': true,
-          'message': 'Registration successful',
-          'data': response.data
+          'message': registerData['message'] ?? 'Registration successful',
+          'data': {
+            'user_id': registerData['user_id'] ?? '',
+            'username': registerData['username'] ?? '',
+            'email': registerData['email'] ?? '',
+            'role': registerData['role'] ?? 'Employee',
+            // Mock auth fields since registration doesn't return these
+            'token': '', // Empty token since registration doesn't log user in
+            'session_id': '',
+            'approved': false, // User needs to login to get real auth status
+            'is_active': true,
+            'token_created_at': DateTime.now().toIso8601String(),
+          }
         });
       }
       
