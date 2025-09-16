@@ -397,8 +397,7 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         ],
       ),
       gasOptimization: GasOptimizationModel(
-        estimatedGasSaved: _parseGasSavings(gasOptimization),
-        optimizationScore: calculatedScore,
+        optimizationScore: _calculateGasOptimizationScore(gasOptimization),
         suggestions: _parseGasOptimizationSuggestions(gasOptimization),
       ),
       codeQuality: CodeQualityModel(
@@ -438,29 +437,154 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     }
   }
 
-  /// Parse gas optimization suggestions from string
+  /// Parse gas optimization suggestions from backend gas optimization text
   List<GasOptimizationSuggestionModel> _parseGasOptimizationSuggestions(String gasOptText) {
-    // Simple parsing - in a real app, you'd want more sophisticated parsing
-    return [
-      const GasOptimizationSuggestionModel(
-        function: 'State Variables',
-        suggestion: 'Pack state variables to reduce storage slots',
-        estimatedSaving: 20000,
-        priority: Priority.medium,
-      ),
-      const GasOptimizationSuggestionModel(
-        function: 'Loop Optimization',
-        suggestion: 'Optimize loops to reduce gas consumption',
-        estimatedSaving: 15000,
-        priority: Priority.low,
-      ),
-    ];
+    final List<GasOptimizationSuggestionModel> suggestions = [];
+    
+    if (gasOptText.isEmpty) {
+      // Return default suggestions if no backend data
+      return [
+        const GasOptimizationSuggestionModel(
+          function: 'State Variables',
+          suggestion: 'Pack state variables to reduce storage slots',
+          priority: Priority.medium,
+        ),
+        const GasOptimizationSuggestionModel(
+          function: 'Loop Optimization',
+          suggestion: 'Optimize loops to reduce gas consumption',
+          priority: Priority.low,
+        ),
+      ];
+    }
+
+    // Parse actual backend gas optimization text
+    try {
+      // Split by common delimiters and extract suggestions
+      final lines = gasOptText.split(RegExp(r'\n|\. |; '));
+      
+      for (String line in lines) {
+        line = line.trim();
+        if (line.isEmpty || line.length < 10) continue;
+        
+        // Determine priority based on content keywords
+        Priority priority = Priority.medium;
+        if (line.toLowerCase().contains('critical') || line.toLowerCase().contains('high')) {
+          priority = Priority.high;
+        } else if (line.toLowerCase().contains('low') || line.toLowerCase().contains('minor')) {
+          priority = Priority.low;
+        }
+        
+        // Extract function name (look for patterns like "in function X" or "function X")
+        String functionName = 'General';
+        final functionPattern = RegExp(r'(?:in\s+)?function\s+(\w+)', caseSensitive: false);
+        final funcMatch = functionPattern.firstMatch(line);
+        if (funcMatch != null) {
+          functionName = funcMatch.group(1) ?? 'General';
+        } else if (line.toLowerCase().contains('loop')) {
+          functionName = 'Loop Optimization';
+        } else if (line.toLowerCase().contains('storage') || line.toLowerCase().contains('variable')) {
+          functionName = 'State Variables';
+        } else if (line.toLowerCase().contains('modifier')) {
+          functionName = 'Modifiers';
+        }
+        
+        suggestions.add(GasOptimizationSuggestionModel(
+          function: functionName,
+          suggestion: line,
+          priority: priority,
+        ));
+        
+        // Limit to 5 suggestions to avoid UI clutter
+        if (suggestions.length >= 5) break;
+      }
+    } catch (e) {
+      print("⚠️ Error parsing gas optimization suggestions: $e");
+    }
+    
+    // Return default if parsing failed
+    if (suggestions.isEmpty) {
+      return [
+        GasOptimizationSuggestionModel(
+          function: 'Analysis Result',
+          suggestion: gasOptText.isNotEmpty ? gasOptText : 'No specific gas optimization suggestions available.',
+          priority: Priority.medium,
+        ),
+      ];
+    }
+    
+    return suggestions;
   }
 
-  /// Parse gas savings from optimization text
-  int _parseGasSavings(String gasOptText) {
-    // Extract gas savings from text - in a real app, you'd parse this properly
-    return 35000; // Default estimation
+  /// Calculate gas optimization score based on backend gas optimization text
+  double _calculateGasOptimizationScore(String gasOptText) {
+    if (gasOptText.isEmpty) return 60.0; // Default score for empty optimization data
+    
+    double score = 50.0; // Base score
+    
+    try {
+      // Analyze content for optimization quality indicators
+      final optimizationKeywords = [
+        'optimize', 'optimization', 'efficient', 'reduce', 'save', 'improve',
+        'gas', 'cost', 'performance', 'cheaper', 'better'
+      ];
+      
+      final negativeKeywords = [
+        'no optimization', 'cannot optimize', 'not possible', 'inefficient',
+        'expensive', 'high cost', 'poor', 'bad'
+      ];
+      
+      // Count positive optimization indicators
+      int positiveCount = 0;
+      int negativeCount = 0;
+      
+      final lowerText = gasOptText.toLowerCase();
+      
+      for (final keyword in optimizationKeywords) {
+        if (lowerText.contains(keyword)) {
+          positiveCount++;
+        }
+      }
+      
+      for (final keyword in negativeKeywords) {
+        if (lowerText.contains(keyword)) {
+          negativeCount++;
+        }
+      }
+      
+      // Calculate score based on keyword analysis
+      score += (positiveCount * 8); // Boost for positive indicators
+      score -= (negativeCount * 15); // Penalty for negative indicators
+      
+      // Bonus for specific optimization techniques mentioned
+      if (lowerText.contains('storage')) score += 5;
+      if (lowerText.contains('memory')) score += 5;
+      if (lowerText.contains('loop')) score += 5;
+      if (lowerText.contains('variable packing')) score += 10;
+      if (lowerText.contains('modifier')) score += 5;
+      if (lowerText.contains('function')) score += 3;
+      
+      // Bonus for quantified improvements (specific gas amounts)
+      final gasNumberPattern = RegExp(r'\d+\s*(?:gas|wei)', caseSensitive: false);
+      if (gasNumberPattern.hasMatch(gasOptText)) {
+        score += 10;
+      }
+      
+      // Bonus for detailed analysis (longer content generally means more thorough)
+      if (gasOptText.length > 100) score += 5;
+      if (gasOptText.length > 300) score += 5;
+      if (gasOptText.length > 500) score += 5;
+      
+      // Clamp score to valid range
+      score = score.clamp(0.0, 100.0);
+      
+      print("📊 Calculated gas optimization score: $score (positive: $positiveCount, negative: $negativeCount)");
+      
+    } catch (e) {
+      print("⚠️ Error calculating gas optimization score: $e");
+      score = 60.0; // Default on error
+    }
+    
+    return score;
   }
 
   /// Calculate complexity score based on vulnerability count

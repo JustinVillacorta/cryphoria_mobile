@@ -587,15 +587,6 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
                 ),
               ),
               const Spacer(),
-              if (suggestion.estimatedSaving > 0)
-                Text(
-                  '~${suggestion.estimatedSaving} gas',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.green[700],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: 8),

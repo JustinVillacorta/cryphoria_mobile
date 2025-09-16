@@ -125,14 +125,12 @@ class SecurityCheckModel extends SecurityCheck {
 
 class GasOptimizationModel extends GasOptimization {
   const GasOptimizationModel({
-    required super.estimatedGasSaved,
     required super.optimizationScore,
     required super.suggestions,
   });
 
   factory GasOptimizationModel.fromJson(Map<String, dynamic> json) {
     return GasOptimizationModel(
-      estimatedGasSaved: json['estimated_gas_saved'] as int,
       optimizationScore: (json['optimization_score'] as num).toDouble(),
       suggestions: (json['suggestions'] as List)
           .map((s) => GasOptimizationSuggestionModel.fromJson(s))
@@ -142,7 +140,6 @@ class GasOptimizationModel extends GasOptimization {
 
   Map<String, dynamic> toJson() {
     return {
-      'estimated_gas_saved': estimatedGasSaved,
       'optimization_score': optimizationScore,
       'suggestions': suggestions
           .map((s) => (s as GasOptimizationSuggestionModel).toJson())
@@ -155,7 +152,6 @@ class GasOptimizationSuggestionModel extends GasOptimizationSuggestion {
   const GasOptimizationSuggestionModel({
     required super.function,
     required super.suggestion,
-    required super.estimatedSaving,
     required super.priority,
   });
 
@@ -163,7 +159,6 @@ class GasOptimizationSuggestionModel extends GasOptimizationSuggestion {
     return GasOptimizationSuggestionModel(
       function: json['function'] as String,
       suggestion: json['suggestion'] as String,
-      estimatedSaving: json['estimated_saving'] as int,
       priority: Priority.values.firstWhere(
         (e) => e.name == json['priority'],
         orElse: () => Priority.medium,
@@ -175,7 +170,6 @@ class GasOptimizationSuggestionModel extends GasOptimizationSuggestion {
     return {
       'function': function,
       'suggestion': suggestion,
-      'estimated_saving': estimatedSaving,
       'priority': priority.name,
     };
   }

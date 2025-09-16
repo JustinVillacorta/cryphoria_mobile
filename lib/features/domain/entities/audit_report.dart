@@ -59,12 +59,10 @@ class SecurityCheck {
 }
 
 class GasOptimization {
-  final int estimatedGasSaved;
   final double optimizationScore;
   final List<GasOptimizationSuggestion> suggestions;
 
   const GasOptimization({
-    required this.estimatedGasSaved,
     required this.optimizationScore,
     required this.suggestions,
   });
@@ -73,13 +71,11 @@ class GasOptimization {
 class GasOptimizationSuggestion {
   final String function;
   final String suggestion;
-  final int estimatedSaving;
   final Priority priority;
 
   const GasOptimizationSuggestion({
     required this.function,
     required this.suggestion,
-    required this.estimatedSaving,
     required this.priority,
   });
 }
