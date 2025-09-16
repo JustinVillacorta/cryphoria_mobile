@@ -596,26 +596,34 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     return 10;
   }
 
-  /// Parse recommendations from string and AI recommendations
+  /// Parse recommendations from structured backend text and AI recommendations
   List<RecommendationModel> _parseRecommendations(String recommendationsText, [List<dynamic>? aiRecommendations]) {
     final List<RecommendationModel> recommendations = [];
     
-    // Add main recommendation based on text
+    // Parse structured recommendations text
     if (recommendationsText.isNotEmpty) {
-      recommendations.add(RecommendationModel(
-        title: 'Security Improvements',
-        description: recommendationsText,
-        priority: Priority.high,
-        category: 'Security',
-      ));
+      try {
+        // Split by sections based on the backend format
+        final sections = _parseRecommendationSections(recommendationsText);
+        recommendations.addAll(sections);
+      } catch (e) {
+        print("⚠️ Error parsing structured recommendations: $e");
+        // Fallback to treating as single recommendation
+        recommendations.add(RecommendationModel(
+          title: 'Security Improvements',
+          description: recommendationsText,
+          priority: Priority.high,
+          category: 'Security',
+        ));
+      }
     }
     
-    // Add AI recommendations if available
+    // Add AI recommendations if available and not already included
     if (aiRecommendations != null && aiRecommendations.isNotEmpty) {
       for (int i = 0; i < aiRecommendations.length && i < 3; i++) {
         final rec = aiRecommendations[i];
         recommendations.add(RecommendationModel(
-          title: 'AI Recommendation ${i + 1}',
+          title: 'AI Analysis ${i + 1}',
           description: rec.toString(),
           priority: Priority.medium,
           category: 'AI Analysis',
@@ -634,6 +642,76 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     }
     
     return recommendations;
+  }
+
+  /// Parse structured recommendation sections from backend format
+  List<RecommendationModel> _parseRecommendationSections(String text) {
+    final List<RecommendationModel> recommendations = [];
+    
+    // Split by known section headers from backend
+    final sectionPatterns = {
+      'HIGH PRIORITY:': {'priority': Priority.high, 'category': 'Security'},
+      'AI ANALYSIS RECOMMENDATIONS:': {'priority': Priority.medium, 'category': 'AI Analysis'},
+      'GAS OPTIMIZATION:': {'priority': Priority.medium, 'category': 'Gas Optimization'},
+      'GENERAL RECOMMENDATIONS:': {'priority': Priority.low, 'category': 'General'},
+      'MEDIUM PRIORITY:': {'priority': Priority.medium, 'category': 'Security'},
+      'LOW PRIORITY:': {'priority': Priority.low, 'category': 'Security'},
+    };
+    
+    String remainingText = text;
+    
+    for (final sectionPattern in sectionPatterns.entries) {
+      final sectionHeader = sectionPattern.key;
+      final sectionConfig = sectionPattern.value;
+      
+      if (remainingText.contains(sectionHeader)) {
+        final sectionStart = remainingText.indexOf(sectionHeader);
+        final sectionEnd = _findNextSectionStart(remainingText, sectionStart + sectionHeader.length, sectionPatterns.keys.toList());
+        
+        final sectionContent = remainingText.substring(
+          sectionStart + sectionHeader.length,
+          sectionEnd > sectionStart ? sectionEnd : remainingText.length
+        ).trim();
+        
+        if (sectionContent.isNotEmpty) {
+          // Split section content by lines and clean up
+          final lines = sectionContent.split('\n')
+              .map((line) => line.trim())
+              .where((line) => line.isNotEmpty && line.startsWith('- '))
+              .map((line) => line.substring(2)) // Remove "- " prefix
+              .toList();
+          
+          if (lines.isNotEmpty) {
+            recommendations.add(RecommendationModel(
+              title: sectionHeader.replaceAll(':', '').trim(),
+              description: lines.join('\n• '), // Use bullet points
+              priority: sectionConfig['priority'] as Priority,
+              category: sectionConfig['category'] as String,
+            ));
+          }
+        }
+        
+        // Remove processed section from remaining text
+        remainingText = remainingText.substring(0, sectionStart) + 
+                      (sectionEnd > sectionStart ? remainingText.substring(sectionEnd) : '');
+      }
+    }
+    
+    return recommendations;
+  }
+
+  /// Find the start of the next section
+  int _findNextSectionStart(String text, int startFrom, List<String> sectionHeaders) {
+    int earliest = text.length;
+    
+    for (final header in sectionHeaders) {
+      final index = text.indexOf(header, startFrom);
+      if (index >= 0 && index < earliest) {
+        earliest = index;
+      }
+    }
+    
+    return earliest;
   }
 
   @override
