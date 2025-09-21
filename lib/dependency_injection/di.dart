@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthRemoteDataSource.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/EmployeeRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/audit_remote_data_source.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/AuthRepositoryImpl.dart';
@@ -14,6 +15,9 @@ import 'package:cryphoria_mobile/features/data/services/currency_conversion_serv
 import 'package:cryphoria_mobile/features/data/notifiers/audit_notifier.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/audit_repository.dart';
+import 'package:cryphoria_mobile/features/domain/repositories/employee_repository.dart';
+import 'package:cryphoria_mobile/features/domain/repositories/employee_repository_impl.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/EmployeeHome/employee_home_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_check_usecase.dart';
@@ -31,6 +35,7 @@ import 'package:cryphoria_mobile/features/domain/usecases/Audit/submit_audit_use
 import 'package:cryphoria_mobile/features/domain/usecases/Audit/get_audit_report_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Audit/get_audit_status_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Audit/upload_contract_usecase.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
@@ -42,6 +47,8 @@ import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/au
 import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_analysis_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_results_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_main_viewmodel.dart';
+
+
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -78,7 +85,7 @@ Future<void> init() async {
 
   String _baseUrl() {
     if (Platform.isAndroid) {
-      return 'http://192.168.5.59:8000';
+      return 'http://192.168.0.35:8000';
     }
     return 'http://127.0.0.1:8000';
   }
@@ -138,6 +145,25 @@ Future<void> init() async {
     revokeOtherSessions: sl(),
     viewModel: sl(),
   ));
+
+  //HomeEmployeeViewModel
+  sl.registerFactory(
+        () => HomeEmployeeViewModel (),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => GetEmployeeDashboardData(repository: sl()));
+
+  // Repositories
+  sl.registerLazySingleton<EmployeeRepository>(
+        () => EmployeeRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<EmployeeRemoteDataSource>(
+        () => EmployeeRemoteDataSourceImpl(),
+  );
+
+
 
   // Wallet feature
   sl.registerLazySingleton<WalletRemoteDataSource>(

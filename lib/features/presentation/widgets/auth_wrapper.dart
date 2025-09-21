@@ -4,7 +4,7 @@ import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_dart.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:cryphoria_mobile/debug/auth_debug_helper.dart';
 
@@ -37,9 +37,9 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     print('🔄 AuthWrapper: App lifecycle state changed to: $state');
-    
+
     switch (state) {
       case AppLifecycleState.resumed:
         // Re-verify authentication when app comes to foreground
@@ -63,20 +63,20 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
 
   Future<void> _checkAuthenticationStatus() async {
     print('🚀 AuthWrapper: Starting authentication check...');
-    
+
     // Debug storage capabilities first
     await AuthDebugHelper.debugStorageCapabilities();
     await AuthDebugHelper.debugAuthStatus();
-    
+
     try {
       final authDataSource = sl<AuthLocalDataSource>();
       final authUser = await authDataSource.getAuthUser();
-      
+
       print('🔍 AuthWrapper: Retrieved auth user - ${authUser?.username ?? 'null'}');
-      
+
       if (authUser != null && authUser.token.isNotEmpty) {
         print('🔍 AuthWrapper: Found valid token (length: ${authUser.token.length})');
-        
+
         // Check if the token is approved
         if (authUser.approved) {
           // User has valid and approved authentication data
@@ -120,7 +120,7 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
         _isLoading = false;
       });
     }
-    
+
     print('🏁 AuthWrapper: Authentication check completed - authenticated: $_isAuthenticated');
   }
 
@@ -168,7 +168,7 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       // Reset page notifiers to default before navigation
       selectedPageNotifer.value = 0;
       selectedEmployeePageNotifer.value = 0;
-      
+
       // Role-based navigation
       if (_cachedAuthUser!.role == 'Manager') {
         print('🔀 AuthWrapper: Navigating to Manager screens for user: ${_cachedAuthUser!.username}');
