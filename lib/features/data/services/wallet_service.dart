@@ -12,8 +12,8 @@ class WalletService {
   WalletService({
     required this.remoteDataSource, 
     required this.storage,
-    CurrencyConversionService? currencyService,
-  }) : currencyService = currencyService ?? CurrencyConversionService();
+    required this.currencyService,
+  });
 
   Future<Wallet> connectWallet(
     String privateKey, {
@@ -50,9 +50,8 @@ class WalletService {
     
     // Convert ETH balance to both PHP and USD
     final rates = await currencyService.getETHRates();
-    final balanceInPHP = balance * (rates['php'] ?? 200000.0);
-    final balanceInUSD = balance * (rates['usd'] ?? 3200.0);
-
+    final balanceInPHP = balance * (rates['php'] ?? 0.0);
+    final balanceInUSD = balance * (rates['usd'] ?? 0.0);
     return Wallet(
       id: walletData['wallet_id']?.toString() ?? '', 
       name: walletName, 
@@ -101,9 +100,9 @@ class WalletService {
       }
       
       // Convert ETH balance to both PHP and USD
-      final rates = await currencyService.getETHRates();
-      final balanceInPHP = balance * (rates['php'] ?? 200000.0);
-      final balanceInUSD = balance * (rates['usd'] ?? 3200.0);
+        final rates = await currencyService.getETHRates();
+        final balanceInPHP = balance * (rates['php'] ?? 0.0);
+        final balanceInUSD = balance * (rates['usd'] ?? 0.0);
       
       return Wallet(
         id: walletData['wallet_id']?.toString() ?? '', 
