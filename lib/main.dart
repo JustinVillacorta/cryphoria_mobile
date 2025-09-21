@@ -1,4 +1,5 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart' as di;
+import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
@@ -20,6 +21,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<AuditNotifier>(
           create: (_) => di.sl<AuditNotifier>(),
         ),
+        ChangeNotifierProvider(
+        create: (_) => di.sl<HomeEmployeeViewModel>())
+
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
