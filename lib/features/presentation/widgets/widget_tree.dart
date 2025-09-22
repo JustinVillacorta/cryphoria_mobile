@@ -1,6 +1,6 @@
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_views/homeView.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Employee/employee_views/employee_management_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Employee_Management(manager_screens)/employee_views/employee_management_screen.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Payroll/payroll_views/payroll_Views.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Invoice/InvoiceViews/invoice_views.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/UserProfile/UserProfile_Views/userProfile_Views.dart';

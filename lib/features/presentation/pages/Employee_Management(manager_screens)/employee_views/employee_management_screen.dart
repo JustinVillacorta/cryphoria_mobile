@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../employee_viewmodel/employee_viewmodel.dart';
 import 'add_employee_screen.dart';
 import 'employee_detail_screen.dart';
+import '../../../../../dependency_injection/di.dart';
 
 class EmployeeManagementScreen extends StatefulWidget {
   const EmployeeManagementScreen({super.key});
@@ -19,10 +20,13 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   @override
   void initState() {
     super.initState();
-    _employeeViewModel = EmployeeViewModel();
-    // Load sample employees by default
+    _employeeViewModel = sl<EmployeeViewModel>();
+    // Load manager's team from backend by default
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _employeeViewModel.loadSampleData();
+      // Try to load manager's team first, fallback to sample data if needed
+      _employeeViewModel.getManagerTeam().catchError((_) {
+        _employeeViewModel.loadSampleData();
+      });
     });
   }
 
@@ -58,7 +62,10 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AddEmployeeScreen(),
+                            builder: (context) => ChangeNotifierProvider.value(
+                              value: _employeeViewModel,
+                              child: const AddEmployeeScreen(),
+                            ),
                           ),
                         );
                       },
@@ -410,10 +417,10 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
             CircleAvatar(
               radius: 24,
               backgroundColor: Colors.grey[300],
-              child: employee.profileImage.isNotEmpty
+              child: (employee.profileImage != null && employee.profileImage!.isNotEmpty)
                   ? ClipOval(
                       child: Image.network(
-                        employee.profileImage,
+                        employee.profileImage!,
                         width: 48,
                         height: 48,
                         fit: BoxFit.cover,
@@ -443,7 +450,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                   Row(
                     children: [
                       Text(
-                        employee.position,
+                        employee.position ?? 'Employee',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],

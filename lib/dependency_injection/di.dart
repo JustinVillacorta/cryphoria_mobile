@@ -4,8 +4,10 @@ import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.
 import 'package:cryphoria_mobile/features/data/data_sources/AuthRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/audit_remote_data_source.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/employee_remote_data_source.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/AuthRepositoryImpl.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/audit_repository_impl.dart';
+import 'package:cryphoria_mobile/features/data/repositories_impl/employee_repository_impl.dart';
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/data/services/private_key_storage.dart';
 import 'package:cryphoria_mobile/features/data/services/device_info_service.dart';
@@ -14,6 +16,7 @@ import 'package:cryphoria_mobile/features/data/services/currency_conversion_serv
 import 'package:cryphoria_mobile/features/data/notifiers/audit_notifier.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/audit_repository.dart';
+import 'package:cryphoria_mobile/features/domain/repositories/employee_repository.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_check_usecase.dart';
@@ -31,13 +34,18 @@ import 'package:cryphoria_mobile/features/domain/usecases/Audit/submit_audit_use
 import 'package:cryphoria_mobile/features/domain/usecases/Audit/get_audit_report_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Audit/get_audit_status_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Audit/upload_contract_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Employee_management/get_all_employees_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Employee_management/get_manager_team_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Employee_management/add_employee_to_team_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Employee_management/create_payslip_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/Employee_management/get_payslips_usecase.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_controller.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Employee/employee_viewmodel/employee_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/pages/Employee_Management(manager_screens)/employee_viewmodel/employee_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_contract_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_analysis_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Audit/ViewModels/audit_results_viewmodel.dart';
@@ -163,8 +171,41 @@ Future<void> init() async {
     ),
   );
 
-  // Employee ViewModel
-  sl.registerFactory<EmployeeViewModel>(() => EmployeeViewModel());
+  // Employee ViewModel (Legacy - compatible with existing UI)
+  sl.registerFactory<EmployeeViewModel>(() => EmployeeViewModel(
+    getAllEmployeesUseCase: sl<GetAllEmployeesUseCase>(),
+    getManagerTeamUseCase: sl<GetManagerTeamUseCase>(),
+    addEmployeeToTeamUseCase: sl<AddEmployeeToTeamUseCase>(),
+  ));
+
+  // Employee Management feature (Backend-integrated)
+  // Data Sources
+  sl.registerLazySingleton<EmployeeRemoteDataSource>(
+    () => EmployeeRemoteDataSourceImpl(
+      dio: sl<DioClient>().dio..options.baseUrl = _baseUrl(),
+    ),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<EmployeeRepository>(
+    () => EmployeeRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => GetAllEmployeesUseCase(repository: sl()));
+  sl.registerLazySingleton(() => GetManagerTeamUseCase(repository: sl()));
+  sl.registerLazySingleton(() => AddEmployeeToTeamUseCase(repository: sl()));
+  sl.registerLazySingleton(() => CreatePayslipUseCase(repository: sl()));
+  sl.registerLazySingleton(() => GetPayslipsUseCase(repository: sl()));
+
+  // Enhanced Employee ViewModel (Backend-integrated) - uncomment when UI is updated
+  // sl.registerFactory(() => EmployeeViewModelEnhanced(
+  //   getAllEmployeesUseCase: sl(),
+  //   registerEmployeeUseCase: sl(),
+  //   createPayrollEntryUseCase: sl(),
+  //   createPayslipUseCase: sl(),
+  //   getPayslipsUseCase: sl(),
+  // ));
 
   // Audit feature
   // Data Sources

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../employee_viewmodel/employee_viewmodel.dart';
 
 class AddEmployeeScreen extends StatefulWidget {
   const AddEmployeeScreen({super.key});
@@ -79,20 +81,6 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen>
             fontWeight: FontWeight.w600,
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: const Color(0xFF8E24AA),
-          unselectedLabelColor: Colors.grey[400],
-          indicatorColor: const Color(0xFF8E24AA),
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
-          tabs: const [
-            Tab(text: 'Basic Info'),
-            Tab(text: 'Employment Details'),
-            Tab(text: 'Payroll Setup'),
-          ],
-        ),
       ),
       body: Column(
         children: [
@@ -119,82 +107,95 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen>
 
   Widget _buildProgressIndicator() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildProgressStep(1, 'Personal', _currentTabIndex >= 0),
-          _buildProgressLine(_currentTabIndex > 0),
-          _buildProgressStep(2, 'Work', _currentTabIndex >= 1),
-          _buildProgressLine(_currentTabIndex > 1),
-          _buildProgressStep(3, 'Review', _currentTabIndex >= 2),
+          _buildStepIndicator('Basic Info', 0),
+          _buildConnector(0),
+          _buildStepIndicator('Employment\nDetails', 1),
+          _buildConnector(1),
+          _buildStepIndicator('Payroll Setup', 2),
         ],
       ),
     );
   }
 
-  Widget _buildProgressStep(int stepNumber, String title, bool isCompleted) {
-    bool isActive = _currentTabIndex == stepNumber - 1;
+  Widget _buildStepIndicator(String title, int index) {
+    bool isActive = _currentTabIndex == index;
+    bool isCompleted = _currentTabIndex > index;
     
-    return Column(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isCompleted || isActive
-                ? const Color(0xFF2E7D32)
-                : Colors.grey[300],
-            border: Border.all(
-              color: isActive
-                  ? const Color(0xFF2E7D32)
-                  : Colors.grey[400]!,
-              width: 2,
+    return Expanded(
+      flex: 2,
+      child: Column(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isCompleted 
+                  ? const Color(0xFF8E24AA)
+                  : isActive 
+                      ? const Color(0xFF8E24AA)
+                      : const Color(0xFFE5E5E5),
+              border: Border.all(
+                color: isActive && !isCompleted 
+                    ? const Color(0xFF8E24AA)
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: Center(
+              child: isCompleted
+                  ? const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 18,
+                    )
+                  : Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: isActive 
+                            ? Colors.white
+                            : const Color(0xFF9E9E9E),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
-          child: Center(
-            child: isCompleted && !isActive
-                ? const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 20,
-                  )
-                : Text(
-                    stepNumber.toString(),
-                    style: TextStyle(
-                      color: isCompleted || isActive
-                          ? Colors.white
-                          : Colors.grey[600],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isActive || isCompleted 
+                  ? const Color(0xFF8E24AA)
+                  : const Color(0xFF9E9E9E),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-            color: isActive
-                ? const Color(0xFF2E7D32)
-                : Colors.grey[600],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildProgressLine(bool isCompleted) {
-    return Container(
-      width: 40,
-      height: 2,
-      margin: const EdgeInsets.only(bottom: 24),
-      color: isCompleted
-          ? const Color(0xFF2E7D32)
-          : Colors.grey[300],
+  Widget _buildConnector(int index) {
+    bool isCompleted = _currentTabIndex > index;
+    
+    return Expanded(
+      flex: 1,
+      child: Container(
+        height: 2,
+        margin: const EdgeInsets.only(bottom: 24),
+        decoration: BoxDecoration(
+          color: isCompleted 
+              ? const Color(0xFF8E24AA)
+              : const Color(0xFFE5E5E5),
+          borderRadius: BorderRadius.circular(1),
+        ),
+      ),
     );
   }
 
@@ -417,39 +418,65 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen>
               ),
             ),
           ),
-          // Next Button
+          // Bottom Navigation
           Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 20),
-            child: ElevatedButton(
-              onPressed: () {
-                if (_currentTabIndex < 2) {
-                  _tabController.animateTo(_currentTabIndex + 1);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8E24AA),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Next',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF8E24AA),
+                      side: const BorderSide(color: Color(0xFF8E24AA)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 20),
-                ],
-              ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_currentTabIndex < 2) {
+                        _tabController.animateTo(_currentTabIndex + 1);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8E24AA),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1036,16 +1063,57 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen>
     );
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Here you would typically save the employee data
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Employee added successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pop(context);
+      try {
+        // Get employee view model from context
+        final employeeViewModel = Provider.of<EmployeeViewModel>(context, listen: false);
+        
+        // Show loading
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+
+        // Add existing employee to team by email (NEW WORKFLOW)
+        await employeeViewModel.addEmployeeToTeam(
+          email: _emailController.text,
+          position: _positionController.text.isNotEmpty ? _positionController.text : null,
+          department: _selectedDepartment,
+          fullName: _fullNameController.text.isNotEmpty ? _fullNameController.text : null,
+          phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
+        );
+
+        // Close loading dialog
+        Navigator.pop(context);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Employee successfully added to your team!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Go back to employee list
+        Navigator.pop(context);
+      } catch (e) {
+        // Close loading dialog if open
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+        
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding employee: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

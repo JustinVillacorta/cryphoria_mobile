@@ -148,7 +148,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          widget.employee.position,
+                          widget.employee.position ?? 'Employee',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 16,
@@ -188,9 +188,9 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                 children: [
                   const Icon(Icons.email_outlined, color: Colors.white70, size: 18),
                   const SizedBox(width: 8),
-                  const Text(
-                    'sarah.johnson@company.com',
-                    style: TextStyle(
+                  Text(
+                    widget.employee.email,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                     ),
@@ -199,7 +199,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                   const Icon(Icons.business_outlined, color: Colors.white70, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    widget.employee.department,
+                    widget.employee.department ?? 'General',
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
@@ -277,10 +277,12 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
       icon: Icons.person_outline,
       title: 'Personal Information',
       children: [
-        _buildInfoRow('Email', 'sarah.johnson@company.com'),
-        _buildInfoRow('Address', '123 Main Street, New York, NY 10001'),
-        _buildInfoRow('Gender', 'Female'),
-        _buildInfoRow('Nationality', 'American'),
+        _buildInfoRow('Email', widget.employee.email),
+        _buildInfoRow('Username', widget.employee.username),
+        _buildInfoRow('Employee ID', widget.employee.userId),
+        _buildInfoRow('Role', widget.employee.role),
+        _buildInfoRow('Status', widget.employee.isActive ? 'Active' : 'Inactive'),
+        _buildInfoRow('Joined Date', widget.employee.createdAt.toString().split(' ')[0]),
       ],
     );
   }
@@ -290,11 +292,14 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
       icon: Icons.work_outline,
       title: 'Employment Information',
       children: [
-        _buildInfoRow('Basic Salary', '₱96,000 PHP'),
-        _buildInfoRow('Start Date', '2018-03-10'),
+        _buildInfoRow('Basic Salary', widget.employee.payrollInfo != null 
+            ? '${widget.employee.payrollInfo!.salaryAmount.toStringAsFixed(2)} ${widget.employee.payrollInfo!.salaryCurrency}'
+            : 'Not set'),
+        _buildInfoRow('Start Date', widget.employee.payrollInfo?.startDate.toString().split(' ')[0] ?? 'Not set'),
         _buildInfoRow('Employment Type', 'Full-time'),
-        _buildInfoRow('Payment Schedule', 'Weekly'),
-        _buildInfoRow('Department', widget.employee.department),
+        _buildInfoRow('Payment Schedule', widget.employee.payrollInfo?.paymentFrequency ?? 'Not set'),
+        _buildInfoRow('Department', widget.employee.department ?? 'General'),
+        _buildInfoRow('Position', widget.employee.position ?? 'Employee'),
       ],
     );
   }
