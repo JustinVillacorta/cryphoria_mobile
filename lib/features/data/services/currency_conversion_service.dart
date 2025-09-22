@@ -1,14 +1,17 @@
 import 'package:dio/dio.dart';
 
 class CurrencyConversionService {
-  final Dio _dio = Dio();
-  static const String _coingeckoApiUrl = 'https://api.coingecko.com/api/v3';
+  final Dio _dio;
+  static const String _backendBaseUrl = 'http://localhost:8000/api';
   
   // Cache for exchange rates to avoid too many API calls
   static double? _cachedEthToPHPRate;
   static double? _cachedEthToUSDRate;
   static DateTime? _lastFetchTime;
   static const Duration _cacheValidDuration = Duration(minutes: 5);
+
+  /// Constructor accepts Dio instance for backend API calls
+  CurrencyConversionService({Dio? dio}) : _dio = dio ?? Dio();
 
   /// Converts ETH amount to PHP
   Future<double> convertETHToPHP(double ethAmount) async {
@@ -32,7 +35,7 @@ class CurrencyConversionService {
     }
   }
 
-  /// Gets both PHP and USD rates for ETH in a single API call
+  /// Gets both PHP and USD rates for ETH in a single API call from backend
   Future<Map<String, double>> getETHRates() async {
     // Check if we have valid cached rates
     if (_cachedEthToPHPRate != null && 
@@ -46,11 +49,12 @@ class CurrencyConversionService {
     }
 
     try {
+      // Call backend exchange rate endpoint
       final response = await _dio.get(
-        '$_coingeckoApiUrl/simple/price',
+        '$_backendBaseUrl/rates/current/',
         queryParameters: {
-          'ids': 'ethereum',
-          'vs_currencies': 'php,usd',
+          'crypto_symbol': 'ETH',
+          'fiat_currencies': 'php,usd',
         },
         options: Options(
           sendTimeout: const Duration(seconds: 10),
@@ -60,8 +64,12 @@ class CurrencyConversionService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        final phpRate = data['ethereum']['php']?.toDouble() ?? 200000.0;
-        final usdRate = data['ethereum']['usd']?.toDouble() ?? 3200.0;
+        
+        // Parse backend response format
+        final phpRate = data['data']?['ETH']?['php']?.toDouble() ?? 
+                       data['php']?.toDouble() ?? 200000.0;
+        final usdRate = data['data']?['ETH']?['usd']?.toDouble() ?? 
+                       data['usd']?.toDouble() ?? 3200.0;
         
         // Cache the rates
         _cachedEthToPHPRate = phpRate;
@@ -76,13 +84,61 @@ class CurrencyConversionService {
         throw Exception('Failed to fetch exchange rates: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching ETH rates: $e');
-      // Return fallback rates if API fails
-      return {
-        'php': 200000.0, // Fallback: 1 ETH ≈ 200,000 PHP
-        'usd': 3200.0,   // Fallback: 1 ETH ≈ 3,200 USD
-      };
+      print('Error fetching ETH rates from backend: $e');
+      
+      // Fallback: Try conversion endpoint
+      try {
+        return await _getETHRatesFromConversionEndpoint();
+      } catch (conversionError) {
+        print('Error with conversion endpoint fallback: $conversionError');
+        
+        // Return fallback rates if both backend endpoints fail
+        return {
+          'php': 200000.0, // Fallback: 1 ETH ≈ 200,000 PHP
+          'usd': 3200.0,   // Fallback: 1 ETH ≈ 3,200 USD
+        };
+      }
     }
+  }
+
+  /// Alternative method using backend conversion endpoint
+  Future<Map<String, double>> _getETHRatesFromConversionEndpoint() async {
+    final responses = await Future.wait([
+      _dio.post(
+        '$_backendBaseUrl/conversion/crypto-to-fiat/',
+        data: {
+          'amount': 1.0,
+          'crypto_symbol': 'ETH',
+          'fiat_currency': 'PHP',
+        },
+      ),
+      _dio.post(
+        '$_backendBaseUrl/conversion/crypto-to-fiat/',
+        data: {
+          'amount': 1.0,
+          'crypto_symbol': 'ETH',
+          'fiat_currency': 'USD',
+        },
+      ),
+    ]);
+
+    final phpResponse = responses[0];
+    final usdResponse = responses[1];
+
+    final phpRate = phpResponse.data['data']?['converted_amount']?.toDouble() ?? 
+                   phpResponse.data['converted_amount']?.toDouble() ?? 200000.0;
+    final usdRate = usdResponse.data['data']?['converted_amount']?.toDouble() ?? 
+                   usdResponse.data['converted_amount']?.toDouble() ?? 3200.0;
+
+    // Cache the rates
+    _cachedEthToPHPRate = phpRate;
+    _cachedEthToUSDRate = usdRate;
+    _lastFetchTime = DateTime.now();
+
+    return {
+      'php': phpRate,
+      'usd': usdRate,
+    };
   }
 
   /// Gets the current ETH to PHP exchange rate

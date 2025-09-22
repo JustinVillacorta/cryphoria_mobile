@@ -70,7 +70,7 @@ Future<void> init() async {
   sl.registerLazySingleton<DeviceApprovalCache>(
       () => DeviceApprovalCache(storage: sl()));
   sl.registerLazySingleton<CurrencyConversionService>(
-      () => CurrencyConversionService());
+      () => CurrencyConversionService(dio: sl<DioClient>().dio));
   sl.registerLazySingleton<AuthLocalDataSource>(
       () => AuthLocalDataSourceImpl(secureStorage: sl()));
   sl.registerLazySingleton(() => DioClient(

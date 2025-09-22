@@ -1,7 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
+import 'package:cryphoria_mobile/features/data/services/currency_conversion_service.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
 import 'private_key_storage_test.dart';
+import 'package:dio/dio.dart';
+
+class FakeCurrencyService extends CurrencyConversionService {
+  FakeCurrencyService() : super(dio: Dio());
+  
+  @override
+  Future<Map<String, double>> getETHRates() async {
+    return {
+      'php': 200000.0,
+      'usd': 3200.0,
+    };
+  }
+}
 
 class FakeRemote extends WalletRemoteDataSource {
   FakeRemote() : super();
@@ -80,6 +94,7 @@ void main() {
     final service = WalletService(
       remoteDataSource: FakeRemote(),
       storage: MemoryStorage(),
+      currencyService: FakeCurrencyService(),
     );
     final wallet = await service.connectWallet(
       key,
@@ -99,6 +114,7 @@ void main() {
     final service = WalletService(
       remoteDataSource: FakeRemote(),
       storage: storage,
+      currencyService: FakeCurrencyService(),
     );
     final wallet = await service.reconnect();
     expect(wallet?.balance, 5.0);
@@ -112,6 +128,7 @@ void main() {
     final service = WalletService(
       remoteDataSource: NotFoundRemote(),
       storage: storage,
+      currencyService: FakeCurrencyService(),
     );
     final wallet = await service.reconnect();
     expect(wallet, isNull);

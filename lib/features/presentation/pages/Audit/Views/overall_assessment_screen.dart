@@ -74,7 +74,7 @@ class OverallAssessmentScreen extends StatelessWidget {
     
     final gasOptimizations = auditReport.gasOptimization.suggestions.length;
     
-    // Determine risk level
+    // Determine risk level based on real data
     String riskLevel;
     MaterialColor riskColor;
     String riskMessage;
@@ -82,46 +82,48 @@ class OverallAssessmentScreen extends StatelessWidget {
     if (criticalVulns > 0) {
       riskLevel = 'Critical';
       riskColor = Colors.red;
-      riskMessage = 'This contract has several critical vulnerabilities that could lead to financial loss.';
+      riskMessage = 'This contract has ${criticalVulns} critical vulnerabilities that could lead to financial loss.';
     } else if (highVulns > 0) {
       riskLevel = 'High';
       riskColor = Colors.orange;
-      riskMessage = 'This contract has high-severity vulnerabilities that should be addressed before deployment.';
+      riskMessage = 'This contract has ${highVulns} high-severity vulnerabilities that should be addressed before deployment.';
     } else if (mediumVulns > 0) {
       riskLevel = 'Medium';
       riskColor = Colors.amber;
-      riskMessage = 'This contract has medium-severity vulnerabilities that should be reviewed and addressed.';
+      riskMessage = 'This contract has ${mediumVulns} medium-severity vulnerabilities that should be reviewed and addressed.';
     } else if (lowVulns > 0) {
       riskLevel = 'Low';
       riskColor = Colors.blue;
-      riskMessage = 'This contract has minor vulnerabilities that pose minimal risk but should be considered.';
+      riskMessage = 'This contract has ${lowVulns} minor vulnerabilities that pose minimal risk but should be considered.';
     } else {
       riskLevel = 'Secure';
       riskColor = Colors.green;
       riskMessage = 'This contract passed all security checks with no vulnerabilities detected.';
     }
 
-    // Gas optimization level
+    // Gas optimization level - use actual score from backend
     String gasOptLevel;
     MaterialColor gasOptColor;
     String gasOptMessage;
     
-    if (gasOptimizations == 0) {
-      gasOptLevel = 'Optimized';
+    final gasOptScore = auditReport.gasOptimization.optimizationScore;
+    
+    if (gasOptScore >= 80) {
+      gasOptLevel = 'Excellent';
       gasOptColor = Colors.green;
-      gasOptMessage = 'Your contract is already well-optimized for gas usage. No significant improvements needed.';
-    } else if (gasOptimizations <= 2) {
+      gasOptMessage = 'Your contract is well-optimized for gas usage with score ${gasOptScore.toStringAsFixed(1)}/100.';
+    } else if (gasOptScore >= 60) {
       gasOptLevel = 'Good';
       gasOptColor = Colors.blue;
-      gasOptMessage = 'Few optimization opportunities identified. Implementing these could provide modest gas savings.';
-    } else if (gasOptimizations <= 5) {
+      gasOptMessage = 'Good optimization level with score ${gasOptScore.toStringAsFixed(1)}/100. Some improvements possible.';
+    } else if (gasOptScore >= 40) {
       gasOptLevel = 'Moderate';
       gasOptColor = Colors.orange;
-      gasOptMessage = 'Several opportunities to optimize gas usage were identified. Implementing these changes could reduce transaction costs by approximately 15-25%.';
+      gasOptMessage = 'Moderate optimization level with score ${gasOptScore.toStringAsFixed(1)}/100. Several opportunities for improvement.';
     } else {
       gasOptLevel = 'Poor';
       gasOptColor = Colors.red;
-      gasOptMessage = 'Many optimization opportunities identified. Significant gas savings possible with proper optimization.';
+      gasOptMessage = 'Low optimization score ${gasOptScore.toStringAsFixed(1)}/100. Significant improvements needed.';
     }
 
     return Column(
@@ -199,6 +201,11 @@ class OverallAssessmentScreen extends StatelessWidget {
                 _buildGasOptimizationCard(auditReport, gasOptLevel, gasOptColor, gasOptMessage, gasOptimizations),
                 
                 const SizedBox(height: 24),
+                
+                // Summary Statistics
+                _buildSummaryStatistics(auditReport),
+                
+                const SizedBox(height: 16),
                 
                 // Recommendations
                 _buildRecommendationsSection(auditReport),
@@ -297,9 +304,14 @@ class OverallAssessmentScreen extends StatelessWidget {
           _buildKeyFinding('${auditReport.vulnerabilities.length} vulnerabilities detected${criticalVulns > 0 ? ' ($criticalVulns critical)' : ''}'),
           
           if (gasOptimizations > 0)
-            _buildKeyFinding('$gasOptimizations gas optimization opportunities identified')
-          else
-            _buildKeyFinding('Contract requires access control improvements'),
+            _buildKeyFinding('$gasOptimizations gas optimization opportunities identified'),
+            
+          // Show actual recommendations count
+          if (auditReport.recommendations.isNotEmpty)
+            _buildKeyFinding('${auditReport.recommendations.length} actionable recommendations provided'),
+            
+          // Show code quality score
+          _buildKeyFinding('Overall security score: ${auditReport.overallScore.toStringAsFixed(1)}/100'),
         ],
       ),
     );
@@ -368,12 +380,27 @@ class OverallAssessmentScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Optimization Level',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Optimization Level',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Score: ${auditReport.gasOptimization.optimizationScore.toStringAsFixed(1)}/100',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Container(
@@ -450,6 +477,115 @@ class OverallAssessmentScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildSummaryStatistics(AuditReport auditReport) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Audit Summary',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  'Total Issues',
+                  '${auditReport.vulnerabilities.length}',
+                  Icons.bug_report,
+                  Colors.red,
+                ),
+              ),
+              Expanded(
+                child: _buildStatItem(
+                  'Security Score',
+                  '${auditReport.overallScore.toStringAsFixed(0)}/100',
+                  Icons.security,
+                  auditReport.overallScore >= 70 ? Colors.green : Colors.orange,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  'Gas Score',
+                  '${auditReport.gasOptimization.optimizationScore.toStringAsFixed(0)}/100',
+                  Icons.speed,
+                  auditReport.gasOptimization.optimizationScore >= 70 ? Colors.green : Colors.orange,
+                ),
+              ),
+              Expanded(
+                child: _buildStatItem(
+                  'Recommendations',
+                  '${auditReport.recommendations.length}',
+                  Icons.lightbulb,
+                  Colors.blue,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, IconData icon, MaterialColor color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(right: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color[200]!),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: color[600],
+            size: 24,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color[700],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRecommendationsSection(AuditReport auditReport) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,69 +600,156 @@ class OverallAssessmentScreen extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         
-        // Critical Priority
-        if (auditReport.vulnerabilities.any((v) => v.severity == Severity.critical))
+        // Display actual recommendations from backend
+        if (auditReport.recommendations.isNotEmpty) ...[
+          ...auditReport.recommendations.map((recommendation) => 
+            _buildRecommendationCard(
+              recommendation.title,
+              recommendation.description,
+              _getPriorityColor(recommendation.priority),
+              recommendation.category,
+              recommendation.priority,
+            )
+          ).toList(),
+        ] else ...[
+          // Fallback if no recommendations (should not happen with proper backend)
           _buildRecommendationCard(
-            'Critical Priority',
-            'Add proper access control mechanisms to the withdraw function to prevent unauthorized withdrawals.',
-            Colors.red,
+            'General Improvements',
+            'Review the audit findings and implement necessary security measures.',
+            Colors.blue,
+            'General',
+            Priority.medium,
           ),
-        
-        // High Priority  
-        if (auditReport.vulnerabilities.any((v) => v.severity == Severity.high))
-          _buildRecommendationCard(
-            'High Priority',
-            'Implement SafeMath library or use Solidity 0.8+ built-in overflow checks for all arithmetic operations.',
-            Colors.orange,
-          ),
-        
-        // Medium Priority
-        if (auditReport.vulnerabilities.any((v) => v.severity == Severity.medium))
-          _buildRecommendationCard(
-            'Medium Priority',
-            'Apply the checks-effects-interactions pattern and consider using ReentrancyGuard to prevent reentrancy attacks.',
-            Colors.amber,
-          ),
-        
-        // Gas Optimization
-        if (auditReport.gasOptimization.suggestions.isNotEmpty)
-          _buildRecommendationCard(
-            'Gas Optimization',
-            'Replace memory with calldata for read-only function parameters and optimize storage access patterns.',
-            Colors.green,
-          ),
+        ],
       ],
     );
   }
 
-  Widget _buildRecommendationCard(String priority, String description, MaterialColor color) {
+  MaterialColor _getPriorityColor(Priority priority) {
+    switch (priority) {
+      case Priority.high:
+        return Colors.red;
+      case Priority.medium:
+        return Colors.orange;
+      case Priority.low:
+        return Colors.blue;
+    }
+  }
+
+  Widget _buildRecommendationCard(
+    String title, 
+    String description, 
+    MaterialColor color,
+    [String? category,
+    Priority? priority]
+  ) {
+    // Determine icon based on category
+    IconData categoryIcon = Icons.lightbulb_outline;
+    if (category != null) {
+      switch (category.toLowerCase()) {
+        case 'security':
+          categoryIcon = Icons.security;
+          break;
+        case 'ai analysis':
+          categoryIcon = Icons.psychology;
+          break;
+        case 'gas optimization':
+          categoryIcon = Icons.speed;
+          break;
+        case 'general':
+          categoryIcon = Icons.checklist;
+          break;
+        default:
+          categoryIcon = Icons.lightbulb_outline;
+      }
+    }
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            priority,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: color[700],
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  categoryIcon,
+                  color: color[700],
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: color[700],
+                      ),
+                    ),
+                    if (category != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (priority != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: color[300]!),
+                  ),
+                  child: Text(
+                    priority.name.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: color[800],
+                    ),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             description,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[700],
-              height: 1.4,
+              height: 1.5,
             ),
           ),
         ],
