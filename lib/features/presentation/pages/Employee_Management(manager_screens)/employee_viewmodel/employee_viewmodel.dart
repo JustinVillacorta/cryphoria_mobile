@@ -171,7 +171,7 @@ class EmployeeViewModel extends ChangeNotifier {
     }
   }
 
-
+  /// Adds existing employee to manager's team (NEW WORKFLOW)
   Future<void> addEmployeeToTeam({
     required String email,
     String? position,
