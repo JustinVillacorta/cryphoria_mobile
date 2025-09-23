@@ -43,7 +43,7 @@ class WalletService {
       balance = 0.0;
     }
 
-// ✅ Always fetch from blockchain if balance is still 0
+//Always fetch from blockchain if balance is still 0
     if (balance <= 0.0) {
       balance = await remoteDataSource.getBalance(address);
     }
@@ -113,7 +113,7 @@ class WalletService {
     }
   }
 
-  /// ✅ ADD THIS NEW METHOD HERE
+  //ADD THIS NEW METHOD HERE
   Future<Wallet> refreshBalance(Wallet wallet) async {
     final address = (wallet.address.isNotEmpty)
         ? wallet.address
