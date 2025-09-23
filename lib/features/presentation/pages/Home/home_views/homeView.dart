@@ -127,7 +127,12 @@ class _HomeViewState extends State<HomeView> {
                 children: [
                   WalletCard(),
                   const SizedBox(height: 24),
-                  const QuickActions(),
+                  QuickActions(
+                    onPaymentSuccess: () {
+                      // Refresh transactions after successful payment
+                      context.read<WalletViewModel>().refreshTransactions();
+                    },
+                  ),
                   const SizedBox(height: 24),
                   const RecentTransactions(),
                   const SizedBox(height: 24),

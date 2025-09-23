@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
+import '../services/eth_payment_service.dart';
+import '../../../dependency_injection/di.dart';
 
 class FakeTransactionsDataSource {
+  late EthPaymentService _ethPaymentService;
+  
+  FakeTransactionsDataSource() {
+    try {
+      _ethPaymentService = sl<EthPaymentService>();
+    } catch (e) {
+      // Service not available, will use mock data only
+      print('⚠️ EthPaymentService not available, using mock data only: $e');
+    }
+  }
   final List<Map<String, dynamic>> _transactions = [
     // Recent transactions
     {
@@ -141,4 +153,46 @@ class FakeTransactionsDataSource {
   ];
 
   List<Map<String, dynamic>> getTransactions() => List.unmodifiable(_transactions);
+  
+  /// Get mixed transactions including real ETH payments (sent & received) and mock data
+  Future<List<Map<String, dynamic>>> getMixedTransactions({int limit = 10}) async {
+    List<Map<String, dynamic>> allTransactions = [];
+    
+    // Try to get recent ETH payment transactions (sent)
+    try {
+      final ethTransactions = await _ethPaymentService.getRecentPaymentTransactions(limit: 2);
+      allTransactions.addAll(ethTransactions);
+    } catch (e) {
+      print('⚠️ Could not fetch ETH sent transactions: $e');
+    }
+    
+    // Add mock transactions to fill remaining slots
+    final remainingSlots = limit - allTransactions.length;
+    if (remainingSlots > 0) {
+      allTransactions.addAll(_transactions.take(remainingSlots));
+    }
+    
+    // Sort by time (newest first) - for now keep existing order
+    // In a real implementation, you'd parse timestamps and sort properly
+    
+    return allTransactions.take(limit).toList();
+  }
+
+  /// Format transaction timestamp for display
+  String _formatTransactionTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    }
+  }
 }

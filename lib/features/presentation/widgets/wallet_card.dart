@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 
@@ -11,6 +12,16 @@ class WalletCard extends StatefulWidget {
 
 class _WalletCardState extends State<WalletCard> {
   bool _showUSD = false; // Toggle between PHP and USD
+
+  void _copyAddressToClipboard(BuildContext context, String address) {
+    Clipboard.setData(ClipboardData(text: address));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Wallet address copied to clipboard!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,9 +114,34 @@ class _WalletCardState extends State<WalletCard> {
                         ),
                         if (viewModel.wallet!.address.isNotEmpty) ...[
                           const SizedBox(height: 2),
-                          Text(
-                            viewModel.wallet!.displayAddress,
-                            style: const TextStyle(color: Colors.white60, fontSize: 12),
+                          GestureDetector(
+                            onTap: () => _copyAddressToClipboard(context, viewModel.wallet!.address),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    viewModel.wallet!.displayAddress,
+                                    style: const TextStyle(
+                                      color: Colors.white, 
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(
+                                    Icons.content_copy,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ],
