@@ -56,4 +56,27 @@ class Wallet {
     if (address.length <= 10) return address;
     return '${address.substring(0, 6)}...${address.substring(address.length - 4)}';
   }
+
+  /// ✅ Add this for updating fields easily
+  Wallet copyWith({
+    String? id,
+    String? name,
+    String? private_key,
+    double? balance,
+    double? balanceInPHP,
+    double? balanceInUSD,
+    String? address,
+    String? walletType,
+  }) {
+    return Wallet(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      private_key: private_key ?? this.private_key,
+      balance: balance ?? this.balance,
+      balanceInPHP: balanceInPHP ?? this.balanceInPHP,
+      balanceInUSD: balanceInUSD ?? this.balanceInUSD,
+      address: address ?? this.address,
+      walletType: walletType ?? this.walletType,
+    );
+  }
 }

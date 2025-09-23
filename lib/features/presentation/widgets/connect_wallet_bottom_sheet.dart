@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
 
 class ConnectPrivateKeyBottomSheet extends StatefulWidget {
   const ConnectPrivateKeyBottomSheet({Key? key}) : super(key: key);
@@ -11,6 +13,8 @@ class _ConnectPrivateKeyBottomSheetState extends State<ConnectPrivateKeyBottomSh
   final TextEditingController _privateKeyController = TextEditingController();
   bool _isValidFormat = true;
   bool _isLoading = false;
+  String _selectedWallet = 'MetaMask';
+  final List<String> _wallets = ['MetaMask', 'Trust Wallet', 'Coinbase'];
 
   @override
   void dispose() {
@@ -27,25 +31,56 @@ class _ConnectPrivateKeyBottomSheetState extends State<ConnectPrivateKeyBottomSh
   }
 
   void _connect() async {
-    if (_privateKeyController.text.isEmpty || !_isValidFormat) return;
+    if (_privateKeyController.text.isEmpty || !_isValidFormat) {
+      setState(() {
+        _isValidFormat = false;
+      });
+      return;
+    }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Wallet connected successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    final viewModel = Provider.of<HomeEmployeeViewModel>(context, listen: false);
+    try {
+      await viewModel.connect(
+        _privateKeyController.text,
+        endpoint: 'connect_wallet_with_private_key/',
+        walletName: _selectedWallet,
+        walletType: _selectedWallet,
+      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+        Navigator.pop(context);
+        if (viewModel.errorMessage.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to connect: ${viewModel.errorMessage}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else if (viewModel.wallet != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Wallet connected successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Force refresh to ensure balance is fetched
+          await viewModel.refreshWallet();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to connect wallet: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -94,6 +129,31 @@ class _ConnectPrivateKeyBottomSheetState extends State<ConnectPrivateKeyBottomSh
             ),
             const SizedBox(height: 24),
             const Text(
+              'Wallet Type',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            DropdownButton<String>(
+              value: _selectedWallet,
+              isExpanded: true,
+              items: _wallets.map((wallet) => DropdownMenuItem(
+                value: wallet,
+                child: Text(wallet),
+              )).toList(),
+              onChanged: _isLoading
+                  ? null
+                  : (value) {
+                if (value != null) {
+                  setState(() => _selectedWallet = value);
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            const Text(
               'Enter Private Key',
               style: TextStyle(
                 fontSize: 14,
@@ -120,6 +180,7 @@ class _ConnectPrivateKeyBottomSheetState extends State<ConnectPrivateKeyBottomSh
                 ),
                 maxLines: 1,
                 style: const TextStyle(fontSize: 14),
+                enabled: !_isLoading,
               ),
             ),
             if (!_isValidFormat) ...[
@@ -202,16 +263,25 @@ class _ConnectPrivateKeyBottomSheetState extends State<ConnectPrivateKeyBottomSh
                 const SizedBox(width: 16),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    onPressed: _isLoading || !_isValidFormat ? null : _connect,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: BorderSide(color: Colors.grey[300]!),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      backgroundColor: Color(0xFF9747FF),
+                      backgroundColor: const Color(0xFF9747FF),
                     ),
-                    child: const Text(
+                    child: _isLoading
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                        : const Text(
                       'Connect Wallet',
                       style: TextStyle(
                         color: Colors.white,

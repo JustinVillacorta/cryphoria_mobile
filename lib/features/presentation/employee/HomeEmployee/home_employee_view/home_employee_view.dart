@@ -1,4 +1,3 @@
-// lib/features/presentation/employee/home/views/home_employee_screen.dart
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/notification_view/notification_view.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/salary_transactions_view/salary_transactions_view.dart';
@@ -8,6 +7,7 @@ import 'package:cryphoria_mobile/features/presentation/widgets/employee_transact
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_transaction_lists.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_wallet_card.dart';
 import 'package:cryphoria_mobile/features/domain/entities/employee_transaction_status.dart';
+import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +28,7 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint('Initializing HomeEmployeeScreen with employeeId: ${widget.employeeId}');
       context.read<HomeEmployeeViewModel>().getDashboardData(widget.employeeId);
     });
   }
@@ -45,9 +46,7 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
           builder: (context, viewModel, child) {
             if (viewModel.isLoading) {
               return const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF9747FF),
-                ),
+                child: CircularProgressIndicator(color: Color(0xFF9747FF)),
               );
             }
 
@@ -81,14 +80,14 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: () => viewModel.refreshData(widget.employeeId),
+                      onPressed: () {
+                        debugPrint('Retrying dashboard data load');
+                        viewModel.refreshData(widget.employeeId);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF9747FF),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 12,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       ),
                       child: const Text('Retry'),
                     ),
@@ -98,7 +97,10 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
             }
 
             return RefreshIndicator(
-              onRefresh: () => viewModel.refreshData(widget.employeeId),
+              onRefresh: () async {
+                debugPrint('Refresh triggered');
+                await viewModel.refreshData(widget.employeeId);
+              },
               color: const Color(0xFF9747FF),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -111,14 +113,15 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       EmployeeTobBarWidget(
-                        employeeName: viewModel.toString(),
+                        employeeName: viewModel.employeeName,
                         onNotificationTapped: () => _navigateToNotifications(context),
                       ),
                       SizedBox(height: screenHeight * 0.02),
                       EmployeeWalletCardWidget(
-                        balance: viewModel.walletDisplayBalance,
-                        convertedBalance: viewModel.convertedDisplayBalance,
                         isTablet: isTablet,
+                        onWhatIsCryptoWallet: () {
+                          debugPrint('What is a crypto wallet tapped');
+                        },
                       ),
                       SizedBox(height: screenHeight * 0.02),
                       PayoutInfoWidget(
@@ -158,6 +161,24 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
     );
   }
 
+  void _navigateToNotifications(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NotificationsScreen(),
+      ),
+    );
+  }
+
+  void _navigateToAllTransactions(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SalaryTransactionsScreen(),
+      ),
+    );
+  }
+
   Widget _buildEmptyTransactionsState(double screenHeight) {
     return Container(
       height: screenHeight * 0.2,
@@ -189,24 +210,6 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _navigateToNotifications(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => NotificationsScreen(),
-      ),
-    );
-  }
-
-  void _navigateToAllTransactions(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const SalaryTransactionsScreen(),
       ),
     );
   }

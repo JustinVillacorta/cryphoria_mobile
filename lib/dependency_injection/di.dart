@@ -16,7 +16,7 @@ import 'package:cryphoria_mobile/features/data/notifiers/audit_notifier.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/audit_repository.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/employee_repository.dart';
-import 'package:cryphoria_mobile/features/domain/repositories/employee_repository_impl.dart';
+import 'package:cryphoria_mobile/features/data/repositories_impl/employee_repository_impl.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/EmployeeHome/employee_home_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Logout/logout_usecase.dart';
@@ -85,7 +85,7 @@ Future<void> init() async {
 
   String _baseUrl() {
     if (Platform.isAndroid) {
-      return 'http://192.168.0.35:8000';
+      return 'http://192.168.0.12:8000';
     }
     return 'http://127.0.0.1:8000';
   }

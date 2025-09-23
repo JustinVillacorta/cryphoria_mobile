@@ -3,7 +3,7 @@ import 'package:cryphoria_mobile/features/domain/entities/employee_transaction_s
 import 'package:cryphoria_mobile/features/domain/entities/employee_wallet.dart';
 import '../../domain/entities/employee_payout_info.dart';
 import '../../domain/repositories/employee_repository.dart';
-import '../../data/data_sources/EmployeeRemoteDataSource.dart';
+import '../data_sources/EmployeeRemoteDataSource.dart';
 
 class EmployeeRepositoryImpl implements EmployeeRepository {
   final EmployeeRemoteDataSource remoteDataSource;
