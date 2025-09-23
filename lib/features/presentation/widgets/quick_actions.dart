@@ -1,17 +1,13 @@
 import 'package:cryphoria_mobile/features/presentation/widgets/payroll_bottom_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/generate_report_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Invest/invest_main_screen.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Invest/investment_portfolio_screen.dart';
 import 'package:cryphoria_mobile/features/presentation/pages/Audit/Views/audit_contract_main_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
 
 class QuickActions extends StatefulWidget {
-  final VoidCallback? onPaymentSuccess;
-  
-  const QuickActions({super.key, this.onPaymentSuccess});
+  const QuickActions({super.key});
 
   @override
   State<QuickActions> createState() => _QuickActionsState();
@@ -201,32 +197,13 @@ class _QuickActionsState extends State<QuickActions> {
   }
 
   // Show Payment Bottom Sheet
-  void showPaymentBottomSheet(BuildContext context) async {
-    // Get the current wallet from WalletViewModel
-    final walletViewModel = context.read<WalletViewModel>();
-    final currentWallet = walletViewModel.wallet;
-    
-    if (currentWallet == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No wallet connected. Please connect a wallet first.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-    
-    final result = await showModalBottomSheet(
+  void showPaymentBottomSheet(BuildContext context) {
+    showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => PaymentBottomSheet(wallet: currentWallet),
+      builder: (context) => const PaymentBottomSheet(),
     );
-    
-    // If payment was successful and we have a callback, call it
-    if (result != null && widget.onPaymentSuccess != null) {
-      widget.onPaymentSuccess!();
-    }
   }
   void showPayrollBottomSheet(BuildContext context) {
     showModalBottomSheet(

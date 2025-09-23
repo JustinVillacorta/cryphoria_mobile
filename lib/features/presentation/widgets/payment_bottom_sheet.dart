@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../data/services/eth_payment_service.dart';
-import '../../domain/entities/eth_transaction.dart';
-import '../../domain/entities/wallet.dart';
-import '../../../dependency_injection/di.dart';
 
 class PaymentBottomSheet extends StatefulWidget {
-  final Wallet? wallet;
-  
-  const PaymentBottomSheet({Key? key, this.wallet}) : super(key: key);
+  const PaymentBottomSheet({Key? key}) : super(key: key);
 
   @override
   State<PaymentBottomSheet> createState() => _PaymentBottomSheetState();
@@ -21,14 +15,6 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
   String recipientAddress = '';
   String description = '';
   String category = 'Office Expenses';
-  
-  // Service dependencies
-  late EthPaymentService _ethPaymentService;
-  
-  // Gas estimation
-  GasEstimate? _gasEstimate;
-  bool _isEstimatingGas = false;
-  bool _isSendingPayment = false;
 
   final List<String> tokens = ['ETH', 'BTC', 'USDT', 'USDC'];
   final List<String> categories = [
@@ -38,166 +24,6 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
     'Equipment',
     'Software',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeService();
-  }
-  
-  void _initializeService() {
-    _ethPaymentService = sl<EthPaymentService>();
-  }
-
-  Future<void> _estimateGas() async {
-    if (widget.wallet == null || amount.isEmpty || recipientAddress.isEmpty) {
-      return;
-    }
-
-    setState(() {
-      _isEstimatingGas = true;
-    });
-
-    try {
-      print("🔄 Starting gas estimation...");
-      print("📋 From: ${widget.wallet!.address}");
-      print("📋 To: $recipientAddress");
-      print("📋 Amount: $amount");
-      
-      // First check server health
-      print("🏥 Checking server connectivity...");
-      final isServerHealthy = await _ethPaymentService.remoteDataSource.checkServerHealth();
-      
-      if (!isServerHealthy) {
-        print("⚠️ Server health check failed, using default gas estimate");
-        setState(() {
-          _isEstimatingGas = false;
-          _gasEstimate = GasEstimate(
-            estimatedCostEth: 0.001,
-            gasPriceGwei: 20.0,
-            gasLimit: 21000,
-            slowGasPrice: 10.0,
-            standardGasPrice: 20.0,
-            fastGasPrice: 30.0,
-          );
-        });
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Server not reachable. Using default gas fee (0.001 ETH). Please check if backend server is running.'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 5),
-              action: SnackBarAction(
-                label: 'OK',
-                onPressed: () {},
-              ),
-            ),
-          );
-        }
-        return;
-      }
-      
-      final gasEstimate = await _ethPaymentService.estimateGas(
-        fromAddress: widget.wallet!.address,
-        toAddress: recipientAddress,
-        amount: double.parse(amount),
-      );
-
-      print("✅ Gas estimation successful: ${gasEstimate.toString()}");
-      setState(() {
-        _gasEstimate = gasEstimate;
-        _isEstimatingGas = false;
-      });
-    } catch (e) {
-      print("❌ Gas estimation failed: $e");
-      setState(() {
-        _isEstimatingGas = false;
-        // Set a default gas estimate so transaction can still proceed
-        _gasEstimate = GasEstimate(
-          estimatedCostEth: 0.001, // Default gas fee
-          gasPriceGwei: 20.0, // Default gas price
-          gasLimit: 21000, // Default gas limit for ETH transfer
-          slowGasPrice: 10.0,
-          standardGasPrice: 20.0,
-          fastGasPrice: 30.0,
-        );
-      });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gas estimation failed. Using default gas fee (0.001 ETH). You can still proceed.'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'OK',
-              onPressed: () {},
-            ),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _sendPayment() async {
-    if (widget.wallet == null || amount.isEmpty || recipientAddress.isEmpty) {
-      return;
-    }
-
-    setState(() {
-      _isSendingPayment = true;
-    });
-
-    try {
-      final result = await _ethPaymentService.sendEthTransaction(
-        fromWallet: widget.wallet!,
-        toAddress: recipientAddress,
-        amount: double.parse(amount),
-        company: recipientName.isNotEmpty ? recipientName : null,
-        category: category,
-        description: description.isNotEmpty ? description : null,
-      );
-
-      setState(() {
-        _isSendingPayment = false;
-      });
-
-      if (mounted) {
-        Navigator.pop(context, result);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Payment sent! TX: ${result.transactionHash.substring(0, 10)}...'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isSendingPayment = false;
-      });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Payment failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  String _formatAddress(String address) {
-    if (address.length <= 10) return address;
-    return '${address.substring(0, 6)}...${address.substring(address.length - 4)}';
-  }
-
-  String _calculateTotal() {
-    final amountValue = double.tryParse(amount) ?? 0.0;
-    final gasValue = _gasEstimate?.estimatedCostEth ?? 0.0;
-    return '${(amountValue + gasValue).toStringAsFixed(6)} ETH';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -540,22 +366,14 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
             ),
           ),
           const SizedBox(height: 24),
-          _buildAddressPreviewRow(
-              'To:', recipientName.isEmpty ? _formatAddress(recipientAddress) : recipientName, 
-              recipientName.isEmpty ? recipientAddress : null),
           _buildPreviewRow(
-              'Amount:', '${amount.isEmpty ? '0' : amount} $selectedToken'),
+              'To:', recipientName.isEmpty ? 'Acme Corp Pty' : recipientName),
           _buildPreviewRow(
-              'Description:', description.isEmpty ? 'No description' : description),
+              'Amount:', '${amount.isEmpty ? '23' : amount} $selectedToken'),
+          _buildPreviewRow(
+              'Description:', description.isEmpty ? '2221' : description),
           _buildPreviewRow('Category:', category),
-          _buildPreviewRow(
-            'Gas Fee:', 
-            _isEstimatingGas 
-              ? 'Estimating...' 
-              : _gasEstimate != null 
-                ? '${_gasEstimate!.estimatedCostEth.toStringAsFixed(6)} ETH'
-                : 'Not estimated'
-          ),
+          _buildPreviewRow('Gas Fee:', '0.007 ETH'),
           const SizedBox(height: 24),
           Container(
             width: double.infinity,
@@ -580,25 +398,23 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                       ),
                     ),
                     Text(
-                      _calculateTotal(),
+                      '${(double.tryParse(amount.isEmpty ? '23' : amount) ??
+                          23) + 0.007} ETH',
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                     ),
                   ],
                 ),
-                if (_gasEstimate != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    'Gas Price: ${_gasEstimate!.gasPriceGwei.toStringAsFixed(1)} Gwei',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                Text(
+                  '≈ \$72,800.00',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
                   ),
-                ],
+                ),
               ],
             ),
           ),
@@ -654,37 +470,6 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddressPreviewRow(String label, String displayValue, String? fullAddress) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              displayValue,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -758,27 +543,20 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
           Expanded(
             flex: currentStep == 0 ? 1 : 2,
             child: ElevatedButton(
-              onPressed: _isSendingPayment ? null : () async {
+              onPressed: () {
                 if (currentStep < 2) {
-                  // If moving to confirmation step (step 2), estimate gas
-                  if (currentStep == 1 && widget.wallet != null && amount.isNotEmpty && recipientAddress.isNotEmpty) {
-                    await _estimateGas();
-                  }
                   setState(() {
                     currentStep++;
                   });
                 } else {
                   // Handle payment confirmation
-                  if (widget.wallet != null) {
-                    await _sendPayment();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No wallet connected'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Payment sent successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -789,23 +567,14 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                 ),
                 elevation: 0,
               ),
-              child: _isSendingPayment 
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    currentStep == 2 ? 'Send Payment' : 'Continue',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
+              child: Text(
+                currentStep == 2 ? 'Send Payment' : 'Continue',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
         ],
