@@ -1,10 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/profile_session_management_view.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/SessionManagement/profile_session_management_view.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 
 class userProfile extends StatefulWidget {

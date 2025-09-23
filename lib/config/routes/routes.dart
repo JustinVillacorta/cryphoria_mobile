@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/Views/register_view.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 
 class AppRoutes {

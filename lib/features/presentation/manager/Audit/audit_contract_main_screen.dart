@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Audit/contract_setup_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Audit/contract_setup_screen.dart';
 
 class AuditContractMainScreen extends StatelessWidget {
   const AuditContractMainScreen({super.key});

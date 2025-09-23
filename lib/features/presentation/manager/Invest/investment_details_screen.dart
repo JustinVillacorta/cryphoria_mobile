@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/investment_confirmation_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/investment_confirmation_screen.dart';
 
 class InvestmentDetailsScreen extends StatefulWidget {
   final String companyName;

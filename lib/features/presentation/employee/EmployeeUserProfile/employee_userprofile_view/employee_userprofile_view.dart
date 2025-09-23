@@ -6,8 +6,8 @@ import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProf
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/compliance/compliance_view/compliance_view.dart';
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 
 

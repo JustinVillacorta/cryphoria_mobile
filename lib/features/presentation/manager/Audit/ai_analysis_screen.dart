@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Audit/audit_results_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Audit/audit_results_screen.dart';
 
 class AiAnalysisScreen extends StatefulWidget {
   final String contractName;

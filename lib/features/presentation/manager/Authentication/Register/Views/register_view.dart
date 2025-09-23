@@ -1,6 +1,6 @@
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/Register/ViewModel/register_view_model.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:flutter/material.dart';
 
 class RegisterView extends StatefulWidget {

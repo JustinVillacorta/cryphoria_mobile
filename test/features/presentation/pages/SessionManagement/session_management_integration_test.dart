@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:cryphoria_mobile/features/domain/entities/user_session.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_controller.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/SessionManagement/session_management_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/SessionManagement/session_management_controller.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/SessionManagement/session_management_viewmodel.dart';
 
 import '../../../domain/usecases/session_usecases_test.mocks.dart';
 

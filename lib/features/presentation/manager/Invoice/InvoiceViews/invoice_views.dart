@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invoice/invoice_views/invoice_detail_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invoice/invoice_views/invoice_detail_screen.dart';
 
 class Invoice {
   final String id;

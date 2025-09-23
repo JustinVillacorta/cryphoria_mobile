@@ -1,7 +1,7 @@
 // Quick test to verify GetIt registration
 import 'package:flutter/material.dart';
 import 'lib/dependency_injection/di.dart';
-import 'lib/features/presentation/pages/Audit/ViewModels/audit_main_viewmodel.dart';
+import 'lib/features/presentation/manager/Audit/ViewModels/audit_main_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

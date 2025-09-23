@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/generate_report_bottom_sheet.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/invest_main_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/investment_portfolio_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Audit/Views/audit_contract_main_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Home/home_ViewModel/home_Viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/invest_main_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/investment_portfolio_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Audit/Views/audit_contract_main_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
 
 class QuickActions extends StatefulWidget {
   final VoidCallback? onPaymentSuccess;

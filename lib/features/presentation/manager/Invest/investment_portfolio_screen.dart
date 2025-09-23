@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/investment_history_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/asset_allocation_detail_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Transactions/all_transactions_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/investment_history_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/asset_allocation_detail_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Transactions/all_transactions_screen.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/sell_shares_bottom_sheet.dart';
 
 class InvestmentPortfolioScreen extends StatefulWidget {

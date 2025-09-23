@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Audit/ai_analysis_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Audit/ai_analysis_screen.dart';
 
 class ContractSetupScreen extends StatefulWidget {
   const ContractSetupScreen({super.key});

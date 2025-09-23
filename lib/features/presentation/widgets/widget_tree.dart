@@ -1,9 +1,9 @@
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Home/home_views/homeView.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Employee_Management(manager_screens)/employee_views/employee_management_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invoice/InvoiceViews/invoice_views.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Reports/reports_views/reports_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/UserProfile/UserProfile_Views/userProfile_Views.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Home/home_views/homeView.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Employee_Management(manager_screens)/employee_views/employee_management_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invoice/InvoiceViews/invoice_views.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Reports/Reports_Views/reports_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/UserProfile_Views/userProfile_Views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/navbar_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

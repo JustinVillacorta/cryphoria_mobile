@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/industry_selection_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/investment_portfolio_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/industry_selection_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/investment_portfolio_screen.dart';
 
 class InvestMainScreen extends StatelessWidget {
   const InvestMainScreen({super.key});

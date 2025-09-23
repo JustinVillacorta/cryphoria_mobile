@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_dart.dart';
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';

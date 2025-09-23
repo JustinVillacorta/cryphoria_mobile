@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/investment_details_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/investment_details_screen.dart';
 
 class WalletSelectionScreen extends StatefulWidget {
   final String companyName;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/wallet_selection_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/wallet_selection_screen.dart';
 
 class CompanySelectionScreen extends StatefulWidget {
   final String industry;

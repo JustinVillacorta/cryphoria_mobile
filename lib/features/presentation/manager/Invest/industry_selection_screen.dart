@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/pages/Invest/company_selection_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invest/company_selection_screen.dart';
 
 class IndustrySelectionScreen extends StatelessWidget {
   const IndustrySelectionScreen({super.key});
