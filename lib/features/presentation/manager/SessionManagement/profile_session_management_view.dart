@@ -407,7 +407,7 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
           color: Colors.grey.shade400, // border color
           width: 1,                    // border width
         ),
-        borderRadius: BorderRadius.circular(8), // rounded corners
+        borderRadius: BorderRadius.circular(12), // rounded corners
       ),
       child: Row(
         children: [

@@ -1,4 +1,5 @@
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_wallet_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
@@ -125,7 +126,7 @@ class _HomeViewState extends State<HomeView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  WalletCard(),
+                  EmployeeWalletCardWidget(),
                   const SizedBox(height: 24),
                   QuickActions(
                     onPaymentSuccess: () {
