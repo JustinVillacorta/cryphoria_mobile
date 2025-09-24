@@ -4,7 +4,8 @@ import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.
 import 'package:cryphoria_mobile/features/data/data_sources/AuthRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/walletRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/audit_remote_data_source.dart';
-import 'package:cryphoria_mobile/features/data/data_sources/employee_remote_data_source.dart';
+import 'package:cryphoria_mobile/features/data/data_sources/employee_remote_data_source.dart' as manager_employee;
+import 'package:cryphoria_mobile/features/data/data_sources/EmployeeRemoteDataSource.dart' as employee_dashboard;
 import 'package:cryphoria_mobile/features/data/data_sources/eth_payment_remote_data_source.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/AuthRepositoryImpl.dart';
 import 'package:cryphoria_mobile/features/data/repositories_impl/audit_repository_impl.dart';
@@ -41,6 +42,7 @@ import 'package:cryphoria_mobile/features/domain/usecases/Employee_management/ge
 import 'package:cryphoria_mobile/features/domain/usecases/Employee_management/add_employee_to_team_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Employee_management/create_payslip_usecase.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Employee_management/get_payslips_usecase.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/EmployeeHome/employee_home_usecase.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
@@ -52,6 +54,7 @@ import 'package:cryphoria_mobile/features/presentation/manager/Audit/ViewModels/
 import 'package:cryphoria_mobile/features/presentation/manager/Audit/ViewModels/audit_analysis_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Audit/ViewModels/audit_results_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Audit/ViewModels/audit_main_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -167,6 +170,9 @@ Future<void> init() async {
     viewModel: sl(),
   ));
 
+  // Employee Home ViewModel
+  sl.registerFactory(() => HomeEmployeeViewModel());
+
   // Wallet feature
   sl.registerLazySingleton<WalletRemoteDataSource>(
     () => WalletRemoteDataSource(
@@ -200,15 +206,20 @@ Future<void> init() async {
 
   // Employee Management feature (Backend-integrated)
   // Data Sources
-  sl.registerLazySingleton<EmployeeRemoteDataSource>(
-    () => EmployeeRemoteDataSourceImpl(
+  sl.registerLazySingleton<manager_employee.EmployeeRemoteDataSource>(
+    () => manager_employee.EmployeeRemoteDataSourceImpl(
       dio: sl<DioClient>().dio..options.baseUrl = _baseUrl(),
     ),
   );
 
+  // Employee Dashboard Data Source
+  sl.registerLazySingleton<employee_dashboard.EmployeeRemoteDataSource>(
+    () => employee_dashboard.EmployeeRemoteDataSourceImpl(),
+  );
+
   // Repositories
   sl.registerLazySingleton<EmployeeRepository>(
-    () => EmployeeRepositoryImpl(remoteDataSource: sl()),
+    () => EmployeeRepositoryImpl(remoteDataSource: sl<manager_employee.EmployeeRemoteDataSource>()),
   );
 
   // Use Cases
@@ -217,6 +228,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddEmployeeToTeamUseCase(repository: sl()));
   sl.registerLazySingleton(() => CreatePayslipUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetPayslipsUseCase(repository: sl()));
+  sl.registerLazySingleton(() => GetEmployeeDashboardData(dataSource: sl<employee_dashboard.EmployeeRemoteDataSource>()));
 
   // Enhanced Employee ViewModel (Backend-integrated) - uncomment when UI is updated
   // sl.registerFactory(() => EmployeeViewModelEnhanced(

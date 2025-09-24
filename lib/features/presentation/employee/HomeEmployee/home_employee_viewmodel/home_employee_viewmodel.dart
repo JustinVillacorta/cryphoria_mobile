@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/domain/entities/wallet.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/fake_transactions_data.dart';
+import 'package:cryphoria_mobile/features/domain/usecases/EmployeeHome/employee_home_usecase.dart';
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
 
 class HomeEmployeeViewModel extends ChangeNotifier {
   final WalletService walletService = sl<WalletService>();
   final FakeTransactionsDataSource _transactionsDataSource = sl<FakeTransactionsDataSource>();
+  final GetEmployeeDashboardData _getDashboardData = sl<GetEmployeeDashboardData>();
 
   // State management
   bool _isLoading = false;
@@ -44,7 +46,7 @@ class HomeEmployeeViewModel extends ChangeNotifier {
   String get payoutFrequency => _payoutFrequency;
   List<Map<String, dynamic>> get recentTransactions => _recentTransactions;
   Wallet? get wallet => _wallet;
-  String? get error => error;
+  String? get error => _errorMessage;
   List<Map<String, dynamic>> get transactions => List.unmodifiable(_transactions);
   String get selectedCurrency => _selectedCurrency;
   bool get hasTransactions => _recentTransactions.isNotEmpty;
@@ -54,10 +56,28 @@ class HomeEmployeeViewModel extends ChangeNotifier {
     _setLoading(true);
 
     try {
-      await _loadEmployeeData(employeeId);
-      await _loadPayoutInfo(employeeId);
-      await _loadRecentTransactions(employeeId);
+      final dashboardData = await _getDashboardData(employeeId);
+      
+      // Update employee data
+      _employeeName = dashboardData.employee.name;
+      _employeeAvatar = dashboardData.employee.avatarUrl;
+      
+      // Update payout info
+      _nextPayoutDate = _formatDate(dashboardData.payoutInfo.nextPayoutDate);
+      _payoutFrequency = dashboardData.payoutInfo.frequency;
+      
+      // Update recent transactions
+      _recentTransactions = dashboardData.recentTransactions.map((transaction) => {
+        'id': transaction.id,
+        'date': _formatDate(transaction.date),
+        'amount': '${transaction.amount} ${transaction.currency}',
+        'usdAmount': '\$${transaction.usdAmount.toStringAsFixed(2)} USD',
+        'status': transaction.status.name,
+      }).toList();
+      
+      // Load wallet data (keeping the existing wallet loading logic for now)
       await _loadInitialWalletData();
+      
       _isInitialized = true;
       debugPrint('Dashboard data loaded, wallet: ${_wallet?.toJson()}');
       _setLoading(false);
