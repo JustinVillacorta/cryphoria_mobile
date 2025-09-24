@@ -56,7 +56,7 @@ class _GenerateReportBottomSheetState extends State<GenerateReportBottomSheet> {
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),
-              textAlign: TextAlign.center,
+              textAlign: TextAlign.start,
             ),
           ),
           const SizedBox(width: 48),

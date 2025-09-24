@@ -18,6 +18,7 @@ class InvestMainScreen extends StatelessWidget {
         ),
         title: const Text(
           'Invest Smart',
+          textAlign: TextAlign.start,
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
