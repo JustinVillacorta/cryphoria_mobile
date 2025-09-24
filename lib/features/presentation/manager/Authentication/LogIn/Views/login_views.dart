@@ -3,7 +3,7 @@ import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Lo
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/ApprovalPending/approval_pending_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_dart.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:flutter/material.dart';

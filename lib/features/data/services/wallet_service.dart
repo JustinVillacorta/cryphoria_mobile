@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 import '../data_sources/walletRemoteDataSource.dart';
 import '../../domain/entities/wallet.dart';
 import 'private_key_storage.dart';
@@ -36,26 +38,25 @@ class WalletService {
     // Extract balance from backend response or use blockchain endpoint as fallback
     double balance = 0.0;
     try {
-      // Try to get balance from wallet data first
-      balance = double.tryParse(walletData['balances']?['ETH']?['balance']?.toString() ?? '0') ?? 0.0;
-      
-      // If no balance in wallet data, fall back to blockchain endpoint
-      if (balance == 0.0) {
-        balance = await remoteDataSource.getBalance(address);
-      }
+      balance = double.tryParse(walletData['balances']?['ETH']?['balance']?.toString() ?? '') ?? 0.0;
     } catch (e) {
-      // Fallback to blockchain endpoint if wallet data parsing fails
+      balance = 0.0;
+    }
+
+//Always fetch from blockchain if balance is still 0
+    if (balance <= 0.0) {
       balance = await remoteDataSource.getBalance(address);
     }
-    
+
+
     // Convert ETH balance to both PHP and USD
     final rates = await currencyService.getETHRates();
     final balanceInPHP = balance * (rates['php'] ?? 0.0);
     final balanceInUSD = balance * (rates['usd'] ?? 0.0);
     return Wallet(
-      id: walletData['wallet_id']?.toString() ?? '', 
-      name: walletName, 
-      private_key: privateKey, 
+      id: walletData['wallet_id']?.toString() ?? '',
+      name: walletName,
+      private_key: privateKey,
       balance: balance,
       balanceInPHP: balanceInPHP,
       balanceInUSD: balanceInUSD,
@@ -79,43 +80,63 @@ class WalletService {
 
     final address = EthPrivateKey.fromHex(key).address.hexEip55;
     try {
-      // Use backend's reconnect endpoint to validate and get wallet data
       final walletData = await remoteDataSource.reconnectWallet(
         privateKey: key,
       );
-      
-      // Extract balance from backend response or use blockchain endpoint as fallback
+
       double balance = 0.0;
       try {
-        // Try to get balance from wallet data first
         balance = double.tryParse(walletData['balances']?['ETH']?['balance']?.toString() ?? '0') ?? 0.0;
-        
-        // If no balance in wallet data, fall back to blockchain endpoint
         if (balance == 0.0) {
           balance = await remoteDataSource.getBalance(address);
         }
       } catch (e) {
-        // Fallback to blockchain endpoint if wallet data parsing fails
         balance = await remoteDataSource.getBalance(address);
       }
-      
-      // Convert ETH balance to both PHP and USD
-        final rates = await currencyService.getETHRates();
-        final balanceInPHP = balance * (rates['php'] ?? 0.0);
-        final balanceInUSD = balance * (rates['usd'] ?? 0.0);
-      
+
+      final rates = await currencyService.getETHRates();
+      final balanceInPHP = balance * (rates['php'] ?? 0.0);
+      final balanceInUSD = balance * (rates['usd'] ?? 0.0);
+
       return Wallet(
-        id: walletData['wallet_id']?.toString() ?? '', 
-        name: walletData['name']?.toString() ?? 'Stored Wallet', 
-        private_key: key, 
+        id: walletData['wallet_id']?.toString() ?? '',
+        name: walletData['name']?.toString() ?? 'MetaMask',
+        private_key: key,
         balance: balance,
         balanceInPHP: balanceInPHP,
         balanceInUSD: balanceInUSD,
         address: address,
-        walletType: walletData['wallet_type']?.toString() ?? 'MetaMask', // Default type for stored wallets
+        walletType: walletData['wallet_type']?.toString() ?? 'MetaMask',
       );
     } on WalletNotFoundException {
       return null;
     }
   }
+
+  //ADD THIS NEW METHOD HERE
+  Future<Wallet> refreshBalance(Wallet wallet) async {
+    final address = (wallet.address.isNotEmpty)
+        ? wallet.address
+        : EthPrivateKey.fromHex(wallet.private_key).address.hexEip55;
+
+    double balance = 0.0;
+    try {
+      balance = await remoteDataSource.getBalance(address);
+    } catch (e) {
+      debugPrint('WalletService.refreshBalance: getBalance failed: $e');
+      balance = 0.0;
+    }
+
+    final rates = await currencyService.getETHRates();
+    final balanceInPHP = balance * (rates['php'] ?? 0.0);
+    final balanceInUSD = balance * (rates['usd'] ?? 0.0);
+
+    return wallet.copyWith(
+      balance: balance,
+      balanceInPHP: balanceInPHP,
+      balanceInUSD: balanceInUSD,
+      address: address,
+    );
+  }
+
 }
