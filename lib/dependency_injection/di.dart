@@ -92,7 +92,7 @@ Future<void> init() async {
 
   String _baseUrl() {
     if (Platform.isAndroid) {
-      return 'http://192.168.5.59:8000';
+      return 'http://192.168.0.12:8000';
     }
     return 'http://127.0.0.1:8000';
   }

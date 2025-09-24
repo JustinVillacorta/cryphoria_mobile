@@ -35,7 +35,7 @@ class _userProfileState extends State<userProfile> {
 
   void _onLogoutStateChanged() {
     if (!mounted) return; // Ensure widget is still mounted
-    
+
     if (_logoutViewModel.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -44,7 +44,7 @@ class _userProfileState extends State<userProfile> {
         ),
       );
     }
-    
+
     if (_logoutViewModel.message != null) {
       // Logout successful, navigate to login
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -54,7 +54,7 @@ class _userProfileState extends State<userProfile> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const LogIn()),
-            (route) => false,
+                (route) => false,
           );
         } else if (mounted) {
           // If no routes to pop, just push replacement
@@ -72,7 +72,7 @@ class _userProfileState extends State<userProfile> {
   Future<void> _loadUserData() async {
     final authDataSource = sl<AuthLocalDataSource>();
     final authUser = await authDataSource.getAuthUser();
-    
+
     if (authUser != null) {
       setState(() {
         _username = authUser.username;
@@ -120,10 +120,10 @@ class _userProfileState extends State<userProfile> {
 
         // Use smart logout
         final success = await _logoutViewModel.smartLogout();
-        
+
         // Close loading dialog
         if (mounted) Navigator.of(context).pop();
-        
+
         if (!success && _logoutViewModel.needsTransfer) {
           // Show transfer dialog
           _showTransferDialog();
@@ -132,7 +132,7 @@ class _userProfileState extends State<userProfile> {
     } catch (e) {
       // Close loading dialog if open
       if (mounted) Navigator.of(context).pop();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Logout error: ${e.toString()}'),
@@ -201,15 +201,15 @@ class _userProfileState extends State<userProfile> {
     );
 
     await _logoutViewModel.forceLogout();
-    
+
     if (mounted) {
       Navigator.of(context).pop();
-      
+
       // Navigate to login screen
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const LogIn()),
-        (route) => false,
+            (route) => false,
       );
     }
   }
@@ -225,198 +225,137 @@ class _userProfileState extends State<userProfile> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final paddingValue = screenWidth * 0.05; // 5% of screen width for padding
+    final headerHeight = screenHeight * 0.22; // 22% of screen height for gradient header
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      body: Stack(
-        fit: StackFit.expand,
+      body: Column(
         children: [
-          // Blurred radial background
-          Positioned(
-            top: -180,
-            left: -100,
-            right: -100,
-            child: Container(
-              height: 300,
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topCenter,
-                  radius: 1.2,
-                  colors: [
-                    Color(0xFF5B50FF),
-                    Color(0xFF7142FF),
-                    Color(0xFF9747FF),
-                    Colors.transparent,
-                  ],
-                  stops: [0.2, 0.4, 0.6, 1.0],
-                ),
+          // Gradient Header Section
+          Container(
+            height: headerHeight,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF8B5CF6), // Purple top
+                  Color(0xFF7C3AED), // Slightly darker purple
+                ],
               ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
-                child: Container(color: Colors.transparent),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: paddingValue),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // Profile Card
+                    _buildProfileCard(context, screenWidth, screenHeight),
+                  ],
+                ),
               ),
             ),
           ),
 
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  const Text(
-                    'Profile',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Manage your account and security settings',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
+          // White Content Section
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(paddingValue),
+                child: Column(
+                  children: [
+                    SizedBox(height: screenHeight * 0.02), // 2% of screen height
 
-                  // User Info Card
-                  _buildGlassCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundColor: const Color(0xFF9747FF),
-                              child: Text(
-                                _username?.substring(0, 1).toUpperCase() ?? 'U',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _username ?? 'Loading...',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _email ?? '',
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                    // Session Management
+                    _buildMenuItem(
+                      context: context,
+                      icon: Icons.devices,
+                      title: 'Session Management',
+                      subtitle: 'Manage your active devices and sessions',
+                      iconColor: const Color(0xFF8B5CF6),
+                      onTap: _navigateToSessionManagement,
+                    ),
+
+                    SizedBox(height: screenHeight * 0.015), // 1.5% of screen height
+
+                    // Change Password
+                    _buildMenuItem(
+                      context: context,
+                      icon: Icons.lock_outline,
+                      title: 'Change Password',
+                      subtitle: 'Update your account password',
+                      iconColor: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        // TODO: Implement change password
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Feature coming soon')),
+                        );
+                      },
+                    ),
+
+                    SizedBox(height: screenHeight * 0.015),
+
+                    // Privacy Settings
+                    _buildMenuItem(
+                      context: context,
+                      icon: Icons.privacy_tip_outlined,
+                      title: 'Privacy Settings',
+                      subtitle: 'Control your privacy preferences',
+                      iconColor: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        // TODO: Implement privacy settings
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Feature coming soon')),
+                        );
+                      },
+                    ),
+
+                    SizedBox(height: screenHeight * 0.015),
+
+                    // Security Settings
+                    _buildMenuItem(
+                      context: context,
+                      icon: Icons.security_outlined,
+                      title: 'Security',
+                      subtitle: 'Account security settings',
+                      iconColor: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        // TODO: Implement security settings
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Feature coming soon')),
+                        );
+                      },
+                    ),
+
+                    // Sign Out Button
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
+                      child: TextButton(
+                        onPressed: _logout,
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          padding: EdgeInsets.zero,
                         ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-
-                  // Settings Section
-                  const Text(
-                    'Security & Privacy',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Session Management Option
-                  _buildMenuOption(
-                    icon: Icons.devices,
-                    title: 'Session Management',
-                    subtitle: 'Manage your active devices and sessions',
-                    onTap: _navigateToSessionManagement,
-                  ),
-                  
-                  const SizedBox(height: 12),
-
-                  // Change Password Option
-                  _buildMenuOption(
-                    icon: Icons.lock_outline,
-                    title: 'Change Password',
-                    subtitle: 'Update your account password',
-                    onTap: () {
-                      // TODO: Implement change password
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feature coming soon')),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Privacy Settings Option
-                  _buildMenuOption(
-                    icon: Icons.privacy_tip_outlined,
-                    title: 'Privacy Settings',
-                    subtitle: 'Control your privacy preferences',
-                    onTap: () {
-                      // TODO: Implement privacy settings
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feature coming soon')),
-                      );
-                    },
-                  ),
-
-                  const Spacer(),
-
-                  // Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.withOpacity(0.2),
-                        foregroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.red.withOpacity(0.3)),
-                        ),
-                      ),
-                      onPressed: _logout,
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.logout),
-                          SizedBox(width: 8),
-                          Text(
-                            'Sign Out',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        child: Text(
+                          'Sign Out',
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.04, // 4% of screen width
+                            fontWeight: FontWeight.w500,
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                  
-                  const SizedBox(height: 32), // Space for navbar
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -425,72 +364,191 @@ class _userProfileState extends State<userProfile> {
     );
   }
 
-  Widget _buildGlassCard({required Widget child}) {
+  Widget _buildProfileCard(BuildContext context, double screenWidth, double screenHeight) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(screenWidth * 0.02),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
       ),
-      child: child,
+      child: Row(
+        children: [
+          // Profile Image with Status Indicator
+          Stack(
+            children: [
+              Container(
+                width: screenWidth * 0.20, // 20% of screen width
+                height: screenWidth * 0.20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF9747FF),
+                ),
+                child: Center(
+                  child: Text(
+                    _username?.substring(0, 1).toUpperCase() ?? 'U',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenWidth * 0.08,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              // Online Status Indicator
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: screenWidth * 0.04,
+                  height: screenWidth * 0.04,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 2,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.verified,
+                    color: Colors.white,
+                    size: screenWidth * 0.025,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(width: screenWidth * 0.04), // 4% of screen width
+
+          // Profile Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _username ?? 'Loading...',
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.045, // 4.5% of screen width
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.005), // 0.5% of screen height
+                Text(
+                  _email ?? '',
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.035, // 3.5% of screen width
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Edit Icon
+          GestureDetector(
+            onTap: () {
+              // TODO: Implement edit profile
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Edit profile coming soon')),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.all(screenWidth * 0.02),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: screenWidth * 0.04,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildMenuOption({
+  Widget _buildMenuItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
-    required String subtitle,
+    String? subtitle,
+    required Color iconColor,
     required VoidCallback onTap,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(screenWidth * 0.04), // 4% of screen width
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF9747FF).withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: const Color(0xFF9747FF),
-            size: 24,
-          ),
+        child: Row(
+          children: [
+            Container(
+              width: screenWidth * 0.1, // 10% of screen width
+              height: screenWidth * 0.1,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: screenWidth * 0.05, // 5% of screen width
+              ),
+            ),
+            SizedBox(width: screenWidth * 0.04), // 4% of screen width
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.04, // 4% of screen width
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    SizedBox(height: screenHeight * 0.005), // 0.5% of screen height
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.035, // 3.5% of screen width
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: Colors.grey,
+              size: screenWidth * 0.045, // 4.5% of screen width
+            ),
+          ],
         ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-          ),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          color: Colors.white54,
-          size: 16,
-        ),
-        onTap: onTap,
       ),
     );
   }

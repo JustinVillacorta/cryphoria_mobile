@@ -73,12 +73,13 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text('Deny', style: TextStyle(color: Colors.white54)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF9747FF),
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             ),
             onPressed: () {
               Navigator.of(context).pop();
@@ -93,7 +94,7 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
 
   void _showRevokeDialog(UserSession session) {
     final isCurrentDevice = session.deviceId == _currentDeviceId;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -108,9 +109,9 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isCurrentDevice 
-                ? 'This will sign you out of this device.'
-                : 'This will revoke access for this device.',
+              isCurrentDevice
+                  ? 'This will sign you out of this device.'
+                  : 'This will revoke access for this device.',
               style: TextStyle(color: Colors.white.withOpacity(0.8)),
             ),
             const SizedBox(height: 16),
@@ -126,6 +127,7 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             ),
             onPressed: () {
               Navigator.of(context).pop();
@@ -161,12 +163,13 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             ),
             onPressed: () {
               Navigator.of(context).pop();
               _controller.revokeAllOtherSessions();
             },
-            child: const Text('Sign Out All'),
+            child: const Text('Sign Out From All Devices'),
           ),
         ],
       ),
@@ -176,75 +179,25 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Blurred radial background
-          Positioned(
-            top: -180,
-            left: -100,
-            right: -100,
-            child: Container(
-              height: 300,
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topCenter,
-                  radius: 1.2,
-                  colors: [
-                    Color(0xFF5B50FF),
-                    Color(0xFF7142FF),
-                    Color(0xFF9747FF),
-                    Colors.transparent,
-                  ],
-                  stops: [0.2, 0.4, 0.6, 1.0],
-                ),
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
-                child: Container(color: Colors.transparent),
-              ),
-            ),
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Security and Privacy',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
           ),
-
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      const Text(
-                        'Session Management',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.refresh, color: Colors.white),
-                        onPressed: () => _controller.loadSessions(),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Content
-                Expanded(
-                  child: _buildContent(),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
+        centerTitle: false,
       ),
+      body: _buildContent(),
     );
   }
 
@@ -273,7 +226,7 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
               Text(
                 'Error loading sessions',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -281,8 +234,8 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
               const SizedBox(height: 8),
               Text(
                 _viewModel.error ?? 'Unknown error',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                style: const TextStyle(
+                  color: Colors.black54,
                   fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
@@ -292,6 +245,7 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9747FF),
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 ),
                 onPressed: () => _controller.loadSessions(),
                 child: const Text('Retry'),
@@ -303,136 +257,111 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
     }
 
     final sessions = _viewModel.sessions;
-    final currentSessions = sessions.where((s) => s.deviceId == _currentDeviceId).toList();
-    final otherSessions = sessions.where((s) => s.deviceId != _currentDeviceId).toList();
-    final pendingSessions = otherSessions.where((s) => !s.approved).toList();
-    final activeSessions = otherSessions.where((s) => s.approved).toList();
+
+// Always show current device (main device)
+    final currentSessions = sessions
+        .where((s) => s.deviceId == _currentDeviceId)
+        .toList();
+
+// Pending approvals → only other devices that are not approved
+    final pendingSessions = sessions
+        .where((s) => s.deviceId != _currentDeviceId && !s.approved)
+        .toList();
+
+// Active devices → only other devices that are approved
+    final activeSessions = sessions
+        .where((s) => s.deviceId != _currentDeviceId && s.approved)
+        .toList();
+
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Current Device Section
+          // Security Settings Header
+
+          // Password Settings
+          _buildPasswordSection(),
+          const SizedBox(height: 20),
+
+          // Recent Login Activity Section
+          _buildSectionHeader('Device Management'),
+          const SizedBox(height: 16),
+
+          // Current Device
           if (currentSessions.isNotEmpty) ...[
-            const Text(
-              'This Device',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            ...currentSessions.map((session) => _buildLoginActivityItem(
+              session: session,
+              isCurrentDevice: true,
+            )),
+          ],
+
+          // Other Active Sessions
+          if (activeSessions.isNotEmpty) ...[
+            ...activeSessions.map((session) => _buildLoginActivityItem(
+              session: session,
+              showRevokeButton: true,
+            )),
+          ],
+
+          if (activeSessions.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Center(
+              child: TextButton(
+                onPressed: () => _showRevokeAllDialog(),
+                child: const Text(
+                  'View Full Login History',
+                  style: TextStyle(
+                    color: Color(0xFF9747FF),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            ...currentSessions.map((session) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildSessionCard(session, isCurrentDevice: true),
-            )),
-            const SizedBox(height: 24),
           ],
 
-          // Pending Approvals Section
+          // Pending Approval Section
           if (pendingSessions.isNotEmpty) ...[
-            Row(
-              children: [
-                const Text(
-                  'Pending Approvals',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${pendingSessions.length}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...pendingSessions.map((session) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildSessionCard(session, isPending: true),
-            )),
-            const SizedBox(height: 24),
+            const SizedBox(height: 30),
+            _buildSectionHeader('Pending Approval'),
+            const SizedBox(height: 16),
+            ...pendingSessions.map((session) => _buildPendingApprovalItem(session)),
           ],
 
-          // Other Devices Section
-          if (activeSessions.isNotEmpty) ...[
-            Row(
-              children: [
-                const Text(
-                  'Other Devices',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: _showRevokeAllDialog,
-                  child: const Text(
-                    'Sign Out All',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...activeSessions.map((session) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildSessionCard(session),
-            )),
-          ],
+
 
           // Empty state
           if (sessions.isEmpty) ...[
+            const SizedBox(height: 60),
             Center(
-              child: Padding(
-                padding: const EdgeInsets.all(48),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.devices,
-                      color: Colors.white54,
-                      size: 64,
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.devices,
+                    color: Colors.black26,
+                    size: 64,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No Other Sessions',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'No Other Sessions',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'You\'re only signed in on this device.',
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 14,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'You\'re only signed in on this device.',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
           ],
@@ -441,140 +370,270 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
     );
   }
 
-  Widget _buildSessionCard(UserSession session, {bool isCurrentDevice = false, bool isPending = false}) {
+  Widget _buildSectionHeader(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: const Color(0xFF9747FF),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.security,
+            color: Colors.white,
+            size: 16,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.black87,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordSection() {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.grey.shade400, // border color
+          width: 1,                    // border width
+        ),
+        borderRadius: BorderRadius.circular(8), // rounded corners
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.key,
+            color: Colors.black54,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Password',
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // Handle password change
+            },
+            child: const Text(
+              'Change Password',
+              style: TextStyle(
+                color: Color(0xFF9747FF),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildLoginActivityItem({
+    required UserSession session,
+    bool isCurrentDevice = false,
+    bool showRevokeButton = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isPending 
-            ? Colors.orange.withOpacity(0.3)
-            : isCurrentDevice 
-              ? const Color(0xFF9747FF).withOpacity(0.3)
-              : Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _getDeviceIcon(session.deviceName),
+            color: Colors.black54,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  session.deviceName,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Last Active: ${_formatDateTime(session.lastSeen ?? session.createdAt)}',
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isCurrentDevice)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'Current',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          if (showRevokeButton)
+            InkWell(
+              onTap: () => _showRevokeDialog(session),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Revoke',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPendingApprovalItem(UserSession session) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isPending
-                    ? Colors.orange.withOpacity(0.2)
-                    : isCurrentDevice
-                      ? const Color(0xFF9747FF).withOpacity(0.2)
-                      : Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  _getDeviceIcon(session.deviceName),
-                  color: isPending
-                    ? Colors.orange
-                    : isCurrentDevice
-                      ? const Color(0xFF9747FF)
-                      : Colors.white70,
-                  size: 20,
-                ),
+              Icon(
+                _getDeviceIcon(session.deviceName),
+                color: Colors.black54,
+                size: 24,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            session.deviceName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        if (isCurrentDevice)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF9747FF),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'Current',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        if (isPending)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.orange,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'Pending',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
                     Text(
-                      'Last active: ${_formatDateTime(session.lastSeen ?? session.createdAt)}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                      session.deviceName,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Last Active: ${_formatDateTime(session.lastSeen ?? session.createdAt)}',
+                      style: const TextStyle(
+                        color: Colors.black54,
                         fontSize: 12,
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-          
-          if (isPending || !isCurrentDevice) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                if (isPending)
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF9747FF),
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () => _showApprovalDialog(session),
-                      child: const Text('Approve'),
-                    ),
-                  ),
-                if (isPending) const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                    ),
-                    onPressed: () => _showRevokeDialog(session),
-                    child: Text(isPending ? 'Deny' : 'Revoke'),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Pending',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black54,
+                    side: const BorderSide(color: Colors.black26),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  ),
+                  onPressed: () {
+                    _controller.revokeSessionById(session.sid);
+                  },
+                  child: const Text('Deny'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF9747FF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  ),
+                  onPressed: () {
+                    _controller.approveSessionById(session.sid);
+                  },
+                  child: const Text('Approve'),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
