@@ -170,8 +170,14 @@ Future<void> init() async {
     viewModel: sl(),
   ));
 
-  // Employee Home ViewModel
-  sl.registerFactory(() => HomeEmployeeViewModel());
+  // Employee Home Notifier
+  sl.registerFactory<HomeEmployeeNotifier>(
+    () => HomeEmployeeNotifier(
+      walletService: sl<WalletService>(),
+      transactionsDataSource: sl<FakeTransactionsDataSource>(),
+      getEmployeeDashboardData: sl<GetEmployeeDashboardData>(),
+    ),
+  );
 
   // Wallet feature
   sl.registerLazySingleton<WalletRemoteDataSource>(
@@ -189,9 +195,9 @@ Future<void> init() async {
         ));
 
 
-  // Wallet ViewModel
-  sl.registerFactory<WalletViewModel>(
-        () => WalletViewModel(
+  // Wallet Notifier
+  sl.registerFactory<WalletNotifier>(
+    () => WalletNotifier(
       walletService: sl<WalletService>(),
       ethTransactionDataSource: sl<EthTransactionDataSource>(),
     ),
@@ -283,8 +289,5 @@ Future<void> init() async {
     uploadContractUseCase: sl(),
   ));
 }
-
-
-
 
 
