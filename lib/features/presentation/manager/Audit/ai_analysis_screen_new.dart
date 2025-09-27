@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import '../../../data/notifiers/audit_notifier.dart';
 import '../../../domain/entities/smart_contract.dart';
 import '../../../domain/entities/audit_report.dart';
 import 'Views/audit_results_screen.dart';
 
-class AiAnalysisScreen extends StatefulWidget {
+class AiAnalysisScreen extends ConsumerStatefulWidget {
   final String contractName;
   final String fileName;
 
@@ -16,10 +17,10 @@ class AiAnalysisScreen extends StatefulWidget {
   });
 
   @override
-  State<AiAnalysisScreen> createState() => _AiAnalysisScreenState();
+  ConsumerState<AiAnalysisScreen> createState() => _AiAnalysisScreenState();
 }
 
-class _AiAnalysisScreenState extends State<AiAnalysisScreen>
+class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
     with TickerProviderStateMixin {
   late AnimationController _progressController;
   late AnimationController _rotationController;
@@ -69,7 +70,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
   }
 
   Future<void> _startAnalysis() async {
-    final auditNotifier = Provider.of<AuditNotifier>(context, listen: false);
+    final auditNotifier = ref.read(auditNotifierProvider);
     
     print("🔄 AiAnalysisScreen._startAnalysis: Starting analysis");
     print("📋 Contract name: ${widget.contractName}");

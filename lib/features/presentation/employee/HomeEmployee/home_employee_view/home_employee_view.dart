@@ -7,11 +7,11 @@ import 'package:cryphoria_mobile/features/presentation/widgets/employee_transact
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_transaction_lists.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_wallet_card.dart';
 import 'package:cryphoria_mobile/features/domain/entities/employee_transaction_status.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeEmployeeScreen extends StatefulWidget {
+class HomeEmployeeScreen extends ConsumerStatefulWidget {
   final String employeeId;
 
   const HomeEmployeeScreen({
@@ -20,16 +20,17 @@ class HomeEmployeeScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<HomeEmployeeScreen> createState() => _HomeEmployeeScreenState();
+  ConsumerState<HomeEmployeeScreen> createState() => _HomeEmployeeScreenState();
 }
 
-class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
+class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       debugPrint('Initializing HomeEmployeeScreen with employeeId: ${widget.employeeId}');
-      context.read<HomeEmployeeViewModel>().getDashboardData(widget.employeeId);
+      ref.read(homeEmployeeNotifierProvider.notifier)
+          .getDashboardData(widget.employeeId);
     });
   }
 
@@ -38,19 +39,21 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isTablet = screenWidth > 600;
+    final state = ref.watch(homeEmployeeNotifierProvider);
+    final notifier = ref.read(homeEmployeeNotifierProvider.notifier);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       body: SafeArea(
-        child: Consumer<HomeEmployeeViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
+        child: Builder(
+          builder: (context) {
+            if (state.isLoading) {
               return const Center(
                 child: CircularProgressIndicator(color: Color(0xFF9747FF)),
               );
             }
 
-            if (viewModel.hasError) {
+            if (state.hasError) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -71,7 +74,7 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      viewModel.errorMessage,
+                      state.errorMessage,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -79,11 +82,11 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        debugPrint('Retrying dashboard data load');
-                        viewModel.refreshData(widget.employeeId);
-                      },
+                      ElevatedButton(
+                        onPressed: () {
+                          debugPrint('Retrying dashboard data load');
+                          notifier.refreshData(widget.employeeId);
+                        },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF9747FF),
                         foregroundColor: Colors.white,
@@ -99,7 +102,7 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
             return RefreshIndicator(
               onRefresh: () async {
                 debugPrint('Refresh triggered');
-                await viewModel.refreshData(widget.employeeId);
+                await notifier.refreshData(widget.employeeId);
               },
               color: const Color(0xFF9747FF),
               child: SingleChildScrollView(
@@ -113,7 +116,7 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       EmployeeTobBarWidget(
-                        employeeName: viewModel.employeeName,
+                        employeeName: state.employeeName,
                         onNotificationTapped: () => _navigateToNotifications(context),
                       ),
                       SizedBox(height: screenHeight * 0.02),
@@ -125,8 +128,8 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
                       ),
                       SizedBox(height: screenHeight * 0.02),
                       PayoutInfoWidget(
-                        nextPayoutDate: viewModel.nextPayoutDate,
-                        frequency: viewModel.payoutFrequency,
+                        nextPayoutDate: state.nextPayoutDate,
+                        frequency: state.payoutFrequency,
                         isTablet: isTablet,
                       ),
                       SizedBox(height: screenHeight * 0.02),
@@ -135,13 +138,13 @@ class _HomeEmployeeScreenState extends State<HomeEmployeeScreen> {
                         isTablet: isTablet,
                       ),
                       SizedBox(height: screenHeight * 0.016),
-                      if (viewModel.recentTransactions.isEmpty)
+                      if (state.recentTransactions.isEmpty)
                         _buildEmptyTransactionsState(screenHeight)
                       else
                         ListView(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          children: viewModel.recentTransactions
+                          children: state.recentTransactions
                               .map<Widget>(
                                 (dynamic transaction) => TransactionItemWidget(
                               transaction: Transaction.fromMap(transaction),

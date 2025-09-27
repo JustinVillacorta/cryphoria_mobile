@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import '../employee_viewmodel/employee_viewmodel.dart';
 import 'add_employee_screen.dart';
 import 'employee_detail_screen.dart';
-import '../../../../../dependency_injection/di.dart';
 
-class EmployeeManagementScreen extends StatefulWidget {
+class EmployeeManagementScreen extends ConsumerStatefulWidget {
   const EmployeeManagementScreen({super.key});
 
   @override
-  State<EmployeeManagementScreen> createState() => _EmployeeManagementScreenState();
+  ConsumerState<EmployeeManagementScreen> createState() => _EmployeeManagementScreenState();
 }
 
-class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
+class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScreen> {
   late EmployeeViewModel _employeeViewModel;
   bool _isFilterExpanded = false;
   final List<String> _departments = ['Finance', 'Marketing', 'Operations', 'Sales', 'Technology'];
@@ -20,7 +20,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   @override
   void initState() {
     super.initState();
-    _employeeViewModel = sl<EmployeeViewModel>();
+    _employeeViewModel = ref.read(employeeViewModelProvider);
     // Load manager's team from backend by default
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Try to load manager's team first, fallback to sample data if needed
@@ -32,153 +32,134 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _employeeViewModel,
-      child: Scaffold(
-        backgroundColor: Colors.grey[50],
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(80),
-          child: AppBar(
-            backgroundColor: Colors.grey[50],
-            elevation: 0,
-            flexibleSpace: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Employee Management',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
+    final viewModel = ref.watch(employeeViewModelProvider);
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: AppBar(
+          backgroundColor: Colors.grey[50],
+          elevation: 0,
+          flexibleSpace: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Employee Management',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.add, color: Colors.black, size: 28),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChangeNotifierProvider.value(
-                              value: _employeeViewModel,
-                              child: const AddEmployeeScreen(),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add, color: Colors.black, size: 28),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddEmployeeScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
         ),
-        body: Consumer<EmployeeViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (!viewModel.hasEmployees) {
-              return _buildEmptyState();
-            }
-
-            return Column(
-              children: [
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search employees...',
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    onChanged: viewModel.searchEmployees,
-                  ),
-                ),
-
-                // Employee List Header with Filter
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Employee Lists',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => setState(() => _isFilterExpanded = !_isFilterExpanded),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.purple.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.filter_list, color: Colors.purple, size: 16),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Filter',
-                                style: TextStyle(color: Colors.purple, fontWeight: FontWeight.w500),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                _isFilterExpanded ? Icons.expand_less : Icons.expand_more,
-                                color: Colors.purple,
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Filter Section
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  height: _isFilterExpanded ? 80 : 0,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: _isFilterExpanded ? 1.0 : 0.0,
-                    child: _buildFilterSection(viewModel),
-                  ),
-                ),
-
-                // Employee List
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: viewModel.employees.length,
-                    itemBuilder: (context, index) {
-                      final employee = viewModel.employees[index];
-                      return _buildEmployeeCard(employee);
-                    },
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
       ),
+      body: viewModel.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : viewModel.hasEmployees
+              ? Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search employees...',
+                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        onChanged: viewModel.searchEmployees,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Employee Lists',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => setState(() => _isFilterExpanded = !_isFilterExpanded),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.filter_list, color: Colors.purple, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Filter',
+                                    style: TextStyle(color: Colors.purple, fontWeight: FontWeight.w500),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    _isFilterExpanded ? Icons.expand_less : Icons.expand_more,
+                                    color: Colors.purple,
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: _isFilterExpanded ? 80 : 0,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: _isFilterExpanded ? 1.0 : 0.0,
+                        child: _buildFilterSection(viewModel),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: viewModel.employees.length,
+                        itemBuilder: (context, index) {
+                          final employee = viewModel.employees[index];
+                          return _buildEmployeeCard(employee);
+                        },
+                      ),
+                    ),
+                  ],
+                )
+              : _buildEmptyState(),
     );
   }
 

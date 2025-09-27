@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import '../ViewModels/audit_results_viewmodel.dart';
 import '../../../../domain/entities/audit_report.dart';
 
-class OverallAssessmentScreen extends StatelessWidget {
+class OverallAssessmentScreen extends ConsumerWidget {
   final String contractName;
   final String fileName;
 
@@ -14,7 +15,9 @@ class OverallAssessmentScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(auditResultsViewModelProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -34,12 +37,8 @@ class OverallAssessmentScreen extends StatelessWidget {
         ),
         centerTitle: false,
       ),
-      body: Consumer<AuditResultsViewModel>(
-        builder: (context, viewModel, child) {
-          final auditReport = viewModel.auditReport;
-          
-          if (auditReport == null) {
-            return Center(
+      body: viewModel.auditReport == null
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -56,12 +55,8 @@ class OverallAssessmentScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            );
-          }
-
-          return _buildAssessmentContent(context, auditReport);
-        },
-      ),
+            )
+          : _buildAssessmentContent(context, viewModel.auditReport!),
     );
   }
 

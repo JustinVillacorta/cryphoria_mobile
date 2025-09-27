@@ -1,92 +1,91 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Transactions/all_transactions_screen.dart';
 
-class RecentTransactions extends StatelessWidget {
+class RecentTransactions extends ConsumerWidget {
   const RecentTransactions({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<WalletViewModel>(
-      builder: (context, viewModel, child) {
-        if (viewModel.isLoading) {
-          return const SizedBox(
-            height: 100,
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (viewModel.error != null) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Recent Transactions',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
-              ),
-              const SizedBox(height: 16),
-              Text('Error: ${viewModel.error}'),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: viewModel.refresh,
-                child: const Text('Retry'),
-              ),
-            ],
-          );
-        }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(walletNotifierProvider);
+    final notifier = ref.read(walletNotifierProvider.notifier);
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    if (state.isLoading) {
+      return const SizedBox(
+        height: 100,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (state.error != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Recent Transactions',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+          ),
+          const SizedBox(height: 16),
+          Text('Error: ${state.error}'),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: notifier.refresh,
+            child: const Text('Retry'),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Recent Transactions',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AllTransactionsScreen(),
-                      ),
-                    );
-                  },
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'See All',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontSize: 14,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_ios, size: 12, color: Colors.blue),
-                    ],
+            const Text(
+              'Recent Transactions',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AllTransactionsScreen(),
                   ),
-                )
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: viewModel.transactions.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final transaction = viewModel.transactions[index];
-                return _buildTransactionItem(transaction);
+                );
               },
-            ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'See All',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 14,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios, size: 12, color: Colors.blue),
+                ],
+              ),
+            )
           ],
-        );
-      },
+        ),
+        const SizedBox(height: 16),
+
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: state.transactions.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final transaction = state.transactions[index];
+            return _buildTransactionItem(transaction);
+          },
+        ),
+      ],
     );
   }
 

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import '../employee_viewmodel/employee_viewmodel.dart';
 
-class AddEmployeeScreen extends StatefulWidget {
+class AddEmployeeScreen extends ConsumerStatefulWidget {
   const AddEmployeeScreen({super.key});
 
   @override
-  State<AddEmployeeScreen> createState() => _AddEmployeeScreenState();
+  ConsumerState<AddEmployeeScreen> createState() => _AddEmployeeScreenState();
 }
 
-class _AddEmployeeScreenState extends State<AddEmployeeScreen>
+class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
@@ -1067,7 +1068,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen>
     if (_formKey.currentState!.validate()) {
       try {
         // Get employee view model from context
-        final employeeViewModel = Provider.of<EmployeeViewModel>(context, listen: false);
+        final employeeViewModel = ref.read(employeeViewModelProvider);
         
         // Show loading
         showDialog(

@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import '../ViewModels/audit_contract_viewmodel.dart';
 import 'ai_analysis_screen.dart';
 
-class ContractSetupScreenRefactored extends StatefulWidget {
+class ContractSetupScreenRefactored extends ConsumerStatefulWidget {
   const ContractSetupScreenRefactored({super.key});
 
   @override
-  State<ContractSetupScreenRefactored> createState() => _ContractSetupScreenRefactoredState();
+  ConsumerState<ContractSetupScreenRefactored> createState() => _ContractSetupScreenRefactoredState();
 }
 
-class _ContractSetupScreenRefactoredState extends State<ContractSetupScreenRefactored> {
+class _ContractSetupScreenRefactoredState extends ConsumerState<ContractSetupScreenRefactored> {
   final TextEditingController _contractNameController = TextEditingController();
   late AuditContractViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = sl<AuditContractViewModel>();
+    _viewModel = ref.read(auditContractViewModelProvider);
     _viewModel.addListener(_onViewModelChanged);
   }
 
@@ -42,51 +42,39 @@ class _ContractSetupScreenRefactoredState extends State<ContractSetupScreenRefac
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _viewModel,
-      child: Scaffold(
-        backgroundColor: Colors.grey[50],
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text(
-            'Contract Setup',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
+    final viewModel = ref.watch(auditContractViewModelProvider);
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Contract Setup',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        body: Consumer<AuditContractViewModel>(
-          builder: (context, viewModel, child) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  _buildHeader(),
-                  const SizedBox(height: 32),
-
-                  // Contract Name Input
-                  _buildContractNameSection(viewModel),
-                  const SizedBox(height: 24),
-
-                  // File Upload Section
-                  _buildFileUploadSection(viewModel),
-                  const SizedBox(height: 32),
-
-                  // Upload Button
-                  _buildUploadButton(viewModel),
-                ],
-              ),
-            );
-          },
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 32),
+            _buildContractNameSection(viewModel),
+            const SizedBox(height: 24),
+            _buildFileUploadSection(viewModel),
+            const SizedBox(height: 32),
+            _buildUploadButton(viewModel),
+          ],
         ),
       ),
     );

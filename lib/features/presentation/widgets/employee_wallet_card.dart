@@ -1,9 +1,10 @@
 import 'package:cryphoria_mobile/features/presentation/widgets/connect_wallet_bottom_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 
-class EmployeeWalletCardWidget extends StatefulWidget {
+class EmployeeWalletCardWidget extends ConsumerStatefulWidget {
   final bool isTablet;
   final VoidCallback? onWhatIsCryptoWallet;
 
@@ -14,17 +15,18 @@ class EmployeeWalletCardWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<EmployeeWalletCardWidget> createState() => _EmployeeWalletCardWidgetState();
+  ConsumerState<EmployeeWalletCardWidget> createState() => _EmployeeWalletCardWidgetState();
 }
 
-class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
+class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWidget> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final viewModel = Provider.of<HomeEmployeeViewModel>(context);
+    final state = ref.watch(homeEmployeeNotifierProvider);
+    final notifier = ref.read(homeEmployeeNotifierProvider.notifier);
 
-    if (viewModel.isLoading) {
+    if (state.isLoading) {
       return Container(
         width: double.infinity,
         constraints: BoxConstraints(maxWidth: widget.isTablet ? 500 : double.infinity),
@@ -41,7 +43,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
       );
     }
 
-    if (viewModel.errorMessage.isNotEmpty) {
+    if (state.errorMessage.isNotEmpty) {
       return Container(
         width: double.infinity,
         constraints: BoxConstraints(maxWidth: widget.isTablet ? 500 : double.infinity),
@@ -58,14 +60,14 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Error: ${viewModel.errorMessage}',
+              'Error: ${state.errorMessage}',
               style: TextStyle(color: Colors.white, fontSize: widget.isTablet ? 16 : screenWidth * 0.035),
             ),
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                onPressed: () => viewModel.clearError(),
+                onPressed: notifier.clearError,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white.withOpacity(0.2),
                   foregroundColor: Colors.white,
@@ -100,8 +102,8 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
         ),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: viewModel.wallet != null
-          ? _buildConnectedWalletView(screenWidth, screenHeight, viewModel)
+      child: state.wallet != null
+          ? _buildConnectedWalletView(screenWidth, screenHeight, state, notifier)
           : _buildNoWalletView(screenWidth, screenHeight),
     );
   }
@@ -186,7 +188,12 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
     );
   }
 
-  Widget _buildConnectedWalletView(double screenWidth, double screenHeight, HomeEmployeeViewModel viewModel) {
+  Widget _buildConnectedWalletView(
+    double screenWidth,
+    double screenHeight,
+    HomeEmployeeState state,
+    HomeEmployeeNotifier notifier,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -207,10 +214,11 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
               onSelected: (value) async {
                 switch (value) {
                   case 'refresh':
-                    await viewModel.refreshWallet();
-                    if (mounted && viewModel.errorMessage.isNotEmpty) {
+                    await notifier.refreshWallet();
+                    final updated = ref.read(homeEmployeeNotifierProvider);
+                    if (mounted && updated.errorMessage.isNotEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to refresh: ${viewModel.errorMessage}')),
+                        SnackBar(content: Text('Failed to refresh: ${updated.errorMessage}')),
                       );
                     } else if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -222,10 +230,11 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
                     await _showConnectWalletBottomSheet(context);
                     break;
                   case 'disconnect':
-                    await viewModel.disconnectWallet();
-                    if (mounted && viewModel.errorMessage.isNotEmpty) {
+                    await notifier.disconnectWallet();
+                    final updated = ref.read(homeEmployeeNotifierProvider);
+                    if (mounted && updated.errorMessage.isNotEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to disconnect: ${viewModel.errorMessage}')),
+                        SnackBar(content: Text('Failed to disconnect: ${updated.errorMessage}')),
                       );
                     } else if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -272,7 +281,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
         ),
         const SizedBox(height: 4),
         Text(
-          viewModel.wallet!.name,
+          state.wallet!.name,
           style: TextStyle(
             color: Colors.white,
             fontSize: widget.isTablet ? 18 : screenWidth * 0.04,
@@ -293,7 +302,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                viewModel.wallet!.displayAddress,
+                state.wallet!.displayAddress,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: widget.isTablet ? 18 : screenWidth * 0.04,
@@ -304,7 +313,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
               GestureDetector(
                 onTap: () {
                   // Implement copy to clipboard (e.g., using package:clipboard)
-                  debugPrint('Copying wallet address: ${viewModel.wallet!.address}');
+                  debugPrint('Copying wallet address: ${state.wallet!.address}');
                 },
                 child: Icon(
                   Icons.copy,
@@ -318,7 +327,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
         SizedBox(height: screenHeight * 0.001),
         const SizedBox(height: 8),
         Text(
-          '${viewModel.wallet!.balance.toStringAsFixed(6)} ETH',
+          '${state.wallet!.balance.toStringAsFixed(6)} ETH',
           style: TextStyle(
             color: Colors.white,
             fontSize: widget.isTablet ? 36 : screenWidth * 0.08,
@@ -333,7 +342,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Converted to ${viewModel.selectedCurrency}',
+                  'Converted to ${state.selectedCurrency}',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: widget.isTablet ? 12 : screenWidth * 0.03,
@@ -341,9 +350,9 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  viewModel.selectedCurrency == 'USD'
-                      ? '\$${viewModel.wallet!.balanceInUSD.toStringAsFixed(2)}'
-                      : '₱${viewModel.wallet!.balanceInPHP.toStringAsFixed(2)}',
+                  state.selectedCurrency == 'USD'
+                      ? '\$${state.wallet!.balanceInUSD.toStringAsFixed(2)}'
+                      : '₱${state.wallet!.balanceInPHP.toStringAsFixed(2)}',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: widget.isTablet ? 16 : screenWidth * 0.035,
@@ -360,7 +369,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
                 border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
               ),
               child: DropdownButton<String>(
-                value: viewModel.selectedCurrency,
+                value: state.selectedCurrency,
                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 16),
                 dropdownColor: Colors.white,
                 underline: const SizedBox(),
@@ -372,7 +381,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
                 ),
                 onChanged: (String? newValue) {
                   if (newValue != null) {
-                    viewModel.changeCurrency(newValue);
+                    notifier.changeCurrency(newValue);
                   }
                 },
                 items: ['PHP', 'USD'].map<DropdownMenuItem<String>>((String value) {
@@ -395,7 +404,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
   Future<void> _showConnectWalletBottomSheet(BuildContext context) async {
     final controller = TextEditingController();
     String selectedWallet = 'MetaMask';
-    final viewModel = Provider.of<HomeEmployeeViewModel>(context, listen: false);
+    final notifier = ref.read(homeEmployeeNotifierProvider.notifier);
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
@@ -418,7 +427,7 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
             endpoint = 'connect_trust_wallet/';
         }
 
-        await viewModel.connect(
+        await notifier.connect(
           controller.text,
           endpoint: endpoint,
           walletName: selectedWallet,
@@ -432,13 +441,14 @@ class _EmployeeWalletCardWidgetState extends State<EmployeeWalletCardWidget> {
 
         // Check if connection was successful and widget is still mounted
         if (mounted) {
-          if (viewModel.wallet != null && viewModel.error == null) {
+          final updatedState = ref.read(homeEmployeeNotifierProvider);
+          if (updatedState.wallet != null && updatedState.errorMessage.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Wallet connected successfully!')),
             );
-          } else if (viewModel.error != null) {
+          } else if (updatedState.errorMessage.isNotEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to connect: ${viewModel.error}')),
+              SnackBar(content: Text('Failed to connect: ${updatedState.errorMessage}')),
             );
           }
         }

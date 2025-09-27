@@ -1,85 +1,150 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/domain/entities/wallet.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/fake_transactions_data.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/EmployeeHome/employee_home_usecase.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
 
-class HomeEmployeeViewModel extends ChangeNotifier {
-  final WalletService walletService = sl<WalletService>();
-  final FakeTransactionsDataSource _transactionsDataSource = sl<FakeTransactionsDataSource>();
-  final GetEmployeeDashboardData _getDashboardData = sl<GetEmployeeDashboardData>();
+class HomeEmployeeState {
+  final bool isLoading;
+  final bool hasError;
+  final String errorMessage;
+  final bool isInitialized;
+  final String employeeId;
+  final String employeeName;
+  final String employeeAvatar;
+  final String nextPayoutDate;
+  final String payoutFrequency;
+  final List<Map<String, dynamic>> recentTransactions;
+  final Wallet? wallet;
+  final List<Map<String, dynamic>> transactions;
+  final String selectedCurrency;
 
-  // State management
-  bool _isLoading = false;
-  bool _hasError = false;
-  String _errorMessage = '';
-  bool _isInitialized = false;
+  const HomeEmployeeState({
+    required this.isLoading,
+    required this.hasError,
+    required this.errorMessage,
+    required this.isInitialized,
+    required this.employeeId,
+    required this.employeeName,
+    required this.employeeAvatar,
+    required this.nextPayoutDate,
+    required this.payoutFrequency,
+    required this.recentTransactions,
+    required this.wallet,
+    required this.transactions,
+    required this.selectedCurrency,
+  });
 
-  // Employee data
-  String _employeeId = '';
-  String _employeeName = 'Anna';
-  String _employeeAvatar = '';
+  factory HomeEmployeeState.initial() => const HomeEmployeeState(
+        isLoading: false,
+        hasError: false,
+        errorMessage: '',
+        isInitialized: false,
+        employeeId: '',
+        employeeName: 'Anna',
+        employeeAvatar: '',
+        nextPayoutDate: 'June 30, 2023',
+        payoutFrequency: 'Monthly',
+        recentTransactions: [],
+        wallet: null,
+        transactions: [],
+        selectedCurrency: 'PHP',
+      );
 
-  // Payout info
-  String _nextPayoutDate = 'June 30, 2023';
-  String _payoutFrequency = 'Monthly';
+  bool get isLoaded => isInitialized && !isLoading && !hasError;
+  bool get hasTransactions => recentTransactions.isNotEmpty;
 
-  // Transactions
-  List<Map<String, dynamic>> _recentTransactions = [];
+  HomeEmployeeState copyWith({
+    bool? isLoading,
+    bool? hasError,
+    String? errorMessage,
+    bool? isInitialized,
+    String? employeeId,
+    String? employeeName,
+    String? employeeAvatar,
+    String? nextPayoutDate,
+    String? payoutFrequency,
+    List<Map<String, dynamic>>? recentTransactions,
+    Wallet? wallet,
+    List<Map<String, dynamic>>? transactions,
+    String? selectedCurrency,
+  }) {
+    return HomeEmployeeState(
+      isLoading: isLoading ?? this.isLoading,
+      hasError: hasError ?? this.hasError,
+      errorMessage: errorMessage ?? this.errorMessage,
+      isInitialized: isInitialized ?? this.isInitialized,
+      employeeId: employeeId ?? this.employeeId,
+      employeeName: employeeName ?? this.employeeName,
+      employeeAvatar: employeeAvatar ?? this.employeeAvatar,
+      nextPayoutDate: nextPayoutDate ?? this.nextPayoutDate,
+      payoutFrequency: payoutFrequency ?? this.payoutFrequency,
+      recentTransactions: recentTransactions ?? this.recentTransactions,
+      wallet: wallet ?? this.wallet,
+      transactions: transactions ?? this.transactions,
+      selectedCurrency: selectedCurrency ?? this.selectedCurrency,
+    );
+  }
+}
 
-  // Wallet state
-  Wallet? _wallet;
-  List<Map<String, dynamic>> _transactions = [];
-  String _selectedCurrency = 'PHP';
+class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
+  HomeEmployeeNotifier({
+    required WalletService walletService,
+    required FakeTransactionsDataSource transactionsDataSource,
+    required GetEmployeeDashboardData getEmployeeDashboardData,
+  })  : _walletService = walletService,
+        _transactionsDataSource = transactionsDataSource,
+        _getDashboardData = getEmployeeDashboardData,
+        super(HomeEmployeeState.initial());
 
-  // Getters
-  bool get isLoading => _isLoading;
-  bool get hasError => _hasError;
-  String get errorMessage => _errorMessage;
-  bool get isInitialized => _isInitialized;
-  bool get isLoaded => _isInitialized && !_isLoading && !_hasError;
-  String get employeeId => _employeeId;
-  String get employeeName => _employeeName;
-  String get employeeAvatar => _employeeAvatar;
-  String get nextPayoutDate => _nextPayoutDate;
-  String get payoutFrequency => _payoutFrequency;
-  List<Map<String, dynamic>> get recentTransactions => _recentTransactions;
-  Wallet? get wallet => _wallet;
-  String? get error => _errorMessage;
-  List<Map<String, dynamic>> get transactions => List.unmodifiable(_transactions);
-  String get selectedCurrency => _selectedCurrency;
-  bool get hasTransactions => _recentTransactions.isNotEmpty;
+  final WalletService _walletService;
+  final FakeTransactionsDataSource _transactionsDataSource;
+  final GetEmployeeDashboardData _getDashboardData;
 
   Future<void> getDashboardData(String employeeId) async {
-    _employeeId = employeeId;
     _setLoading(true);
+    state = state.copyWith(employeeId: employeeId);
 
     try {
       final dashboardData = await _getDashboardData(employeeId);
       
       // Update employee data
-      _employeeName = dashboardData.employee.name;
-      _employeeAvatar = dashboardData.employee.avatarUrl;
+      state = state.copyWith(
+        employeeName: dashboardData.employee.name,
+        employeeAvatar: dashboardData.employee.avatarUrl,
+        hasError: false,
+        errorMessage: '',
+      );
       
       // Update payout info
-      _nextPayoutDate = _formatDate(dashboardData.payoutInfo.nextPayoutDate);
-      _payoutFrequency = dashboardData.payoutInfo.frequency;
+      final nextPayoutDate = _formatDate(dashboardData.payoutInfo.nextPayoutDate);
+      state = state.copyWith(
+        nextPayoutDate: nextPayoutDate,
+        payoutFrequency: dashboardData.payoutInfo.frequency,
+        hasError: false,
+        errorMessage: '',
+      );
       
       // Update recent transactions
-      _recentTransactions = dashboardData.recentTransactions.map((transaction) => {
+      final updatedRecentTransactions = dashboardData.recentTransactions.map((transaction) => {
         'id': transaction.id,
         'date': _formatDate(transaction.date),
         'amount': '${transaction.amount} ${transaction.currency}',
         'usdAmount': '\$${transaction.usdAmount.toStringAsFixed(2)} USD',
         'status': transaction.status.name,
       }).toList();
+      state = state.copyWith(
+        recentTransactions: List.unmodifiable(updatedRecentTransactions),
+        hasError: false,
+        errorMessage: '',
+      );
       
       // Load wallet data (keeping the existing wallet loading logic for now)
       await _loadInitialWalletData();
       
-      _isInitialized = true;
-      debugPrint('Dashboard data loaded, wallet: ${_wallet?.toJson()}');
+      state = state.copyWith(isInitialized: true);
+      debugPrint('Dashboard data loaded, wallet: ${state.wallet?.toJson()}');
       _setLoading(false);
     } catch (e) {
       _setError('Failed to load dashboard data: $e');
@@ -90,31 +155,51 @@ class HomeEmployeeViewModel extends ChangeNotifier {
     await Future.delayed(const Duration(milliseconds: 200));
     switch (employeeId) {
       case 'anna_001':
-        _employeeName = 'Anna Smith';
+        state = state.copyWith(
+          employeeName: 'Anna Smith',
+          hasError: false,
+          errorMessage: '',
+        );
         break;
       case 'john_002':
-        _employeeName = 'John Doe';
+        state = state.copyWith(
+          employeeName: 'John Doe',
+          hasError: false,
+          errorMessage: '',
+        );
         break;
       case 'sarah_003':
-        _employeeName = 'Sarah Johnson';
+        state = state.copyWith(
+          employeeName: 'Sarah Johnson',
+          hasError: false,
+          errorMessage: '',
+        );
         break;
       default:
-        _employeeName = 'Anna';
+        state = state.copyWith(
+          employeeName: 'Anna',
+          hasError: false,
+          errorMessage: '',
+        );
     }
-    _employeeAvatar = '';
+    state = state.copyWith(employeeAvatar: '');
   }
 
   Future<void> _loadPayoutInfo(String employeeId) async {
     await Future.delayed(const Duration(milliseconds: 100));
     final now = DateTime.now();
     final nextPayout = DateTime(now.year, now.month + 1, 30);
-    _nextPayoutDate = _formatDate(nextPayout);
-    _payoutFrequency = 'Monthly';
+    state = state.copyWith(
+      nextPayoutDate: _formatDate(nextPayout),
+      payoutFrequency: 'Monthly',
+      hasError: false,
+      errorMessage: '',
+    );
   }
 
   Future<void> _loadRecentTransactions(String employeeId) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    _recentTransactions = [
+    final fallbackTransactions = [
       {
         'id': '0xABC...123',
         'date': 'May 31, 2023',
@@ -128,23 +213,35 @@ class HomeEmployeeViewModel extends ChangeNotifier {
         'rawUsdAmount': 820.90,
       },
     ];
+    state = state.copyWith(
+      recentTransactions: List.unmodifiable(fallbackTransactions),
+      hasError: false,
+      errorMessage: '',
+    );
   }
 
   Future<void> _loadInitialWalletData() async {
     try {
-      _transactions = _transactionsDataSource.getTransactions();
-      if (await walletService.hasStoredWallet()) {
+      final transactions = _transactionsDataSource.getTransactions();
+      state = state.copyWith(
+        transactions: List.unmodifiable(transactions),
+        hasError: false,
+        errorMessage: '',
+      );
+      if (await _walletService.hasStoredWallet()) {
         debugPrint('Attempting to reconnect stored wallet');
         await reconnect();
       } else {
         debugPrint('No stored wallet found');
       }
-      _errorMessage = '';
+      state = state.copyWith(errorMessage: '', hasError: false);
     } catch (e) {
-      _errorMessage = 'Failed to load wallet data: $e';
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to load wallet data: $e',
+      );
       debugPrint('Error in _loadInitialWalletData: $e');
     }
-    notifyListeners();
   }
 
   Future<void> connect(
@@ -154,159 +251,193 @@ class HomeEmployeeViewModel extends ChangeNotifier {
         required String walletType,
       }) async {
     _setLoading(true);
-    _errorMessage = '';
-    notifyListeners();
+    state = state.copyWith(errorMessage: '');
     try {
-      _wallet = await walletService.connectWallet(
+      final wallet = await _walletService.connectWallet(
         privateKey,
         endpoint: endpoint,
         walletName: walletName,
         walletType: walletType,
       );
-      debugPrint('Connected wallet: ${_wallet?.toJson()}');
-      _selectedCurrency = 'PHP';
+      debugPrint('Connected wallet: ${wallet.toJson()}');
+      state = state.copyWith(
+        wallet: wallet,
+        selectedCurrency: 'PHP',
+        hasError: false,
+        errorMessage: '',
+      );
 
       /// ✅ Fetch fresh balance after connecting
       await fetchWalletBalance();
     } catch (e) {
-      _errorMessage = 'Failed to connect wallet: $e';
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to connect wallet: $e',
+      );
       debugPrint('Connection error: $e');
     } finally {
       _setLoading(false);
-      notifyListeners();
     }
   }
 
 
   Future<void> reconnect() async {
     _setLoading(true);
-    _errorMessage = '';
-    notifyListeners();
+    state = state.copyWith(errorMessage: '');
     try {
-      _wallet = await walletService.reconnect();
-      debugPrint('Reconnected wallet: ${_wallet?.toJson()}');
-      _selectedCurrency = 'PHP';
+      final wallet = await _walletService.reconnect();
+      if (wallet != null) {
+        debugPrint('Reconnected wallet: ${wallet.toJson()}');
+        state = state.copyWith(
+          wallet: wallet,
+          selectedCurrency: 'PHP',
+          hasError: false,
+          errorMessage: '',
+        );
+        await fetchWalletBalance();
+      }
 
-      /// Fetch fresh balance after reconnecting
-      await fetchWalletBalance();
     } catch (e) {
-      _errorMessage = 'Failed to reconnect wallet: $e';
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to reconnect wallet: $e',
+      );
       debugPrint('Reconnect error: $e');
     } finally {
       _setLoading(false);
-      notifyListeners();
     }
   }
 
 
   Future<void> _fetchTransactions() async {
     try {
-      _transactions = _transactionsDataSource.getTransactions();
-      _errorMessage = '';
+      final transactions = _transactionsDataSource.getTransactions();
+      state = state.copyWith(
+        transactions: List.unmodifiable(transactions),
+        hasError: false,
+        errorMessage: '',
+      );
     } catch (e) {
-      _errorMessage = 'Failed to fetch transactions: $e';
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to fetch transactions: $e',
+      );
     }
-    notifyListeners();
   }
 
   Future<void> refresh() async {
     _setLoading(true);
-    _errorMessage = '';
-    notifyListeners();
+    state = state.copyWith(errorMessage: '', hasError: false);
     try {
       await _fetchTransactions();
       await refreshWallet();
-      await _loadEmployeeData(_employeeId);
-      await _loadPayoutInfo(_employeeId);
-      await _loadRecentTransactions(_employeeId);
+      await _loadEmployeeData(state.employeeId);
+      await _loadPayoutInfo(state.employeeId);
+      await _loadRecentTransactions(state.employeeId);
     } catch (e) {
-      _errorMessage = 'Failed to refresh data: $e';
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to refresh data: $e',
+      );
     } finally {
       _setLoading(false);
-      notifyListeners();
     }
   }
 
   Future<bool> hasStoredWallet() async {
     try {
-      final hasWallet = await walletService.hasStoredWallet();
+      final hasWallet = await _walletService.hasStoredWallet();
       debugPrint('Has stored wallet: $hasWallet');
       return hasWallet;
     } catch (e) {
-      _errorMessage = 'Failed to check stored wallet: $e';
-      notifyListeners();
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to check stored wallet: $e',
+      );
       return false;
     }
   }
 
   /// ✅ ADD THIS NEW METHOD HERE
   Future<void> fetchWalletBalance() async {
-    if (_wallet == null) return;
+    final wallet = state.wallet;
+    if (wallet == null) return;
 
     _setLoading(true);
-    notifyListeners();
 
     try {
-      _wallet = await walletService.refreshBalance(_wallet!);
-      _errorMessage = '';
+      final updatedWallet = await _walletService.refreshBalance(wallet);
+      state = state.copyWith(
+        wallet: updatedWallet,
+        errorMessage: '',
+        hasError: false,
+      );
     } catch (e) {
-      _errorMessage = 'Failed to fetch wallet balance: $e';
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to fetch wallet balance: $e',
+      );
       debugPrint('fetchWalletBalance error: $e');
     } finally {
       _setLoading(false);
-      notifyListeners();
     }
   }
 
   void clearError() {
-    _errorMessage = '';
-    _hasError = false;
-    notifyListeners();
+    state = state.copyWith(
+      errorMessage: '',
+      hasError: false,
+    );
   }
 
 
 
   Future<void> refreshWallet() async {
-    if (_wallet == null) {
+    final wallet = state.wallet;
+    if (wallet == null) {
       debugPrint('No wallet to refresh');
       return;
     }
     _setLoading(true);
-    notifyListeners();
     try {
-      final refreshedWallet = await walletService.reconnect();
+      final refreshedWallet = await _walletService.reconnect();
       if (refreshedWallet != null) {
-        _wallet = refreshedWallet;
-        debugPrint('Refreshed wallet: ${_wallet?.toJson()}');
+        state = state.copyWith(wallet: refreshedWallet);
+        debugPrint('Refreshed wallet: ${refreshedWallet.toJson()}');
       }
-      _errorMessage = '';
+      state = state.copyWith(errorMessage: '', hasError: false);
     } catch (e) {
-      _errorMessage = 'Failed to refresh wallet: $e';
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to refresh wallet: $e',
+      );
       debugPrint('Refresh wallet error: $e');
     } finally {
       _setLoading(false);
-      notifyListeners();
     }
   }
 
   Future<void> disconnectWallet() async {
     try {
-      await walletService.disconnect();
-      _wallet = null;
-      _errorMessage = '';
-      _selectedCurrency = 'PHP';
+      await _walletService.disconnect();
+      state = state.copyWith(
+        wallet: null,
+        errorMessage: '',
+        selectedCurrency: 'PHP',
+        hasError: false,
+      );
       debugPrint('Wallet disconnected');
-      notifyListeners();
     } catch (e) {
-      _errorMessage = 'Failed to disconnect wallet: $e';
-      notifyListeners();
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to disconnect wallet: $e',
+      );
     }
   }
 
   void changeCurrency(String currency) {
-    if (_selectedCurrency == currency || _wallet == null) return;
-    _selectedCurrency = currency;
-    notifyListeners();
+    if (state.selectedCurrency == currency || state.wallet == null) return;
+    state = state.copyWith(selectedCurrency: currency);
   }
 
   Future<void> refreshData(String employeeId) async {
@@ -314,7 +445,7 @@ class HomeEmployeeViewModel extends ChangeNotifier {
   }
 
   Future<void> forceRefresh(String employeeId) async {
-    _isInitialized = false;
+    state = state.copyWith(isInitialized: false);
     await getDashboardData(employeeId);
   }
 
@@ -327,18 +458,22 @@ class HomeEmployeeViewModel extends ChangeNotifier {
   }
 
   void _setLoading(bool loading) {
-    _isLoading = loading;
     if (loading) {
-      _hasError = false;
-      _errorMessage = '';
+      state = state.copyWith(
+        isLoading: true,
+        hasError: false,
+        errorMessage: '',
+      );
+    } else {
+      state = state.copyWith(isLoading: false);
     }
-    notifyListeners();
   }
 
   void _setError(String error) {
-    _isLoading = false;
-    _hasError = true;
-    _errorMessage = error;
-    notifyListeners();
+    state = state.copyWith(
+      isLoading: false,
+      hasError: true,
+      errorMessage: error,
+    );
   }
 }

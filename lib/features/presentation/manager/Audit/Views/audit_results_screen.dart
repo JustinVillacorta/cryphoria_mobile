@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import '../ViewModels/audit_results_viewmodel.dart';
 import '../ViewModels/audit_main_viewmodel.dart';
 import 'package:cryphoria_mobile/features/domain/entities/audit_report.dart';
 import 'overall_assessment_screen.dart';
 
-class AuditResultsScreen extends StatefulWidget {
+class AuditResultsScreen extends ConsumerStatefulWidget {
   final String contractName;
   final String fileName;
   final String? auditId;
@@ -19,10 +19,10 @@ class AuditResultsScreen extends StatefulWidget {
   });
 
   @override
-  State<AuditResultsScreen> createState() => _AuditResultsScreenState();
+  ConsumerState<AuditResultsScreen> createState() => _AuditResultsScreenState();
 }
 
-class _AuditResultsScreenState extends State<AuditResultsScreen>
+class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   late AuditResultsViewModel _resultsViewModel;
@@ -34,8 +34,8 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
     _tabController = TabController(length: 2, vsync: this);
     
     // Initialize ViewModels
-    _resultsViewModel = sl<AuditResultsViewModel>();
-    _mainViewModel = sl<AuditMainViewModel>();
+    _resultsViewModel = ref.read(auditResultsViewModelProvider);
+    _mainViewModel = ref.read(auditMainViewModelProvider);
     
     // Add listeners
     _resultsViewModel.addListener(_onResultsViewModelChanged);
@@ -73,35 +73,32 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: _resultsViewModel),
-        ChangeNotifierProvider.value(value: _mainViewModel),
-      ],
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: _buildAppBar(),
-        body: Consumer<AuditResultsViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
-              return const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
-                ),
-              );
-            }
+    final resultsViewModel = ref.watch(auditResultsViewModelProvider);
+    ref.watch(auditMainViewModelProvider);
 
-            if (viewModel.error != null) {
-              return _buildErrorState(viewModel.error!);
-            }
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: _buildAppBar(),
+      body: Builder(
+        builder: (context) {
+          if (resultsViewModel.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+              ),
+            );
+          }
 
-            if (!viewModel.hasReport) {
-              return _buildNoReportState();
-            }
+          if (resultsViewModel.error != null) {
+            return _buildErrorState(resultsViewModel.error!);
+          }
 
-            return _buildResultsContent(viewModel);
-          },
-        ),
+          if (!resultsViewModel.hasReport) {
+            return _buildNoReportState();
+          }
+
+          return _buildResultsContent(resultsViewModel);
+        },
       ),
     );
   }
@@ -641,15 +638,9 @@ class _AuditResultsScreenState extends State<AuditResultsScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MultiProvider(
-          providers: [
-            ChangeNotifierProvider.value(value: _resultsViewModel),
-            ChangeNotifierProvider.value(value: _mainViewModel),
-          ],
-          child: OverallAssessmentScreen(
-            contractName: widget.contractName,
-            fileName: widget.fileName,
-          ),
+        builder: (context) => OverallAssessmentScreen(
+          contractName: widget.contractName,
+          fileName: widget.fileName,
         ),
       ),
     );

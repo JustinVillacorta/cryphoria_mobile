@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 
-class ConnectPrivateKeyBottomSheet extends StatefulWidget {
+class ConnectPrivateKeyBottomSheet extends ConsumerStatefulWidget {
   const ConnectPrivateKeyBottomSheet({Key? key}) : super(key: key);
 
   @override
-  State<ConnectPrivateKeyBottomSheet> createState() => _ConnectPrivateKeyBottomSheetState();
+  ConsumerState<ConnectPrivateKeyBottomSheet> createState() => _ConnectPrivateKeyBottomSheetState();
 }
 
-class _ConnectPrivateKeyBottomSheetState extends State<ConnectPrivateKeyBottomSheet> {
+class _ConnectPrivateKeyBottomSheetState extends ConsumerState<ConnectPrivateKeyBottomSheet> {
   final TextEditingController _privateKeyController = TextEditingController();
   bool _isValidFormat = true;
   bool _isLoading = false;
@@ -40,9 +41,9 @@ class _ConnectPrivateKeyBottomSheetState extends State<ConnectPrivateKeyBottomSh
 
     setState(() => _isLoading = true);
 
-    final viewModel = Provider.of<HomeEmployeeViewModel>(context, listen: false);
+    final notifier = ref.read(homeEmployeeNotifierProvider.notifier);
     try {
-      await viewModel.connect(
+      await notifier.connect(
         _privateKeyController.text,
         endpoint: 'connect_wallet_with_private_key/',
         walletName: _selectedWallet,
@@ -51,14 +52,15 @@ class _ConnectPrivateKeyBottomSheetState extends State<ConnectPrivateKeyBottomSh
       if (mounted) {
         setState(() => _isLoading = false);
         Navigator.pop(context);
-        if (viewModel.errorMessage.isNotEmpty) {
+        final state = ref.read(homeEmployeeNotifierProvider);
+        if (state.errorMessage.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to connect: ${viewModel.errorMessage}'),
+              content: Text('Failed to connect: ${state.errorMessage}'),
               backgroundColor: Colors.red,
             ),
           );
-        } else if (viewModel.wallet != null) {
+        } else if (state.wallet != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Wallet connected successfully!'),
@@ -66,7 +68,7 @@ class _ConnectPrivateKeyBottomSheetState extends State<ConnectPrivateKeyBottomSh
             ),
           );
           // Force refresh to ensure balance is fetched
-          await viewModel.refreshWallet();
+          await notifier.refreshWallet();
         }
       }
     } catch (e) {

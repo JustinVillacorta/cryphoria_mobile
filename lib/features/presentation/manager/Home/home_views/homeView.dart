@@ -1,24 +1,23 @@
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/di.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/quick_actions.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/recent_transactions.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/revenue_chart.dart';
 
-class HomeView extends StatefulWidget {
+class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
 
   @override
-  State<HomeView> createState() => _HomeViewState();
+  ConsumerState<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends ConsumerState<HomeView> {
   late ScrollController _scrollController;
   double _scrollOffset = 0.0;
-  late WalletViewModel _walletViewModel;
 
   @override
   void initState() {
@@ -30,11 +29,9 @@ class _HomeViewState extends State<HomeView> {
         });
       });
 
-    _walletViewModel = sl<WalletViewModel>();
-
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (await sl<WalletService>().hasStoredWallet()) {
-        await _walletViewModel.reconnect();
+        await ref.read(walletNotifierProvider.notifier).reconnect();
       }
     });
   }
@@ -47,9 +44,9 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _walletViewModel,
-      child: Scaffold(
+    final walletState = ref.watch(walletNotifierProvider);
+    final walletNotifier = ref.read(walletNotifierProvider.notifier);
+    return Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(80),
@@ -98,7 +95,7 @@ class _HomeViewState extends State<HomeView> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.refresh, color: Colors.black),
-                      onPressed: () => Provider.of<WalletViewModel>(context, listen: false).refresh(),
+                      onPressed: () => walletNotifier.refresh(),
                     ),
                   ],
                 ),
@@ -106,17 +103,17 @@ class _HomeViewState extends State<HomeView> {
             ),
           ),
         ),
-        body: Consumer<WalletViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
+        body: Builder(
+          builder: (context) {
+            if (walletState.isLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (viewModel.error != null) {
+            if (walletState.error != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(viewModel.error!)),
+                  SnackBar(content: Text(walletState.error!)),
                 );
-                viewModel.clearError();
+                walletNotifier.clearError();
               });
             }
             return SingleChildScrollView(
@@ -125,12 +122,11 @@ class _HomeViewState extends State<HomeView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  WalletCard(),
+                  const WalletCard(),
                   const SizedBox(height: 24),
                   QuickActions(
                     onPaymentSuccess: () {
-                      // Refresh transactions after successful payment
-                      context.read<WalletViewModel>().refreshTransactions();
+                      walletNotifier.refreshTransactions();
                     },
                   ),
                   const SizedBox(height: 24),
@@ -142,7 +138,6 @@ class _HomeViewState extends State<HomeView> {
             );
           },
         ),
-      ),
-    );
+      );
   }
 }

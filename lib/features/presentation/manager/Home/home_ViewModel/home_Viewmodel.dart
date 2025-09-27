@@ -1,58 +1,72 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
-import 'package:cryphoria_mobile/features/data/services/eth_payment_service.dart';
 import 'package:cryphoria_mobile/features/domain/entities/wallet.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/eth_transaction_data_source.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
 
-class WalletViewModel extends ChangeNotifier {
-  // Dependencies
-  final WalletService walletService;
-  final EthTransactionDataSource _ethTransactionDataSource;
-  late EthPaymentService _ethPaymentService;
+class WalletState {
+  final Wallet? wallet;
+  final bool isLoading;
+  final String? error;
+  final List<Map<String, dynamic>> transactions;
 
-  // State
-  Wallet? _wallet;
-  bool _isLoading = false;
-  String? _error;
-  List<Map<String, dynamic>> _transactions = [];
+  const WalletState({
+    required this.wallet,
+    required this.isLoading,
+    required this.error,
+    required this.transactions,
+  });
 
-  // Getters
-  Wallet? get wallet => _wallet;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  List<Map<String, dynamic>> get transactions => List.unmodifiable(_transactions);
+  factory WalletState.initial() => const WalletState(
+        wallet: null,
+        isLoading: false,
+        error: null,
+        transactions: [],
+      );
 
-  WalletViewModel({
-    required this.walletService,
-    EthTransactionDataSource? ethTransactionDataSource,
-  }) : _ethTransactionDataSource = ethTransactionDataSource ?? sl<EthTransactionDataSource>() {
-    try {
-      _ethPaymentService = sl<EthPaymentService>();
-    } catch (e) {
-      print('⚠️ EthPaymentService not available in ViewModel: $e');
-    }
+  WalletState copyWith({
+    Wallet? wallet,
+    bool? isLoading,
+    String? error,
+    List<Map<String, dynamic>>? transactions,
+  }) {
+    return WalletState(
+      wallet: wallet ?? this.wallet,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      transactions: transactions ?? this.transactions,
+    );
+  }
+}
+
+class WalletNotifier extends StateNotifier<WalletState> {
+  WalletNotifier({
+    required WalletService walletService,
+    required EthTransactionDataSource ethTransactionDataSource,
+  })  : _walletService = walletService,
+        _ethTransactionDataSource = ethTransactionDataSource,
+        super(WalletState.initial()) {
     _loadInitialData();
   }
 
+  final WalletService _walletService;
+  final EthTransactionDataSource _ethTransactionDataSource;
+
   /// Loads initial data (e.g., transactions) and checks for stored wallet on initialization
   Future<void> _loadInitialData() async {
-    _isLoading = true;
-    notifyListeners();
+    state = state.copyWith(isLoading: true, error: null);
     try {
       // First check for stored wallet and reconnect
-      if (await walletService.hasStoredWallet()) {
+      if (await _walletService.hasStoredWallet()) {
         await reconnect();
       }
       
       // Then load transactions (now that wallet is connected if it was stored)
       await _fetchTransactions();
-      _error = null;
+      state = state.copyWith(error: null);
     } catch (e) {
-      _error = e.toString();
+      state = state.copyWith(error: e.toString());
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(isLoading: false);
     }
   }
 
@@ -63,11 +77,9 @@ class WalletViewModel extends ChangeNotifier {
         String? walletName,
         String? walletType,
       }) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(isLoading: true, error: null);
     try {
-      _wallet = await walletService.connectWallet(
+      final wallet = await _walletService.connectWallet(
         privateKey,
         endpoint: endpoint ?? 'http://localhost:8545',
         walletName: walletName ?? 'My Wallet',
@@ -75,30 +87,28 @@ class WalletViewModel extends ChangeNotifier {
       );
       
       // Wallet connected successfully - fetch transactions now
+      state = state.copyWith(wallet: wallet);
       await _fetchTransactions();
     } catch (e) {
-      _error = e.toString();
+      state = state.copyWith(error: e.toString());
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(isLoading: false);
     }
   }
 
   /// Reconnects to a previously stored wallet
   Future<void> reconnect() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(isLoading: true, error: null);
     try {
-      _wallet = await walletService.reconnect();
+      final wallet = await _walletService.reconnect();
+      state = state.copyWith(wallet: wallet);
       
       // Wallet reconnected successfully - fetch transactions now
       await _fetchTransactions();
     } catch (e) {
-      _error = e.toString();
+      state = state.copyWith(error: e.toString());
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(isLoading: false);
     }
   }
 
@@ -107,89 +117,77 @@ class WalletViewModel extends ChangeNotifier {
     try {
       // Get user wallets for received transaction detection
       List<Wallet> userWallets = [];
-      if (_wallet != null) {
-        userWallets = [_wallet!];
+      if (state.wallet != null) {
+        userWallets = [state.wallet!];
       }
       
       // Get all transactions (sent + received)
       // The data source will now automatically find real transaction hashes to check
-      _transactions = await _ethTransactionDataSource.getAllTransactions(
+      final transactions = await _ethTransactionDataSource.getAllTransactions(
         userWallets: userWallets,
         knownReceivedHashes: null, // Let the data source find real hashes
         limit: 10,
       );
       
-      _error = null;
+      state = state.copyWith(transactions: List.unmodifiable(transactions), error: null);
     } catch (e) {
-      _error = e.toString();
+      state = state.copyWith(error: e.toString(), transactions: const []);
       print('⚠️ Failed to fetch transactions: $e');
-      _transactions = []; // Clear transactions on error
     }
-    notifyListeners();
   }
 
   /// Refreshes transaction data (e.g., on pull-to-refresh)
   Future<void> refresh() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(isLoading: true, error: null);
     try {
       await _fetchTransactions();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(isLoading: false);
     }
   }
 
   /// Checks if a stored wallet exists (async to match WalletService)
   Future<bool> hasStoredWallet() async {
     try {
-      return await walletService.hasStoredWallet();
+      return await _walletService.hasStoredWallet();
     } catch (e) {
-      _error = e.toString();
-      notifyListeners();
+      state = state.copyWith(error: e.toString());
       return false;
     }
   }
 
   /// Clears the current error state
   void clearError() {
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(error: null);
   }
 
   /// Refreshes the current wallet balance and PHP conversion
   Future<void> refreshWallet() async {
-    if (_wallet == null) return;
+    if (state.wallet == null) return;
     
-    _isLoading = true;
-    notifyListeners();
+    state = state.copyWith(isLoading: true);
     
     try {
       // Reconnect to refresh balance and conversion
-      final refreshedWallet = await walletService.reconnect();
+      final refreshedWallet = await _walletService.reconnect();
       if (refreshedWallet != null) {
-        _wallet = refreshedWallet;
+        state = state.copyWith(wallet: refreshedWallet);
       }
-      _error = null;
+      state = state.copyWith(error: null);
     } catch (e) {
-      _error = e.toString();
+      state = state.copyWith(error: e.toString());
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(isLoading: false);
     }
   }
 
   /// Disconnects the current wallet
   Future<void> disconnectWallet() async {
     try {
-      await walletService.disconnect();
-      _wallet = null;
-      _error = null;
-      notifyListeners();
+      await _walletService.disconnect();
+      state = state.copyWith(wallet: null, error: null);
     } catch (e) {
-      _error = e.toString();
-      notifyListeners();
+      state = state.copyWith(error: e.toString());
     }
   }
   
@@ -198,16 +196,16 @@ class WalletViewModel extends ChangeNotifier {
     try {
       // Get user wallets for received transaction detection
       List<Wallet> userWallets = [];
-      if (_wallet != null) {
-        userWallets = [_wallet!];
+      if (state.wallet != null) {
+        userWallets = [state.wallet!];
       }
       
-      _transactions = await _ethTransactionDataSource.getAllTransactions(
+      final transactions = await _ethTransactionDataSource.getAllTransactions(
         userWallets: userWallets,
         knownReceivedHashes: null, // Let the data source find real hashes
         limit: 10,
       );
-      notifyListeners();
+      state = state.copyWith(transactions: List.unmodifiable(transactions));
     } catch (e) {
       print('⚠️ Failed to refresh transactions: $e');
       // Keep existing transactions on error

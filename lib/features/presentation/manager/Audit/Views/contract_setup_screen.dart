@@ -1,22 +1,22 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 
 import '../../../../../core/utils/responsive_helper.dart';
 import '../ViewModels/audit_contract_viewmodel.dart';
 import '../ViewModels/audit_main_viewmodel.dart';
 import 'ai_analysis_screen.dart';
 
-class ContractSetupScreen extends StatefulWidget {
+class ContractSetupScreen extends ConsumerStatefulWidget {
   const ContractSetupScreen({super.key});
 
   @override
-  State<ContractSetupScreen> createState() => _ContractSetupScreenState();
+  ConsumerState<ContractSetupScreen> createState() => _ContractSetupScreenState();
 }
 
-class _ContractSetupScreenState extends State<ContractSetupScreen> {
+class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
   late AuditContractViewModel _contractViewModel;
   late AuditMainViewModel _mainViewModel;
   final TextEditingController _contractNameController = TextEditingController();
@@ -28,8 +28,8 @@ class _ContractSetupScreenState extends State<ContractSetupScreen> {
   @override
   void initState() {
     super.initState();
-    _contractViewModel = sl<AuditContractViewModel>();
-    _mainViewModel = sl<AuditMainViewModel>();
+    _contractViewModel = ref.read(auditContractViewModelProvider);
+    _mainViewModel = ref.read(auditMainViewModelProvider);
   }
 
   @override

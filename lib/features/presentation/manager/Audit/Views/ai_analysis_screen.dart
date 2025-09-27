@@ -1,13 +1,14 @@
+import 'package:cryphoria_mobile/features/domain/entities/smart_contract.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 
 import '../ViewModels/audit_analysis_viewmodel.dart';
 import '../ViewModels/audit_main_viewmodel.dart';
-import '../../../../domain/entities/smart_contract.dart';
+import '../../../../domain/entities/audit_report.dart' show AuditStatus;
 import 'audit_results_screen.dart';
 
-class AiAnalysisScreen extends StatefulWidget {
+class AiAnalysisScreen extends ConsumerStatefulWidget {
   final String contractName;
   final String fileName;
 
@@ -18,10 +19,10 @@ class AiAnalysisScreen extends StatefulWidget {
   });
 
   @override
-  State<AiAnalysisScreen> createState() => _AiAnalysisScreenState();
+  ConsumerState<AiAnalysisScreen> createState() => _AiAnalysisScreenState();
 }
 
-class _AiAnalysisScreenState extends State<AiAnalysisScreen>
+class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
     with TickerProviderStateMixin {
   late AnimationController _progressController;
   late AnimationController _rotationController;
@@ -44,8 +45,8 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
     super.initState();
     
     // Initialize ViewModels
-    _analysisViewModel = sl<AuditAnalysisViewModel>();
-    _mainViewModel = sl<AuditMainViewModel>();
+    _analysisViewModel = ref.read(auditAnalysisViewModelProvider);
+    _mainViewModel = ref.read(auditMainViewModelProvider);
     
     // Add listeners
     _analysisViewModel.addListener(_onAnalysisViewModelChanged);
@@ -243,259 +244,245 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen>
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: _analysisViewModel),
-        ChangeNotifierProvider.value(value: _mainViewModel),
-      ],
-      child: Scaffold(
+    final watchedAnalysis = ref.watch(auditAnalysisViewModelProvider);
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: const Text(
-            'Smart Audit Contract',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          centerTitle: false,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
         ),
-        body: Consumer<AuditAnalysisViewModel>(
-          builder: (context, viewModel, child) {
-            return SingleChildScrollView(
+        title: const Text(
+          'Smart Audit Contract',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: false,
+      ),
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - 
-                        MediaQuery.of(context).padding.top - 
-                        kToolbarHeight - 48, // Account for padding
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top -
+                  kToolbarHeight -
+                  48,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-            // Progress indicator
-            Row(
-              children: [
-                _buildProgressStep(1, false, true),
-                _buildProgressLine(true),
-                _buildProgressStep(2, true, false),
-                _buildProgressLine(false),
-                _buildProgressStep(3, false, false),
-                _buildProgressLine(false),
-                _buildProgressStep(4, false, false),
-              ],
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // Progress labels
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Contract Setup', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                Text('AI Analysis', style: TextStyle(fontSize: 12, color: Colors.purple, fontWeight: FontWeight.w600)),
-                Text('Audit Results', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                Text('Assessment', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              ],
-            ),
-            
-            const SizedBox(height: 60),
-            
-            // Analysis animation
-            SizedBox(
-              height: MediaQuery.of(context).size.height - 200, // Constrain height
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Loading animation
-                  AnimatedBuilder(
-                    animation: _rotationController,
-                    builder: (context, child) {
-                      return Transform.rotate(
-                        angle: _rotationController.value * 2 * 3.14159,
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.purple[100]!,
-                              width: 3,
-                            ),
-                          ),
-                          child: Container(
-                            margin: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.purple[50],
-                            ),
-                            child: const Icon(
-                              Icons.analytics_outlined,
-                              size: 48,
-                              color: Colors.purple,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  const Text(
-                    'Analyzing Smart Contract',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  const Text(
-                    'Our AI is performing a comprehensive\naudit of your smart contract',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                      height: 1.4,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Progress bar
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  children: [
+                    _buildProgressStep(1, false, true),
+                    _buildProgressLine(true),
+                    _buildProgressStep(2, true, false),
+                    _buildProgressLine(false),
+                    _buildProgressStep(3, false, false),
+                    _buildProgressLine(false),
+                    _buildProgressStep(4, false, false),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Contract Setup', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text('AI Analysis', style: TextStyle(fontSize: 12, color: Colors.purple, fontWeight: FontWeight.w600)),
+                    Text('Audit Results', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text('Assessment', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+                const SizedBox(height: 60),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height - 200,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Progress',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
+                      AnimatedBuilder(
+                        animation: _rotationController,
+                        builder: (context, child) {
+                          return Transform.rotate(
+                            angle: _rotationController.value * 2 * 3.14159,
+                            child: Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.purple[100]!,
+                                  width: 3,
+                                ),
+                              ),
+                              child: Container(
+                                margin: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.purple[50],
+                                ),
+                                child: const Icon(
+                                  Icons.analytics_outlined,
+                                  size: 48,
+                                  color: Colors.purple,
+                                ),
+                              ),
                             ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 40),
+                      const Text(
+                        'Analyzing Smart Contract',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Our AI is performing a comprehensive\naudit of your smart contract',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 40),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Progress',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              AnimatedBuilder(
+                                animation: _progressAnimation,
+                                builder: (context, child) {
+                                  return Text(
+                                    '${(_progressAnimation.value * 100).toInt()}%',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.purple,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 12),
                           AnimatedBuilder(
                             animation: _progressAnimation,
                             builder: (context, child) {
-                              return Text(
-                                '${(_progressAnimation.value * 100).toInt()}%',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.purple,
-                                ),
+                              return LinearProgressIndicator(
+                                value: _progressAnimation.value,
+                                backgroundColor: Colors.grey[300],
+                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.purple),
+                                minHeight: 8,
                               );
                             },
                           ),
                         ],
                       ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      AnimatedBuilder(
-                        animation: _progressAnimation,
-                        builder: (context, child) {
-                          return LinearProgressIndicator(
-                            value: _progressAnimation.value,
-                            backgroundColor: Colors.grey[300],
-                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.purple),
-                            minHeight: 8,
-                          );
+                      const SizedBox(height: 40),
+                      Text(
+                        watchedAnalysis.currentAuditId != null
+                            ? 'Audit ID: ${watchedAnalysis.currentAuditId}'
+                            : 'Generating audit ID...',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        switch (watchedAnalysis.currentStatus) {
+                          AuditStatus.completed => 'Status: Completed',
+                          AuditStatus.failed => 'Status: Failed',
+                          _ => 'Status: Analyzing…',
                         },
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.purple[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.purple[200]!),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Analysis Progress',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ...List.generate(_analysisSteps.length, (index) {
+                              final isCompleted = index < _currentStep;
+                              final isCurrent = index == _currentStep;
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isCompleted
+                                          ? Icons.check_circle
+                                          : isCurrent
+                                              ? Icons.radio_button_checked
+                                              : Icons.radio_button_unchecked,
+                                      color: isCompleted || isCurrent
+                                          ? Colors.purple
+                                          : Colors.grey[400],
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        _analysisSteps[index],
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: isCompleted || isCurrent
+                                              ? Colors.black
+                                              : Colors.grey[600],
+                                          fontWeight: isCurrent
+                                              ? FontWeight.w600
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Current analysis step
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.purple[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.purple[200]!),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Analysis Progress',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 16),
-                        
-                        ...List.generate(_analysisSteps.length, (index) {
-                          final isCompleted = index < _currentStep;
-                          final isCurrent = index == _currentStep;
-                          
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isCompleted 
-                                      ? Icons.check_circle
-                                      : isCurrent
-                                          ? Icons.radio_button_checked
-                                          : Icons.radio_button_unchecked,
-                                  color: isCompleted || isCurrent 
-                                      ? Colors.purple 
-                                      : Colors.grey[400],
-                                  size: 20,
-                                ),
-                                
-                                const SizedBox(width: 12),
-                                
-                                Expanded(
-                                  child: Text(
-                                    _analysisSteps[index],
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isCompleted || isCurrent
-                                          ? Colors.black
-                                          : Colors.grey[600],
-                                      fontWeight: isCurrent 
-                                          ? FontWeight.w600 
-                                          : FontWeight.normal,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-            ));
-          },
+          ),
         ),
       ),
     );

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
 
-class WalletCard extends StatefulWidget {
+class WalletCard extends ConsumerStatefulWidget {
   const WalletCard({super.key});
   
   @override
-  _WalletCardState createState() => _WalletCardState();
+  ConsumerState<WalletCard> createState() => _WalletCardState();
 }
 
-class _WalletCardState extends State<WalletCard> {
+class _WalletCardState extends ConsumerState<WalletCard> {
   bool _showUSD = false; // Toggle between PHP and USD
 
   void _copyAddressToClipboard(BuildContext context, String address) {
@@ -25,435 +26,235 @@ class _WalletCardState extends State<WalletCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<WalletViewModel>(
-      builder: (context, viewModel, child) {
-        if (viewModel.isLoading) {
-          return Container(
-            width: double.infinity,
-            height: 200,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Center(child: CircularProgressIndicator(color: Colors.white)),
-          );
-        }
+    final state = ref.watch(walletNotifierProvider);
+    final notifier = ref.read(walletNotifierProvider.notifier);
 
-        if (viewModel.error != null) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Error: ${viewModel.error}',
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton(
-                    onPressed: () => viewModel.clearError(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
+    if (state.isLoading) {
+      return Container(
+        width: double.infinity,
+        height: 200,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+    }
+
+    if (state.error != null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Error: ${state.error}',
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: notifier.clearError,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                child: const Text('Retry'),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Current Wallet',
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
-                      const SizedBox(height: 4),
-                      if (viewModel.wallet != null) ...[
-                        Text(
-                          viewModel.wallet!.name,
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                        if (viewModel.wallet!.address.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          GestureDetector(
-                            onTap: () => _copyAddressToClipboard(context, viewModel.wallet!.address),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    viewModel.wallet!.displayAddress,
-                                    style: const TextStyle(
-                                      color: Colors.white, 
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Icon(
-                                    Icons.content_copy,
-                                    color: Colors.white,
-                                    size: 14,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ],
+                  const Text(
+                    'Current Wallet',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
-                  if (viewModel.wallet != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        viewModel.wallet!.walletType,
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
-                      ),
+                  const SizedBox(height: 4),
+                  if (state.wallet != null) ...[
+                    Text(
+                      state.wallet!.name,
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                     ),
+                    if (state.wallet!.address.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      GestureDetector(
+                        onTap: () => _copyAddressToClipboard(context, state.wallet!.address),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                state.wallet!.displayAddress,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.content_copy,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ],
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              if (state.wallet != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: 8),
-                  const Text('ETH', style: TextStyle(color: Colors.white, fontSize: 14)),
-                ],
+                  child: Text(
+                    state.wallet!.walletType,
+                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(width: 8),
+              const Text('ETH', style: TextStyle(color: Colors.white, fontSize: 14)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            state.wallet != null 
+                ? '${state.wallet!.balance.toStringAsFixed(6)} ETH' 
+                : 'No Wallet Connected',
+            style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Text(
-                viewModel.wallet != null 
-                    ? '${viewModel.wallet!.balance.toStringAsFixed(6)} ETH' 
-                    : 'No Wallet Connected',
-                style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                'Converted to ${_showUSD ? 'USD' : 'PHP'}',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
               ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Converted to ${_showUSD ? 'USD' : 'PHP'}', 
-                    style: const TextStyle(color: Colors.white70, fontSize: 12)
+              GestureDetector(
+                onTap: () => setState(() => _showUSD = !_showUSD),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  GestureDetector(
-                    onTap: () => setState(() => _showUSD = !_showUSD),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        _showUSD ? 'USD' : 'PHP',
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
-                      ),
-                    ),
+                  child: Text(
+                    _showUSD ? 'Show PHP' : 'Show USD',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                viewModel.wallet != null 
-                    ? (_showUSD 
-                        ? '\$${viewModel.wallet!.balanceInUSD.toStringAsFixed(2)}'
-                        : '₱${viewModel.wallet!.balanceInPHP.toStringAsFixed(2)}')
-                    : (_showUSD ? '\$0.00' : '₱0.00'),
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 20),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: () => _showWalletOptionsDialog(context, viewModel),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (state.wallet != null) ...[
+            Text(
+              _showUSD
+                  ? '\$${state.wallet!.balanceInUSD.toStringAsFixed(2)}'
+                  : '₱${state.wallet!.balanceInPHP.toStringAsFixed(2)}',
+              style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: notifier.refreshWallet,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white.withOpacity(0.2),
                     foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
-                  child: Text(viewModel.wallet != null ? 'Wallet Options' : 'Connect Wallet'),
+                  child: const Text('Refresh'),
                 ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: notifier.disconnectWallet,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Disconnect'),
+                ),
+              ],
+            ),
+          ] else ...[
+            ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _showWalletOptionsDialog(BuildContext context, WalletViewModel viewModel) async {
-    if (viewModel.wallet == null) {
-      // No wallet connected, show connect dialog
-      return _showConnectWalletDialog(context, viewModel);
-    }
-
-    // Wallet is connected, show options
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Wallet Options'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.refresh),
-                title: Text('Refresh Balance'),
-                subtitle: Text('Update ETH balance and PHP conversion'),
-                onTap: () => Navigator.pop(context, 'refresh'),
-              ),
-              ListTile(
-                leading: Icon(Icons.swap_horiz),
-                title: Text('Switch Wallet'),
-                subtitle: Text('Connect a different wallet'),
-                onTap: () => Navigator.pop(context, 'switch'),
-              ),
-              ListTile(
-                leading: Icon(Icons.logout, color: Colors.red),
-                title: Text('Disconnect Wallet'),
-                subtitle: Text('Remove wallet connection'),
-                onTap: () => Navigator.pop(context, 'disconnect'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
+              child: const Text('Connect Wallet'),
             ),
           ],
-        );
-      },
+        ],
+      ),
     );
-
-    if (result != null && mounted) {
-      switch (result) {
-        case 'refresh':
-          await viewModel.refreshWallet();
-          if (mounted) {
-            if (viewModel.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to refresh: ${viewModel.error}')),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Wallet balance refreshed')),
-              );
-            }
-          }
-          break;
-        case 'switch':
-          if (mounted) {
-            await _showConnectWalletDialog(context, viewModel);
-          }
-          break;
-        case 'disconnect':
-          await viewModel.disconnectWallet();
-          if (mounted) {
-            if (viewModel.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to disconnect: ${viewModel.error}')),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Wallet disconnected')),
-              );
-            }
-          }
-          break;
-      }
-    }
-  }
-
-  Future<void> _showConnectWalletDialog(BuildContext context, WalletViewModel viewModel) async {
-    final controller = TextEditingController();
-    String selectedWallet = 'MetaMask';
-
-    final shouldConnect = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Enter private key'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: controller,
-                    obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Private key'),
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButton<String>(
-                    value: selectedWallet,
-                    items: const [
-                      DropdownMenuItem(value: 'MetaMask', child: Text('MetaMask')),
-                      DropdownMenuItem(value: 'Trust Wallet', child: Text('Trust Wallet')),
-                      DropdownMenuItem(value: 'Coinbase', child: Text('Coinbase')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => selectedWallet = value);
-                      }
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Connect'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (shouldConnect == true) {
-      // Check if widget is still mounted before proceeding
-      if (!mounted) return;
-      
-      // Check if wallet is already connected with same private key
-      if (viewModel.wallet != null && 
-          viewModel.wallet!.private_key == controller.text) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Wallet already connected!')),
-          );
-        }
-        return;
-      }
-      
-      // Show loading dialog
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => AlertDialog(
-            content: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 20),
-                Text('Connecting wallet...'),
-              ],
-            ),
-          ),
-        );
-      }
-      
-      try {
-        String endpoint;
-        switch (selectedWallet) {
-          case 'MetaMask':
-            endpoint = 'connect_metamask/';
-            break;
-          case 'Coinbase':
-            endpoint = 'connect_coinbase/';
-            break;
-          case 'Trust Wallet':
-          default:
-            endpoint = 'connect_trust_wallet/';
-        }
-        
-        await viewModel.connect(
-          controller.text,
-          endpoint: endpoint,
-          walletName: selectedWallet,
-          walletType: selectedWallet,
-        );
-        
-        // Always dismiss loading dialog first if widget is still mounted
-        if (mounted && Navigator.canPop(context)) {
-          Navigator.of(context).pop();
-        }
-        
-        // Check if connection was successful and widget is still mounted
-        if (mounted) {
-          if (viewModel.wallet != null && viewModel.error == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Wallet connected successfully!')),
-            );
-          } else if (viewModel.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to connect: ${viewModel.error}')),
-            );
-          }
-        }
-      } catch (e) {
-        // Always dismiss loading dialog first if widget is still mounted
-        if (mounted && Navigator.canPop(context)) {
-          Navigator.of(context).pop();
-        }
-        
-        // Show error message if widget is still mounted
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to connect wallet: $e')),
-          );
-        }
-      }
-    }
   }
 }
