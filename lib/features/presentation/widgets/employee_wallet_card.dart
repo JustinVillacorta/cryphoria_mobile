@@ -156,7 +156,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
               padding: EdgeInsets.symmetric(vertical: screenHeight * 0.018),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.white, width: 2),
+                side: BorderSide(color: Colors.white, width: 1),
               ),
               elevation: 0,
             ),

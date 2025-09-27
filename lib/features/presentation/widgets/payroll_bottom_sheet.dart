@@ -399,6 +399,7 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
                     child: Text(
                       'Process Payroll',
                       style: TextStyle(color: Colors.white),
+                      textAlign: TextAlign.start,
                     ),
                   ),
                 ),
