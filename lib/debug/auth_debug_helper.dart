@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthDebugHelper {
-  static Future<void> debugAuthStatus() async {
+  static Future<void> debugAuthStatus(AuthLocalDataSource authDataSource) async {
     print("🔍 AUTH DEBUG - Starting authentication status check");
     
     try {
@@ -14,7 +13,6 @@ class AuthDebugHelper {
       print("🔍 AUTH DEBUG - Raw storage data: ${authUserData?.substring(0, (authUserData.length > 100) ? 100 : authUserData.length)}...");
       
       // Check through AuthLocalDataSource
-      final authDataSource = sl<AuthLocalDataSource>();
       final authUser = await authDataSource.getAuthUser();
       
       if (authUser != null) {

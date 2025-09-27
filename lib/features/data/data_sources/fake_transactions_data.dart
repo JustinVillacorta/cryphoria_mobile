@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../services/eth_payment_service.dart';
-import '../../../dependency_injection/di.dart';
 
 class FakeTransactionsDataSource {
-  late EthPaymentService _ethPaymentService;
-  
-  FakeTransactionsDataSource() {
-    try {
-      _ethPaymentService = sl<EthPaymentService>();
-    } catch (e) {
-      // Service not available, will use mock data only
-      print('⚠️ EthPaymentService not available, using mock data only: $e');
-    }
-  }
+  FakeTransactionsDataSource({EthPaymentService? ethPaymentService})
+      : _ethPaymentService = ethPaymentService;
+
+  final EthPaymentService? _ethPaymentService;
   final List<Map<String, dynamic>> _transactions = [
     // Recent transactions
     {
@@ -159,11 +153,14 @@ class FakeTransactionsDataSource {
     List<Map<String, dynamic>> allTransactions = [];
     
     // Try to get recent ETH payment transactions (sent)
-    try {
-      final ethTransactions = await _ethPaymentService.getRecentPaymentTransactions(limit: 2);
-      allTransactions.addAll(ethTransactions);
-    } catch (e) {
-      print('⚠️ Could not fetch ETH sent transactions: $e');
+    if (_ethPaymentService != null) {
+      try {
+        final ethTransactions =
+            await _ethPaymentService!.getRecentPaymentTransactions(limit: 2);
+        allTransactions.addAll(ethTransactions);
+      } catch (e) {
+        print('⚠️ Could not fetch ETH sent transactions: $e');
+      }
     }
     
     // Add mock transactions to fill remaining slots

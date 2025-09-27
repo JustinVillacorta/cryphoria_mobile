@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import '../ViewModels/audit_contract_viewmodel.dart';
 import 'ai_analysis_screen.dart';
 

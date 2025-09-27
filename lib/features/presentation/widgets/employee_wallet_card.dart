@@ -2,7 +2,7 @@ import 'package:cryphoria_mobile/features/presentation/widgets/connect_wallet_bo
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
-import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 
 class EmployeeWalletCardWidget extends ConsumerStatefulWidget {
   final bool isTablet;

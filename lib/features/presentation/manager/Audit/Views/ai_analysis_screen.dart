@@ -1,7 +1,7 @@
 import 'package:cryphoria_mobile/features/domain/entities/smart_contract.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 
 import '../ViewModels/audit_analysis_viewmodel.dart';
 import '../ViewModels/audit_main_viewmodel.dart';

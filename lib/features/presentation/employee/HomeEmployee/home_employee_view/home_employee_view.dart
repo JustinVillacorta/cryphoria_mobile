@@ -7,7 +7,7 @@ import 'package:cryphoria_mobile/features/presentation/widgets/employee_transact
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_transaction_lists.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_wallet_card.dart';
 import 'package:cryphoria_mobile/features/domain/entities/employee_transaction_status.dart';
-import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

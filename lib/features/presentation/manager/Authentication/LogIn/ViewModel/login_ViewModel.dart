@@ -5,13 +5,13 @@ import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.da
 import 'package:cryphoria_mobile/features/data/services/device_info_service.dart';
 import 'package:cryphoria_mobile/features/data/services/device_approval_cache.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
 import 'package:flutter/foundation.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final Login loginUseCase;
   final DeviceInfoService deviceInfoService;
   final DeviceApprovalCache deviceApprovalCache;
+  final AuthLocalDataSource authLocalDataSource;
 
   AuthUser? _authUser;
   AuthUser? get authUser => _authUser;
@@ -29,6 +29,7 @@ class LoginViewModel extends ChangeNotifier {
     required this.loginUseCase,
     required this.deviceInfoService,
     required this.deviceApprovalCache,
+    required this.authLocalDataSource,
   });
 
   Future<void> login(String username, String password) async {
@@ -90,8 +91,7 @@ class LoginViewModel extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 200));
       
       // Try to retrieve the saved authentication data
-      final authDataSource = sl<AuthLocalDataSource>();
-      final savedUser = await authDataSource.getAuthUser();
+      final savedUser = await authLocalDataSource.getAuthUser();
       
       if (savedUser == null) {
         throw Exception('No authentication data found after login');
@@ -116,12 +116,11 @@ class LoginViewModel extends ChangeNotifier {
       // Attempt to re-save the authentication data
       try {
         print('🔄 LoginViewModel: Attempting to re-save authentication data...');
-        final authDataSource = sl<AuthLocalDataSource>();
-        await authDataSource.cacheAuthUser(_authUser!);
+        await authLocalDataSource.cacheAuthUser(_authUser!);
         
         // Verify again
         await Future.delayed(const Duration(milliseconds: 100));
-        final retrySavedUser = await authDataSource.getAuthUser();
+        final retrySavedUser = await authLocalDataSource.getAuthUser();
         
         if (retrySavedUser != null && retrySavedUser.token == _authUser?.token) {
           print('✅ LoginViewModel: Re-save successful');

@@ -1,41 +1,37 @@
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/ApprovalPending/approval_pending_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
-import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
-import 'package:flutter/material.dart';
 
-class LogIn extends StatefulWidget {
+class LogIn extends ConsumerStatefulWidget {
   const LogIn({super.key});
 
   @override
-  State<LogIn> createState() => _LogInState();
+  ConsumerState<LogIn> createState() => _LogInState();
 }
 
-class _LogInState extends State<LogIn> {
+class _LogInState extends ConsumerState<LogIn> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final LoginViewModel _viewModel = sl<LoginViewModel>();
 
-  @override
-  void initState() {
-    super.initState();
-    _viewModel.addListener(_onViewModelChanged);
-  }
+  LoginViewModel get _viewModel => ref.read(loginViewModelProvider);
 
-  void _onViewModelChanged() async {
-    if (_viewModel.authUser != null) {
+  void _onViewModelChanged(LoginViewModel viewModel) async {
+    if (viewModel.authUser != null) {
       // Check if approval is pending
-      if (_viewModel.isApprovalPending) {
+      if (viewModel.isApprovalPending) {
         // Navigate to approval pending screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => ApprovalPendingView(
-              authUser: _viewModel.authUser!,
+              authUser: viewModel.authUser!,
               onRetry: () => _checkApprovalStatus(),
               onLogout: () => _logout(),
             ),
@@ -44,7 +40,7 @@ class _LogInState extends State<LogIn> {
       } else {
         // Role-based navigation after successful login
         // Use pushAndRemoveUntil to clear the entire navigation stack and prevent back button issues
-        if (_viewModel.authUser!.role == 'Manager') {
+        if (viewModel.authUser!.role == 'Manager') {
           // Reset page notifiers to default before navigation
           selectedPageNotifer.value = 0;
           selectedEmployeePageNotifer.value = 0;
@@ -64,10 +60,10 @@ class _LogInState extends State<LogIn> {
           );
         }
       }
-    } else if (_viewModel.error != null) {
+    } else if (viewModel.error != null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(_viewModel.error!)));
+      ).showSnackBar(SnackBar(content: Text(viewModel.error!)));
     }
   }
 
@@ -102,7 +98,7 @@ class _LogInState extends State<LogIn> {
   void _logout() async {
     try {
       // Clear authentication data first to prevent issues
-      final authDataSource = sl<AuthLocalDataSource>();
+      final authDataSource = ref.read(authLocalDataSourceProvider);
       await authDataSource.clearAuthData();
       print('Login logout: Local authentication data cleared successfully');
     } catch (e) {
@@ -129,8 +125,6 @@ class _LogInState extends State<LogIn> {
 
   @override
   void dispose() {
-    _viewModel.removeListener(_onViewModelChanged);
-    _viewModel.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -138,6 +132,10 @@ class _LogInState extends State<LogIn> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<LoginViewModel>(
+      loginViewModelProvider,
+      (previous, next) => _onViewModelChanged(next),
+    );
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
@@ -180,6 +178,7 @@ class _LogInState extends State<LogIn> {
   }
 
   Widget _buildLoginForm(BuildContext context) {
+    final viewModel = ref.watch(loginViewModelProvider);
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(32),
@@ -251,7 +250,7 @@ class _LogInState extends State<LogIn> {
 
                 // Login Button
                 ElevatedButton(
-                  onPressed: _viewModel.isLoading ? null : _login,
+                  onPressed: viewModel.isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     foregroundColor: Colors.white,
@@ -261,7 +260,7 @@ class _LogInState extends State<LogIn> {
                     ),
                     elevation: 0,
                   ),
-                  child: _viewModel.isLoading
+                  child: viewModel.isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -311,7 +310,7 @@ class _LogInState extends State<LogIn> {
                 ),
 
                 // Error message
-                if (_viewModel.error != null && _viewModel.error!.isNotEmpty) ...[
+                if (viewModel.error != null && viewModel.error!.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -321,7 +320,7 @@ class _LogInState extends State<LogIn> {
                       border: Border.all(color: Colors.red.shade200),
                     ),
                     child: Text(
-                      _viewModel.error!,
+                      viewModel.error!,
                       style: TextStyle(
                         color: Colors.red.shade700,
                         fontSize: 14,

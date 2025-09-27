@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
 
 class WalletCard extends ConsumerStatefulWidget {

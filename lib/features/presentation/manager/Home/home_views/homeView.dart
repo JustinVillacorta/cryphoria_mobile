@@ -1,8 +1,6 @@
-import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
-import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/quick_actions.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/recent_transactions.dart';
@@ -30,7 +28,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
       });
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (await sl<WalletService>().hasStoredWallet()) {
+      final walletService = ref.read(walletServiceProvider);
+      if (await walletService.hasStoredWallet()) {
         await ref.read(walletNotifierProvider.notifier).reconnect();
       }
     });

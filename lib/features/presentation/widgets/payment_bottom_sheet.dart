@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../data/services/eth_payment_service.dart';
 import '../../domain/entities/eth_transaction.dart';
 import '../../domain/entities/wallet.dart';
-import '../../../dependency_injection/di.dart';
+import '../../../dependency_injection/riverpod_providers.dart';
 
-class PaymentBottomSheet extends StatefulWidget {
+class PaymentBottomSheet extends ConsumerStatefulWidget {
   final Wallet? wallet;
-  
+ 
   const PaymentBottomSheet({Key? key, this.wallet}) : super(key: key);
 
   @override
-  State<PaymentBottomSheet> createState() => _PaymentBottomSheetState();
+  ConsumerState<PaymentBottomSheet> createState() => _PaymentBottomSheetState();
 }
 
-class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
+class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   int currentStep = 0;
   String selectedToken = 'ETH';
   String amount = '';
@@ -42,11 +44,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _initializeService();
-  }
-  
-  void _initializeService() {
-    _ethPaymentService = sl<EthPaymentService>();
+    _ethPaymentService = ref.read(ethPaymentServiceProvider);
   }
 
   Future<void> _estimateGas() async {

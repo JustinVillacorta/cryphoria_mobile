@@ -1,35 +1,37 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/SessionManagement/profile_session_management_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
-import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 
-class userProfile extends StatefulWidget {
+class userProfile extends ConsumerStatefulWidget {
   const userProfile({super.key});
 
   @override
-  State<userProfile> createState() => _userProfileState();
+  ConsumerState<userProfile> createState() => _userProfileState();
 }
 
-class _userProfileState extends State<userProfile> {
+class _userProfileState extends ConsumerState<userProfile> {
   String? _username;
   String? _email;
   late LogoutViewModel _logoutViewModel;
+  late VoidCallback _logoutListener;
 
   @override
   void initState() {
     super.initState();
-    _logoutViewModel = sl<LogoutViewModel>();
-    _logoutViewModel.addListener(_onLogoutStateChanged);
+    _logoutViewModel = ref.read(logoutViewModelProvider);
+    _logoutListener = _onLogoutStateChanged;
+    _logoutViewModel.addListener(_logoutListener);
     _loadUserData();
   }
 
   @override
   void dispose() {
-    _logoutViewModel.removeListener(_onLogoutStateChanged);
+    _logoutViewModel.removeListener(_logoutListener);
     super.dispose();
   }
 
@@ -70,7 +72,7 @@ class _userProfileState extends State<userProfile> {
   }
 
   Future<void> _loadUserData() async {
-    final authDataSource = sl<AuthLocalDataSource>();
+    final authDataSource = ref.read(authLocalDataSourceProvider);
     final authUser = await authDataSource.getAuthUser();
 
     if (authUser != null) {

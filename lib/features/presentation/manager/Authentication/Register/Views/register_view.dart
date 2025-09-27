@@ -1,27 +1,27 @@
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
-import 'package:flutter/material.dart';
 
-class RegisterView extends StatefulWidget {
+class RegisterView extends ConsumerStatefulWidget {
   const RegisterView({super.key});
 
   @override
-  State<RegisterView> createState() => _RegisterViewState();
+  ConsumerState<RegisterView> createState() => _RegisterViewState();
 }
 
-class _RegisterViewState extends State<RegisterView> {
+class _RegisterViewState extends ConsumerState<RegisterView> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final RegisterViewModel _viewModel = sl<RegisterViewModel>();
   
   // Role selection state
   String _selectedRole = 'Employee'; // Default to Employee
 
   @override
   void dispose() {
-    _viewModel.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -72,6 +72,7 @@ class _RegisterViewState extends State<RegisterView> {
   }
 
   Widget _buildRegisterForm(BuildContext context) {
+    final viewModel = ref.watch(registerViewModelProvider);
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(32),
@@ -215,7 +216,7 @@ class _RegisterViewState extends State<RegisterView> {
 
                 // Sign Up Button
                 ElevatedButton(
-                  onPressed: _viewModel.isLoading ? null : _register,
+                  onPressed: viewModel.isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     foregroundColor: Colors.white,
@@ -225,7 +226,7 @@ class _RegisterViewState extends State<RegisterView> {
                     ),
                     elevation: 0,
                   ),
-                  child: _viewModel.isLoading
+                  child: viewModel.isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -272,7 +273,7 @@ class _RegisterViewState extends State<RegisterView> {
                 ),
 
                 // Error message
-                if (_viewModel.error != null && _viewModel.error!.isNotEmpty) ...[
+                if (viewModel.error != null && viewModel.error!.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -282,7 +283,7 @@ class _RegisterViewState extends State<RegisterView> {
                       border: Border.all(color: Colors.red.shade200),
                     ),
                     child: Text(
-                      _viewModel.error!,
+                      viewModel.error!,
                       style: TextStyle(
                         color: Colors.red.shade700,
                         fontSize: 14,
@@ -404,8 +405,9 @@ class _RegisterViewState extends State<RegisterView> {
     if (_usernameController.text.isNotEmpty && 
         _emailController.text.isNotEmpty && 
         _passwordController.text.isNotEmpty) {
-      
-      await _viewModel.register(
+      final viewModel = ref.read(registerViewModelProvider);
+
+      await viewModel.register(
         _usernameController.text,
         _passwordController.text,
         _emailController.text,
@@ -415,7 +417,7 @@ class _RegisterViewState extends State<RegisterView> {
       // Check if registration was successful and redirect to login
       if (!mounted) return;
       
-      if (_viewModel.error == null && _viewModel.registerResponse != null) {
+      if (viewModel.error == null && viewModel.registerResponse != null) {
         // Registration successful - redirect to login screen
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -428,11 +430,11 @@ class _RegisterViewState extends State<RegisterView> {
           context,
           MaterialPageRoute(builder: (context) => const LogIn()),
         );
-      } else if (_viewModel.error != null) {
+      } else if (viewModel.error != null) {
         // Show error message - this is already handled by the UI
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_viewModel.error!),
+            content: Text(viewModel.error!),
             backgroundColor: Colors.red,
           ),
         );

@@ -1,21 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/wallet.dart';
-import '../../../dependency_injection/di.dart';
+
 import '../../../core/network/dio_client.dart';
+import '../../domain/entities/wallet.dart';
 
 /// Dedicated data source for ETH transactions - handles both sent and received
 /// Now uses the new backend category endpoints for better transaction filtering
 class EthTransactionDataSource {
-  late DioClient _dioClient;
-  
-  EthTransactionDataSource() {
-    try {
-      _dioClient = sl<DioClient>();
-    } catch (e) {
-      print('⚠️ DioClient service not available: $e');
-      rethrow;
-    }
-  }
+  EthTransactionDataSource({required DioClient dioClient})
+      : _dioClient = dioClient;
+
+  final DioClient _dioClient;
 
   /// Fetch ETH transactions by category (SENT, RECEIVED, TRANSFER)
   Future<List<Map<String, dynamic>>> getTransactionsByCategory(String category) async {

@@ -1,5 +1,5 @@
-import 'package:cryphoria_mobile/features/presentation/widgets/connect_wallet_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+
 import 'package:cryphoria_mobile/features/presentation/widgets/connect_wallet_bottom_sheet.dart';
 
 class WalletConnectScreen extends StatelessWidget {

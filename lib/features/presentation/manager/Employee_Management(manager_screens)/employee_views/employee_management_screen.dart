@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import '../employee_viewmodel/employee_viewmodel.dart';
 import 'add_employee_screen.dart';
 import 'employee_detail_screen.dart';

@@ -1,24 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:cryphoria_mobile/debug/auth_debug_helper.dart';
 
-class AuthWrapper extends StatefulWidget {
+class AuthWrapper extends ConsumerStatefulWidget {
   const AuthWrapper({super.key});
 
   @override
-  State<AuthWrapper> createState() => _AuthWrapperState();
+  ConsumerState<AuthWrapper> createState() => _AuthWrapperState();
 }
 
-class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
+class _AuthWrapperState extends ConsumerState<AuthWrapper>
+    with WidgetsBindingObserver {
   bool _isLoading = true;
   bool _isAuthenticated = false;
   AuthUser? _cachedAuthUser;
+
+  AuthLocalDataSource get _authLocalDataSource =>
+      ref.read(authLocalDataSourceProvider);
 
   @override
   void initState() {
@@ -33,7 +39,6 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // Handle app lifecycle changes to maintain authentication
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -42,17 +47,14 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
 
     switch (state) {
       case AppLifecycleState.resumed:
-        // Re-verify authentication when app comes to foreground
         print('🔄 AuthWrapper: App resumed - re-checking authentication');
         _checkAuthenticationStatus();
         break;
       case AppLifecycleState.paused:
-        // Ensure current state is saved when app goes to background
         print('🔄 AuthWrapper: App paused - saving auth state');
         _saveCurrentAuthState();
         break;
       case AppLifecycleState.detached:
-        // Save state when app is being terminated
         print('🔄 AuthWrapper: App detached - final save');
         _saveCurrentAuthState();
         break;
@@ -64,32 +66,31 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   Future<void> _checkAuthenticationStatus() async {
     print('🚀 AuthWrapper: Starting authentication check...');
 
-    // Debug storage capabilities first
     await AuthDebugHelper.debugStorageCapabilities();
-    await AuthDebugHelper.debugAuthStatus();
+    await AuthDebugHelper.debugAuthStatus(_authLocalDataSource);
 
     try {
-      final authDataSource = sl<AuthLocalDataSource>();
-      final authUser = await authDataSource.getAuthUser();
+      final authUser = await _authLocalDataSource.getAuthUser();
 
-      print('🔍 AuthWrapper: Retrieved auth user - ${authUser?.username ?? 'null'}');
+      print('🔍 AuthWrapper: Retrieved auth user - '
+          '${authUser?.username ?? 'null'}');
 
       if (authUser != null && authUser.token.isNotEmpty) {
-        print('🔍 AuthWrapper: Found valid token (length: ${authUser.token.length})');
+        print('🔍 AuthWrapper: Found valid token (length: '
+            '${authUser.token.length})');
 
-        // Check if the token is approved
         if (authUser.approved) {
-          // User has valid and approved authentication data
           setState(() {
             _isAuthenticated = true;
-            _cachedAuthUser = authUser; // Cache the user for lifecycle management
+            _cachedAuthUser = authUser;
             _isLoading = false;
           });
-          print('🟢 AuthWrapper: User authenticated successfully - ${authUser.username}');
+          print('🟢 AuthWrapper: User authenticated successfully - '
+              '${authUser.username}');
         } else {
-          // User has token but it's pending approval - clear it and redirect to login
-          print('🟡 AuthWrapper: Found pending approval token - clearing and redirecting');
-          await authDataSource.clearAuthData();
+          print(
+              '🟡 AuthWrapper: Found pending approval token - clearing and redirecting');
+          await _authLocalDataSource.clearAuthData();
           setState(() {
             _isAuthenticated = false;
             _cachedAuthUser = null;
@@ -97,7 +98,6 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
           });
         }
       } else {
-        // No valid authentication data
         setState(() {
           _isAuthenticated = false;
           _cachedAuthUser = null;
@@ -107,12 +107,11 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       }
     } catch (e) {
       print('🔥 AuthWrapper: Error checking auth status: $e');
-      // On error, clear any corrupted data and default to not authenticated
       try {
-        final authDataSource = sl<AuthLocalDataSource>();
-        await authDataSource.clearAuthData();
+        await _authLocalDataSource.clearAuthData();
       } catch (clearError) {
-        print('🔥 AuthWrapper: Could not clear corrupted auth data: $clearError');
+        print('🔥 AuthWrapper: Could not clear corrupted auth data: '
+            '$clearError');
       }
       setState(() {
         _isAuthenticated = false;
@@ -121,15 +120,16 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       });
     }
 
-    print('🏁 AuthWrapper: Authentication check completed - authenticated: $_isAuthenticated');
+    print('🏁 AuthWrapper: Authentication check completed - '
+        'authenticated: $_isAuthenticated');
   }
 
   Future<void> _saveCurrentAuthState() async {
     if (_cachedAuthUser != null) {
       try {
-        final authDataSource = sl<AuthLocalDataSource>();
-        await authDataSource.cacheAuthUser(_cachedAuthUser!);
-        print('💾 AuthWrapper: Successfully saved auth state during app lifecycle change');
+        await _authLocalDataSource.cacheAuthUser(_cachedAuthUser!);
+        print(
+            '💾 AuthWrapper: Successfully saved auth state during app lifecycle change');
       } catch (e) {
         print('🔥 AuthWrapper: Failed to save auth state: $e');
       }
@@ -165,16 +165,16 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
     }
 
     if (_isAuthenticated && _cachedAuthUser != null) {
-      // Reset page notifiers to default before navigation
       selectedPageNotifer.value = 0;
       selectedEmployeePageNotifer.value = 0;
 
-      // Role-based navigation
       if (_cachedAuthUser!.role == 'Manager') {
-        print('🔀 AuthWrapper: Navigating to Manager screens for user: ${_cachedAuthUser!.username}');
+        print('🔀 AuthWrapper: Navigating to Manager screens for user: '
+            '${_cachedAuthUser!.username}');
         return const WidgetTree();
       } else {
-        print('🔀 AuthWrapper: Navigating to Employee screens for user: ${_cachedAuthUser!.username}');
+        print('🔀 AuthWrapper: Navigating to Employee screens for user: '
+            '${_cachedAuthUser!.username}');
         return const EmployeeWidgetTree();
       }
     }

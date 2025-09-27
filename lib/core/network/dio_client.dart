@@ -16,7 +16,7 @@ class DioClient {
   }) : dio = dio ??
             Dio(BaseOptions(
               connectTimeout: const Duration(milliseconds: 5000),
-              receiveTimeout: const Duration(milliseconds: 3000),
+              receiveTimeout: const Duration(milliseconds: 90000),
             )) {
     // Add device info interceptor first (before auth interceptor)
     this.dio.interceptors.add(DeviceInfoInterceptor(deviceInfoService: deviceInfoService));

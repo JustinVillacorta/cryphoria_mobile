@@ -4,33 +4,37 @@ import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProf
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/security/security_view/security_view.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/wallet/wallet_view/wallet_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/compliance/compliance_view/compliance_view.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 
 
-class EmployeeUserProfileScreen extends StatefulWidget {
+class EmployeeUserProfileScreen extends ConsumerStatefulWidget {
   const EmployeeUserProfileScreen({Key? key}) : super(key: key);
 
   @override
-  State<EmployeeUserProfileScreen> createState() => _EmployeeUserProfileScreenState();
+  ConsumerState<EmployeeUserProfileScreen> createState() =>
+      _EmployeeUserProfileScreenState();
 }
 
-class _EmployeeUserProfileScreenState extends State<EmployeeUserProfileScreen> {
+class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileScreen> {
   late LogoutViewModel _logoutViewModel;
+  late VoidCallback _logoutListener;
 
   @override
   void initState() {
     super.initState();
-    _logoutViewModel = sl<LogoutViewModel>();
-    _logoutViewModel.addListener(_onLogoutStateChanged);
+    _logoutViewModel = ref.read(logoutViewModelProvider);
+    _logoutListener = _onLogoutStateChanged;
+    _logoutViewModel.addListener(_logoutListener);
   }
 
   @override
   void dispose() {
-    _logoutViewModel.removeListener(_onLogoutStateChanged);
+    _logoutViewModel.removeListener(_logoutListener);
     super.dispose();
   }
 

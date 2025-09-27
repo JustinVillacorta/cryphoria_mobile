@@ -1,19 +1,21 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/dependency_injection/di.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/domain/entities/user_session.dart';
 import 'package:cryphoria_mobile/features/data/services/device_info_service.dart';
 import 'session_management_controller.dart';
 import 'session_management_viewmodel.dart';
 
-class ProfileSessionManagementView extends StatefulWidget {
+class ProfileSessionManagementView extends ConsumerStatefulWidget {
   const ProfileSessionManagementView({super.key});
 
   @override
-  State<ProfileSessionManagementView> createState() => _ProfileSessionManagementViewState();
+  ConsumerState<ProfileSessionManagementView> createState() =>
+      _ProfileSessionManagementViewState();
 }
 
-class _ProfileSessionManagementViewState extends State<ProfileSessionManagementView> {
+class _ProfileSessionManagementViewState extends ConsumerState<ProfileSessionManagementView> {
   late SessionManagementController _controller;
   late SessionManagementViewModel _viewModel;
   String _currentDeviceId = '';
@@ -21,11 +23,11 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
   @override
   void initState() {
     super.initState();
-    _controller = sl<SessionManagementController>();
+    _controller = ref.read(sessionManagementControllerProvider);
     _viewModel = _controller.viewModel;
     _viewModel.addListener(_onViewModelChanged);
     _loadCurrentDeviceId();
-    _controller.loadSessions();
+    Future.microtask(() => _controller.loadSessions());
   }
 
   @override
@@ -35,7 +37,7 @@ class _ProfileSessionManagementViewState extends State<ProfileSessionManagementV
   }
 
   Future<void> _loadCurrentDeviceId() async {
-    final deviceInfoService = sl<DeviceInfoService>();
+    final deviceInfoService = ref.read(deviceInfoServiceProvider);
     final deviceId = await deviceInfoService.getDeviceId();
     setState(() {
       _currentDeviceId = deviceId;

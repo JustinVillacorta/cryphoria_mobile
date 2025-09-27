@@ -1,7 +1,7 @@
 import 'package:cryphoria_mobile/features/presentation/widgets/payroll_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/dependency_injection/app_providers.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/generate_report_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Invest/invest_main_screen.dart';
