@@ -42,7 +42,7 @@ void main() {
   test('clearError resets error flags', () {
     notifier.state = notifier.state.copyWith(
       hasError: true,
-      errorMessage: 'oops',
+      errorMessage: () => 'oops',
     );
 
     notifier.clearError();

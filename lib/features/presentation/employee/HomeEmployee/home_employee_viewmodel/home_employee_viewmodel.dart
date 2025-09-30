@@ -58,7 +58,7 @@ class HomeEmployeeState {
   HomeEmployeeState copyWith({
     bool? isLoading,
     bool? hasError,
-    String? errorMessage,
+    String? Function()? errorMessage, // Use function to allow explicit null
     bool? isInitialized,
     String? employeeId,
     String? employeeName,
@@ -73,7 +73,7 @@ class HomeEmployeeState {
     return HomeEmployeeState(
       isLoading: isLoading ?? this.isLoading,
       hasError: hasError ?? this.hasError,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage != null ? (errorMessage() ?? '') : this.errorMessage,
       isInitialized: isInitialized ?? this.isInitialized,
       employeeId: employeeId ?? this.employeeId,
       employeeName: employeeName ?? this.employeeName,
@@ -114,7 +114,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
         employeeName: dashboardData.employee.name,
         employeeAvatar: dashboardData.employee.avatarUrl,
         hasError: false,
-        errorMessage: '',
+        errorMessage: () => '',
       );
       
       // Update payout info
@@ -123,7 +123,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
         nextPayoutDate: nextPayoutDate,
         payoutFrequency: dashboardData.payoutInfo.frequency,
         hasError: false,
-        errorMessage: '',
+        errorMessage: () => '',
       );
       
       // Update recent transactions
@@ -137,7 +137,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       state = state.copyWith(
         recentTransactions: List.unmodifiable(updatedRecentTransactions),
         hasError: false,
-        errorMessage: '',
+        errorMessage: () => '',
       );
       
       // Load wallet data (keeping the existing wallet loading logic for now)
@@ -158,28 +158,28 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
         state = state.copyWith(
           employeeName: 'Anna Smith',
           hasError: false,
-          errorMessage: '',
+          errorMessage: () => '',
         );
         break;
       case 'john_002':
         state = state.copyWith(
           employeeName: 'John Doe',
           hasError: false,
-          errorMessage: '',
+          errorMessage: () => '',
         );
         break;
       case 'sarah_003':
         state = state.copyWith(
           employeeName: 'Sarah Johnson',
           hasError: false,
-          errorMessage: '',
+          errorMessage: () => '',
         );
         break;
       default:
         state = state.copyWith(
           employeeName: 'Anna',
           hasError: false,
-          errorMessage: '',
+          errorMessage: () => '',
         );
     }
     state = state.copyWith(employeeAvatar: '');
@@ -193,7 +193,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       nextPayoutDate: _formatDate(nextPayout),
       payoutFrequency: 'Monthly',
       hasError: false,
-      errorMessage: '',
+      errorMessage: () => '',
     );
   }
 
@@ -216,7 +216,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     state = state.copyWith(
       recentTransactions: List.unmodifiable(fallbackTransactions),
       hasError: false,
-      errorMessage: '',
+      errorMessage: () => '',
     );
   }
 
@@ -226,7 +226,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       state = state.copyWith(
         transactions: List.unmodifiable(transactions),
         hasError: false,
-        errorMessage: '',
+        errorMessage: () => '',
       );
       if (await _walletService.hasStoredWallet()) {
         debugPrint('Attempting to reconnect stored wallet');
@@ -234,11 +234,11 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       } else {
         debugPrint('No stored wallet found');
       }
-      state = state.copyWith(errorMessage: '', hasError: false);
+      state = state.copyWith(errorMessage: () => '', hasError: false);
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: 'Failed to load wallet data: $e',
+        errorMessage: () => 'Failed to load wallet data: $e',
       );
       debugPrint('Error in _loadInitialWalletData: $e');
     }
@@ -251,7 +251,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
         required String walletType,
       }) async {
     _setLoading(true);
-    state = state.copyWith(errorMessage: '');
+    state = state.copyWith(errorMessage: () => '');
     try {
       final wallet = await _walletService.connectWallet(
         privateKey,
@@ -264,7 +264,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
         wallet: wallet,
         selectedCurrency: 'PHP',
         hasError: false,
-        errorMessage: '',
+        errorMessage: () => '',
       );
 
       /// ✅ Fetch fresh balance after connecting
@@ -272,7 +272,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: 'Failed to connect wallet: $e',
+        errorMessage: () => 'Failed to connect wallet: $e',
       );
       debugPrint('Connection error: $e');
     } finally {
@@ -283,7 +283,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
 
   Future<void> reconnect() async {
     _setLoading(true);
-    state = state.copyWith(errorMessage: '');
+    state = state.copyWith(errorMessage: () => '');
     try {
       final wallet = await _walletService.reconnect();
       if (wallet != null) {
@@ -292,7 +292,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
           wallet: wallet,
           selectedCurrency: 'PHP',
           hasError: false,
-          errorMessage: '',
+          errorMessage: () => '',
         );
         await fetchWalletBalance();
       }
@@ -300,7 +300,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: 'Failed to reconnect wallet: $e',
+        errorMessage: () => 'Failed to reconnect wallet: $e',
       );
       debugPrint('Reconnect error: $e');
     } finally {
@@ -315,19 +315,19 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       state = state.copyWith(
         transactions: List.unmodifiable(transactions),
         hasError: false,
-        errorMessage: '',
+        errorMessage: () => '',
       );
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: 'Failed to fetch transactions: $e',
+        errorMessage: () => 'Failed to fetch transactions: $e',
       );
     }
   }
 
   Future<void> refresh() async {
     _setLoading(true);
-    state = state.copyWith(errorMessage: '', hasError: false);
+    state = state.copyWith(errorMessage: () => '', hasError: false);
     try {
       await _fetchTransactions();
       await refreshWallet();
@@ -337,7 +337,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: 'Failed to refresh data: $e',
+        errorMessage: () => 'Failed to refresh data: $e',
       );
     } finally {
       _setLoading(false);
@@ -352,7 +352,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: 'Failed to check stored wallet: $e',
+        errorMessage: () => 'Failed to check stored wallet: $e',
       );
       return false;
     }
@@ -369,13 +369,13 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       final updatedWallet = await _walletService.refreshBalance(wallet);
       state = state.copyWith(
         wallet: updatedWallet,
-        errorMessage: '',
+        errorMessage: () => '',
         hasError: false,
       );
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: 'Failed to fetch wallet balance: $e',
+        errorMessage: () => 'Failed to fetch wallet balance: $e',
       );
       debugPrint('fetchWalletBalance error: $e');
     } finally {
@@ -385,7 +385,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
 
   void clearError() {
     state = state.copyWith(
-      errorMessage: '',
+      errorMessage: () => '',
       hasError: false,
     );
   }
@@ -405,11 +405,11 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
         state = state.copyWith(wallet: refreshedWallet);
         debugPrint('Refreshed wallet: ${refreshedWallet.toJson()}');
       }
-      state = state.copyWith(errorMessage: '', hasError: false);
+      state = state.copyWith(errorMessage: () => '', hasError: false);
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: 'Failed to refresh wallet: $e',
+        errorMessage: () => 'Failed to refresh wallet: $e',
       );
       debugPrint('Refresh wallet error: $e');
     } finally {
@@ -422,7 +422,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       await _walletService.disconnect();
       state = state.copyWith(
         wallet: null,
-        errorMessage: '',
+        errorMessage: () => '',
         selectedCurrency: 'PHP',
         hasError: false,
       );
@@ -430,7 +430,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: 'Failed to disconnect wallet: $e',
+        errorMessage: () => 'Failed to disconnect wallet: $e',
       );
     }
   }
@@ -462,7 +462,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       state = state.copyWith(
         isLoading: true,
         hasError: false,
-        errorMessage: '',
+        errorMessage: () => '',
       );
     } else {
       state = state.copyWith(isLoading: false);
@@ -473,7 +473,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     state = state.copyWith(
       isLoading: false,
       hasError: true,
-      errorMessage: error,
+      errorMessage: () => error,
     );
   }
 }

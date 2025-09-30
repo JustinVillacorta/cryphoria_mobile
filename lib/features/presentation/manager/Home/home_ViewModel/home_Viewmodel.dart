@@ -26,13 +26,13 @@ class WalletState {
   WalletState copyWith({
     Wallet? wallet,
     bool? isLoading,
-    String? error,
+    String? Function()? error, // Use function to allow explicit null
     List<Map<String, dynamic>>? transactions,
   }) {
     return WalletState(
       wallet: wallet ?? this.wallet,
       isLoading: isLoading ?? this.isLoading,
-      error: error,
+      error: error != null ? error() : this.error,
       transactions: transactions ?? this.transactions,
     );
   }
@@ -53,7 +53,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
 
   /// Loads initial data (e.g., transactions) and checks for stored wallet on initialization
   Future<void> _loadInitialData() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: () => null);
     try {
       // First check for stored wallet and reconnect
       if (await _walletService.hasStoredWallet()) {
@@ -62,9 +62,9 @@ class WalletNotifier extends StateNotifier<WalletState> {
       
       // Then load transactions (now that wallet is connected if it was stored)
       await _fetchTransactions();
-      state = state.copyWith(error: null);
+      state = state.copyWith(error: () => null);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: () => e.toString());
     } finally {
       state = state.copyWith(isLoading: false);
     }
@@ -77,7 +77,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
         String? walletName,
         String? walletType,
       }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: () => null);
     try {
       final wallet = await _walletService.connectWallet(
         privateKey,
@@ -90,7 +90,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       state = state.copyWith(wallet: wallet);
       await _fetchTransactions();
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: () => e.toString());
     } finally {
       state = state.copyWith(isLoading: false);
     }
@@ -98,7 +98,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
 
   /// Reconnects to a previously stored wallet
   Future<void> reconnect() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: () => null);
     try {
       final wallet = await _walletService.reconnect();
       state = state.copyWith(wallet: wallet);
@@ -106,7 +106,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       // Wallet reconnected successfully - fetch transactions now
       await _fetchTransactions();
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: () => e.toString());
     } finally {
       state = state.copyWith(isLoading: false);
     }
@@ -129,16 +129,16 @@ class WalletNotifier extends StateNotifier<WalletState> {
         limit: 10,
       );
       
-      state = state.copyWith(transactions: List.unmodifiable(transactions), error: null);
+      state = state.copyWith(transactions: List.unmodifiable(transactions), error: () => null);
     } catch (e) {
-      state = state.copyWith(error: e.toString(), transactions: const []);
+      state = state.copyWith(error: () => e.toString(), transactions: const []);
       print('⚠️ Failed to fetch transactions: $e');
     }
   }
 
   /// Refreshes transaction data (e.g., on pull-to-refresh)
   Future<void> refresh() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: () => null);
     try {
       await _fetchTransactions();
     } finally {
@@ -151,14 +151,14 @@ class WalletNotifier extends StateNotifier<WalletState> {
     try {
       return await _walletService.hasStoredWallet();
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: () => e.toString());
       return false;
     }
   }
 
   /// Clears the current error state
   void clearError() {
-    state = state.copyWith(error: null);
+    state = state.copyWith(error: () => null);
   }
 
   /// Refreshes the current wallet balance and PHP conversion
@@ -173,9 +173,9 @@ class WalletNotifier extends StateNotifier<WalletState> {
       if (refreshedWallet != null) {
         state = state.copyWith(wallet: refreshedWallet);
       }
-      state = state.copyWith(error: null);
+      state = state.copyWith(error: () => null);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: () => e.toString());
     } finally {
       state = state.copyWith(isLoading: false);
     }
@@ -185,9 +185,9 @@ class WalletNotifier extends StateNotifier<WalletState> {
   Future<void> disconnectWallet() async {
     try {
       await _walletService.disconnect();
-      state = state.copyWith(wallet: null, error: null);
+      state = state.copyWith(wallet: null, error: () => null);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: () => e.toString());
     }
   }
   

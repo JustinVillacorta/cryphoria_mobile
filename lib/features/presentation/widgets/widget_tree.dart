@@ -1,4 +1,5 @@
-import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Home/home_views/homeView.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Employee_Management(manager_screens)/employee_views/employee_management_screen.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Invoice/InvoiceViews/invoice_views.dart';
@@ -10,11 +11,13 @@ import 'package:flutter/material.dart';
 
 List<Widget> pages = [HomeView(), EmployeeManagementScreen(), ReportsScreen(), InvoiceScreen(), userProfile()];
 
-class WidgetTree extends StatelessWidget {
+class WidgetTree extends ConsumerWidget {
   const WidgetTree({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedPage = ref.watch(selectedPageProvider);
+    
     return PopScope(
       canPop: false, // Prevent default back button behavior
       onPopInvoked: (didPop) {
@@ -24,31 +27,26 @@ class WidgetTree extends StatelessWidget {
           print('Back button pressed on main screen - ignoring to prevent app closure');
         }
       },
-      child: ValueListenableBuilder(
-        valueListenable: selectedPageNotifer,
-        builder: (context, selectedPage, child) {
-          return Scaffold(
-            backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor, // Match theme
-            body: Stack(
-              children: [
-                // Display the selected page
-                pages[selectedPage],
-                // Position the custom navigation bar at the bottom
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: CustomNavBar(
-                    currentIndex: selectedPage,
-                    onTap: (index) {
-                      selectedPageNotifer.value = index;
-                    },
-                  ),
-                ),
-              ],
+      child: Scaffold(
+        backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor, // Match theme
+        body: Stack(
+          children: [
+            // Display the selected page
+            pages[selectedPage],
+            // Position the custom navigation bar at the bottom
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: CustomNavBar(
+                currentIndex: selectedPage,
+                onTap: (index) {
+                  ref.read(selectedPageProvider.notifier).state = index;
+                },
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }

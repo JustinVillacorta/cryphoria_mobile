@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/manager_connect_wallet_bottom_sheet.dart';
 
 class WalletCard extends ConsumerStatefulWidget {
   const WalletCard({super.key});
@@ -21,6 +21,15 @@ class _WalletCardState extends ConsumerState<WalletCard> {
         content: Text('Wallet address copied to clipboard!'),
         duration: Duration(seconds: 2),
       ),
+    );
+  }
+
+  void _showConnectWalletBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const ManagerConnectWalletBottomSheet(),
     );
   }
 
@@ -243,7 +252,7 @@ class _WalletCardState extends ConsumerState<WalletCard> {
             ),
           ] else ...[
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () => _showConnectWalletBottomSheet(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white.withOpacity(0.2),
                 foregroundColor: Colors.white,

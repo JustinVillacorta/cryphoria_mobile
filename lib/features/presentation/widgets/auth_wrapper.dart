@@ -7,7 +7,6 @@ import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
-import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 import 'package:cryphoria_mobile/debug/auth_debug_helper.dart';
 
 class AuthWrapper extends ConsumerStatefulWidget {
@@ -165,8 +164,9 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
     }
 
     if (_isAuthenticated && _cachedAuthUser != null) {
-      selectedPageNotifer.value = 0;
-      selectedEmployeePageNotifer.value = 0;
+      // Reset navigation state when authenticating
+      ref.read(selectedPageProvider.notifier).state = 0;
+      ref.read(selectedEmployeePageProvider.notifier).state = 0;
 
       if (_cachedAuthUser!.role == 'Manager') {
         print('🔀 AuthWrapper: Navigating to Manager screens for user: '

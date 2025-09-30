@@ -7,7 +7,6 @@ import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Re
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/ApprovalPending/approval_pending_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
-import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 
 class LogIn extends ConsumerStatefulWidget {
   const LogIn({super.key});
@@ -42,8 +41,8 @@ class _LogInState extends ConsumerState<LogIn> {
         // Use pushAndRemoveUntil to clear the entire navigation stack and prevent back button issues
         if (viewModel.authUser!.role == 'Manager') {
           // Reset page notifiers to default before navigation
-          selectedPageNotifer.value = 0;
-          selectedEmployeePageNotifer.value = 0;
+          ref.read(selectedPageProvider.notifier).state = 0;
+          ref.read(selectedEmployeePageProvider.notifier).state = 0;
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const WidgetTree()),
@@ -51,8 +50,8 @@ class _LogInState extends ConsumerState<LogIn> {
           );
         } else {
           // Reset page notifiers to default before navigation
-          selectedPageNotifer.value = 0;
-          selectedEmployeePageNotifer.value = 0;
+          ref.read(selectedPageProvider.notifier).state = 0;
+          ref.read(selectedEmployeePageProvider.notifier).state = 0;
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const EmployeeWidgetTree()),
@@ -75,8 +74,8 @@ class _LogInState extends ConsumerState<LogIn> {
       // Use pushAndRemoveUntil to clear the entire navigation stack
       if (_viewModel.authUser!.role == 'Manager') {
         // Reset page notifiers to default before navigation
-        selectedPageNotifer.value = 0;
-        selectedEmployeePageNotifer.value = 0;
+        ref.read(selectedPageProvider.notifier).state = 0;
+        ref.read(selectedEmployeePageProvider.notifier).state = 0;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const WidgetTree()),
@@ -84,8 +83,8 @@ class _LogInState extends ConsumerState<LogIn> {
         );
       } else {
         // Reset page notifiers to default before navigation
-        selectedPageNotifer.value = 0;
-        selectedEmployeePageNotifer.value = 0;
+        ref.read(selectedPageProvider.notifier).state = 0;
+        ref.read(selectedEmployeePageProvider.notifier).state = 0;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const EmployeeWidgetTree()),

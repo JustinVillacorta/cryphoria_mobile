@@ -39,7 +39,7 @@ void main() {
   });
 
   test('clearError resets error', () {
-    notifier.state = notifier.state.copyWith(error: 'oops');
+    notifier.state = notifier.state.copyWith(error: () => 'oops');
     notifier.clearError();
     expect(notifier.state.error, isNull);
   });

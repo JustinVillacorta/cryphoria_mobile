@@ -421,10 +421,20 @@ final auditMainViewModelProvider =
 final employeeViewModelProvider =
     ChangeNotifierProvider<EmployeeViewModel>((ref) {
   final viewModel = EmployeeViewModel(
-    getAllEmployeesUseCase: ref.read(getAllEmployeesUseCaseProvider),
-    getManagerTeamUseCase: ref.read(getManagerTeamUseCaseProvider),
-    addEmployeeToTeamUseCase: ref.read(addEmployeeToTeamUseCaseProvider),
+    getAllEmployeesUseCase: ref.watch(getAllEmployeesUseCaseProvider),
+    getManagerTeamUseCase: ref.watch(getManagerTeamUseCaseProvider),
+    addEmployeeToTeamUseCase: ref.watch(addEmployeeToTeamUseCaseProvider),
   );
   ref.onDispose(viewModel.dispose);
   return viewModel;
 });
+
+// -----------------------------------------------------------------------------
+// Navigation State Providers (replaces global ValueNotifiers)
+// -----------------------------------------------------------------------------
+
+/// Provider for managing the selected page index in the manager navigation
+final selectedPageProvider = StateProvider<int>((ref) => 0);
+
+/// Provider for managing the selected page index in the employee navigation
+final selectedEmployeePageProvider = StateProvider<int>((ref) => 0);

@@ -9,7 +9,6 @@ import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProf
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
-import 'package:cryphoria_mobile/features/data/notifiers/notifiers.dart';
 
 
 class EmployeeUserProfileScreen extends ConsumerStatefulWidget {
@@ -21,60 +20,9 @@ class EmployeeUserProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileScreen> {
-  late LogoutViewModel _logoutViewModel;
-  late VoidCallback _logoutListener;
-
-  @override
-  void initState() {
-    super.initState();
-    _logoutViewModel = ref.read(logoutViewModelProvider);
-    _logoutListener = _onLogoutStateChanged;
-    _logoutViewModel.addListener(_logoutListener);
-  }
-
-  @override
-  void dispose() {
-    _logoutViewModel.removeListener(_logoutListener);
-    super.dispose();
-  }
-
-  void _onLogoutStateChanged() {
-    if (!mounted) return; // Ensure widget is still mounted
-    
-    if (_logoutViewModel.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_logoutViewModel.error!),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-    
-    if (_logoutViewModel.message != null) {
-      // Logout successful, navigate to login
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && Navigator.canPop(context)) {
-          selectedPageNotifer.value = 0;
-          selectedEmployeePageNotifer.value = 0;
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const LogIn()),
-            (route) => false,
-          );
-        } else if (mounted) {
-          // If no routes to pop, just push replacement
-          selectedPageNotifer.value = 0;
-          selectedEmployeePageNotifer.value = 0;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const LogIn()),
-          );
-        }
-      });
-    }
-  }
 
   Future<void> _logout() async {
+    final logoutViewModel = ref.read(logoutViewModelProvider);
     try {
       // Show confirmation dialog
       final shouldLogout = await showDialog<bool>(
@@ -112,7 +60,7 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
         );
 
         // Use smart logout (employees typically don't need transfer checks)
-        final success = await _logoutViewModel.forceLogout();
+        final success = await logoutViewModel.forceLogout();
         
         // Close loading dialog
         if (mounted) Navigator.of(context).pop();
@@ -120,7 +68,7 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
         if (!success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Logout failed: ${_logoutViewModel.error ?? "Unknown error"}'),
+              content: Text('Logout failed: ${logoutViewModel.error ?? "Unknown error"}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -141,6 +89,46 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
 
   @override
   Widget build(BuildContext context) {
+    // Use ref.listen for side effects (navigation)
+    ref.listen<LogoutViewModel>(
+      logoutViewModelProvider,
+      (previous, next) {
+        if (!mounted) return;
+
+        if (next.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(next.error!),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+
+        if (next.message != null) {
+          // Logout successful, navigate to login
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && Navigator.canPop(context)) {
+              ref.read(selectedPageProvider.notifier).state = 0;
+              ref.read(selectedEmployeePageProvider.notifier).state = 0;
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LogIn()),
+                (route) => false,
+              );
+            } else if (mounted) {
+              // If no routes to pop, just push replacement
+              ref.read(selectedPageProvider.notifier).state = 0;
+              ref.read(selectedEmployeePageProvider.notifier).state = 0;
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LogIn()),
+              );
+            }
+          });
+        }
+      },
+    );
+
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final paddingValue = screenWidth * 0.05; // 5% of screen width for padding
