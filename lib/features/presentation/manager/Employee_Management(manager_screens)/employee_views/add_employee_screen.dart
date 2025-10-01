@@ -15,35 +15,29 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
   late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
 
-  // Form Controllers
-  final TextEditingController _fullNameController = TextEditingController();
+  // Form Controllers - only the required fields
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _positionController = TextEditingController();
-  final TextEditingController _basicSalaryController = TextEditingController();
-  final TextEditingController _startDateController = TextEditingController();
 
-  // Dropdown values
-  String _selectedPaymentSchedule = 'Weekly';
-  String _selectedEmploymentType = 'Full-time';
-  String _selectedDepartment = 'Finance';
-
-  // Checkbox values
-  bool _taxExempt = false;
-  bool _healthInsurance = false;
-  bool _retirementPlan = false;
-  bool _lifeInsurance = false;
-
-  final List<String> _paymentSchedules = ['Weekly', 'Bi-Weekly', 'Monthly'];
-  final List<String> _employmentTypes = ['Full-time', 'Part-time', 'Temporary', 'Internship'];
-  final List<String> _departments = ['Finance', 'Marketing', 'Operations', 'Sales', 'Technology'];
+  // Department dropdown
+  String _selectedDepartment = 'IT Department';
+  final List<String> _departments = [
+    'IT Department',
+    'Finance Department', 
+    'Marketing Department',
+    'Operations Department',
+    'Sales Department',
+    'HR Department'
+  ];
 
   int _currentTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       setState(() {
         _currentTabIndex = _tabController.index;
@@ -54,12 +48,10 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    _fullNameController.dispose();
     _emailController.dispose();
+    _fullNameController.dispose();
     _phoneController.dispose();
     _positionController.dispose();
-    _basicSalaryController.dispose();
-    _startDateController.dispose();
     super.dispose();
   }
 
@@ -67,998 +59,464 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Add New Employee',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
       body: Column(
         children: [
-          // Progress Indicator
-          _buildProgressIndicator(),
-          // Form Content
+          // Custom Header with gradient
+          _buildHeader(),
+          // Tab Navigation
+          _buildTabNavigation(),
+          // Tab Content
           Expanded(
-            child: Form(
-              key: _formKey,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildBasicInfoTab(),
-                  _buildEmploymentDetailsTab(),
-                  _buildPayrollSetupTab(),
-                ],
-              ),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildPersonalInfoTab(),
+                _buildEmploymentInfoTab(),
+              ],
             ),
           ),
+          // Bottom Action Buttons
+          _buildBottomActions(),
         ],
       ),
     );
   }
 
-  Widget _buildProgressIndicator() {
+  Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF9747FF), Color(0xFF7B1FA2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+          child: Column(
+            children: [
+              // Top Navigation
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const Text(
+                    'Add Employee',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 48), // Balance the back button
+                ],
+              ),
+              const SizedBox(height: 20),
+              // Add Employee Icon and Description
+              const Column(
+                children: [
+                  Icon(
+                    Icons.person_add,
+                    size: 60,
+                    color: Colors.white,
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Add New Employee',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    'Fill in the employee details below',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabNavigation() {
+    return Container(
+      color: Colors.white,
       child: Row(
         children: [
-          _buildStepIndicator('Basic Info', 0),
-          _buildConnector(0),
-          _buildStepIndicator('Employment\nDetails', 1),
-          _buildConnector(1),
-          _buildStepIndicator('Payroll Setup', 2),
+          _buildTabItem('Personal Info', 0),
+          _buildTabItem('Employment', 1),
         ],
       ),
     );
   }
 
-  Widget _buildStepIndicator(String title, int index) {
+  Widget _buildTabItem(String title, int index) {
     bool isActive = _currentTabIndex == index;
     bool isCompleted = _currentTabIndex > index;
     
     return Expanded(
-      flex: 2,
-      child: Column(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isCompleted 
-                  ? const Color(0xFF8E24AA)
-                  : isActive 
-                      ? const Color(0xFF8E24AA)
-                      : const Color(0xFFE5E5E5),
-              border: Border.all(
-                color: isActive && !isCompleted 
-                    ? const Color(0xFF8E24AA)
-                    : Colors.transparent,
+      child: GestureDetector(
+        onTap: () => _tabController.animateTo(index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isActive ? const Color(0xFF9747FF) : Colors.transparent,
                 width: 2,
               ),
             ),
-            child: Center(
-              child: isCompleted
-                  ? const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 18,
-                    )
-                  : Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        color: isActive 
-                            ? Colors.white
-                            : const Color(0xFF9E9E9E),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isActive || isCompleted 
-                  ? const Color(0xFF8E24AA)
-                  : const Color(0xFF9E9E9E),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isCompleted)
+                const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 20,
+                ),
+              if (isCompleted) const SizedBox(width: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isActive ? const Color(0xFF9747FF) : 
+                         isCompleted ? Colors.green : Colors.grey,
+                  fontSize: 16,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConnector(int index) {
-    bool isCompleted = _currentTabIndex > index;
-    
-    return Expanded(
-      flex: 1,
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.only(bottom: 24),
-        decoration: BoxDecoration(
-          color: isCompleted 
-              ? const Color(0xFF8E24AA)
-              : const Color(0xFFE5E5E5),
-          borderRadius: BorderRadius.circular(1),
         ),
       ),
     );
   }
 
-  Widget _buildBasicInfoTab() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  // Profile Photo
-                  Center(
-                    child: Stack(
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.grey[200],
-                            border: Border.all(color: Colors.grey[300]!, width: 2),
-                          ),
-                          child: Icon(
-                            Icons.camera_alt,
-                            size: 40,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFF8E24AA),
-                            ),
-                            child: const Icon(
-                              Icons.add,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  
-                  // Full Name
-                  const Text(
-                    'Full Name',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _fullNameController,
-                    decoration: InputDecoration(
-                      hintText: 'Enter employee\'s full name',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the employee\'s full name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Email Address
-                  const Text(
-                    'Email Address',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      hintText: 'Enter email address',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter an email address';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email address';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Phone Number
-                  const Text(
-                    'Phone Number',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      hintText: 'Enter phone number',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a phone number';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Position
-                  const Text(
-                    'Position',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _positionController,
-                    decoration: InputDecoration(
-                      hintText: 'Enter position',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a position';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
-          ),
-          // Bottom Navigation
-          Container(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Row(
+  Widget _buildPersonalInfoTab() {
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionCard(
+              icon: Icons.person_outline,
+              title: 'Personal Information',
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF8E24AA),
-                      side: const BorderSide(color: Color(0xFF8E24AA)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                const SizedBox(height: 16),
+                _buildInputField(
+                  controller: _fullNameController,
+                  label: 'Full Name',
+                  hint: 'Enter employee full name',
+                  icon: Icons.person,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Full name is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                _buildInputField(
+                  controller: _emailController,
+                  label: 'Email Address',
+                  hint: 'Enter employee email',
+                  icon: Icons.email,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Email is required';
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      return 'Enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                _buildInputField(
+                  controller: _phoneController,
+                  label: 'Phone Number',
+                  hint: 'Enter phone number',
+                  icon: Icons.phone,
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Phone number is required';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmploymentInfoTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionCard(
+            icon: Icons.work_outline,
+            title: 'Employment Information',
+            children: [
+              const SizedBox(height: 16),
+              _buildInputField(
+                controller: _positionController,
+                label: 'Job Position',
+                hint: 'Enter job position',
+                icon: Icons.work,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Position is required';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              _buildDropdownField(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({
+    required IconData icon,
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9747FF).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: const Color(0xFF9747FF),
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_currentTabIndex < 2) {
-                        _tabController.animateTo(_currentTabIndex + 1);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8E24AA),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Next',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(Icons.arrow_forward, size: 20),
-                      ],
-                    ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D3748),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            ...children,
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildEmploymentDetailsTab() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  
-                  // Basic Salary
-                  const Text(
-                    'Basic Salary',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _basicSalaryController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      hintText: '0.00',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Payment Schedule
-                  const Text(
-                    'Payment Schedule',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: _selectedPaymentSchedule,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                    items: _paymentSchedules.map((String schedule) {
-                      return DropdownMenuItem<String>(
-                        value: schedule,
-                        child: Text(schedule),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedPaymentSchedule = newValue!;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Employment Type
-                  const Text(
-                    'Employment Type',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: _selectedEmploymentType,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                    items: _employmentTypes.map((String type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedEmploymentType = newValue!;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Start Date
-                  const Text(
-                    'Start Date',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _startDateController,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      hintText: 'mm/dd/yyyy',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      suffixIcon: const Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                    onTap: () async {
-                      final DateTime? picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          _startDateController.text = "${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}/${picked.year}";
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Department
-                  const Text(
-                    'Department',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: _selectedDepartment,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                    items: _departments.map((String department) {
-                      return DropdownMenuItem<String>(
-                        value: department,
-                        child: Text(department),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedDepartment = newValue!;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          validator: validator,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.grey[500]),
+            prefixIcon: Icon(icon, color: const Color(0xFF9747FF)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
             ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF9747FF), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red),
+            ),
+            filled: true,
+            fillColor: const Color(0xFFF7FAFC),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
-          // Navigation Buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    _tabController.animateTo(0);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    side: const BorderSide(color: Color(0xFF8E24AA)),
-                  ),
-                  child: const Text(
-                    'Back',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF8E24AA),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    _tabController.animateTo(2);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8E24AA),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Next',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward, size: 20),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildPayrollSetupTab() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
+  Widget _buildDropdownField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Department',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: _selectedDepartment,
+          items: _departments.map((department) {
+            return DropdownMenuItem(
+              value: department,
+              child: Text(department),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedDepartment = value!;
+            });
+          },
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.business, color: Color(0xFF9747FF)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF9747FF), width: 2),
+            ),
+            filled: true,
+            fillColor: const Color(0xFFF7FAFC),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomActions() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  
-                  // Deductions Section
-                  const Text(
-                    'Deductions',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Tax Information
-                  const Text(
-                    'Tax Information',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  
-                  // Tax Exempt
-                  const Text(
-                    'Tax Exempt',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: _taxExempt ? 'Yes' : 'No',
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                    items: ['Yes', 'No'].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _taxExempt = newValue == 'Yes';
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // SSS Contribution
-                  const Text(
-                    'SSS Contribution',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      hintText: '0.00',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // PhilHealth Contribution
-                  const Text(
-                    'PhilHealth Contribution',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      hintText: '0.00',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Pag-IBIG Contribution
-                  const Text(
-                    'Pag-IBIG Contribution',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      hintText: '0.00',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8E24AA)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  
-                  // Benefits Section
-                  const Text(
-                    'Benefits',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Checkboxes for benefits
-                  CheckboxListTile(
-                    title: const Text('Health Insurance'),
-                    value: _healthInsurance,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _healthInsurance = value ?? false;
-                      });
-                    },
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                    activeColor: const Color(0xFF8E24AA),
-                  ),
-                  CheckboxListTile(
-                    title: const Text('Retirement Plan'),
-                    value: _retirementPlan,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _retirementPlan = value ?? false;
-                      });
-                    },
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                    activeColor: const Color(0xFF8E24AA),
-                  ),
-                  CheckboxListTile(
-                    title: const Text('Life Insurance'),
-                    value: _lifeInsurance,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _lifeInsurance = value ?? false;
-                      });
-                    },
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                    activeColor: const Color(0xFF8E24AA),
-                  ),
-                  const SizedBox(height: 40),
-                ],
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(color: Color(0xFF9747FF)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF9747FF),
+                ),
               ),
             ),
           ),
-          // Navigation Buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    _tabController.animateTo(1);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    side: const BorderSide(color: Color(0xFF8E24AA)),
-                  ),
-                  child: const Text(
-                    'Back',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF8E24AA),
-                    ),
-                  ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => _submitForm(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF9747FF),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Add Employee',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _submitForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8E24AA),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Add Employee',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );
@@ -1066,54 +524,41 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
+      final employeeViewModel = ref.read(employeeViewModelProvider.notifier);
+      
       try {
-        // Get employee view model from context
-        final employeeViewModel = ref.read(employeeViewModelProvider);
-        
-        // Show loading
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
-
-        // Add existing employee to team by email (NEW WORKFLOW)
         await employeeViewModel.addEmployeeToTeam(
-          email: _emailController.text,
-          position: _positionController.text.isNotEmpty ? _positionController.text : null,
+          email: _emailController.text.trim(),
+          position: _positionController.text.trim(),
           department: _selectedDepartment,
-          fullName: _fullNameController.text.isNotEmpty ? _fullNameController.text : null,
-          phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
+          fullName: _fullNameController.text.trim(),
+          phone: _phoneController.text.trim(),
         );
 
-        // Close loading dialog
-        Navigator.pop(context);
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Employee successfully added to your team!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        // Go back to employee list
-        Navigator.pop(context);
-      } catch (e) {
-        // Close loading dialog if open
-        if (Navigator.canPop(context)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Employee added successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
           Navigator.pop(context);
         }
-        
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error adding employee: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error adding employee: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } else {
+      // If form validation fails and we're on the employment tab, 
+      // go back to personal info tab to show validation errors
+      if (_currentTabIndex == 1) {
+        _tabController.animateTo(0);
       }
     }
   }
