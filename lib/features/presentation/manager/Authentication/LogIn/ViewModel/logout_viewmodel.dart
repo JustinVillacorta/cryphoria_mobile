@@ -21,12 +21,26 @@ class LogoutViewModel extends ChangeNotifier {
   String? _message;
   String? get message => _message;
 
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
   /// Perform logout
   Future<bool> logout() async {
     try {
       _isLoading = true;
       _error = null;
-      notifyListeners();
+      _safeNotifyListeners();
 
       final success = await logoutUseCase.execute();
       
@@ -48,12 +62,12 @@ class LogoutViewModel extends ChangeNotifier {
       return false;
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
   void clearError() {
     _error = null;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 }

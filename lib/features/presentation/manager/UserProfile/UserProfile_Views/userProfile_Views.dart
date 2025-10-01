@@ -80,31 +80,40 @@ class _userProfileState extends ConsumerState<userProfile> {
         if (mounted) Navigator.of(context).pop();
 
         if (success) {
-          // Navigate to login screen
-          ref.read(selectedPageProvider.notifier).state = 0;
-          ref.read(selectedEmployeePageProvider.notifier).state = 0;
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const LogIn()),
-            (route) => false,
-          );
+          // Check if widget is still mounted before modifying providers and navigating
+          if (mounted) {
+            // Reset provider states
+            ref.read(selectedPageProvider.notifier).state = 0;
+            ref.read(selectedEmployeePageProvider.notifier).state = 0;
+            
+            // Navigate to login screen
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const LogIn()),
+              (route) => false,
+            );
+          }
         } else {
-          // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(logoutViewModel.error ?? 'Logout failed')),
-          );
+          // Show error message only if mounted
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(logoutViewModel.error ?? 'Logout failed')),
+            );
+          }
         }
       }
     } catch (e) {
       // Close loading dialog if open
       if (mounted) Navigator.of(context).pop();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Logout error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

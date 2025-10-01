@@ -65,25 +65,43 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
         // Close loading dialog
         if (mounted) Navigator.of(context).pop();
         
-        if (!success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Logout failed: ${logoutViewModel.error ?? "Unknown error"}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        if (success) {
+          // Check if widget is still mounted before modifying providers and navigating
+          if (mounted) {
+            // Reset provider states
+            ref.read(selectedPageProvider.notifier).state = 0;
+            ref.read(selectedEmployeePageProvider.notifier).state = 0;
+            
+            // Navigate to login screen
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const LogIn()),
+              (route) => false,
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Logout failed: ${logoutViewModel.error ?? "Unknown error"}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
       // Close loading dialog if open
       if (mounted) Navigator.of(context).pop();
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Logout error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
