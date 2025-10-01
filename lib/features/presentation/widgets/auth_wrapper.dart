@@ -160,9 +160,11 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
     }
 
     if (_isAuthenticated && _cachedAuthUser != null) {
-      // Reset navigation state when authenticating
-      ref.read(selectedPageProvider.notifier).state = 0;
-      ref.read(selectedEmployeePageProvider.notifier).state = 0;
+      // Reset navigation state when authenticating - delay to avoid build cycle modification
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(selectedPageProvider.notifier).state = 0;
+        ref.read(selectedEmployeePageProvider.notifier).state = 0;
+      });
 
       if (_cachedAuthUser!.role == 'Manager') {
         print('🔀 AuthWrapper: Navigating to Manager screens for user: '
