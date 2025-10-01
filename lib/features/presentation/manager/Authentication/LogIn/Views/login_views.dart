@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Authentication/ApprovalPending/approval_pending_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
 
@@ -16,63 +15,16 @@ class LogIn extends ConsumerStatefulWidget {
 }
 
 class _LogInState extends ConsumerState<LogIn> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   LoginViewModel get _viewModel => ref.read(loginViewModelProvider);
 
   void _onViewModelChanged(LoginViewModel viewModel) async {
     if (viewModel.authUser != null) {
-      // Check if approval is pending
-      if (viewModel.isApprovalPending) {
-        // Navigate to approval pending screen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ApprovalPendingView(
-              authUser: viewModel.authUser!,
-              onRetry: () => _checkApprovalStatus(),
-              onLogout: () => _logout(),
-            ),
-          ),
-        );
-      } else {
-        // Role-based navigation after successful login
-        // Use pushAndRemoveUntil to clear the entire navigation stack and prevent back button issues
-        if (viewModel.authUser!.role == 'Manager') {
-          // Reset page notifiers to default before navigation
-          ref.read(selectedPageProvider.notifier).state = 0;
-          ref.read(selectedEmployeePageProvider.notifier).state = 0;
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const WidgetTree()),
-            (route) => false, // Remove all previous routes
-          );
-        } else {
-          // Reset page notifiers to default before navigation
-          ref.read(selectedPageProvider.notifier).state = 0;
-          ref.read(selectedEmployeePageProvider.notifier).state = 0;
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const EmployeeWidgetTree()),
-            (route) => false, // Remove all previous routes
-          );
-        }
-      }
-    } else if (viewModel.error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(viewModel.error!)));
-    }
-  }
-
-  void _checkApprovalStatus() async {
-    // This will be handled by the ApprovalPendingView's polling mechanism
-    // Just refresh the current state
-    if (_viewModel.authUser != null && !_viewModel.isApprovalPending) {
-      // Role-based navigation after approval
-      // Use pushAndRemoveUntil to clear the entire navigation stack
-      if (_viewModel.authUser!.role == 'Manager') {
+      // Role-based navigation after successful login
+      // Use pushAndRemoveUntil to clear the entire navigation stack and prevent back button issues
+      if (viewModel.authUser!.role == 'Manager') {
         // Reset page notifiers to default before navigation
         ref.read(selectedPageProvider.notifier).state = 0;
         ref.read(selectedEmployeePageProvider.notifier).state = 0;
@@ -91,32 +43,17 @@ class _LogInState extends ConsumerState<LogIn> {
           (route) => false, // Remove all previous routes
         );
       }
-    }
-  }
-
-  void _logout() async {
-    try {
-      // Clear authentication data first to prevent issues
-      final authDataSource = ref.read(authLocalDataSourceProvider);
-      await authDataSource.clearAuthData();
-      print('Login logout: Local authentication data cleared successfully');
-    } catch (e) {
-      print('Login logout: Error clearing authentication data: $e');
-    }
-    
-    // Navigate to login screen
-    if (mounted) {
-      Navigator.pushReplacement(
+    } else if (viewModel.error != null) {
+      ScaffoldMessenger.of(
         context,
-        MaterialPageRoute(builder: (_) => const LogIn()),
-      );
+      ).showSnackBar(SnackBar(content: Text(viewModel.error!)));
     }
   }
 
   void _login() {
-    if (_usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+    if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
       _viewModel.login(
-        _usernameController.text,
+        _emailController.text,
         _passwordController.text,
       );
     }
@@ -124,7 +61,7 @@ class _LogInState extends ConsumerState<LogIn> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -212,11 +149,11 @@ class _LogInState extends ConsumerState<LogIn> {
                 ),
                 const SizedBox(height: 40),
 
-                // Username field
+                // Email field
                 _buildTextField(
-                  controller: _usernameController,
-                  label: 'Username',
-                  icon: Icons.person_outline,
+                  controller: _emailController,
+                  label: 'Email',
+                  icon: Icons.email_outlined,
                 ),
                 const SizedBox(height: 20),
 

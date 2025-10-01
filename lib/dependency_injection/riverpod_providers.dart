@@ -17,8 +17,7 @@ import '../features/data/repositories_impl/AuthRepositoryImpl.dart';
 import '../features/data/repositories_impl/audit_repository_impl.dart';
 import '../features/data/repositories_impl/employee_repository_impl.dart';
 import '../features/data/services/currency_conversion_service.dart';
-import '../features/data/services/device_approval_cache.dart';
-import '../features/data/services/device_info_service.dart';
+
 import '../features/data/services/eth_payment_service.dart';
 import '../features/data/services/private_key_storage.dart';
 import '../features/data/services/wallet_service.dart';
@@ -36,18 +35,9 @@ import '../features/domain/usecases/Employee_management/get_all_employees_usecas
 import '../features/domain/usecases/Employee_management/get_manager_team_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_payslips_usecase.dart';
 import '../features/domain/usecases/Login/login_usecase.dart';
-import '../features/domain/usecases/Logout/logout_check_usecase.dart';
-import '../features/domain/usecases/Logout/logout_force_usecase.dart';
 import '../features/domain/usecases/Logout/logout_usecase.dart';
 import '../features/domain/usecases/Register/register_use_case.dart';
-import '../features/domain/usecases/Session/approve_session_usecase.dart';
-import '../features/domain/usecases/Session/confirm_password_usecase.dart';
-import '../features/domain/usecases/Session/get_sessions_usecase.dart';
-import '../features/domain/usecases/Session/get_transferable_sessions_usecase.dart';
-import '../features/domain/usecases/Session/revoke_other_sessions_usecase.dart';
-import '../features/domain/usecases/Session/revoke_session_usecase.dart';
-import '../features/domain/usecases/Session/transfer_main_device_usecase.dart';
-import '../features/domain/usecases/Session/validate_session_usecase.dart';
+
 import '../features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
 import '../features/presentation/manager/Audit/ViewModels/audit_analysis_viewmodel.dart';
 import '../features/presentation/manager/Audit/ViewModels/audit_contract_viewmodel.dart';
@@ -58,8 +48,7 @@ import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_v
 import '../features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
 import '../features/presentation/manager/Employee_Management(manager_screens)/employee_viewmodel/employee_viewmodel.dart';
 import '../features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
-import '../features/presentation/manager/SessionManagement/session_management_controller.dart';
-import '../features/presentation/manager/SessionManagement/session_management_viewmodel.dart';
+
 
 import '../features/data/data_sources/employee_remote_data_source.dart'
     as manager_employee;
@@ -80,13 +69,6 @@ final baseUrlProvider = Provider<String>((ref) {
 final flutterSecureStorageProvider =
     Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
 
-final deviceInfoServiceProvider = Provider<DeviceInfoService>((ref) {
-  return DeviceInfoServiceImpl();
-});
-
-final deviceApprovalCacheProvider = Provider<DeviceApprovalCache>((ref) {
-  return DeviceApprovalCache(storage: ref.watch(flutterSecureStorageProvider));
-});
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
   return AuthLocalDataSourceImpl(secureStorage: ref.watch(flutterSecureStorageProvider));
@@ -104,7 +86,6 @@ final dioClientProvider = Provider<DioClient>((ref) {
   return DioClient(
     dio: dio,
     localDataSource: ref.watch(authLocalDataSourceProvider),
-    deviceInfoService: ref.watch(deviceInfoServiceProvider),
   );
 });
 
@@ -221,47 +202,6 @@ final registerUseCaseProvider = Provider<Register>((ref) {
   return Register(ref.watch(authRepositoryProvider));
 });
 
-final logoutCheckUseCaseProvider = Provider<LogoutCheck>((ref) {
-  return LogoutCheck(ref.watch(authRepositoryProvider));
-});
-
-final logoutForceUseCaseProvider = Provider<LogoutForce>((ref) {
-  return LogoutForce(ref.watch(authRepositoryProvider));
-});
-
-final getSessionsUseCaseProvider = Provider<GetSessions>((ref) {
-  return GetSessions(ref.watch(authRepositoryProvider));
-});
-
-final getTransferableSessionsUseCaseProvider =
-    Provider<GetTransferableSessions>((ref) {
-  return GetTransferableSessions(ref.watch(authRepositoryProvider));
-});
-
-final transferMainDeviceUseCaseProvider =
-    Provider<TransferMainDevice>((ref) {
-  return TransferMainDevice(ref.watch(authRepositoryProvider));
-});
-
-final approveSessionUseCaseProvider = Provider<ApproveSession>((ref) {
-  return ApproveSession(ref.watch(authRepositoryProvider));
-});
-
-final revokeSessionUseCaseProvider = Provider<RevokeSession>((ref) {
-  return RevokeSession(ref.watch(authRepositoryProvider));
-});
-
-final revokeOtherSessionsUseCaseProvider = Provider<RevokeOtherSessions>((ref) {
-  return RevokeOtherSessions(ref.watch(authRepositoryProvider));
-});
-
-final confirmPasswordUseCaseProvider = Provider<ConfirmPassword>((ref) {
-  return ConfirmPassword(ref.watch(authRepositoryProvider));
-});
-
-final validateSessionUseCaseProvider = Provider<ValidateSession>((ref) {
-  return ValidateSession(ref.watch(authRepositoryProvider));
-});
 
 final getAllEmployeesUseCaseProvider = Provider<GetAllEmployeesUseCase>((ref) {
   return GetAllEmployeesUseCase(repository: ref.watch(employeeRepositoryProvider));
@@ -315,8 +255,6 @@ final loginViewModelProvider =
     ChangeNotifierProvider<LoginViewModel>((ref) {
   return LoginViewModel(
     loginUseCase: ref.watch(loginUseCaseProvider),
-    deviceInfoService: ref.watch(deviceInfoServiceProvider),
-    deviceApprovalCache: ref.watch(deviceApprovalCacheProvider),
     authLocalDataSource: ref.watch(authLocalDataSourceProvider),
   );
 });
@@ -325,7 +263,6 @@ final registerViewModelProvider =
     ChangeNotifierProvider<RegisterViewModel>((ref) {
   return RegisterViewModel(
     registerUseCase: ref.watch(registerUseCaseProvider),
-    deviceInfoService: ref.watch(deviceInfoServiceProvider),
   );
 });
 
@@ -333,25 +270,7 @@ final logoutViewModelProvider =
     ChangeNotifierProvider<LogoutViewModel>((ref) {
   return LogoutViewModel(
     logoutUseCase: ref.watch(logoutUseCaseProvider),
-    logoutForceUseCase: ref.watch(logoutForceUseCaseProvider),
-    logoutCheckUseCase: ref.watch(logoutCheckUseCaseProvider),
     authLocalDataSource: ref.watch(authLocalDataSourceProvider),
-  );
-});
-
-final sessionManagementViewModelProvider =
-    ChangeNotifierProvider<SessionManagementViewModel>((ref) {
-  return SessionManagementViewModel();
-});
-
-final sessionManagementControllerProvider =
-    Provider<SessionManagementController>((ref) {
-  return SessionManagementController(
-    getSessions: ref.watch(getSessionsUseCaseProvider),
-    approveSession: ref.watch(approveSessionUseCaseProvider),
-    revokeSession: ref.watch(revokeSessionUseCaseProvider),
-    revokeOtherSessions: ref.watch(revokeOtherSessionsUseCaseProvider),
-    viewModel: ref.watch(sessionManagementViewModelProvider),
   );
 });
 

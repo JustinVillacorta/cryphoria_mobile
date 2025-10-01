@@ -7,7 +7,6 @@ import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
-import 'package:cryphoria_mobile/debug/auth_debug_helper.dart';
 
 class AuthWrapper extends ConsumerStatefulWidget {
   const AuthWrapper({super.key});
@@ -64,9 +63,6 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
 
   Future<void> _checkAuthenticationStatus() async {
     print('🚀 AuthWrapper: Starting authentication check...');
-
-    await AuthDebugHelper.debugStorageCapabilities();
-    await AuthDebugHelper.debugAuthStatus(_authLocalDataSource);
 
     try {
       final authUser = await _authLocalDataSource.getAuthUser();

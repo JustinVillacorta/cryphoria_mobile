@@ -59,8 +59,8 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
           ),
         );
 
-        // Use smart logout (employees typically don't need transfer checks)
-        final success = await logoutViewModel.forceLogout();
+        // Use simple logout
+        final success = await logoutViewModel.logout();
         
         // Close loading dialog
         if (mounted) Navigator.of(context).pop();

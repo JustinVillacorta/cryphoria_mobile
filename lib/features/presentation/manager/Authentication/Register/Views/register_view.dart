@@ -16,6 +16,10 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _securityAnswerController = TextEditingController();
   
   // Role selection state
   String _selectedRole = 'Employee'; // Default to Employee
@@ -25,6 +29,10 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _securityAnswerController.dispose();
     super.dispose();
   }
 
@@ -135,11 +143,27 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                 ),
                 const SizedBox(height: 32),
 
+                // First Name field
+                _buildTextField(
+                  controller: _firstNameController,
+                  label: 'First Name',
+                  icon: Icons.person_outline,
+                ),
+                const SizedBox(height: 20),
+
+                // Last Name field
+                _buildTextField(
+                  controller: _lastNameController,
+                  label: 'Last Name',
+                  icon: Icons.person_outline,
+                ),
+                const SizedBox(height: 20),
+
                 // Username field
                 _buildTextField(
                   controller: _usernameController,
                   label: 'Username',
-                  icon: Icons.person_outline,
+                  icon: Icons.account_circle_outlined,
                 ),
                 const SizedBox(height: 20),
 
@@ -162,10 +186,18 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
                 // Confirm Password field
                 _buildTextField(
-                  controller: TextEditingController(), // You may want to add this controller
+                  controller: _confirmPasswordController,
                   label: 'Confirm Password',
                   icon: Icons.lock_outline,
                   isPassword: true,
+                ),
+                const SizedBox(height: 20),
+
+                // Security Answer field
+                _buildTextField(
+                  controller: _securityAnswerController,
+                  label: 'Security Answer (e.g., My favorite pet is Max)',
+                  icon: Icons.security_outlined,
                 ),
                 const SizedBox(height: 24),
 
@@ -402,15 +434,35 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   }
 
   void _register() async {
-    if (_usernameController.text.isNotEmpty && 
+    if (_firstNameController.text.isNotEmpty && 
+        _lastNameController.text.isNotEmpty &&
+        _usernameController.text.isNotEmpty && 
         _emailController.text.isNotEmpty && 
-        _passwordController.text.isNotEmpty) {
+        _passwordController.text.isNotEmpty &&
+        _confirmPasswordController.text.isNotEmpty &&
+        _securityAnswerController.text.isNotEmpty) {
+      
+      // Check if passwords match
+      if (_passwordController.text != _confirmPasswordController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Passwords do not match'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       final viewModel = ref.read(registerViewModelProvider);
 
       await viewModel.register(
         _usernameController.text,
         _passwordController.text,
+        _confirmPasswordController.text,
         _emailController.text,
+        _firstNameController.text,
+        _lastNameController.text,
+        _securityAnswerController.text,
         _selectedRole,
       );
       
@@ -439,6 +491,13 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
           ),
         );
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 }

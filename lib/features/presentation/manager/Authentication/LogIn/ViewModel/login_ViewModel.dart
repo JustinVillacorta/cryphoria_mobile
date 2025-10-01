@@ -2,15 +2,11 @@ import 'package:cryphoria_mobile/core/error/exceptions.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/domain/entities/login_response.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Login/login_usecase.dart';
-import 'package:cryphoria_mobile/features/data/services/device_info_service.dart';
-import 'package:cryphoria_mobile/features/data/services/device_approval_cache.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:flutter/foundation.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final Login loginUseCase;
-  final DeviceInfoService deviceInfoService;
-  final DeviceApprovalCache deviceApprovalCache;
   final AuthLocalDataSource authLocalDataSource;
 
   AuthUser? _authUser;
@@ -27,51 +23,21 @@ class LoginViewModel extends ChangeNotifier {
 
   LoginViewModel({
     required this.loginUseCase,
-    required this.deviceInfoService,
-    required this.deviceApprovalCache,
     required this.authLocalDataSource,
   });
 
-  Future<void> login(String username, String password) async {
+  Future<void> login(String email, String password) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      // Get device information
-      final deviceName = await deviceInfoService.getDeviceName();
-      final deviceId = await deviceInfoService.getDeviceId();
-
-      // Check if device was previously approved
-      final wasApproved = await deviceApprovalCache.isDeviceApproved(username, deviceId);
-      print('LoginViewModel: Device previously approved: $wasApproved');
-
-      _loginResponse = await loginUseCase.execute(
-        username, 
-        password, 
-        deviceName: deviceName,
-        deviceId: deviceId,
-      );
-      
+      _loginResponse = await loginUseCase.execute(email, password);
       _authUser = _loginResponse!.data;
 
-      // If login is successful and device is approved, cache the approval and verify persistence
-      if (_authUser!.approved) {
-        await deviceApprovalCache.markDeviceApproved(username, deviceId);
-        print('LoginViewModel: Device approved - cached approval status');
-        
-        // CRITICAL: Verify authentication was properly persisted
-        await _verifyAuthenticationPersistence();
-      } else if (wasApproved) {
-        // Device was previously approved but backend says it's not
-        // This indicates the user logged out and logged back in on the same device
-        print('LoginViewModel: WARNING - Device was previously approved locally but backend requires approval again');
-        print('LoginViewModel: This is the same device that was previously the main device');
-        
-        // Update the error message to be more informative
-        _error = 'This device was previously approved. The backend now requires re-approval for security reasons.';
-      }
-
+      // CRITICAL: Verify authentication was properly persisted
+      await _verifyAuthenticationPersistence();
+      
       _error = null;
     } on ServerException catch (e) {
       _error = e.message;
@@ -134,8 +100,6 @@ class LoginViewModel extends ChangeNotifier {
       }
     }
   }
-
-  bool get isApprovalPending => _loginResponse?.data.approved == false;
   
   String get loginMessage => _loginResponse?.message ?? '';
 }

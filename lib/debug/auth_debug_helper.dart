@@ -22,8 +22,6 @@ class AuthDebugHelper {
         print("  - Token length: ${authUser.token.length}");
         print("  - Approved: ${authUser.approved}");
         print("  - Active: ${authUser.isActive}");
-        print("  - Session ID: ${authUser.sessionId}");
-        print("  - Created: ${authUser.tokenCreatedAt}");
       } else {
         print("🔍 AUTH DEBUG - No cached user found");
       }

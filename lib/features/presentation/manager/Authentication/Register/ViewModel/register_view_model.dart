@@ -2,12 +2,10 @@ import 'package:cryphoria_mobile/core/error/exceptions.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/domain/entities/login_response.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Register/register_use_case.dart';
-import 'package:cryphoria_mobile/features/data/services/device_info_service.dart';
 import 'package:flutter/foundation.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final Register registerUseCase;
-  final DeviceInfoService deviceInfoService;
 
   AuthUser? _authUser;
   AuthUser? get authUser => _authUser;
@@ -23,26 +21,23 @@ class RegisterViewModel extends ChangeNotifier {
 
   RegisterViewModel({
     required this.registerUseCase,
-    required this.deviceInfoService,
   });
 
-  Future<void> register(String username, String password, String email, String role) async {
+  Future<void> register(String username, String password, String passwordConfirm, String email, String firstName, String lastName, String securityAnswer, String role) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      // Get device information for registration
-      final deviceName = await deviceInfoService.getDeviceName();
-      final deviceId = await deviceInfoService.getDeviceId();
-
       _registerResponse = await registerUseCase.execute(
         username, 
-        password, 
+        password,
+        passwordConfirm, 
         email,
+        firstName,
+        lastName,
+        securityAnswer,
         role: role,
-        deviceName: deviceName,
-        deviceId: deviceId,
       );
       _authUser = _registerResponse!.data;
       _error = null;

@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/SessionManagement/profile_session_management_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 
@@ -74,15 +73,26 @@ class _userProfileState extends ConsumerState<userProfile> {
           ),
         );
 
-        // Use smart logout
-        final success = await logoutViewModel.smartLogout();
+        // Use simple logout
+        final success = await logoutViewModel.logout();
 
         // Close loading dialog
         if (mounted) Navigator.of(context).pop();
 
-        if (!success && logoutViewModel.needsTransfer) {
-          // Show transfer dialog
-          _showTransferDialog();
+        if (success) {
+          // Navigate to login screen
+          ref.read(selectedPageProvider.notifier).state = 0;
+          ref.read(selectedEmployeePageProvider.notifier).state = 0;
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LogIn()),
+            (route) => false,
+          );
+        } else {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(logoutViewModel.error ?? 'Logout failed')),
+          );
         }
       }
     } catch (e) {
@@ -96,91 +106,6 @@ class _userProfileState extends ConsumerState<userProfile> {
         ),
       );
     }
-  }
-
-  void _showTransferDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Main Device Transfer Required', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'You are the main device for this account. You need to transfer main device privileges to another session before logging out.',
-              style: TextStyle(color: Colors.white70),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'What would you like to do?',
-              style: TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileSessionManagementView()),
-              );
-            },
-            child: const Text('Manage Sessions', style: TextStyle(color: Colors.blue)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _forceLogout();
-            },
-            child: const Text('Force Logout', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _forceLogout() async {
-    final logoutViewModel = ref.read(logoutViewModelProvider);
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
-        ),
-      ),
-    );
-
-    await logoutViewModel.forceLogout();
-
-    if (mounted) {
-      Navigator.of(context).pop();
-
-      // Navigate to login screen
-      ref.read(selectedPageProvider.notifier).state = 0;
-      ref.read(selectedEmployeePageProvider.notifier).state = 0;
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LogIn()),
-        (route) => false,
-      );
-    }
-  }
-
-  void _navigateToSessionManagement() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ProfileSessionManagementView(),
-      ),
-    );
   }
 
   @override
@@ -273,18 +198,6 @@ class _userProfileState extends ConsumerState<userProfile> {
                 child: Column(
                   children: [
                     SizedBox(height: screenHeight * 0.02), // 2% of screen height
-
-                    // Session Management
-                    _buildMenuItem(
-                      context: context,
-                      icon: Icons.devices,
-                      title: 'Session Management',
-                      subtitle: 'Manage your active devices and sessions',
-                      iconColor: const Color(0xFF8B5CF6),
-                      onTap: _navigateToSessionManagement,
-                    ),
-
-                    SizedBox(height: screenHeight * 0.015), // 1.5% of screen height
 
                     // Change Password
                     _buildMenuItem(

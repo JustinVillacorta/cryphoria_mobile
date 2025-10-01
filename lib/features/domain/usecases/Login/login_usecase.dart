@@ -6,7 +6,7 @@ class Login {
   final AuthRepository repository;
   Login(this.repository);
 
-  Future<LoginResponse> execute(String username, String password, {String? deviceName, String? deviceId}) {
-    return repository.login(username, password, deviceName: deviceName, deviceId: deviceId);
+  Future<LoginResponse> execute(String email, String password) {
+    return repository.login(email, password);
   }
 }

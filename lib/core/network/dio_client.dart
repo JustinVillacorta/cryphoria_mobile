@@ -1,26 +1,19 @@
 import 'package:dio/dio.dart';
 
 import '../../features/data/data_sources/AuthLocalDataSource.dart';
-import '../../features/data/services/device_info_service.dart';
-import 'device_info_interceptor.dart';
 
 class DioClient {
   final Dio dio;
   final AuthLocalDataSource localDataSource;
-  final DeviceInfoService deviceInfoService;
 
   DioClient({
     required this.localDataSource, 
-    required this.deviceInfoService,
     Dio? dio
   }) : dio = dio ??
             Dio(BaseOptions(
               connectTimeout: const Duration(milliseconds: 5000),
               receiveTimeout: const Duration(milliseconds: 90000),
             )) {
-    // Add device info interceptor first (before auth interceptor)
-    this.dio.interceptors.add(DeviceInfoInterceptor(deviceInfoService: deviceInfoService));
-    
     this.dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         // Don't add auth token to login/register endpoints
