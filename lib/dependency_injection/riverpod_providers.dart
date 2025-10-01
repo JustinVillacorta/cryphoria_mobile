@@ -34,6 +34,19 @@ import '../features/domain/usecases/Employee_management/create_payslip_usecase.d
 import '../features/domain/usecases/Employee_management/get_all_employees_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_manager_team_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_payslips_usecase.dart';
+
+// Payslip imports
+import '../features/data/data_sources/payslip_remote_data_source.dart';
+import '../features/data/repositories_impl/payslip_repository_impl.dart';
+import '../features/domain/repositories/payslip_repository.dart';
+import '../features/domain/usecases/get_user_payslips_use_case.dart';
+import '../features/domain/usecases/create_payslip_use_case.dart' as payslip_uc;
+import '../features/domain/usecases/generate_payslip_pdf_use_case.dart';
+import '../features/domain/usecases/process_payslip_payment_use_case.dart';
+import '../features/presentation/manager/Payslip/ViewModels/payslip_list_viewmodel.dart';
+import '../features/presentation/manager/Payslip/ViewModels/payslip_list_state.dart';
+import '../features/presentation/manager/Payslip/ViewModels/create_payslip_viewmodel.dart';
+import '../features/presentation/manager/Payslip/ViewModels/create_payslip_state.dart';
 import '../features/domain/usecases/Login/login_usecase.dart';
 import '../features/domain/usecases/Logout/logout_usecase.dart';
 import '../features/domain/usecases/Register/register_use_case.dart';
@@ -357,3 +370,48 @@ final selectedPageProvider = StateProvider<int>((ref) => 0);
 
 /// Provider for managing the selected page index in the employee navigation
 final selectedEmployeePageProvider = StateProvider<int>((ref) => 0);
+
+// -----------------------------------------------------------------------------
+// Payslip Providers
+// -----------------------------------------------------------------------------
+
+// Data Sources
+final payslipRemoteDataSourceProvider = Provider<PayslipRemoteDataSource>((ref) {
+  return PayslipRemoteDataSourceImpl(
+    dio: ref.watch(dioClientProvider).dio,
+    baseUrl: ref.watch(baseUrlProvider),
+  );
+});
+
+// Repositories
+final payslipRepositoryProvider = Provider<PayslipRepository>((ref) {
+  return PayslipRepositoryImpl(
+    remoteDataSource: ref.watch(payslipRemoteDataSourceProvider),
+  );
+});
+
+// Use Cases
+final getUserPayslipsUseCaseProvider = Provider<GetUserPayslipsUseCase>((ref) {
+  return GetUserPayslipsUseCase(ref.watch(payslipRepositoryProvider));
+});
+
+final createPayslipUseCaseNewProvider = Provider<payslip_uc.CreatePayslipUseCase>((ref) {
+  return payslip_uc.CreatePayslipUseCase(ref.watch(payslipRepositoryProvider));
+});
+
+final generatePayslipPdfUseCaseProvider = Provider<GeneratePayslipPdfUseCase>((ref) {
+  return GeneratePayslipPdfUseCase(ref.watch(payslipRepositoryProvider));
+});
+
+final processPayslipPaymentUseCaseProvider = Provider<ProcessPayslipPaymentUseCase>((ref) {
+  return ProcessPayslipPaymentUseCase(ref.watch(payslipRepositoryProvider));
+});
+
+// ViewModels
+final payslipListViewModelProvider = StateNotifierProvider<PayslipListViewModel, PayslipListState>((ref) {
+  return PayslipListViewModel(ref.watch(getUserPayslipsUseCaseProvider));
+});
+
+final createPayslipViewModelProvider = StateNotifierProvider<CreatePayslipViewModel, CreatePayslipState>((ref) {
+  return CreatePayslipViewModel(ref.watch(createPayslipUseCaseNewProvider));
+});

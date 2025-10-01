@@ -1,57 +1,325 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../dependency_injection/riverpod_providers.dart';
+import '../../domain/entities/create_payslip_request.dart';
+import '../../domain/entities/employee.dart' as domain_employee;
 
-
-class PayrollBottomSheet extends StatefulWidget {
+class PayrollBottomSheet extends ConsumerStatefulWidget {
   const PayrollBottomSheet({Key? key}) : super(key: key);
 
   @override
-  _PayrollBottomSheetState createState() => _PayrollBottomSheetState();
+  ConsumerState<PayrollBottomSheet> createState() => _PayrollBottomSheetState();
 }
 
-class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
+class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
   String payrollType = 'Regular Payroll';
   DateTime payPeriodStart = DateTime(2025, 9, 7);
   DateTime payPeriodEnd = DateTime(2025, 9, 7);
   DateTime payDate = DateTime(2025, 9, 7);
 
-  final List<Employee> employees = [
-    Employee(
-      name: 'Sarah Johnson',
-      role: 'Senior Accountant',
-      amount: 3250.00,
-      paymentWallet: 'MetaMask (0+7hC7...87SF)',
-      isSelected: true,
-    ),
-    Employee(
-      name: 'Michael Chen',
-      role: 'Financial Analyst',
-      amount: 2800.00,
-      paymentWallet: 'Coinbase (0+264E...Fc30)',
-      isSelected: true,
-    ),
-    Employee(
-      name: 'Emily Rodriguez',
-      role: 'Payroll Specialist',
-      amount: 2450.00,
-      paymentWallet: 'No wallet connected',
-      isSelected: false,
-      hasWarning: true,
-    ),
-    Employee(
-      name: 'David Kim',
-      role: 'Tax Consultant',
-      amount: 2880.00,
-      paymentWallet: '',
-      isSelected: false,
-    ),
-  ];
+  List<EmployeePayrollInfo> employeePayrollList = [];
+  bool isLoadingEmployees = true;
+  String? employeeLoadError;
 
-  double get totalAmount => employees
+  @override
+  void initState() {
+    super.initState();
+    print('DEBUG: PayrollBottomSheet initState called - this is the REAL employee data version');
+    Future.microtask(() => _loadEmployees());
+  }
+
+  @override
+  void dispose() {
+    // Dispose all salary controllers
+    for (final employeePayroll in employeePayrollList) {
+      employeePayroll.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _loadEmployees() async {
+    print('DEBUG: Starting to load employees...');
+    setState(() {
+      isLoadingEmployees = true;
+      employeeLoadError = null;
+    });
+
+    try {
+      // Test if provider is available
+      print('DEBUG: Checking if getManagerTeamUseCaseProvider is available...');
+      final getManagerTeamUseCase = ref.read(getManagerTeamUseCaseProvider);
+      print('DEBUG: Provider available: true');
+      
+      print('DEBUG: Got manager team use case, executing...');
+      final employees = await getManagerTeamUseCase.execute();
+      print('DEBUG: Loaded ${employees.length} employees from backend');
+      
+      // Log employee details
+      for (final employee in employees) {
+        print('DEBUG: Employee - Name: ${employee.displayName}, Role: ${employee.role}, Email: ${employee.email}');
+      }
+      
+      // Create payroll entries for employees who don't have them
+      await _createMissingPayrollEntries(employees);
+      
+      // Reload employees to get updated payroll info
+      final updatedEmployees = await getManagerTeamUseCase.execute();
+      print('DEBUG: After payroll setup, have ${updatedEmployees.length} employees');
+      
+      // Dispose existing controllers
+      for (final employeePayroll in employeePayrollList) {
+        employeePayroll.dispose();
+      }
+      
+      employeePayrollList = updatedEmployees.map((employee) {
+        print('DEBUG: Creating payroll info for employee: ${employee.displayName}');
+        return EmployeePayrollInfo(
+          employee: employee,
+          isSelected: false, // Start with none selected for manual selection
+        );
+      }).toList();
+
+      setState(() {
+        isLoadingEmployees = false;
+      });
+      
+      print('DEBUG: Employee loading completed successfully. ${employeePayrollList.length} employees available.');
+    } catch (e, stackTrace) {
+      print('ERROR: Failed to load employees: $e');
+      print('STACK TRACE: $stackTrace');
+      setState(() {
+        isLoadingEmployees = false;
+        employeeLoadError = e.toString();
+      });
+    }
+  }
+
+  Future<void> _createMissingPayrollEntries(List<domain_employee.Employee> employees) async {
+    print('DEBUG: Skipping payroll entry creation - backend endpoint not available');
+    print('DEBUG: Employees will use default salary amounts that can be edited in UI');
+    
+    // Note: The /api/payroll/create/ endpoint returns 404 because the backend function doesn't exist
+    // For now, we'll skip this step and let users enter salary amounts manually in the UI
+    // The payslip creation will work with the entered amounts
+    
+    return;
+  }
+
+  double get totalAmount => employeePayrollList
       .where((e) => e.isSelected)
-      .map((e) => e.amount)
+      .map((e) => double.tryParse(e.salaryController.text) ?? 0.0)
       .fold(0.0, (sum, amount) => sum + amount);
 
-  int get selectedCount => employees.where((e) => e.isSelected).length;
+  int get selectedCount => employeePayrollList.where((e) => e.isSelected).length;
+
+  Future<void> _processPayroll() async {
+    try {
+      final selectedEmployees = employeePayrollList.where((e) => e.isSelected).toList();
+      
+      if (selectedEmployees.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please select at least one employee')),
+        );
+        return;
+      }
+
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      final payslipRepository = ref.read(payslipRepositoryProvider);
+      int successCount = 0;
+
+      for (final employeePayroll in selectedEmployees) {
+        final employee = employeePayroll.employee;
+        
+        // Get salary amount from text field
+        final salaryText = employeePayroll.salaryController.text.trim();
+        final salaryAmount = double.tryParse(salaryText) ?? 0.0;
+        
+        final payslipRequest = CreatePayslipRequest(
+          employeeId: employee.userId,
+          employeeName: employee.displayName,
+          employeeEmail: employee.email,
+          employeeWallet: employee.payrollInfo?.employeeWallet,
+          department: employee.department,
+          position: employee.position,
+          salaryAmount: salaryAmount,
+          salaryCurrency: 'USD',
+          cryptocurrency: 'ETH',
+          payPeriodStart: '${payPeriodStart.year}-${payPeriodStart.month.toString().padLeft(2, '0')}-${payPeriodStart.day.toString().padLeft(2, '0')}',
+          payPeriodEnd: '${payPeriodEnd.year}-${payPeriodEnd.month.toString().padLeft(2, '0')}-${payPeriodEnd.day.toString().padLeft(2, '0')}',
+          payDate: '${payDate.year}-${payDate.month.toString().padLeft(2, '0')}-${payDate.day.toString().padLeft(2, '0')}',
+          taxDeduction: 0.0,
+          insuranceDeduction: 0.0,
+          retirementDeduction: 0.0,
+          otherDeductions: 0.0,
+          overtimePay: 0.0,
+          bonus: 0.0,
+          allowances: 0.0,
+          notes: 'Generated from mobile payroll processing',
+        );
+
+        try {
+          await payslipRepository.createPayslip(payslipRequest);
+          successCount++;
+        } catch (e) {
+          print('Failed to create payslip for ${employee.displayName}: $e');
+        }
+      }
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (successCount == selectedEmployees.length) {
+        // Close payroll bottom sheet
+        Navigator.pop(context);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully processed payroll for $successCount employees'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Processed $successCount of ${selectedEmployees.length} employees'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      Navigator.pop(context); // Close loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error processing payroll: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _selectPayPeriodStart(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: payPeriodStart,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFF9747FF),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != payPeriodStart) {
+      setState(() {
+        payPeriodStart = picked;
+      });
+    }
+  }
+
+  Future<void> _selectPayPeriodEnd(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: payPeriodEnd,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFF9747FF),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != payPeriodEnd) {
+      setState(() {
+        payPeriodEnd = picked;
+      });
+    }
+  }
+
+  Future<void> _selectPayDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: payDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFF9747FF),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != payDate) {
+      setState(() {
+        payDate = picked;
+      });
+    }
+  }
+
+  void _showPayrollTypeBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Select Payroll Type',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 20),
+            ...['Regular Payroll', 'Bonus Payment', 'Overtime Payment'].map(
+              (type) => ListTile(
+                title: Text(type),
+                onTap: () {
+                  setState(() {
+                    payrollType = type;
+                  });
+                  Navigator.pop(context);
+                },
+                trailing: payrollType == type ? Icon(Icons.check, color: Color(0xFF9747FF)) : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,32 +372,47 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
                   ),
                   SizedBox(height: 24),
 
-                  // Payroll Type
+                  // Payroll Type Dropdown
                   Text(
                     'Payroll Type',
                     style: TextStyle(
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                       fontSize: 16,
+                      color: Colors.grey[800],
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(payrollType),
-                        Icon(Icons.keyboard_arrow_down),
-                      ],
+                  SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () => _showPayrollTypeBottomSheet(context),
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!, width: 1.5),
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.grey[50],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.work_outline, size: 18, color: Colors.grey[600]),
+                          SizedBox(width: 8),
+                          Text(
+                            payrollType,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          Spacer(),
+                          Icon(Icons.arrow_drop_down, size: 20, color: Colors.grey[600]),
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(height: 24),
 
-                  // Pay Period and Date Row
+                  // Pay Period Row
                   Row(
                     children: [
                       Expanded(
@@ -139,23 +422,36 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
                             Text(
                               'Pay Period Start',
                               style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                color: Colors.grey[800],
                               ),
                             ),
-                            SizedBox(height: 8),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text('mm/dd/yyyy'),
-                                  Spacer(),
-                                  Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                                ],
+                            SizedBox(height: 10),
+                            GestureDetector(
+                              onTap: () => _selectPayPeriodStart(context),
+                              child: Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!, width: 1.5),
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[50],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      '${payPeriodStart.day}/${payPeriodStart.month}/${payPeriodStart.year}',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -169,23 +465,36 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
                             Text(
                               'Pay Period End',
                               style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                color: Colors.grey[800],
                               ),
                             ),
-                            SizedBox(height: 8),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text('mm/dd/yyyy'),
-                                  Spacer(),
-                                  Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                                ],
+                            SizedBox(height: 10),
+                            GestureDetector(
+                              onTap: () => _selectPayPeriodEnd(context),
+                              child: Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!, width: 1.5),
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[50],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      '${payPeriodEnd.day}/${payPeriodEnd.month}/${payPeriodEnd.year}',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -193,61 +502,181 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 20),
 
                   // Pay Date
                   Text(
                     'Pay Date',
                     style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () => _selectPayDate(context),
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!, width: 1.5),
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.grey[50],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+                          SizedBox(width: 8),
+                          Text(
+                            '${payDate.day}/${payDate.month}/${payDate.year}',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          Spacer(),
+                          Icon(Icons.arrow_drop_down, size: 20, color: Colors.grey[600]),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 28),
+
+                  // Employee List Section
+                  Text(
+                    'Employees to be paid',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Colors.grey[800],
                     ),
                   ),
                   SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Text('2025-09-07'),
-                        Spacer(),
-                        Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Employees Section
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Employees to be paid',
+                        '${employeePayrollList.length} employees',
                         style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
+                          color: Colors.grey[600],
+                          fontSize: 14,
                         ),
                       ),
-                      Text(
-                        '$selectedCount selected',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontSize: 14,
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF9747FF).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Color(0xFF9747FF).withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          '$selectedCount selected',
+                          style: TextStyle(
+                            color: Color(0xFF9747FF),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: 16),
 
-                  // Employee List
-                  ...employees.map((employee) => employeeCard(employee)).toList(),
+                  // Employee Cards
+                  if (isLoadingEmployees)
+                    Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: CircularProgressIndicator(color: Color(0xFF9747FF)),
+                      ),
+                    )
+                  else if (employeeLoadError != null)
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red[200]!),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.error, color: Colors.red),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Failed to load employees',
+                                  style: TextStyle(
+                                    color: Colors.red[800],
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            employeeLoadError!,
+                            style: TextStyle(
+                              color: Colors.red[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: _loadEmployees,
+                            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF9747FF)),
+                            child: Text('Retry', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (employeePayrollList.isEmpty)
+                    Container(
+                      padding: EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 48,
+                            color: Colors.grey[400],
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No employees found',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Check console logs for debugging info. Add employees to your team to process payroll.',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadEmployees,
+                            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF9747FF)),
+                            child: Text('Retry Loading', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...employeePayrollList.map((employeePayroll) => employeeCard(employeePayroll)),
 
                   SizedBox(height: 24),
 
-                  // Total
+                  // Total Section
                   Container(
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -261,56 +690,16 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
                         Text(
                           'Total',
                           style: TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            fontSize: 16,
                           ),
                         ),
                         Text(
-                          '\$${totalAmount.toStringAsFixed(2)}',
+                          '\$${totalAmount.toStringAsFixed(2)} USD',
                           style: TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Crypto Payment Notice
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue[200]!),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Crypto Payment Notice',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.blue[800],
-                                  fontSize: 14,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Cryptocurrency payments will be sent to the employees\' selected wallet address. Transactions may take 10-30 minutes to confirm on the blockchain.',
-                                style: TextStyle(
-                                  color: Colors.blue[700],
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
+                            color: Color(0xFF9747FF),
                           ),
                         ),
                       ],
@@ -386,20 +775,14 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
                 SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: selectedCount > 0 ? () {
-                      // Process payroll logic here
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Processing payroll...')),
-                      );
-                    } : null,
+                    onPressed: selectedCount > 0 ? () => _processPayroll() : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Color(0xFF9747FF),
                       padding: EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: Text(
                       'Process Payroll',
                       style: TextStyle(color: Colors.white),
-                      textAlign: TextAlign.start,
                     ),
                   ),
                 ),
@@ -411,27 +794,30 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
     );
   }
 
-  Widget employeeCard(Employee employee) {
+  Widget employeeCard(EmployeePayrollInfo employeePayroll) {
+    final employee = employeePayroll.employee;
+    
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border.all(
-          color: employee.isSelected ? Colors.blue[300]! : Colors.grey[200]!,
-          width: employee.isSelected ? 2 : 1,
+          color: employeePayroll.isSelected ? Color(0xFF9747FF).withOpacity(0.5) : Colors.grey[200]!,
+          width: employeePayroll.isSelected ? 2 : 1,
         ),
         borderRadius: BorderRadius.circular(8),
-        color: employee.isSelected ? Colors.blue[50] : Colors.white,
+        color: employeePayroll.isSelected ? Color(0xFF9747FF).withOpacity(0.1) : Colors.white,
       ),
       child: Row(
         children: [
           Checkbox(
-            value: employee.isSelected,
-            onChanged: employee.hasWarning ? null : (value) {
+            value: employeePayroll.isSelected,
+            onChanged: (value) {
               setState(() {
-                employee.isSelected = value ?? false;
+                employeePayroll.isSelected = value ?? false;
               });
             },
+            activeColor: Color(0xFF9747FF),
           ),
           SizedBox(width: 12),
           Expanded(
@@ -439,56 +825,60 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  employee.name,
+                  employee.displayName,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
                 ),
                 Text(
-                  employee.role,
+                  '${employee.department ?? 'IT Department'} • ${employee.position ?? employee.role}',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
                   ),
                 ),
-                if (employee.paymentWallet.isNotEmpty) ...[
-                  SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        'Payment Wallet',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
+                SizedBox(height: 4),
+                Text(
+                  employee.email,
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 12,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      'Amount: ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
                       ),
-                      if (employee.hasWarning) ...[
-                        SizedBox(width: 8),
-                        Icon(
-                          Icons.warning,
-                          color: Colors.orange,
-                          size: 16,
-                        ),
-                      ],
-                    ],
-                  ),
-                  Text(
-                    employee.paymentWallet,
-                    style: TextStyle(
-                      color: employee.hasWarning ? Colors.orange : Colors.grey[800],
-                      fontSize: 12,
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: TextField(
+                        controller: employeePayroll.salaryController,
+                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(
+                          hintText: '0.00',
+                          prefixText: '\$ ',
+                          suffixText: ' USD',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          isDense: true,
+                        ),
+                        style: TextStyle(fontSize: 14),
+                        onChanged: (value) {
+                          setState(() {}); // Refresh to update total
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ],
-            ),
-          ),
-          Text(
-            '\$${employee.amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
             ),
           ),
         ],
@@ -497,21 +887,23 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
   }
 }
 
-class Employee {
-  final String name;
-  final String role;
-  final double amount;
-  final String paymentWallet;
+class EmployeePayrollInfo {
+  final domain_employee.Employee employee;
   bool isSelected;
-  final bool hasWarning;
+  late TextEditingController salaryController;
 
-  Employee({
-    required this.name,
-    required this.role,
-    required this.amount,
-    required this.paymentWallet,
+  EmployeePayrollInfo({
+    required this.employee,
     this.isSelected = false,
-    this.hasWarning = false,
-  });
-}
+  }) {
+    // Initialize with existing salary or default amount
+    final currentSalary = employee.payrollInfo?.salaryAmount ?? 0.0;
+    salaryController = TextEditingController(
+      text: currentSalary > 0 ? currentSalary.toStringAsFixed(0) : '0'
+    );
+  }
 
+  void dispose() {
+    salaryController.dispose();
+  }
+}
