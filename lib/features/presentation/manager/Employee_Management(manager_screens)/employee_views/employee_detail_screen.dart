@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../../domain/entities/employee.dart';
+import '../../../../domain/entities/payslip.dart' as payslip_entity;
+import '../../../../../dependency_injection/riverpod_providers.dart';
+import '../../Payslip/Views/payslip_details_view.dart';
 
-class EmployeeDetailScreen extends StatefulWidget {
+class EmployeeDetailScreen extends ConsumerStatefulWidget {
   final Employee employee;
 
   const EmployeeDetailScreen({
@@ -10,13 +15,18 @@ class EmployeeDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<EmployeeDetailScreen> createState() => _EmployeeDetailScreenState();
+  ConsumerState<EmployeeDetailScreen> createState() => _EmployeeDetailScreenState();
 }
 
-class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
+class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   int _currentTabIndex = 0;
+  
+  // Payslip data
+  List<payslip_entity.Payslip> employeePayslips = [];
+  bool isLoadingPayslips = true;
+  String? payslipError;
 
   @override
   void initState() {
@@ -27,6 +37,38 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
         _currentTabIndex = _tabController.index;
       });
     });
+    
+    // Load employee payslips
+    Future.microtask(() => _loadEmployeePayslips());
+  }
+
+  Future<void> _loadEmployeePayslips() async {
+    try {
+      setState(() {
+        isLoadingPayslips = true;
+        payslipError = null;
+      });
+
+      final payslipRepository = ref.read(payslipRepositoryProvider);
+      final payslips = await payslipRepository.getUserPayslips(
+        employeeId: widget.employee.userId,
+      );
+
+      if (mounted) {
+        setState(() {
+          employeePayslips = payslips;
+          isLoadingPayslips = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading employee payslips: $e');
+      if (mounted) {
+        setState(() {
+          payslipError = 'Failed to load payslips: ${e.toString()}';
+          isLoadingPayslips = false;
+        });
+      }
+    }
   }
 
   @override
@@ -139,7 +181,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.employee.name,
+                          widget.employee.displayName,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -321,222 +363,446 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildCurrentPayPeriodCard(),
+          // Employee Payslip Summary
+          _buildPayslipSummaryCard(),
           const SizedBox(height: 20),
-          _buildPaymentHistoryCard(),
+          // Payment History
+          _buildPayslipHistoryCard(),
         ],
       ),
     );
   }
 
-  Widget _buildCurrentPayPeriodCard() {
+  Widget _buildPayslipSummaryCard() {
+    // Calculate summary from latest payslip
+    final latestPayslip = employeePayslips.isNotEmpty ? employeePayslips.first : null;
+    final totalPayslips = employeePayslips.length;
+    final totalPaid = employeePayslips
+        .where((p) => p.status == payslip_entity.PayslipStatus.paid)
+        .fold(0.0, (sum, payslip) => sum + payslip.finalNetPay);
+
     return _buildCard(
-      title: 'Current Pay Period',
+      title: 'Payslip Summary',
       titleStyle: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w600,
         color: Colors.black87,
       ),
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              '₱3250.00',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+        if (latestPayslip != null) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '\$${latestPayslip.finalNetPay.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            const Text(
-              'Net Pay',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
+              const Text(
+                'Latest Net Pay',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Basic Pay',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const Text(
-                    '₱3500.00',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Overtime',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const Text(
-                    '₱3500.00',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Allowances',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const Text(
-                    '₱500.00',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Total Deductions',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const Text(
-                    '-₱500.00',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          'Deduction Breakdown',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            ],
           ),
-        ),
-        const SizedBox(height: 12),
-        _buildDeductionRow('SSS', '₱300.00'),
-        _buildDeductionRow('PhilHealth', '₱150.00'),
-        _buildDeductionRow('Pag-IBIG', '₱100.00'),
-        _buildDeductionRow('Tax', '₱18.00'),
-        _buildDeductionRow('Others', '₱0.00'),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Base Salary',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      '\$${latestPayslip.baseSalary.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Overtime',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      '\$${latestPayslip.overtimePay.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Allowances',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      '\$${latestPayslip.allowances.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Total Deductions',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      '-\$${latestPayslip.totalDeductions.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Deduction Breakdown',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildDeductionRow('Tax', '\$${latestPayslip.taxDeduction.toStringAsFixed(2)}'),
+          _buildDeductionRow('Insurance', '\$${latestPayslip.insuranceDeduction.toStringAsFixed(2)}'),
+          _buildDeductionRow('Retirement', '\$${latestPayslip.retirementDeduction.toStringAsFixed(2)}'),
+          _buildDeductionRow('Others', '\$${latestPayslip.otherDeductions.toStringAsFixed(2)}'),
+        ] else ...[
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'No payslips found',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Payslips will appear here once generated',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _downloadPayslip(),
-                icon: const Icon(Icons.download, size: 18),
-                label: const Text('Download Payslip'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9747FF),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+        // Summary stats
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                children: [
+                  Text(
+                    '$totalPayslips',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF9747FF),
+                    ),
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _sendPayslip(),
-                icon: const Icon(Icons.send, size: 18),
-                label: const Text('Send Payslip'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF9747FF),
-                  side: const BorderSide(color: Color(0xFF9747FF)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  const Text(
+                    'Total Payslips',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
+                ],
               ),
-            ),
-          ],
+              Container(
+                height: 40,
+                width: 1,
+                color: Colors.grey[300],
+              ),
+              Column(
+                children: [
+                  Text(
+                    '\$${totalPaid.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                  const Text(
+                    'Total Paid',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildPaymentHistoryCard() {
+  Widget _buildPayslipHistoryCard() {
     return _buildCard(
-      title: 'Payment History',
+      title: 'Payslip History',
       titleStyle: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w600,
         color: Colors.black87,
       ),
       children: [
-        _buildPaymentHistoryItem(
-          'May 18-31, 2023',
-          'May 31, 2023',
-          '₱3250.00',
-        ),
-        _buildPaymentHistoryItem(
-          'May 1-15, 2023',
-          'May 15, 2023',
-          '₱3250.00',
-        ),
-        _buildPaymentHistoryItem(
-          'April 16-30, 2023',
-          'April 30, 2023',
-          '₱3250.00',
-        ),
+        if (isLoadingPayslips)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (payslipError != null)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.red[200]!),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.error, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Error loading payslips',
+                        style: TextStyle(
+                          color: Colors.red[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  payslipError!,
+                  style: TextStyle(
+                    color: Colors.red[600],
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _loadEmployeePayslips,
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          )
+        else if (employeePayslips.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Text(
+                'No payslips found for this employee',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          )
+        else
+          ...employeePayslips.take(5).map((payslip) => _buildPayslipHistoryItem(payslip)),
+        
+        if (employeePayslips.length > 5)
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Center(
+              child: TextButton(
+                onPressed: () => _viewAllPayslips(),
+                child: Text(
+                  'View All ${employeePayslips.length} Payslips',
+                  style: const TextStyle(
+                    color: Color(0xFF9747FF),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
+  }
+
+  Widget _buildPayslipHistoryItem(payslip_entity.Payslip payslip) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${DateFormat('MMM dd').format(payslip.payPeriodStart)} - ${DateFormat('MMM dd, yyyy').format(payslip.payPeriodEnd)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Pay Date: ${DateFormat('MMM dd, yyyy').format(payslip.payDate)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(payslip.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    payslip.status.displayName,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: _getStatusColor(payslip.status),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '\$${payslip.finalNetPay.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: () => _viewPayslip(payslip),
+                child: const Text(
+                  'View',
+                  style: TextStyle(
+                    color: Color(0xFF9747FF),
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor(payslip_entity.PayslipStatus status) {
+    switch (status) {
+      case payslip_entity.PayslipStatus.paid:
+        return Colors.green;
+      case payslip_entity.PayslipStatus.pending:
+        return Colors.orange;
+      case payslip_entity.PayslipStatus.processing:
+        return Colors.blue;
+      case payslip_entity.PayslipStatus.failed:
+        return Colors.red;
+      case payslip_entity.PayslipStatus.generated:
+        return Colors.grey;
+    }
   }
 
   Widget _buildDocumentsTab() {
@@ -727,68 +993,6 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     );
   }
 
-  Widget _buildPaymentHistoryItem(String period, String date, String amount) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  period,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-                Text(
-                  date,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              Text(
-                amount,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(width: 8),
-              TextButton(
-                onPressed: () => _viewPayslip(),
-                child: const Text(
-                  'View',
-                  style: TextStyle(
-                    color: Color(0xFF9747FF),
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDocumentItem(String title, String subtitle, IconData icon) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -845,7 +1049,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Employee'),
-          content: Text('Are you sure you want to delete ${widget.employee.name}?'),
+          content: Text('Are you sure you want to delete ${widget.employee.displayName}?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -876,22 +1080,23 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen>
     );
   }
 
-  void _downloadPayslip() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Downloading payslip...')),
+  void _viewPayslip(payslip_entity.Payslip payslip) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PayslipDetailsView(payslip: payslip),
+      ),
     );
   }
 
-  void _sendPayslip() {
+  void _viewAllPayslips() {
+    // Navigate to a full payslip list screen for this employee
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sending payslip via email...')),
+      SnackBar(
+        content: Text('Viewing all ${employeePayslips.length} payslips for ${widget.employee.displayName}'),
+      ),
     );
-  }
-
-  void _viewPayslip() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Opening payslip viewer...')),
-    );
+    // TODO: Implement navigation to full payslip list screen
   }
 
   void _uploadNewDocument() {
