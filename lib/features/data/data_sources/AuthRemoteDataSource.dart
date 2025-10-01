@@ -142,18 +142,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return LoginResponse.fromJson({
           'success': true,
           'message': registerData['message'] ?? 'Registration successful',
-          'data': {
+          'user': {
             'user_id': registerData['user_id'] ?? '',
             'username': registerData['username'] ?? '',
             'email': registerData['email'] ?? '',
             'role': registerData['role'] ?? 'Employee',
-            // Mock auth fields since registration doesn't return these
-            'token': '', // Empty token since registration doesn't log user in
-            'session_id': '',
-            'approved': false, // User needs to login to get real auth status
+            'approved': true, // Registration is automatically approved since we removed approval logic
             'is_active': true,
-            'token_created_at': DateTime.now().toIso8601String(),
-          }
+          },
+          'session_token': '', // Empty token since registration doesn't log user in
         });
       }
       

@@ -51,7 +51,5 @@ class RegisterViewModel extends ChangeNotifier {
     }
   }
 
-  bool get isApprovalPending => _registerResponse?.data.approved == false;
-  
   String get registerMessage => _registerResponse?.message ?? '';
 }
