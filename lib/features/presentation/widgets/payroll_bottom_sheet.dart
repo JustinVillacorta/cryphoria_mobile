@@ -25,7 +25,11 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
   void initState() {
     super.initState();
     print('DEBUG: PayrollBottomSheet initState called - this is the REAL employee data version');
-    Future.microtask(() => _loadEmployees());
+    Future.microtask(() {
+      if (mounted) {
+        _loadEmployees();
+      }
+    });
   }
 
   @override
@@ -38,6 +42,8 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
   }
 
   Future<void> _loadEmployees() async {
+    if (!mounted) return;
+    
     print('DEBUG: Starting to load employees...');
     setState(() {
       isLoadingEmployees = true;
@@ -79,6 +85,8 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         );
       }).toList();
 
+      if (!mounted) return;
+      
       setState(() {
         isLoadingEmployees = false;
       });
@@ -87,6 +95,9 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
     } catch (e, stackTrace) {
       print('ERROR: Failed to load employees: $e');
       print('STACK TRACE: $stackTrace');
+      
+      if (!mounted) return;
+      
       setState(() {
         isLoadingEmployees = false;
         employeeLoadError = e.toString();
@@ -113,16 +124,21 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
   int get selectedCount => employeePayrollList.where((e) => e.isSelected).length;
 
   Future<void> _processPayroll() async {
+    if (!mounted) return;
+    
     try {
       final selectedEmployees = employeePayrollList.where((e) => e.isSelected).toList();
       
       if (selectedEmployees.isEmpty) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Please select at least one employee')),
         );
         return;
       }
 
+      if (!mounted) return;
+      
       // Show loading dialog
       showDialog(
         context: context,
@@ -169,8 +185,12 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         } catch (e) {
           print('Failed to create payslip for ${employee.displayName}: $e');
         }
+        
+        if (!mounted) break; // Stop processing if widget is disposed
       }
 
+      if (!mounted) return; // Check before UI operations
+      
       // Close loading dialog
       Navigator.pop(context);
 
@@ -178,32 +198,40 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         // Close payroll bottom sheet
         Navigator.pop(context);
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Successfully processed payroll for $successCount employees'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Successfully processed payroll for $successCount employees'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Processed $successCount of ${selectedEmployees.length} employees'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Processed $successCount of ${selectedEmployees.length} employees'),
-            backgroundColor: Colors.orange,
+            content: Text('Error processing payroll: ${e.toString()}'),
+            backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
-      Navigator.pop(context); // Close loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error processing payroll: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
   Future<void> _selectPayPeriodStart(BuildContext context) async {
+    if (!mounted) return;
+    
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: payPeriodStart,
@@ -223,7 +251,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         );
       },
     );
-    if (picked != null && picked != payPeriodStart) {
+    if (picked != null && picked != payPeriodStart && mounted) {
       setState(() {
         payPeriodStart = picked;
       });
@@ -231,6 +259,8 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
   }
 
   Future<void> _selectPayPeriodEnd(BuildContext context) async {
+    if (!mounted) return;
+    
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: payPeriodEnd,
@@ -250,7 +280,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         );
       },
     );
-    if (picked != null && picked != payPeriodEnd) {
+    if (picked != null && picked != payPeriodEnd && mounted) {
       setState(() {
         payPeriodEnd = picked;
       });
@@ -258,6 +288,8 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
   }
 
   Future<void> _selectPayDate(BuildContext context) async {
+    if (!mounted) return;
+    
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: payDate,
@@ -277,7 +309,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         );
       },
     );
-    if (picked != null && picked != payDate) {
+    if (picked != null && picked != payDate && mounted) {
       setState(() {
         payDate = picked;
       });
@@ -285,6 +317,8 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
   }
 
   void _showPayrollTypeBottomSheet(BuildContext context) {
+    if (!mounted) return;
+    
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -307,9 +341,11 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
               (type) => ListTile(
                 title: Text(type),
                 onTap: () {
-                  setState(() {
-                    payrollType = type;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      payrollType = type;
+                    });
+                  }
                   Navigator.pop(context);
                 },
                 trailing: payrollType == type ? Icon(Icons.check, color: Color(0xFF9747FF)) : null,
@@ -813,9 +849,11 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
           Checkbox(
             value: employeePayroll.isSelected,
             onChanged: (value) {
-              setState(() {
-                employeePayroll.isSelected = value ?? false;
-              });
+              if (mounted) {
+                setState(() {
+                  employeePayroll.isSelected = value ?? false;
+                });
+              }
             },
             activeColor: Color(0xFF9747FF),
           ),
@@ -872,7 +910,9 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
                         ),
                         style: TextStyle(fontSize: 14),
                         onChanged: (value) {
-                          setState(() {}); // Refresh to update total
+                          if (mounted) {
+                            setState(() {}); // Refresh to update total
+                          }
                         },
                       ),
                     ),
