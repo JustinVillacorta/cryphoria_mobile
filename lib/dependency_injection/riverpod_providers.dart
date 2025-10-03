@@ -37,6 +37,7 @@ import '../features/domain/usecases/Employee_management/create_payslip_usecase.d
 import '../features/domain/usecases/Employee_management/get_all_employees_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_manager_team_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_payslips_usecase.dart';
+import '../features/domain/usecases/Employee_management/process_payroll_usecase.dart';
 import '../features/domain/usecases/Login/login_usecase.dart';
 import '../features/domain/usecases/Logout/logout_usecase.dart';
 import '../features/domain/usecases/Register/register_use_case.dart';
@@ -236,6 +237,10 @@ final createPayslipUseCaseProvider = Provider<CreatePayslipUseCase>((ref) {
 
 final getPayslipsUseCaseProvider = Provider<GetPayslipsUseCase>((ref) {
   return GetPayslipsUseCase(repository: ref.watch(employeeRepositoryProvider));
+});
+
+final processPayrollUseCaseProvider = Provider<ProcessPayrollUseCase>((ref) {
+  return ProcessPayrollUseCase(repository: ref.watch(employeeRepositoryProvider));
 });
 
 final getEmployeeDashboardDataProvider =

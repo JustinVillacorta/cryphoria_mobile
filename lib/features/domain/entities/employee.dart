@@ -449,3 +449,141 @@ class AddEmployeeToTeamRequest {
     };
   }
 }
+
+// Request model for batch payroll processing
+class PayrollBatchRequest {
+  final String payrollType;
+  final DateTime payPeriodStart;
+  final DateTime payPeriodEnd;
+  final DateTime payDate;
+  final List<PayrollEmployee> employees;
+
+  PayrollBatchRequest({
+    required this.payrollType,
+    required this.payPeriodStart,
+    required this.payPeriodEnd,
+    required this.payDate,
+    required this.employees,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'payroll_type': payrollType,
+      'pay_period_start': payPeriodStart.toIso8601String().split('T')[0],
+      'pay_period_end': payPeriodEnd.toIso8601String().split('T')[0],
+      'pay_date': payDate.toIso8601String().split('T')[0],
+      'employees': employees.map((e) => e.toJson()).toList(),
+    };
+  }
+}
+
+// Employee data for batch payroll processing
+class PayrollEmployee {
+  final String employeeId;
+  final String employeeName;
+  final double amount;
+  final String currency;
+  final String? walletAddress;
+
+  PayrollEmployee({
+    required this.employeeId,
+    required this.employeeName,
+    required this.amount,
+    required this.currency,
+    this.walletAddress,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'employee_id': employeeId,
+      'employee_name': employeeName,
+      'amount': amount,
+      'currency': currency,
+      'wallet_address': walletAddress,
+    };
+  }
+}
+
+// Result model for batch payroll processing
+class PayrollBatchResult {
+  final String batchId;
+  final String status;
+  final int totalEmployees;
+  final int processedEmployees;
+  final int failedEmployees;
+  final double totalAmount;
+  final String currency;
+  final DateTime createdAt;
+  final DateTime? processedAt;
+  final List<PayrollTransactionResult> transactions;
+  final String? errorMessage;
+
+  PayrollBatchResult({
+    required this.batchId,
+    required this.status,
+    required this.totalEmployees,
+    required this.processedEmployees,
+    required this.failedEmployees,
+    required this.totalAmount,
+    required this.currency,
+    required this.createdAt,
+    this.processedAt,
+    required this.transactions,
+    this.errorMessage,
+  });
+
+  factory PayrollBatchResult.fromJson(Map<String, dynamic> json) {
+    return PayrollBatchResult(
+      batchId: json['batch_id'] as String? ?? '',
+      status: json['status'] as String? ?? 'pending',
+      totalEmployees: json['total_employees'] as int? ?? 0,
+      processedEmployees: json['processed_employees'] as int? ?? 0,
+      failedEmployees: json['failed_employees'] as int? ?? 0,
+      totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
+      currency: json['currency'] as String? ?? 'USDC',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      processedAt: json['processed_at'] != null
+          ? DateTime.parse(json['processed_at'])
+          : null,
+      transactions: (json['transactions'] as List<dynamic>?)
+          ?.map((t) => PayrollTransactionResult.fromJson(t))
+          .toList() ?? [],
+      errorMessage: json['error_message'] as String?,
+    );
+  }
+}
+
+// Individual transaction result within batch payroll
+class PayrollTransactionResult {
+  final String employeeId;
+  final String employeeName;
+  final String status;
+  final String? transactionHash;
+  final double amount;
+  final String currency;
+  final String? errorMessage;
+
+  PayrollTransactionResult({
+    required this.employeeId,
+    required this.employeeName,
+    required this.status,
+    this.transactionHash,
+    required this.amount,
+    required this.currency,
+    this.errorMessage,
+  });
+
+  factory PayrollTransactionResult.fromJson(Map<String, dynamic> json) {
+    return PayrollTransactionResult(
+      employeeId: json['employee_id'] as String? ?? '',
+      employeeName: json['employee_name'] as String? ?? '',
+      status: json['status'] as String? ?? 'pending',
+      transactionHash: json['transaction_hash'] as String?,
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      currency: json['currency'] as String? ?? 'USDC',
+      errorMessage: json['error_message'] as String?,
+    );
+  }
+}

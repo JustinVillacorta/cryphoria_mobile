@@ -16,6 +16,7 @@ abstract class EmployeeRemoteDataSource {
   Future<String> generatePayslipPdf(String payslipId);
   Future<void> sendPayslipEmail(String payslipId);
   Future<void> processPayslipPayment(String payslipId);
+  Future<PayrollBatchResult> processBatchPayroll(PayrollBatchRequest request);
 }
 
 class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
@@ -352,12 +353,48 @@ class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
         '/api/payslips/process-payment/',
         data: {'payslip_id': payslipId},
       );
-      
+
       if (response.statusCode != 200) {
         throw Exception('Failed to process payslip payment: ${response.statusMessage}');
       }
     } catch (e) {
       if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<PayrollBatchResult> processBatchPayroll(PayrollBatchRequest request) async {
+    try {
+      print("📤 Processing batch payroll with ${request.employees.length} employees");
+
+      final response = await dio.post(
+        '/api/payroll/process-batch/',
+        data: request.toJson(),
+      );
+
+      print("📥 Batch payroll response: ${response.data}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        if (data['batch_result'] != null) {
+          return PayrollBatchResult.fromJson(data['batch_result']);
+        } else {
+          return PayrollBatchResult.fromJson(data);
+        }
+      }
+
+      throw Exception('Failed to process batch payroll: ${response.statusMessage}');
+    } catch (e) {
+      if (e is DioException) {
+        if (e.response?.statusCode == 400) {
+          final errorData = e.response?.data;
+          if (errorData is Map && errorData.containsKey('error')) {
+            throw Exception(errorData['error']);
+          }
+        }
         throw Exception('Network error: ${e.message}');
       }
       rethrow;

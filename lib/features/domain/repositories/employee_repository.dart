@@ -42,4 +42,7 @@ abstract class EmployeeRepository {
   
   /// Process payslip payment
   Future<void> processPayslipPayment(String payslipId);
+
+  /// Process batch payroll for multiple employees
+  Future<PayrollBatchResult> processBatchPayroll(PayrollBatchRequest request);
 }

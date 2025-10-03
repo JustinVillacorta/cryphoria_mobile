@@ -1,35 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../dependency_injection/riverpod_providers.dart';
+import '../../domain/entities/employee.dart';
 
 
-class PayrollBottomSheet extends StatefulWidget {
+class PayrollBottomSheet extends ConsumerStatefulWidget {
   const PayrollBottomSheet({Key? key}) : super(key: key);
 
   @override
-  _PayrollBottomSheetState createState() => _PayrollBottomSheetState();
+  ConsumerState<PayrollBottomSheet> createState() => _PayrollBottomSheetState();
 }
 
-class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
+class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
   String payrollType = 'Regular Payroll';
   DateTime payPeriodStart = DateTime(2025, 9, 7);
   DateTime payPeriodEnd = DateTime(2025, 9, 7);
   DateTime payDate = DateTime(2025, 9, 7);
+  bool isProcessing = false;
+  String? errorMessage;
 
-  final List<Employee> employees = [
-    Employee(
+  final List<PayrollEmployee> employees = [
+    PayrollEmployee(
       name: 'Sarah Johnson',
       role: 'Senior Accountant',
       amount: 3250.00,
       paymentWallet: 'MetaMask (0+7hC7...87SF)',
       isSelected: true,
     ),
-    Employee(
+    PayrollEmployee(
       name: 'Michael Chen',
       role: 'Financial Analyst',
       amount: 2800.00,
       paymentWallet: 'Coinbase (0+264E...Fc30)',
       isSelected: true,
     ),
-    Employee(
+    PayrollEmployee(
       name: 'Emily Rodriguez',
       role: 'Payroll Specialist',
       amount: 2450.00,
@@ -37,7 +42,7 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
       isSelected: false,
       hasWarning: true,
     ),
-    Employee(
+    PayrollEmployee(
       name: 'David Kim',
       role: 'Tax Consultant',
       amount: 2880.00,
@@ -362,6 +367,49 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
             ),
           ),
 
+          // Error message display
+          if (errorMessage != null) ...[
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red, size: 20),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Processing Error',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red[800],
+                            fontSize: 14,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          errorMessage!,
+                          style: TextStyle(
+                            color: Colors.red[700],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           // Bottom Actions
           Container(
             padding: EdgeInsets.all(16),
@@ -386,21 +434,24 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
                 SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: selectedCount > 0 ? () {
-                      // Process payroll logic here
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Processing payroll...')),
-                      );
-                    } : null,
+                    onPressed: selectedCount > 0 && !isProcessing ? _processPayroll : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       padding: EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: Text(
-                      'Process Payroll',
-                      style: TextStyle(color: Colors.white),
-                      textAlign: TextAlign.start,
-                    ),
+                    child: isProcessing
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text(
+                            'Process Payroll',
+                            style: TextStyle(color: Colors.white),
+                          ),
                   ),
                 ),
               ],
@@ -411,7 +462,74 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
     );
   }
 
-  Widget employeeCard(Employee employee) {
+  Future<void> _processPayroll() async {
+    setState(() {
+      isProcessing = true;
+      errorMessage = null;
+    });
+
+    try {
+      final processPayrollUseCase = ref.read(processPayrollUseCaseProvider);
+
+      // Convert selected employees to PayrollEmployee list
+      final selectedEmployees = employees
+          .where((e) => e.isSelected)
+          .map((e) => PayrollEmployee(
+                employeeId: e.name.toLowerCase().replaceAll(' ', '_'), // Simple ID generation
+                employeeName: e.name,
+                amount: e.amount,
+                currency: 'USDC', // Default currency
+                walletAddress: e.paymentWallet.isNotEmpty && !e.paymentWallet.contains('No wallet')
+                    ? e.paymentWallet.split('(').last.replaceAll(')', '').replaceAll('...', '')
+                    : null,
+              ))
+          .toList();
+
+      final request = PayrollBatchRequest(
+        payrollType: payrollType,
+        payPeriodStart: payPeriodStart,
+        payPeriodEnd: payPeriodEnd,
+        payDate: payDate,
+        employees: selectedEmployees,
+      );
+
+      final result = await processPayrollUseCase.execute(request);
+
+      setState(() {
+        isProcessing = false;
+      });
+
+      // Show success message with details
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Payroll processed successfully! ${result.processedEmployees}/${result.totalEmployees} payments completed.',
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+
+      // Close the bottom sheet
+      Navigator.pop(context);
+
+    } catch (e) {
+      setState(() {
+        isProcessing = false;
+        errorMessage = e.toString();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to process payroll: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+  Widget employeeCard(PayrollEmployee employee) {
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(16),
@@ -497,7 +615,7 @@ class _PayrollBottomSheetState extends State<PayrollBottomSheet> {
   }
 }
 
-class Employee {
+class PayrollEmployee {
   final String name;
   final String role;
   final double amount;
@@ -505,7 +623,7 @@ class Employee {
   bool isSelected;
   final bool hasWarning;
 
-  Employee({
+  PayrollEmployee({
     required this.name,
     required this.role,
     required this.amount,

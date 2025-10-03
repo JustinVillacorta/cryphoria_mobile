@@ -132,4 +132,13 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
       throw Exception('Failed to process payslip payment: $e');
     }
   }
+
+  @override
+  Future<PayrollBatchResult> processBatchPayroll(PayrollBatchRequest request) async {
+    try {
+      return await remoteDataSource.processBatchPayroll(request);
+    } catch (e) {
+      throw Exception('Failed to process batch payroll: $e');
+    }
+  }
 }
