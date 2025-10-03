@@ -1,14 +1,4 @@
 import 'package:dio/dio.dart';
-import '../../domain/entities/wallet.dart';
-
-class WalletNotFoundException implements Exception {
-  final String message;
-
-  WalletNotFoundException([this.message = 'Wallet not found']);
-
-  @override
-  String toString() => 'WalletNotFoundException: ' + message;
-}
 
 class WalletRemoteDataSource {
   final String baseUrl;
@@ -19,57 +9,13 @@ class WalletRemoteDataSource {
     Dio? dio,
   }) : dio = dio ?? Dio();
 
-  Future<List<Wallet>> fetchWallets() async {
-    try {
-      final response = await dio.get(
-        baseUrl,
-        options: Options(
-          headers: {
-            "Content-Type": "application/json",
-          },
-        ),
-      );
-      final walletsJson = response.data["data"]["wallets"] as List;
-      return walletsJson.map((json) => Wallet.fromJson(json)).toList();
-    } on DioException catch (e) {
-      final msg = e.response?.data ?? e.message;
-      throw Exception("Failed to fetch wallets: ${e.response?.statusCode} $msg");
-    }
-  }
-
-  Future<Wallet> createWallet(Wallet wallet) async {
-    try {
-      final response = await dio.post(
-        baseUrl,
-        data: {
-          "wallet_name": wallet.name,
-          // NOTE: This looks wrong; `wallet.address` is not a private key.
-          // Confirm backend contract before sending private keys to server.
-          "private_key": wallet.private_key,
-        },
-        options: Options(
-          headers: {
-            "Content-Type": "application/json",
-          },
-        ),
-      );
-      return Wallet.fromJson(response.data["data"]);
-    } on DioException catch (e) {
-      final msg = e.response?.data ?? e.message;
-      throw Exception("Failed to add wallet: ${e.response?.statusCode} $msg");
-    }
-  }
-
-  /// Connect wallet using private key and return wallet data
-  Future<Map<String, dynamic>> registerWallet({
-    required String endpoint,
+  /// Connect wallet using private key - sends private key to backend for encryption
+  Future<Map<String, dynamic>> connectWallet({
     required String privateKey,
     required String walletName,
     required String walletType,
   }) async {
-    // Use the documented connect_wallet_with_private_key endpoint
-    // regardless of the wallet type passed from the UI
-    final url = '${baseUrl}connect_wallet_with_private_key/';
+    final url = '${baseUrl}connect_wallet/';
     try {
       final response = await dio.post(
         url,
@@ -79,7 +25,6 @@ class WalletRemoteDataSource {
           },
         ),
         data: {
-          // Server expects the private key
           'private_key': privateKey,
           'wallet_name': walletName,
           'wallet_type': walletType,
@@ -99,11 +44,43 @@ class WalletRemoteDataSource {
     }
   }
 
-  /// Reconnect to an existing wallet (for device switching) and return wallet data
-  Future<Map<String, dynamic>> reconnectWallet({
-    required String privateKey,
+  /// Get wallet balance which includes wallet information
+  Future<Map<String, dynamic>> getWalletBalance() async {
+    final url = '${baseUrl}get_wallet_balance/';
+    try {
+      final response = await dio.get(
+        url,
+        options: Options(
+          headers: {
+            "Content-Type": "application/json",
+            // Authentication handled by Dio interceptor
+          },
+        ),
+      );
+      
+      if (response.data['success'] == true) {
+        return response.data['data'];
+      } else {
+        throw Exception('Failed to get wallet balance: ${response.data['error'] ?? 'Unknown error'}');
+      }
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      final status = e.response?.statusCode;
+      throw Exception('Failed to get wallet balance: $status $body');
+    }
+  }
+
+  /// Send ETH transaction using connected wallet (no private key required)
+  Future<Map<String, dynamic>> sendEth({
+    required String toAddress,
+    required double amount,
+    String? gasPrice,
+    String? gasLimit,
+    String? company,
+    String? category,
+    String? description,
   }) async {
-    final url = '${baseUrl}reconnect_wallet_with_private_key/';
+    final url = '${baseUrl}send_eth/';
     try {
       final response = await dio.post(
         url,
@@ -113,29 +90,37 @@ class WalletRemoteDataSource {
           },
         ),
         data: {
-          'private_key': privateKey,
+          'to_address': toAddress,
+          'amount': amount,
+          if (gasPrice != null) 'gas_price': gasPrice,
+          if (gasLimit != null) 'gas_limit': gasLimit,
+          if (company != null) 'company': company,
+          if (category != null) 'category': category,
+          if (description != null) 'description': description,
         },
       );
       
-      // Return the wallet data from backend response
       if (response.data['success'] == true) {
         return response.data['data'] ?? {};
       } else {
-        throw Exception('Failed to reconnect wallet: ${response.data['error'] ?? 'Unknown error'}');
+        throw Exception('Failed to send ETH: ${response.data['error'] ?? 'Unknown error'}');
       }
     } on DioException catch (e) {
       final body = e.response?.data;
       final status = e.response?.statusCode;
-      throw Exception('Failed to reconnect wallet: $status $body');
+      throw Exception('Failed to send ETH: $status $body');
     }
   }
 
-  Future<double> getBalance(String walletAddress) async {
-    // Use the WalletViewSet's get_wallet_balance endpoint
-    final url = '${baseUrl}get_wallet_balance/';
+  /// Disconnect wallet and remove from backend
+  Future<void> disconnectWallet(String walletAddress) async {
+    final url = '${baseUrl}disconnect_wallet/';
     try {
-      final response = await dio.get(
+      final response = await dio.delete(
         url,
+        queryParameters: {
+          'wallet_address': walletAddress,
+        },
         options: Options(
           headers: {
             "Content-Type": "application/json",
@@ -143,25 +128,22 @@ class WalletRemoteDataSource {
         ),
       );
       
-      // Backend returns all wallets for the authenticated user
-      final wallets = response.data['data']?['wallets'] as List? ?? [];
-      
-      // Find the specific wallet by address
-      for (final wallet in wallets) {
-        if (wallet['address']?.toLowerCase() == walletAddress.toLowerCase()) {
-          final balance = wallet['balances']?['ETH']?['balance'] ?? 0;
-          return double.tryParse(balance.toString()) ?? 0;
+      // Accept both success: true and 200 status as successful disconnect
+      if (response.statusCode == 200) {
+        // Check if response has success field, if not, assume success for 200 status
+        if (response.data is Map && response.data.containsKey('success')) {
+          if (response.data['success'] != true) {
+            throw Exception('Failed to disconnect wallet: ${response.data['error'] ?? 'Unknown error'}');
+          }
         }
+        // If no success field but 200 status, assume success
+      } else {
+        throw Exception('Failed to disconnect wallet: ${response.statusCode} ${response.data}');
       }
-      
-      // If wallet not found, return 0 (or throw WalletNotFoundException)
-      return 0;
     } on DioException catch (e) {
-      if (e.response?.statusCode == 403 || e.response?.statusCode == 404) {
-        throw WalletNotFoundException();
-      }
-      final msg = e.response?.data ?? e.message;
-      throw Exception('Failed to load balance: ${e.response?.statusCode} $msg');
+      final body = e.response?.data;
+      final status = e.response?.statusCode;
+      throw Exception('Failed to disconnect wallet: $status $body');
     }
   }
 }

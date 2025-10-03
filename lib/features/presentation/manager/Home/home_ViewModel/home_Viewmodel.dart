@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/features/data/services/wallet_service.dart';
 import 'package:cryphoria_mobile/features/domain/entities/wallet.dart';
@@ -51,16 +52,17 @@ class WalletNotifier extends StateNotifier<WalletState> {
   final WalletService _walletService;
   final EthTransactionDataSource _ethTransactionDataSource;
 
-  /// Loads initial data (e.g., transactions) and checks for stored wallet on initialization
+  /// Loads initial data (e.g., transactions) and fetches user's connected wallet
   Future<void> _loadInitialData() async {
     state = state.copyWith(isLoading: true, error: () => null);
     try {
-      // First check for stored wallet and reconnect
-      if (await _walletService.hasStoredWallet()) {
-        await reconnect();
+      // Fetch user's connected wallet from backend
+      final wallet = await _walletService.getUserWallet();
+      if (wallet != null) {
+        state = state.copyWith(wallet: wallet);
       }
       
-      // Then load transactions (now that wallet is connected if it was stored)
+      // Load transactions
       await _fetchTransactions();
       state = state.copyWith(error: () => null);
     } catch (e) {
@@ -73,7 +75,6 @@ class WalletNotifier extends StateNotifier<WalletState> {
   /// Connects to a wallet with the provided private key
   Future<void> connect(
       String privateKey, {
-        String? endpoint,
         String? walletName,
         String? walletType,
       }) async {
@@ -81,7 +82,6 @@ class WalletNotifier extends StateNotifier<WalletState> {
     try {
       final wallet = await _walletService.connectWallet(
         privateKey,
-        endpoint: endpoint ?? 'http://localhost:8545',
         walletName: walletName ?? 'My Wallet',
         walletType: walletType ?? 'imported',
       );
@@ -96,15 +96,19 @@ class WalletNotifier extends StateNotifier<WalletState> {
     }
   }
 
-  /// Reconnects to a previously stored wallet
+  /// Fetches user's connected wallet from backend
   Future<void> reconnect() async {
     state = state.copyWith(isLoading: true, error: () => null);
     try {
-      final wallet = await _walletService.reconnect();
-      state = state.copyWith(wallet: wallet);
-      
-      // Wallet reconnected successfully - fetch transactions now
-      await _fetchTransactions();
+      // Fetch user's connected wallet from backend
+      final wallet = await _walletService.getUserWallet();
+      if (wallet != null) {
+        state = state.copyWith(wallet: wallet);
+        // Fetch transactions for the wallet
+        await _fetchTransactions();
+      } else {
+        state = state.copyWith(error: () => 'No connected wallet found. Please connect your wallet.');
+      }
     } catch (e) {
       state = state.copyWith(error: () => e.toString());
     } finally {
@@ -163,8 +167,12 @@ class WalletNotifier extends StateNotifier<WalletState> {
 
   /// Refreshes the current wallet balance and PHP conversion
   Future<void> refreshWallet() async {
-    if (state.wallet == null) return;
+    if (state.wallet == null) {
+      debugPrint('🔍 Manager - No wallet to refresh');
+      return;
+    }
     
+    debugPrint('🔍 Manager - Refreshing wallet: ${state.wallet!.address}');
     state = state.copyWith(isLoading: true);
     
     try {
@@ -172,9 +180,14 @@ class WalletNotifier extends StateNotifier<WalletState> {
       final refreshedWallet = await _walletService.reconnect();
       if (refreshedWallet != null) {
         state = state.copyWith(wallet: refreshedWallet);
+        debugPrint('🔍 Manager - Refreshed wallet: ${refreshedWallet.toJson()}');
+      } else {
+        debugPrint('🔍 Manager - No wallet returned from refresh, clearing state');
+        state = state.copyWith(wallet: null);
       }
       state = state.copyWith(error: () => null);
     } catch (e) {
+      debugPrint('❌ Manager - Refresh wallet error: $e');
       state = state.copyWith(error: () => e.toString());
     } finally {
       state = state.copyWith(isLoading: false);
@@ -183,11 +196,26 @@ class WalletNotifier extends StateNotifier<WalletState> {
 
   /// Disconnects the current wallet
   Future<void> disconnectWallet() async {
+    debugPrint('🔍 Manager - Starting disconnect process');
+    state = state.copyWith(isLoading: true, error: () => null);
     try {
-      await _walletService.disconnect();
+      if (state.wallet != null) {
+        debugPrint('🔍 Manager - Disconnecting wallet: ${state.wallet!.address}');
+        await _walletService.disconnect(state.wallet!);
+        debugPrint('🔍 Manager - Wallet service disconnect completed');
+      }
+      
+      // Force clear the wallet state
+      debugPrint('🔍 Manager - Before state update, wallet is: ${state.wallet?.address}');
       state = state.copyWith(wallet: null, error: () => null);
+      debugPrint('🔍 Manager - After state update, wallet is: ${state.wallet?.address}');
+      debugPrint('🔍 Manager - State updated, notifying listeners');
     } catch (e) {
+      debugPrint('❌ Manager - Disconnect error: $e');
       state = state.copyWith(error: () => e.toString());
+    } finally {
+      state = state.copyWith(isLoading: false);
+      debugPrint('🔍 Manager - Disconnect process completed');
     }
   }
   

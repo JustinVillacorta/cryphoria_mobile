@@ -21,7 +21,7 @@ import '../features/data/repositories_impl/reports_repository_impl.dart';
 import '../features/data/services/currency_conversion_service.dart';
 
 import '../features/data/services/eth_payment_service.dart';
-import '../features/data/services/private_key_storage.dart';
+// private_key_storage.dart removed - private keys now stored on backend
 import '../features/data/services/wallet_service.dart';
 import '../features/domain/repositories/auth_repository.dart';
 import '../features/domain/repositories/audit_repository.dart';
@@ -139,9 +139,7 @@ final walletRemoteDataSourceProvider = Provider<WalletRemoteDataSource>((ref) {
   );
 });
 
-final privateKeyStorageProvider = Provider<PrivateKeyStorage>((ref) {
-  return PrivateKeyStorage(storage: ref.watch(flutterSecureStorageProvider));
-});
+// PrivateKeyStorage removed - private keys now stored on backend
 
 final currencyConversionServiceProvider = Provider<CurrencyConversionService>((ref) {
   return CurrencyConversionService(dio: ref.watch(dioClientProvider).dio);
@@ -153,7 +151,10 @@ final ethPaymentRemoteDataSourceProvider =
 });
 
 final ethPaymentServiceProvider = Provider<EthPaymentService>((ref) {
-  return EthPaymentService(remoteDataSource: ref.watch(ethPaymentRemoteDataSourceProvider));
+  return EthPaymentService(
+    remoteDataSource: ref.watch(ethPaymentRemoteDataSourceProvider),
+    walletService: ref.watch(walletServiceProvider),
+  );
 });
 
 
@@ -196,7 +197,6 @@ final reportsRemoteDataSourceProvider = Provider<ReportsRemoteDataSource>((ref) 
 final walletServiceProvider = Provider<WalletService>((ref) {
   return WalletService(
     remoteDataSource: ref.watch(walletRemoteDataSourceProvider),
-    storage: ref.watch(privateKeyStorageProvider),
     currencyService: ref.watch(currencyConversionServiceProvider),
   );
 });

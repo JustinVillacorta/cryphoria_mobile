@@ -44,7 +44,6 @@ class _ManagerConnectWalletBottomSheetState extends ConsumerState<ManagerConnect
     try {
       await notifier.connect(
         _privateKeyController.text,
-        endpoint: 'connect_wallet_with_private_key/',
         walletName: _selectedWallet,
         walletType: _selectedWallet,
       );

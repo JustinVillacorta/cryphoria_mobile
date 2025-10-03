@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/manager_connect_wallet_bottom_sheet.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
 
 class WalletCard extends ConsumerStatefulWidget {
   const WalletCard({super.key});
@@ -24,6 +26,73 @@ class _WalletCardState extends ConsumerState<WalletCard> {
     );
   }
 
+  Future<void> _showDisconnectConfirmationDialog(BuildContext context, WalletNotifier notifier) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Disconnect Wallet'),
+          content: const Text(
+            'Are you sure you want to disconnect your wallet? You will need to reconnect it to access your funds.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Disconnect'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true && mounted) {
+      try {
+        debugPrint('🔍 Manager UI - Starting disconnect from confirmation dialog');
+        await notifier.disconnectWallet();
+        debugPrint('🔍 Manager UI - Disconnect completed, checking state');
+        
+        if (mounted) {
+          // Wait a bit to ensure state is updated
+          await Future.delayed(const Duration(milliseconds: 100));
+          
+          final updated = ref.read(walletNotifierProvider);
+          debugPrint('🔍 Manager UI - State after disconnect: wallet=${updated.wallet?.address}');
+          
+          if (updated.error != null && updated.error!.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to disconnect: ${updated.error}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Wallet disconnected successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ Manager UI - Disconnect error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to disconnect: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   void _showConnectWalletBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -37,6 +106,8 @@ class _WalletCardState extends ConsumerState<WalletCard> {
   Widget build(BuildContext context) {
     final state = ref.watch(walletNotifierProvider);
     final notifier = ref.read(walletNotifierProvider.notifier);
+    
+    debugPrint('🔍 Manager UI - Building with wallet: ${state.wallet?.address}');
 
     if (state.isLoading) {
       return Container(
@@ -239,14 +310,23 @@ class _WalletCardState extends ConsumerState<WalletCard> {
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
-                  onPressed: notifier.disconnectWallet,
+                  onPressed: state.isLoading ? null : () => _showDisconnectConfirmationDialog(context, notifier),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white.withOpacity(0.2),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Disconnect'),
+                  child: state.isLoading 
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text('Disconnect'),
                 ),
               ],
             ),

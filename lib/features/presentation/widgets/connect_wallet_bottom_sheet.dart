@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
+// Unused import removed
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 
 class ConnectPrivateKeyBottomSheet extends ConsumerStatefulWidget {
@@ -45,7 +45,6 @@ class _ConnectPrivateKeyBottomSheetState extends ConsumerState<ConnectPrivateKey
     try {
       await notifier.connect(
         _privateKeyController.text,
-        endpoint: 'connect_wallet_with_private_key/',
         walletName: _selectedWallet,
         walletType: _selectedWallet,
       );
