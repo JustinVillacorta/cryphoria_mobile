@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -68,19 +69,26 @@ import '../features/data/data_sources/employee_remote_data_source.dart'
 import '../features/data/data_sources/EmployeeRemoteDataSource.dart'
     as employee_dashboard;
 
+
+
 // -----------------------------------------------------------------------------
 // Core configuration providers
 // -----------------------------------------------------------------------------
 
+
 final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
-    return 'http://192.168.0.12:8000';
+    return 'http://10.0.2.2:8000';
   }
   return 'http://127.0.0.1:8000';
 });
 
 final flutterSecureStorageProvider =
     Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
+
+
+
+final userProvider = StateProvider<AuthUser?>((ref) => null);
 
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
