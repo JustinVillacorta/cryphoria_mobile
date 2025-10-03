@@ -146,4 +146,39 @@ class WalletRemoteDataSource {
       throw Exception('Failed to disconnect wallet: $status $body');
     }
   }
+
+  /// Convert cryptocurrency to fiat currency
+  Future<Map<String, dynamic>> convertCryptoToFiat({
+    required String value,
+    required String from,
+    required String to,
+  }) async {
+    final url = 'http://localhost:8000/api/conversion/crypto-to-fiat/';
+    try {
+      final response = await dio.post(
+        url,
+        options: Options(
+          headers: {
+            "Content-Type": "application/json",
+            // Authentication handled by Dio interceptor
+          },
+        ),
+        data: {
+          'value': value,
+          'from': from,
+          'to': to,
+        },
+      );
+      
+      if (response.data['success'] == true) {
+        return response.data['data'] ?? {};
+      } else {
+        throw Exception('Failed to convert crypto to fiat: ${response.data['error'] ?? 'Unknown error'}');
+      }
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      final status = e.response?.statusCode;
+      throw Exception('Failed to convert crypto to fiat: $status $body');
+    }
+  }
 }

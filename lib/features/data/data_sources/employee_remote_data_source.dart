@@ -492,25 +492,10 @@ class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
 
   @override
   Future<String?> getEmployeeWalletAddress(String userId) async {
-    try {
-      // Use a test endpoint to get wallet address for specific user
-      final response = await dio.post('/api/test-wallet-lookup/', data: {
-        'user_id': userId,
-      });
-      
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data['success'] == true && data['wallet_address'] != null) {
-          return data['wallet_address'] as String;
-        }
-      }
-      
-      return null; // No wallet found
-    } catch (e) {
-      // Don't throw error, just return null if wallet lookup fails
-      print('DEBUG: Wallet lookup failed for user $userId: $e');
-      return null;
-    }
+    // TODO: Implement proper wallet lookup endpoint
+    // For now, return null as the test endpoint has been removed
+    print('DEBUG: Wallet lookup not implemented for user $userId');
+    return null;
   }
 
 }

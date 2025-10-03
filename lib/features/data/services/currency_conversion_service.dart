@@ -92,17 +92,17 @@ class CurrencyConversionService {
       _dio.post(
         '$_backendBaseUrl/conversion/crypto-to-fiat/',
         data: {
-          'cryptocurrency': 'ETH',  // Backend expects 'cryptocurrency' not 'crypto_symbol'
-          'amount': 1.0,
-          'target_currency': 'PHP',
+          'value': '1',  // Updated to use new API format
+          'from': 'ETH',
+          'to': 'PHP',
         },
       ),
       _dio.post(
         '$_backendBaseUrl/conversion/crypto-to-fiat/',
         data: {
-          'cryptocurrency': 'ETH',
-          'amount': 1.0,
-          'target_currency': 'USD',
+          'value': '1',  // Updated to use new API format
+          'from': 'ETH',
+          'to': 'USD',
         },
       ),
     ]);
@@ -164,6 +164,73 @@ class CurrencyConversionService {
       return '${amount.toStringAsFixed(4)} ETH';
     } else {
       return '${amount.toStringAsFixed(6)} ETH';
+    }
+  }
+
+  /// Convert cryptocurrency to fiat using the new API format
+  Future<Map<String, dynamic>> convertCryptoToFiat({
+    required String value,
+    required String from,
+    required String to,
+  }) async {
+    print('🔄 Converting $value $from to $to using /api/conversion/crypto-to-fiat/');
+    
+    try {
+      final response = await _dio.post(
+        '$_backendBaseUrl/conversion/crypto-to-fiat/',
+        data: {
+          'value': value,
+          'from': from,
+          'to': to,
+        },
+        options: Options(
+          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        ),
+      );
+
+      print('💰 Crypto to fiat conversion response: ${response.statusCode}');
+      print('📊 Full response data: ${response.data}');
+      print('📊 Response data type: ${response.data.runtimeType}');
+
+      if (response.statusCode == 200) {
+        // Check if response has success field
+        if (response.data is Map && response.data.containsKey('success')) {
+          if (response.data['success'] == true) {
+            // Parse the actual response structure: {"success":true,"content":[{"crypto":"ETH","fiat":"PHP","quantity":1.0,"unit_price":259466.0,"total_value":259466.0}]}
+            final content = response.data['content'] as List?;
+            if (content != null && content.isNotEmpty) {
+              final conversionData = content[0] as Map<String, dynamic>;
+              final totalValue = conversionData['total_value'] as num? ?? 0.0;
+              final result = {
+                'converted_amount': totalValue,
+                'unit_price': conversionData['unit_price'],
+                'quantity': conversionData['quantity'],
+                'crypto': conversionData['crypto'],
+                'fiat': conversionData['fiat'],
+              };
+              print('✅ Conversion successful: $value $from = $totalValue $to');
+              print('📊 Result data: $result');
+              return result;
+            } else {
+              throw Exception('Conversion failed: No content in response');
+            }
+          } else {
+            throw Exception('Conversion failed: ${response.data['error'] ?? 'Unknown error'}');
+          }
+        } else {
+          // Response doesn't have success field, assume it's successful if status is 200
+          final result = response.data is Map ? response.data : {'converted_amount': response.data};
+          print('✅ Conversion successful (no success field): $value $from = ${result['converted_amount']} $to');
+          print('📊 Result data: $result');
+          return result;
+        }
+      } else {
+        throw Exception('Conversion failed with status ${response.statusCode}: ${response.data}');
+      }
+    } catch (e) {
+      print('🚨 Error converting crypto to fiat: $e');
+      rethrow;
     }
   }
 }

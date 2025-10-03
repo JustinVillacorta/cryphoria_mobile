@@ -163,20 +163,7 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
         debugResults.add('  - Email: ${employee.email}');
         debugResults.add('  - Current Wallet: ${employee.payrollInfo?.employeeWallet ?? "NULL"}');
         
-        // Test manual wallet lookup via API
-        try {
-          final testResponse = await ref.read(dioClientProvider).dio.post('/api/test-wallet-lookup/', data: {
-            'user_id': employee.userId,
-          });
-          
-          if (testResponse.statusCode == 200) {
-            debugResults.add('  - API Test Result: ${testResponse.data}');
-          } else {
-            debugResults.add('  - API Test Failed: ${testResponse.statusCode}');
-          }
-        } catch (e) {
-          debugResults.add('  - API Test Error: $e');
-        }
+        // Wallet lookup is handled by the existing getManagerTeamWithWalletsUseCase
         debugResults.add('');
       }
 
