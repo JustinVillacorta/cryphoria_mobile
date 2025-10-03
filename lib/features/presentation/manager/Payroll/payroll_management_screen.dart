@@ -60,73 +60,6 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
     }
   }
 
-  Future<void> _fixMissingWallets() async {
-    try {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 16),
-              Text('Fixing missing wallet addresses...'),
-            ],
-          ),
-        ),
-      );
-
-      // Call the backend utility to fix missing wallets
-      final response = await ref.read(dioClientProvider).dio.post('/api/payroll/fix-missing-wallets/');
-      
-      if (mounted) Navigator.pop(context); // Close loading dialog
-      
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final result = response.data;
-        final fixedCount = result['fixed_count'] ?? 0;
-        final failedCount = result['failed_count'] ?? 0;
-        final totalEntries = result['total_entries'] ?? 0;
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Wallet Fix Complete!\n'
-                'Fixed: $fixedCount entries\n'
-                'Failed: $failedCount entries\n'
-                'Total processed: $totalEntries entries',
-              ),
-              backgroundColor: fixedCount > 0 ? Colors.green : Colors.orange,
-              duration: const Duration(seconds: 5),
-            ),
-          );
-        }
-
-        // Refresh data to show updated wallet addresses
-        _loadManagerPayrollData();
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to fix wallets: ${response.data['error'] ?? 'Unknown error'}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error fixing wallets: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   Future<void> _debugWalletFetching() async {
     try {
@@ -236,9 +169,7 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.black87),
             onSelected: (value) {
-              if (value == 'fix_wallets') {
-                _fixMissingWallets();
-              } else if (value == 'refresh') {
+              if (value == 'refresh') {
                 _loadManagerPayrollData();
               } else if (value == 'debug_wallets') {
                 _debugWalletFetching();
@@ -250,14 +181,6 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
                 child: ListTile(
                   leading: Icon(Icons.refresh),
                   title: Text('Refresh Data'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'fix_wallets',
-                child: ListTile(
-                  leading: Icon(Icons.account_balance_wallet),
-                  title: Text('Fix Missing Wallets'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),

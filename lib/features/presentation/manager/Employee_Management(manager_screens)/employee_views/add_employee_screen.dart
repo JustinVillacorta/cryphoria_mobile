@@ -431,11 +431,9 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
             );
           }).toList(),
           onChanged: (value) {
-            if (value != null) {
-              setState(() {
-                _selectedDepartment = value;
-              });
-            }
+            setState(() {
+              _selectedDepartment = value!;
+            });
           },
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.business, color: Color(0xFF9747FF)),
@@ -524,62 +522,42 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
   }
 
   void _submitForm() async {
-    // Check if form is still mounted and valid
-    if (!mounted || _formKey.currentState?.validate() != true) {
+    if (_formKey.currentState!.validate()) {
+      final employeeViewModel = ref.read(employeeViewModelProvider.notifier);
+      
+      try {
+        await employeeViewModel.addEmployeeToTeam(
+          email: _emailController.text.trim(),
+          position: _positionController.text.trim(),
+          department: _selectedDepartment,
+          fullName: _fullNameController.text.trim(),
+          phone: _phoneController.text.trim(),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Employee added successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error adding employee: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } else {
       // If form validation fails and we're on the employment tab, 
       // go back to personal info tab to show validation errors
-      if (mounted && _currentTabIndex == 1) {
+      if (_currentTabIndex == 1) {
         _tabController.animateTo(0);
-      }
-      return;
-    }
-
-    try {
-      print('DEBUG: Starting employee addition process');
-      final employeeViewModel = ref.read(employeeViewModelProvider.notifier);
-      print('DEBUG: Got employee view model successfully');
-      
-      // Ensure controllers are not disposed and have valid data
-      final email = _emailController.text.trim();
-      final position = _positionController.text.trim();
-      final fullName = _fullNameController.text.trim();
-      final phone = _phoneController.text.trim();
-      
-      print('DEBUG: Form data - Email: $email, Name: $fullName, Position: $position, Department: $_selectedDepartment');
-      
-      if (email.isEmpty || fullName.isEmpty) {
-        throw Exception('Required fields cannot be empty');
-      }
-      
-      print('DEBUG: Calling addEmployeeToTeam...');
-      await employeeViewModel.addEmployeeToTeam(
-        email: email,
-        position: position,
-        department: _selectedDepartment,
-        fullName: fullName,
-        phone: phone,
-      );
-      print('DEBUG: Employee added successfully');
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Employee added successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e, stackTrace) {
-      print('ERROR: Failed to add employee: $e');
-      print('STACK TRACE: $stackTrace');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error adding employee: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
