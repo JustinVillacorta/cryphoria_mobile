@@ -51,25 +51,31 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
     });
 
     try {
-      // Test if provider is available
-      print('DEBUG: Checking if getManagerTeamUseCaseProvider is available...');
-      final getManagerTeamUseCase = ref.read(getManagerTeamUseCaseProvider);
+      // Use the new method that includes wallet addresses
+      print('DEBUG: Checking if getManagerTeamWithWalletsUseCaseProvider is available...');
+      final getManagerTeamWithWalletsUseCase = ref.read(getManagerTeamWithWalletsUseCaseProvider);
       print('DEBUG: Provider available: true');
       
-      print('DEBUG: Got manager team use case, executing...');
-      final employees = await getManagerTeamUseCase.execute();
-      print('DEBUG: Loaded ${employees.length} employees from backend');
+      print('DEBUG: Got manager team with wallets use case, executing...');
+      final employees = await getManagerTeamWithWalletsUseCase.execute();
+      print('DEBUG: Loaded ${employees.length} employees from backend with wallet addresses');
       
-      // Log employee details
+      // Log employee details including wallet information
       for (final employee in employees) {
         print('DEBUG: Employee - Name: ${employee.displayName}, Role: ${employee.role}, Email: ${employee.email}');
+        print('DEBUG:   - User ID: ${employee.userId}');
+        print('DEBUG:   - Username: ${employee.username}');
+        print('DEBUG:   - First Name: ${employee.firstName}');
+        print('DEBUG:   - Last Name: ${employee.lastName}');
+        print('DEBUG:   - Wallet: ${employee.payrollInfo?.employeeWallet ?? "NULL"}');
+        print('DEBUG:   - PayrollInfo Employee Name: ${employee.payrollInfo?.employeeName ?? "NULL"}');
       }
       
       // Create payroll entries for employees who don't have them
       await _createMissingPayrollEntries(employees);
       
-      // Reload employees to get updated payroll info
-      final updatedEmployees = await getManagerTeamUseCase.execute();
+      // Reload employees to get updated payroll info with wallets
+      final updatedEmployees = await getManagerTeamWithWalletsUseCase.execute();
       print('DEBUG: After payroll setup, have ${updatedEmployees.length} employees');
       
       // Dispose existing controllers
@@ -123,6 +129,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
 
   int get selectedCount => employeePayrollList.where((e) => e.isSelected).length;
 
+
   Future<void> _processPayroll() async {
     if (!mounted) return;
     
@@ -146,6 +153,82 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         builder: (context) => Center(child: CircularProgressIndicator()),
       );
 
+      // Use the existing backend payroll system
+      // Create individual payroll entries first (using existing backend endpoint)
+      final payrollEntries = <Map<String, dynamic>>[];
+      
+      for (final employeePayroll in selectedEmployees) {
+        final employee = employeePayroll.employee;
+        final salaryText = employeePayroll.salaryController.text.trim();
+        final salaryAmount = double.tryParse(salaryText) ?? 0.0;
+        
+        // Create payroll entry using existing backend endpoint
+        // Backend now automatically fetches employee wallet if not provided
+        try {
+          // Debug logging
+          print('DEBUG: Creating payroll entry for employee:');
+          print('  - User ID: ${employee.userId}');
+          print('  - Employee Name: ${employee.displayName}');
+          print('  - First Name: ${employee.firstName}');
+          print('  - Last Name: ${employee.lastName}');
+          print('  - Username: ${employee.username}');
+          print('  - Email: ${employee.email}');
+          print('  - Existing Wallet: ${employee.payrollInfo?.employeeWallet}');
+          
+          final response = await ref.read(dioClientProvider).dio.post('/api/payroll/create/', data: {
+            'user_id': employee.userId, // CRITICAL: Backend needs this to fetch wallet
+            'employee_name': employee.displayName, // Now using correct name from proper endpoint
+            // Don't send empty wallet - let backend fetch it automatically
+            'employee_wallet': employee.payrollInfo?.employeeWallet?.isNotEmpty == true 
+                ? employee.payrollInfo!.employeeWallet 
+                : null,
+            'salary_amount': salaryAmount,
+            'salary_currency': 'USD',
+            'payment_frequency': 'MONTHLY',
+            'start_date': payDate.toIso8601String().split('T')[0],
+            'is_active': true,
+            'notes': 'Generated from mobile payroll processing - $payrollType',
+          });
+          
+          if (response.statusCode == 200 && response.data['success'] == true) {
+            payrollEntries.add(response.data['payroll_entry']);
+            final entryId = response.data['payroll_entry']['entry_id'];
+            final employeeWallet = response.data['payroll_entry']['employee_wallet'];
+            print('DEBUG: Payroll entry created successfully:');
+            print('  - Entry ID: $entryId');
+            print('  - Employee Wallet: $employeeWallet');
+            print('  - Full entry: ${response.data['payroll_entry']}');
+          } else {
+            print('DEBUG: Payroll entry creation failed:');
+            print('  - Status Code: ${response.statusCode}');
+            print('  - Response: ${response.data}');
+          }
+        } catch (e) {
+          print('Failed to create payroll entry for ${employee.displayName}: $e');
+        }
+      }
+
+      // Fix any missing employee wallets using backend utility
+      print('DEBUG: Attempting to fix missing employee wallets...');
+      try {
+        final fixResponse = await ref.read(dioClientProvider).dio.post('/api/payroll/fix-missing-wallets/');
+        if (fixResponse.statusCode == 200 && fixResponse.data['success'] == true) {
+          final fixedCount = fixResponse.data['fixed_count'] ?? 0;
+          final failedCount = fixResponse.data['failed_count'] ?? 0;
+          final totalEntries = fixResponse.data['total_entries'] ?? 0;
+          print('DEBUG: Wallet fixing results:');
+          print('  - Fixed: $fixedCount entries');
+          print('  - Failed: $failedCount entries'); 
+          print('  - Total processed: $totalEntries entries');
+          print('  - Full response: ${fixResponse.data}');
+        } else {
+          print('DEBUG: Wallet fixing unsuccessful: ${fixResponse.data}');
+        }
+      } catch (e) {
+        print('DEBUG: Wallet fixing failed (non-critical): $e');
+      }
+
+      // Create individual payslips for each employee
       final payslipRepository = ref.read(payslipRepositoryProvider);
       int successCount = 0;
 
@@ -176,7 +259,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
           overtimePay: 0.0,
           bonus: 0.0,
           allowances: 0.0,
-          notes: 'Generated from mobile payroll processing',
+          notes: 'Generated from mobile payroll processing - $payrollType',
         );
 
         try {
@@ -770,7 +853,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                'Processing payroll will initiate cryptocurrency transfers to selected employees. Please ensure all wallet addresses are correct before proceeding.',
+                                'Processing payroll will create payroll entries and payslips for selected employees.',
                                 style: TextStyle(
                                   color: Colors.amber[700],
                                   fontSize: 12,

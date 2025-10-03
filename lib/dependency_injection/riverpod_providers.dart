@@ -33,6 +33,7 @@ import '../features/domain/usecases/Employee_management/add_employee_to_team_use
 import '../features/domain/usecases/Employee_management/create_payslip_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_all_employees_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_manager_team_usecase.dart';
+import '../features/domain/usecases/Employee_management/get_manager_team_with_wallets_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_payslips_usecase.dart';
 
 // Payslip imports
@@ -47,6 +48,17 @@ import '../features/presentation/manager/Payslip/ViewModels/payslip_list_viewmod
 import '../features/presentation/manager/Payslip/ViewModels/payslip_list_state.dart';
 import '../features/presentation/manager/Payslip/ViewModels/create_payslip_viewmodel.dart';
 import '../features/presentation/manager/Payslip/ViewModels/create_payslip_state.dart';
+
+// Payroll imports
+import '../features/data/data_sources/payroll_remote_data_source.dart';
+import '../features/data/repositories/payroll_repository_impl.dart';
+import '../features/domain/repositories/payroll_repository.dart';
+import '../features/domain/usecases/payroll/create_payroll_period_usecase.dart';
+import '../features/domain/usecases/payroll/get_payroll_periods_usecase.dart';
+import '../features/domain/usecases/payroll/process_payroll_period_usecase.dart';
+import '../features/domain/usecases/payroll/update_payroll_entry_usecase.dart';
+import '../features/domain/usecases/payroll/get_payroll_analytics_usecase.dart';
+import '../features/presentation/manager/Payroll/ViewModel/payroll_view_model.dart';
 import '../features/domain/usecases/Login/login_usecase.dart';
 import '../features/domain/usecases/Logout/logout_usecase.dart';
 import '../features/domain/usecases/Register/register_use_case.dart';
@@ -138,6 +150,7 @@ final ethPaymentServiceProvider = Provider<EthPaymentService>((ref) {
   return EthPaymentService(remoteDataSource: ref.watch(ethPaymentRemoteDataSourceProvider));
 });
 
+
 final fakeTransactionsDataSourceProvider =
     Provider<FakeTransactionsDataSource>((ref) {
   return FakeTransactionsDataSource(
@@ -222,6 +235,10 @@ final getAllEmployeesUseCaseProvider = Provider<GetAllEmployeesUseCase>((ref) {
 
 final getManagerTeamUseCaseProvider = Provider<GetManagerTeamUseCase>((ref) {
   return GetManagerTeamUseCase(repository: ref.watch(employeeRepositoryProvider));
+});
+
+final getManagerTeamWithWalletsUseCaseProvider = Provider<GetManagerTeamWithWalletsUseCase>((ref) {
+  return GetManagerTeamWithWalletsUseCase(repository: ref.watch(employeeRepositoryProvider));
 });
 
 final addEmployeeToTeamUseCaseProvider =
@@ -414,4 +431,53 @@ final payslipListViewModelProvider = StateNotifierProvider<PayslipListViewModel,
 
 final createPayslipViewModelProvider = StateNotifierProvider<CreatePayslipViewModel, CreatePayslipState>((ref) {
   return CreatePayslipViewModel(ref.watch(createPayslipUseCaseNewProvider));
+});
+
+// -----------------------------------------------------------------------------
+// Payroll Providers
+// -----------------------------------------------------------------------------
+
+// Data Sources
+final payrollRemoteDataSourceProvider = Provider<PayrollRemoteDataSource>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return PayrollRemoteDataSourceImpl(dio: dioClient.dio);
+});
+
+// Repository
+final payrollRepositoryProvider = Provider<PayrollRepository>((ref) {
+  return PayrollRepositoryImpl(
+    remoteDataSource: ref.watch(payrollRemoteDataSourceProvider),
+  );
+});
+
+// Use Cases
+final createPayrollPeriodUseCaseProvider = Provider<CreatePayrollPeriodUseCase>((ref) {
+  return CreatePayrollPeriodUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+final getPayrollPeriodsUseCaseProvider = Provider<GetPayrollPeriodsUseCase>((ref) {
+  return GetPayrollPeriodsUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+final processPayrollPeriodUseCaseProvider = Provider<ProcessPayrollPeriodUseCase>((ref) {
+  return ProcessPayrollPeriodUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+final updatePayrollEntryUseCaseProvider = Provider<UpdatePayrollEntryUseCase>((ref) {
+  return UpdatePayrollEntryUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+final getPayrollAnalyticsUseCaseProvider = Provider<GetPayrollAnalyticsUseCase>((ref) {
+  return GetPayrollAnalyticsUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+// ViewModel
+final payrollViewModelProvider = StateNotifierProvider<PayrollViewModel, PayrollState>((ref) {
+  return PayrollViewModel(
+    getPayrollPeriodsUseCase: ref.watch(getPayrollPeriodsUseCaseProvider),
+    createPayrollPeriodUseCase: ref.watch(createPayrollPeriodUseCaseProvider),
+    processPayrollPeriodUseCase: ref.watch(processPayrollPeriodUseCaseProvider),
+    updatePayrollEntryUseCase: ref.watch(updatePayrollEntryUseCaseProvider),
+    getPayrollAnalyticsUseCase: ref.watch(getPayrollAnalyticsUseCaseProvider),
+  );
 });

@@ -132,4 +132,23 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
       throw Exception('Failed to process payslip payment: $e');
     }
   }
+
+  @override
+  Future<List<Employee>> getManagerTeamWithWallets() async {
+    try {
+      return await remoteDataSource.getManagerTeamWithWallets();
+    } catch (e) {
+      throw Exception('Failed to load team employees with wallets: $e');
+    }
+  }
+
+  @override
+  Future<String?> getEmployeeWalletAddress(String userId) async {
+    try {
+      return await remoteDataSource.getEmployeeWalletAddress(userId);
+    } catch (e) {
+      // Don't throw error for wallet lookup failures
+      return null;
+    }
+  }
 }

@@ -16,6 +16,8 @@ abstract class EmployeeRemoteDataSource {
   Future<String> generatePayslipPdf(String payslipId);
   Future<void> sendPayslipEmail(String payslipId);
   Future<void> processPayslipPayment(String payslipId);
+  Future<List<Employee>> getManagerTeamWithWallets(); // Get employees with wallet addresses
+  Future<String?> getEmployeeWalletAddress(String userId); // Get specific employee wallet
 }
 
 class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
@@ -363,4 +365,152 @@ class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
       rethrow;
     }
   }
+
+  @override
+  Future<List<Employee>> getManagerTeamWithWallets() async {
+    try {
+      // First, get the proper employee data with correct names
+      final employeeResponse = await dio.get('/api/auth/employees/list/');
+      if (employeeResponse.statusCode != 200 || employeeResponse.data['employees'] == null) {
+        throw Exception('Failed to load employee data');
+      }
+      
+      // Then get payroll data for correlation
+      final payrollResponse = await dio.get('/api/manager/payroll/employees/');
+      Map<String, dynamic> payrollDataMap = {};
+      
+      // Create a map of payroll data by employee_id for quick lookup
+      if (payrollResponse.statusCode == 200 && 
+          payrollResponse.data['success'] == true && 
+          payrollResponse.data['employees'] != null) {
+        for (final payrollEmployee in payrollResponse.data['employees']) {
+          final employeeId = payrollEmployee['employee_id'] as String?;
+          if (employeeId != null) {
+            payrollDataMap[employeeId] = payrollEmployee;
+          }
+        }
+      }
+      
+      final employees = <Employee>[];
+      
+      // Process each employee from the proper employee endpoint
+      for (final employeeData in employeeResponse.data['employees']) {
+        try {
+          print('DEBUG: Raw employee data from /api/auth/employees/list/: $employeeData');
+          
+          // Create employee using the proper Employee.fromJson method
+          final employee = Employee.fromJson(employeeData);
+          print('DEBUG: Created employee with name: ${employee.displayName}');
+          
+          // Get corresponding payroll data if available
+          final employeeId = employee.userId;
+          final payrollData = payrollDataMap[employeeId];
+          
+          // Create PayrollInfo from payroll data if available
+          PayrollInfo? payrollInfo;
+          if (payrollData != null) {
+            final recentEntries = payrollData['recent_payroll_entries'] as List?;
+            if (recentEntries != null && recentEntries.isNotEmpty) {
+              final latestEntry = recentEntries.first as Map<String, dynamic>;
+              payrollInfo = PayrollInfo.fromJson(latestEntry);
+            }
+          }
+          
+          // Try to get wallet address for this employee
+          String? walletAddress;
+          try {
+            walletAddress = await getEmployeeWalletAddress(employee.userId);
+            print('DEBUG: Found wallet for ${employee.displayName}: $walletAddress');
+          } catch (e) {
+            print('DEBUG: Failed to get wallet for employee ${employee.userId}: $e');
+          }
+          
+          // Create updated payroll info with wallet address
+          PayrollInfo? updatedPayrollInfo;
+          if (payrollInfo != null) {
+            updatedPayrollInfo = PayrollInfo(
+              entryId: payrollInfo.entryId,
+              employeeName: employee.displayName, // Use the correct employee name
+              employeeWallet: walletAddress ?? payrollInfo.employeeWallet,
+              salaryAmount: payrollInfo.salaryAmount,
+              salaryCurrency: payrollInfo.salaryCurrency,
+              paymentFrequency: payrollInfo.paymentFrequency,
+              startDate: payrollInfo.startDate,
+              isActive: payrollInfo.isActive,
+              status: payrollInfo.status,
+              usdEquivalent: payrollInfo.usdEquivalent,
+              notes: payrollInfo.notes,
+              createdAt: payrollInfo.createdAt,
+              processedAt: payrollInfo.processedAt,
+            );
+          } else if (walletAddress != null) {
+            // Create basic payroll info even if no payroll entries exist
+            updatedPayrollInfo = PayrollInfo(
+              employeeName: employee.displayName,
+              employeeWallet: walletAddress,
+              salaryAmount: 0.0,
+              salaryCurrency: 'USD',
+              paymentFrequency: 'MONTHLY',
+              startDate: DateTime.now(),
+              isActive: true,
+              status: 'SCHEDULED',
+            );
+          }
+          
+          // Create updated employee with correct payroll info
+          final updatedEmployee = Employee(
+            userId: employee.userId,
+            username: employee.username,
+            email: employee.email,
+            role: employee.role,
+            isActive: employee.isActive,
+            createdAt: employee.createdAt,
+            lastLogin: employee.lastLogin,
+            payrollInfo: updatedPayrollInfo,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
+            department: employee.department,
+            position: employee.position,
+            profileImage: employee.profileImage,
+          );
+          
+          employees.add(updatedEmployee);
+        } catch (e) {
+          print('DEBUG: Error processing employee data: $e');
+          // Continue with next employee
+        }
+      }
+      
+      return employees;
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String?> getEmployeeWalletAddress(String userId) async {
+    try {
+      // Use a test endpoint to get wallet address for specific user
+      final response = await dio.post('/api/test-wallet-lookup/', data: {
+        'user_id': userId,
+      });
+      
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['wallet_address'] != null) {
+          return data['wallet_address'] as String;
+        }
+      }
+      
+      return null; // No wallet found
+    } catch (e) {
+      // Don't throw error, just return null if wallet lookup fails
+      print('DEBUG: Wallet lookup failed for user $userId: $e');
+      return null;
+    }
+  }
+
 }

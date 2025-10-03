@@ -42,4 +42,10 @@ abstract class EmployeeRepository {
   
   /// Process payslip payment
   Future<void> processPayslipPayment(String payslipId);
+  
+  /// Get manager team with wallet addresses pre-loaded
+  Future<List<Employee>> getManagerTeamWithWallets();
+  
+  /// Get specific employee wallet address
+  Future<String?> getEmployeeWalletAddress(String userId);
 }
