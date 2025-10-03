@@ -222,19 +222,20 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
 
   Future<void> _loadInitialWalletData() async {
     try {
+      // Fetch user's connected wallet from backend
+      final wallet = await _walletService.getUserWallet();
+      if (wallet != null) {
+        state = state.copyWith(wallet: wallet);
+      }
+      
       final transactions = _transactionsDataSource.getTransactions();
       state = state.copyWith(
         transactions: List.unmodifiable(transactions),
         hasError: false,
         errorMessage: () => '',
       );
-      if (await _walletService.hasStoredWallet()) {
-        debugPrint('Attempting to reconnect stored wallet');
-        await reconnect();
-      } else {
-        debugPrint('No stored wallet found');
-      }
-      state = state.copyWith(errorMessage: () => '', hasError: false);
+      
+      debugPrint('Loaded connected wallet from backend: ${wallet?.address ?? 'None'}');
     } catch (e) {
       state = state.copyWith(
         hasError: true,
@@ -246,7 +247,6 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
 
   Future<void> connect(
       String privateKey, {
-        required String endpoint,
         required String walletName,
         required String walletType,
       }) async {
@@ -255,7 +255,6 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     try {
       final wallet = await _walletService.connectWallet(
         privateKey,
-        endpoint: endpoint,
         walletName: walletName,
         walletType: walletType,
       );
@@ -285,9 +284,10 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     _setLoading(true);
     state = state.copyWith(errorMessage: () => '');
     try {
-      final wallet = await _walletService.reconnect();
+      // Fetch user's connected wallet from backend
+      final wallet = await _walletService.getUserWallet();
       if (wallet != null) {
-        debugPrint('Reconnected wallet: ${wallet.toJson()}');
+        debugPrint('Fetched wallet from backend: ${wallet.toJson()}');
         state = state.copyWith(
           wallet: wallet,
           selectedCurrency: 'PHP',
@@ -295,12 +295,16 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
           errorMessage: () => '',
         );
         await fetchWalletBalance();
+      } else {
+        state = state.copyWith(
+          hasError: true,
+          errorMessage: () => 'No connected wallet found. Please connect your wallet.',
+        );
       }
-
     } catch (e) {
       state = state.copyWith(
         hasError: true,
-        errorMessage: () => 'Failed to reconnect wallet: $e',
+        errorMessage: () => 'Failed to fetch wallet: $e',
       );
       debugPrint('Reconnect error: $e');
     } finally {
@@ -395,15 +399,20 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
   Future<void> refreshWallet() async {
     final wallet = state.wallet;
     if (wallet == null) {
-      debugPrint('No wallet to refresh');
+      debugPrint('🔍 Employee - No wallet to refresh');
       return;
     }
+    
+    debugPrint('🔍 Employee - Refreshing wallet: ${wallet.address}');
     _setLoading(true);
     try {
       final refreshedWallet = await _walletService.reconnect();
       if (refreshedWallet != null) {
         state = state.copyWith(wallet: refreshedWallet);
-        debugPrint('Refreshed wallet: ${refreshedWallet.toJson()}');
+        debugPrint('🔍 Employee - Refreshed wallet: ${refreshedWallet.toJson()}');
+      } else {
+        debugPrint('🔍 Employee - No wallet returned from refresh, clearing state');
+        state = state.copyWith(wallet: null);
       }
       state = state.copyWith(errorMessage: () => '', hasError: false);
     } catch (e) {
@@ -411,27 +420,41 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
         hasError: true,
         errorMessage: () => 'Failed to refresh wallet: $e',
       );
-      debugPrint('Refresh wallet error: $e');
+      debugPrint('❌ Employee - Refresh wallet error: $e');
     } finally {
       _setLoading(false);
     }
   }
 
   Future<void> disconnectWallet() async {
+    debugPrint('🔍 Employee - Starting disconnect process');
+    _setLoading(true);
     try {
-      await _walletService.disconnect();
+      if (state.wallet != null) {
+        debugPrint('🔍 Employee - Disconnecting wallet: ${state.wallet!.address}');
+        await _walletService.disconnect(state.wallet!);
+        debugPrint('🔍 Employee - Wallet service disconnect completed');
+      }
+      
+      // Force clear the wallet state
+      debugPrint('🔍 Employee - Before state update, wallet is: ${state.wallet?.address}');
       state = state.copyWith(
         wallet: null,
         errorMessage: () => '',
         selectedCurrency: 'PHP',
         hasError: false,
       );
-      debugPrint('Wallet disconnected');
+      debugPrint('🔍 Employee - After state update, wallet is: ${state.wallet?.address}');
+      debugPrint('🔍 Employee - State updated, notifying listeners');
     } catch (e) {
+      debugPrint('❌ Employee - Disconnect error: $e');
       state = state.copyWith(
         hasError: true,
         errorMessage: () => 'Failed to disconnect wallet: $e',
       );
+    } finally {
+      _setLoading(false);
+      debugPrint('🔍 Employee - Disconnect process completed');
     }
   }
 

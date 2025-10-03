@@ -1,18 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../../../dependency_injection/riverpod_providers.dart';
+import '../../Payroll/payroll_management_screen.dart';
 
-class PayrollSummaryScreen extends StatefulWidget {
+class PayrollSummaryScreen extends ConsumerStatefulWidget {
   const PayrollSummaryScreen({super.key});
 
   @override
-  State<PayrollSummaryScreen> createState() => _PayrollSummaryScreenState();
+  ConsumerState<PayrollSummaryScreen> createState() => _PayrollSummaryScreenState();
 }
 
-class _PayrollSummaryScreenState extends State<PayrollSummaryScreen> {
+class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
   bool isChartView = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Load payroll data when screen opens using existing backend endpoints
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPayrollData();
+    });
+  }
+
+  Future<void> _loadPayrollData() async {
+    // Use existing backend endpoint to load manager payroll data
+    try {
+      final response = await ref.read(dioClientProvider).dio.get('/api/manager/payroll/employees/');
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        // Data loaded successfully - the screen will refresh automatically
+      }
+    } catch (e) {
+      print('Error loading payroll data: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final payrollState = ref.watch(payrollViewModelProvider);
+    final payrollNotifier = ref.read(payrollViewModelProvider.notifier);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -30,6 +57,21 @@ class _PayrollSummaryScreenState extends State<PayrollSummaryScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.black87),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PayrollManagementScreen(),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black87),
+            onPressed: _loadPayrollData,
+          ),
+        ],
       ),
       body: Column(
         children: [

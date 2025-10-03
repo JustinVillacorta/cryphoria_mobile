@@ -31,6 +31,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   GasEstimate? _gasEstimate;
   bool _isEstimatingGas = false;
   bool _isSendingPayment = false;
+  bool _isDisposed = false;
 
   final List<String> tokens = ['ETH', 'BTC', 'USDT', 'USDC'];
   final List<String> categories = [
@@ -47,14 +48,22 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     _ethPaymentService = ref.read(ethPaymentServiceProvider);
   }
 
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
   Future<void> _estimateGas() async {
     if (widget.wallet == null || amount.isEmpty || recipientAddress.isEmpty) {
       return;
     }
 
-    setState(() {
-      _isEstimatingGas = true;
-    });
+    if (mounted && !_isDisposed) {
+      setState(() {
+        _isEstimatingGas = true;
+      });
+    }
 
     try {
       print("🔄 Starting gas estimation...");
@@ -68,19 +77,19 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
       
       if (!isServerHealthy) {
         print("⚠️ Server health check failed, using default gas estimate");
-        setState(() {
-          _isEstimatingGas = false;
-          _gasEstimate = GasEstimate(
-            estimatedCostEth: 0.001,
-            gasPriceGwei: 20.0,
-            gasLimit: 21000,
-            slowGasPrice: 10.0,
-            standardGasPrice: 20.0,
-            fastGasPrice: 30.0,
-          );
-        });
-        
-        if (mounted) {
+        if (mounted && !_isDisposed) {
+          setState(() {
+            _isEstimatingGas = false;
+            _gasEstimate = GasEstimate(
+              estimatedCostEth: 0.001,
+              gasPriceGwei: 20.0,
+              gasLimit: 21000,
+              slowGasPrice: 10.0,
+              standardGasPrice: 20.0,
+              fastGasPrice: 30.0,
+            );
+          });
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Server not reachable. Using default gas fee (0.001 ETH). Please check if backend server is running.'),
@@ -103,26 +112,28 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
       );
 
       print("✅ Gas estimation successful: ${gasEstimate.toString()}");
-      setState(() {
-        _gasEstimate = gasEstimate;
-        _isEstimatingGas = false;
-      });
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _gasEstimate = gasEstimate;
+          _isEstimatingGas = false;
+        });
+      }
     } catch (e) {
       print("❌ Gas estimation failed: $e");
-      setState(() {
-        _isEstimatingGas = false;
-        // Set a default gas estimate so transaction can still proceed
-        _gasEstimate = GasEstimate(
-          estimatedCostEth: 0.001, // Default gas fee
-          gasPriceGwei: 20.0, // Default gas price
-          gasLimit: 21000, // Default gas limit for ETH transfer
-          slowGasPrice: 10.0,
-          standardGasPrice: 20.0,
-          fastGasPrice: 30.0,
-        );
-      });
-      
-      if (mounted) {
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isEstimatingGas = false;
+          // Set a default gas estimate so transaction can still proceed
+          _gasEstimate = GasEstimate(
+            estimatedCostEth: 0.001, // Default gas fee
+            gasPriceGwei: 20.0, // Default gas price
+            gasLimit: 21000, // Default gas limit for ETH transfer
+            slowGasPrice: 10.0,
+            standardGasPrice: 20.0,
+            fastGasPrice: 30.0,
+          );
+        });
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Gas estimation failed. Using default gas fee (0.001 ETH). You can still proceed.'),
@@ -143,11 +154,21 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
       return;
     }
 
-    setState(() {
-      _isSendingPayment = true;
-    });
+    if (mounted && !_isDisposed) {
+      setState(() {
+        _isSendingPayment = true;
+      });
+    }
 
     try {
+      print('🚀 Starting ETH payment...');
+      print('📋 From: ${widget.wallet!.address}');
+      print('📋 To: $recipientAddress');
+      print('📋 Amount: $amount');
+      print('📋 Company: $recipientName');
+      print('📋 Category: $category');
+      print('📋 Description: $description');
+
       final result = await _ethPaymentService.sendEthTransaction(
         fromWallet: widget.wallet!,
         toAddress: recipientAddress,
@@ -157,29 +178,36 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
         description: description.isNotEmpty ? description : null,
       );
 
-      setState(() {
-        _isSendingPayment = false;
-      });
+      print('✅ Payment successful! Transaction hash: ${result.transactionHash}');
 
-      if (mounted) {
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isSendingPayment = false;
+        });
+
         Navigator.pop(context, result);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payment sent! TX: ${result.transactionHash.substring(0, 10)}...'),
+            content: Text('Payment sent successfully! TX: ${result.transactionHash.substring(0, 10)}...'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 5),
           ),
         );
       }
     } catch (e) {
-      setState(() {
-        _isSendingPayment = false;
-      });
+      print('🚨 Payment failed with error: $e');
+      print('🚨 Error type: ${e.runtimeType}');
       
-      if (mounted) {
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isSendingPayment = false;
+        });
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Payment failed: $e'),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
           ),
         );
       }

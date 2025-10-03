@@ -56,7 +56,6 @@ void main() {
       wallet: Wallet(
         id: '1',
         name: 'MetaMask',
-        private_key: 'key',
         balance: 1.0,
       ),
       selectedCurrency: 'PHP',

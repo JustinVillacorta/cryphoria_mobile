@@ -12,19 +12,22 @@ import '../features/data/data_sources/audit_remote_data_source.dart';
 import '../features/data/data_sources/eth_payment_remote_data_source.dart';
 import '../features/data/data_sources/eth_transaction_data_source.dart';
 import '../features/data/data_sources/fake_transactions_data.dart';
+import '../features/data/data_sources/reports_remote_data_source.dart';
 import '../features/data/data_sources/walletRemoteDataSource.dart';
 import '../features/data/notifiers/audit_notifier.dart';
 import '../features/data/repositories_impl/AuthRepositoryImpl.dart';
 import '../features/data/repositories_impl/audit_repository_impl.dart';
 import '../features/data/repositories_impl/employee_repository_impl.dart';
+import '../features/data/repositories_impl/reports_repository_impl.dart';
 import '../features/data/services/currency_conversion_service.dart';
 
 import '../features/data/services/eth_payment_service.dart';
-import '../features/data/services/private_key_storage.dart';
+// private_key_storage.dart removed - private keys now stored on backend
 import '../features/data/services/wallet_service.dart';
 import '../features/domain/repositories/auth_repository.dart';
 import '../features/domain/repositories/audit_repository.dart';
 import '../features/domain/repositories/employee_repository.dart';
+import '../features/domain/repositories/reports_repository.dart';
 import '../features/domain/usecases/Audit/get_audit_report_usecase.dart';
 import '../features/domain/usecases/Audit/get_audit_status_usecase.dart';
 import '../features/domain/usecases/Audit/submit_audit_usecase.dart';
@@ -34,6 +37,7 @@ import '../features/domain/usecases/Employee_management/add_employee_to_team_use
 import '../features/domain/usecases/Employee_management/create_payslip_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_all_employees_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_manager_team_usecase.dart';
+import '../features/domain/usecases/Employee_management/get_manager_team_with_wallets_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_payslips_usecase.dart';
 
 // Payslip imports
@@ -48,9 +52,23 @@ import '../features/presentation/manager/Payslip/ViewModels/payslip_list_viewmod
 import '../features/presentation/manager/Payslip/ViewModels/payslip_list_state.dart';
 import '../features/presentation/manager/Payslip/ViewModels/create_payslip_viewmodel.dart';
 import '../features/presentation/manager/Payslip/ViewModels/create_payslip_state.dart';
+
+// Payroll imports
+import '../features/data/data_sources/payroll_remote_data_source.dart';
+import '../features/data/repositories/payroll_repository_impl.dart';
+import '../features/domain/repositories/payroll_repository.dart';
+import '../features/domain/usecases/payroll/create_payroll_period_usecase.dart';
+import '../features/domain/usecases/payroll/get_payroll_periods_usecase.dart';
+import '../features/domain/usecases/payroll/process_payroll_period_usecase.dart';
+import '../features/domain/usecases/payroll/update_payroll_entry_usecase.dart';
+import '../features/domain/usecases/payroll/get_payroll_analytics_usecase.dart';
+import '../features/presentation/manager/Payroll/ViewModel/payroll_view_model.dart';
 import '../features/domain/usecases/Login/login_usecase.dart';
 import '../features/domain/usecases/Logout/logout_usecase.dart';
 import '../features/domain/usecases/Register/register_use_case.dart';
+import '../features/domain/usecases/Reports/generate_report_usecase.dart';
+import '../features/domain/usecases/Reports/get_report_status_usecase.dart';
+import '../features/domain/usecases/Reports/get_user_reports_usecase.dart';
 
 import '../features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
 import '../features/presentation/manager/Audit/ViewModels/audit_analysis_viewmodel.dart';
@@ -129,9 +147,7 @@ final walletRemoteDataSourceProvider = Provider<WalletRemoteDataSource>((ref) {
   );
 });
 
-final privateKeyStorageProvider = Provider<PrivateKeyStorage>((ref) {
-  return PrivateKeyStorage(storage: ref.watch(flutterSecureStorageProvider));
-});
+// PrivateKeyStorage removed - private keys now stored on backend
 
 final currencyConversionServiceProvider = Provider<CurrencyConversionService>((ref) {
   return CurrencyConversionService(dio: ref.watch(dioClientProvider).dio);
@@ -143,8 +159,12 @@ final ethPaymentRemoteDataSourceProvider =
 });
 
 final ethPaymentServiceProvider = Provider<EthPaymentService>((ref) {
-  return EthPaymentService(remoteDataSource: ref.watch(ethPaymentRemoteDataSourceProvider));
+  return EthPaymentService(
+    remoteDataSource: ref.watch(ethPaymentRemoteDataSourceProvider),
+    walletService: ref.watch(walletServiceProvider),
+  );
 });
+
 
 final fakeTransactionsDataSourceProvider =
     Provider<FakeTransactionsDataSource>((ref) {
@@ -174,6 +194,10 @@ final auditRemoteDataSourceProvider = Provider<AuditRemoteDataSource>((ref) {
   return AuditRemoteDataSourceImpl(dio: ref.watch(dioClientProvider).dio);
 });
 
+final reportsRemoteDataSourceProvider = Provider<ReportsRemoteDataSource>((ref) {
+  return ReportsRemoteDataSourceImpl(dio: ref.watch(dioClientProvider).dio);
+});
+
 // -----------------------------------------------------------------------------
 // Services
 // -----------------------------------------------------------------------------
@@ -181,7 +205,6 @@ final auditRemoteDataSourceProvider = Provider<AuditRemoteDataSource>((ref) {
 final walletServiceProvider = Provider<WalletService>((ref) {
   return WalletService(
     remoteDataSource: ref.watch(walletRemoteDataSourceProvider),
-    storage: ref.watch(privateKeyStorageProvider),
     currencyService: ref.watch(currencyConversionServiceProvider),
   );
 });
@@ -207,6 +230,10 @@ final auditRepositoryProvider = Provider<AuditRepository>((ref) {
   return AuditRepositoryImpl(remoteDataSource: ref.watch(auditRemoteDataSourceProvider));
 });
 
+final reportsRepositoryProvider = Provider<ReportsRepository>((ref) {
+  return ReportsRepositoryImpl(remoteDataSource: ref.watch(reportsRemoteDataSourceProvider));
+});
+
 // -----------------------------------------------------------------------------
 // Use cases
 // -----------------------------------------------------------------------------
@@ -230,6 +257,10 @@ final getAllEmployeesUseCaseProvider = Provider<GetAllEmployeesUseCase>((ref) {
 
 final getManagerTeamUseCaseProvider = Provider<GetManagerTeamUseCase>((ref) {
   return GetManagerTeamUseCase(repository: ref.watch(employeeRepositoryProvider));
+});
+
+final getManagerTeamWithWalletsUseCaseProvider = Provider<GetManagerTeamWithWalletsUseCase>((ref) {
+  return GetManagerTeamWithWalletsUseCase(repository: ref.watch(employeeRepositoryProvider));
 });
 
 final addEmployeeToTeamUseCaseProvider =
@@ -266,6 +297,18 @@ final getAuditStatusUseCaseProvider = Provider<GetAuditStatusUseCase>((ref) {
 
 final uploadContractUseCaseProvider = Provider<UploadContractUseCase>((ref) {
   return UploadContractUseCase(ref.watch(auditRepositoryProvider));
+});
+
+final generateReportUseCaseProvider = Provider<GenerateReportUseCase>((ref) {
+  return GenerateReportUseCase(ref.watch(reportsRepositoryProvider));
+});
+
+final getReportStatusUseCaseProvider = Provider<GetReportStatusUseCase>((ref) {
+  return GetReportStatusUseCase(ref.watch(reportsRepositoryProvider));
+});
+
+final getUserReportsUseCaseProvider = Provider<GetUserReportsUseCase>((ref) {
+  return GetUserReportsUseCase(ref.watch(reportsRepositoryProvider));
 });
 
 // -----------------------------------------------------------------------------
@@ -422,4 +465,53 @@ final payslipListViewModelProvider = StateNotifierProvider<PayslipListViewModel,
 
 final createPayslipViewModelProvider = StateNotifierProvider<CreatePayslipViewModel, CreatePayslipState>((ref) {
   return CreatePayslipViewModel(ref.watch(createPayslipUseCaseNewProvider));
+});
+
+// -----------------------------------------------------------------------------
+// Payroll Providers
+// -----------------------------------------------------------------------------
+
+// Data Sources
+final payrollRemoteDataSourceProvider = Provider<PayrollRemoteDataSource>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return PayrollRemoteDataSourceImpl(dio: dioClient.dio);
+});
+
+// Repository
+final payrollRepositoryProvider = Provider<PayrollRepository>((ref) {
+  return PayrollRepositoryImpl(
+    remoteDataSource: ref.watch(payrollRemoteDataSourceProvider),
+  );
+});
+
+// Use Cases
+final createPayrollPeriodUseCaseProvider = Provider<CreatePayrollPeriodUseCase>((ref) {
+  return CreatePayrollPeriodUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+final getPayrollPeriodsUseCaseProvider = Provider<GetPayrollPeriodsUseCase>((ref) {
+  return GetPayrollPeriodsUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+final processPayrollPeriodUseCaseProvider = Provider<ProcessPayrollPeriodUseCase>((ref) {
+  return ProcessPayrollPeriodUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+final updatePayrollEntryUseCaseProvider = Provider<UpdatePayrollEntryUseCase>((ref) {
+  return UpdatePayrollEntryUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+final getPayrollAnalyticsUseCaseProvider = Provider<GetPayrollAnalyticsUseCase>((ref) {
+  return GetPayrollAnalyticsUseCase(repository: ref.watch(payrollRepositoryProvider));
+});
+
+// ViewModel
+final payrollViewModelProvider = StateNotifierProvider<PayrollViewModel, PayrollState>((ref) {
+  return PayrollViewModel(
+    getPayrollPeriodsUseCase: ref.watch(getPayrollPeriodsUseCaseProvider),
+    createPayrollPeriodUseCase: ref.watch(createPayrollPeriodUseCaseProvider),
+    processPayrollPeriodUseCase: ref.watch(processPayrollPeriodUseCaseProvider),
+    updatePayrollEntryUseCase: ref.watch(updatePayrollEntryUseCaseProvider),
+    getPayrollAnalyticsUseCase: ref.watch(getPayrollAnalyticsUseCaseProvider),
+  );
 });

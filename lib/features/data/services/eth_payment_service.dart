@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import '../data_sources/eth_payment_remote_data_source.dart';
 import '../../domain/entities/eth_transaction.dart';
 import '../../domain/entities/wallet.dart';
+import 'wallet_service.dart';
 
 class EthPaymentService {
   final EthPaymentRemoteDataSource remoteDataSource;
+  final WalletService walletService;
 
-  EthPaymentService({required this.remoteDataSource});
+  EthPaymentService({
+    required this.remoteDataSource,
+    required this.walletService,
+  });
 
   /// Send ETH transaction with validation
   Future<EthTransactionResult> sendEthTransaction({
@@ -32,22 +37,63 @@ class EthPaymentService {
       throw Exception('Insufficient balance for transaction');
     }
 
-    // Create transaction request
-    final request = EthTransactionRequest(
-      fromWalletId: fromWallet.id,
-      fromAddress: fromWallet.address,
-      toAddress: toAddress,
-      amount: amount,
-      privateKey: fromWallet.private_key,
-      gasPrice: gasPrice,
-      gasLimit: gasLimit,
-      company: company,
-      category: category,
-      description: description,
-    );
+    if (!fromWallet.isConnected) {
+      throw Exception('Wallet is not connected');
+    }
 
     try {
-      return await remoteDataSource.sendEthTransaction(request);
+      // Use wallet service to send ETH (private key is handled by backend)
+      final result = await walletService.sendEth(
+        toAddress: toAddress,
+        amount: amount,
+        gasPrice: gasPrice?.toString(),
+        gasLimit: gasLimit?.toString(),
+        company: company,
+        category: category,
+        description: description,
+      );
+
+      // Debug logging
+      print('🔍 EthPaymentService received result: $result');
+      print('🔍 Result type: ${result.runtimeType}');
+      print('🔍 Result keys: ${result.keys.toList()}');
+      
+      // Debug individual field types
+      result.forEach((key, value) {
+        print('🔍 $key: $value (${value.runtimeType})');
+      });
+
+      // Validate that we have a transaction hash
+      final transactionHash = result['transaction_hash']?.toString() ?? '';
+      if (transactionHash.isEmpty) {
+        print('🚨 No transaction hash found in result: $result');
+        throw Exception('Transaction failed: No transaction hash returned from server');
+      }
+
+      // Convert backend response to EthTransactionResult
+      final ethResult = EthTransactionResult(
+        transactionHash: transactionHash,
+        fromAddress: result['from_address']?.toString() ?? fromWallet.address,
+        toAddress: result['to_address']?.toString() ?? toAddress,
+        amountEth: _parseDouble(result['amount_eth']) ?? amount,
+        gasPrice: _parseDouble(result['gas_price_gwei']) ?? 0.0,
+        gasLimit: _parseInt(result['gas_limit']) ?? 21000,
+        gasUsed: _parseInt(result['gas_used']) ?? 21000,
+        gasCostEth: _parseDouble(result['gas_cost_eth']) ?? 0.0,
+        totalCostEth: _parseDouble(result['total_cost_eth']) ?? amount,
+        status: result['status']?.toString() ?? 'pending',
+        chainId: _parseInt(result['chain_id']) ?? 1,
+        nonce: _parseInt(result['nonce']) ?? 0,
+        fromWalletName: result['from_wallet_name']?.toString(),
+        company: company,
+        category: category,
+        description: description,
+        timestamp: DateTime.now(),
+        accountingProcessed: _parseBool(result['accounting_processed']) ?? false,
+      );
+
+      print('✅ EthTransactionResult created successfully: ${ethResult.transactionHash}');
+      return ethResult;
     } catch (e) {
       print('🚨 EthPaymentService.sendEthTransaction error: $e');
       rethrow;
@@ -243,6 +289,41 @@ class EthPaymentService {
   bool _isValidEthereumAddress(String address) {
     // Basic Ethereum address validation
     return address.startsWith('0x') && address.length == 42;
+  }
+
+  /// Safely parse a dynamic value to double
+  double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value);
+    }
+    return null;
+  }
+
+  /// Safely parse a dynamic value to int
+  int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
+  }
+
+  /// Safely parse a dynamic value to bool
+  bool? _parseBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is String) {
+      return value.toLowerCase() == 'true';
+    }
+    if (value is int) {
+      return value != 0;
+    }
+    return null;
   }
 
   /// Format address for display
