@@ -11,11 +11,13 @@ import '../features/data/data_sources/audit_remote_data_source.dart';
 import '../features/data/data_sources/eth_payment_remote_data_source.dart';
 import '../features/data/data_sources/eth_transaction_data_source.dart';
 import '../features/data/data_sources/fake_transactions_data.dart';
+import '../features/data/data_sources/reports_remote_data_source.dart';
 import '../features/data/data_sources/walletRemoteDataSource.dart';
 import '../features/data/notifiers/audit_notifier.dart';
 import '../features/data/repositories_impl/AuthRepositoryImpl.dart';
 import '../features/data/repositories_impl/audit_repository_impl.dart';
 import '../features/data/repositories_impl/employee_repository_impl.dart';
+import '../features/data/repositories_impl/reports_repository_impl.dart';
 import '../features/data/services/currency_conversion_service.dart';
 
 import '../features/data/services/eth_payment_service.dart';
@@ -24,6 +26,7 @@ import '../features/data/services/wallet_service.dart';
 import '../features/domain/repositories/auth_repository.dart';
 import '../features/domain/repositories/audit_repository.dart';
 import '../features/domain/repositories/employee_repository.dart';
+import '../features/domain/repositories/reports_repository.dart';
 import '../features/domain/usecases/Audit/get_audit_report_usecase.dart';
 import '../features/domain/usecases/Audit/get_audit_status_usecase.dart';
 import '../features/domain/usecases/Audit/submit_audit_usecase.dart';
@@ -37,6 +40,9 @@ import '../features/domain/usecases/Employee_management/get_payslips_usecase.dar
 import '../features/domain/usecases/Login/login_usecase.dart';
 import '../features/domain/usecases/Logout/logout_usecase.dart';
 import '../features/domain/usecases/Register/register_use_case.dart';
+import '../features/domain/usecases/Reports/generate_report_usecase.dart';
+import '../features/domain/usecases/Reports/get_report_status_usecase.dart';
+import '../features/domain/usecases/Reports/get_user_reports_usecase.dart';
 
 import '../features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
 import '../features/presentation/manager/Audit/ViewModels/audit_analysis_viewmodel.dart';
@@ -153,6 +159,10 @@ final auditRemoteDataSourceProvider = Provider<AuditRemoteDataSource>((ref) {
   return AuditRemoteDataSourceImpl(dio: ref.watch(dioClientProvider).dio);
 });
 
+final reportsRemoteDataSourceProvider = Provider<ReportsRemoteDataSource>((ref) {
+  return ReportsRemoteDataSourceImpl(dio: ref.watch(dioClientProvider).dio);
+});
+
 // -----------------------------------------------------------------------------
 // Services
 // -----------------------------------------------------------------------------
@@ -184,6 +194,10 @@ final employeeRepositoryProvider = Provider<EmployeeRepository>((ref) {
 
 final auditRepositoryProvider = Provider<AuditRepository>((ref) {
   return AuditRepositoryImpl(remoteDataSource: ref.watch(auditRemoteDataSourceProvider));
+});
+
+final reportsRepositoryProvider = Provider<ReportsRepository>((ref) {
+  return ReportsRepositoryImpl(remoteDataSource: ref.watch(reportsRemoteDataSourceProvider));
 });
 
 // -----------------------------------------------------------------------------
@@ -245,6 +259,18 @@ final getAuditStatusUseCaseProvider = Provider<GetAuditStatusUseCase>((ref) {
 
 final uploadContractUseCaseProvider = Provider<UploadContractUseCase>((ref) {
   return UploadContractUseCase(ref.watch(auditRepositoryProvider));
+});
+
+final generateReportUseCaseProvider = Provider<GenerateReportUseCase>((ref) {
+  return GenerateReportUseCase(ref.watch(reportsRepositoryProvider));
+});
+
+final getReportStatusUseCaseProvider = Provider<GetReportStatusUseCase>((ref) {
+  return GetReportStatusUseCase(ref.watch(reportsRepositoryProvider));
+});
+
+final getUserReportsUseCaseProvider = Provider<GetUserReportsUseCase>((ref) {
+  return GetUserReportsUseCase(ref.watch(reportsRepositoryProvider));
 });
 
 // -----------------------------------------------------------------------------

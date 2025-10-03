@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../dependency_injection/riverpod_providers.dart';
+import '../../domain/repositories/reports_repository.dart';
 
-class GenerateReportBottomSheet extends StatefulWidget {
+class GenerateReportBottomSheet extends ConsumerStatefulWidget {
   const GenerateReportBottomSheet({Key? key}) : super(key: key);
 
   @override
-  State<GenerateReportBottomSheet> createState() => _GenerateReportBottomSheetState();
+  ConsumerState<GenerateReportBottomSheet> createState() => _GenerateReportBottomSheetState();
 }
 
-class _GenerateReportBottomSheetState extends State<GenerateReportBottomSheet> {
-  int currentStep = 0; // 0 = form, 1 = success
+class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottomSheet> {
+  int currentStep = 0; // 0 = form, 1 = success, 2 = loading
   String selectedReportType = 'Payroll';
   String selectedTimePeriod = 'Current Period';
   String selectedFormat = 'PDF';
   bool includeDetailedBreakdown = true;
   bool emailReportWhenGenerated = false;
+  bool isLoading = false;
+  String? errorMessage;
+  String? generatedReportId;
 
   final List<String> reportTypes = ['Payroll', 'Tax', 'Summary'];
   final List<String> timePeriods = ['Current Period', 'Previous Period', 'Year to Date', 'Custom Period'];
@@ -31,7 +37,11 @@ class _GenerateReportBottomSheetState extends State<GenerateReportBottomSheet> {
         children: [
           _buildHeader(),
           Expanded(
-            child: currentStep == 0 ? _buildFormStep() : _buildSuccessStep(),
+            child: currentStep == 0
+                ? _buildFormStep()
+                : currentStep == 1
+                    ? _buildLoadingStep()
+                    : _buildSuccessStep(),
           ),
           if (currentStep == 0) _buildBottomActions(),
         ],
@@ -178,6 +188,57 @@ class _GenerateReportBottomSheetState extends State<GenerateReportBottomSheet> {
     );
   }
 
+  Widget _buildLoadingStep() {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Generating Report...',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Please wait while we generate your $selectedReportType report',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          if (errorMessage != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Text(
+                errorMessage!,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildSuccessStep() {
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -266,15 +327,26 @@ class _GenerateReportBottomSheetState extends State<GenerateReportBottomSheet> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {
+                  onPressed: generatedReportId != null ? () async {
                     // Handle download
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Downloading $selectedReportType report...'),
-                        backgroundColor: const Color(0xFF8B5CF6),
-                      ),
-                    );
-                  },
+                    try {
+                      final reportsRepository = ref.read(reportsRepositoryProvider);
+                      await reportsRepository.downloadReport(generatedReportId!);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Report download initiated'),
+                          backgroundColor: Color(0xFF8B5CF6),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Download failed: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } : null,
                   icon: const Icon(Icons.download, color: Colors.white),
                   label: const Text(
                     'Download',
@@ -292,15 +364,26 @@ class _GenerateReportBottomSheetState extends State<GenerateReportBottomSheet> {
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
+                  onPressed: generatedReportId != null ? () async {
                     // Handle email
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Emailing $selectedReportType report...'),
-                        backgroundColor: Colors.blue,
-                      ),
-                    );
-                  },
+                    try {
+                      final reportsRepository = ref.read(reportsRepositoryProvider);
+                      await reportsRepository.emailReport(generatedReportId!);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Report emailed successfully'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Email failed: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } : null,
                   icon: const Icon(Icons.email, color: Colors.grey),
                   label: const Text(
                     'Email',
@@ -495,11 +578,7 @@ class _GenerateReportBottomSheetState extends State<GenerateReportBottomSheet> {
           Expanded(
             flex: 2,
             child: ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  currentStep = 1;
-                });
-              },
+              onPressed: isLoading ? null : _generateReport,
               icon: const Icon(Icons.bar_chart, color: Colors.white),
               label: const Text(
                 'Generate Report',
@@ -522,5 +601,57 @@ class _GenerateReportBottomSheetState extends State<GenerateReportBottomSheet> {
         ],
       ),
     );
+  }
+
+  Future<void> _generateReport() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+      currentStep = 1; // loading step
+    });
+
+    try {
+      final generateReportUseCase = ref.read(generateReportUseCaseProvider);
+
+      final request = ReportGenerationRequest(
+        type: selectedReportType,
+        timePeriod: selectedTimePeriod,
+        format: selectedFormat,
+        includeDetailedBreakdown: includeDetailedBreakdown,
+        emailWhenGenerated: emailReportWhenGenerated,
+      );
+
+      final reportId = await generateReportUseCase.execute(request);
+      generatedReportId = reportId;
+
+      // If email is requested, send the email
+      if (emailReportWhenGenerated) {
+        try {
+          final reportsRepository = ref.read(reportsRepositoryProvider);
+          await reportsRepository.emailReport(reportId);
+        } catch (e) {
+          // Email failed, but report was generated successfully
+          print('Failed to send email: $e');
+        }
+      }
+
+      setState(() {
+        isLoading = false;
+        currentStep = 2; // success step
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = e.toString();
+        currentStep = 0; // back to form
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to generate report: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
