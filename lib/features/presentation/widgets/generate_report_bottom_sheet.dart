@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../dependency_injection/riverpod_providers.dart';
-import '../../domain/repositories/reports_repository.dart';
+import 'pdf_generation_helper.dart';
 
 class GenerateReportBottomSheet extends ConsumerStatefulWidget {
   const GenerateReportBottomSheet({Key? key}) : super(key: key);
@@ -20,8 +20,9 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
   bool isLoading = false;
   String? errorMessage;
   String? generatedReportId;
+  Map<String, dynamic>? reportData;
 
-  final List<String> reportTypes = ['Payroll', 'Tax', 'Summary'];
+  final List<String> reportTypes = ['Tax Reports', 'Balance Sheet', 'Cash Flow'];
   final List<String> timePeriods = ['Current Period', 'Previous Period', 'Year to Date', 'Custom Period'];
   final List<String> formats = ['PDF', 'EXCEL', 'CSV'];
 
@@ -199,7 +200,7 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
           ),
           const SizedBox(height: 24),
           const Text(
-            'Generating Report...',
+            'Fetching Report Data...',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -208,7 +209,7 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
           ),
           const SizedBox(height: 12),
           Text(
-            'Please wait while we generate your $selectedReportType report',
+            'Please wait while we fetch your $selectedReportType data from the server',
             style: const TextStyle(
               fontSize: 14,
               color: Colors.grey,
@@ -243,8 +244,8 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Success Header
           Container(
             width: 80,
             height: 80,
@@ -260,7 +261,7 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
           ),
           const SizedBox(height: 24),
           const Text(
-            'Report Generated!',
+            'Report Data Fetched!',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w600,
@@ -269,136 +270,99 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
           ),
           const SizedBox(height: 12),
           Text(
-            'Your $selectedReportType Report has been created successfully',
+            'Your $selectedReportType data has been fetched successfully.',
             style: const TextStyle(
               fontSize: 14,
               color: Colors.grey,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 40),
-          
-          // Report Icon and Details
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.description,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '$selectedReportType Report',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  selectedTimePeriod,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: 32),
           
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: generatedReportId != null ? () async {
-                    // Handle download
-                    try {
-                      final reportsRepository = ref.read(reportsRepositoryProvider);
-                      await reportsRepository.downloadReport(generatedReportId!);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Report download initiated'),
-                          backgroundColor: Color(0xFF8B5CF6),
+          // Data Display Section
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        _getReportIcon(),
+                        color: const Color(0xFF8B5CF6),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$selectedReportType Data',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Download failed: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  } : null,
-                  icon: const Icon(Icons.download, color: Colors.white),
-                  label: const Text(
-                    'Download',
-                    style: TextStyle(color: Colors.white),
+                      ),
+                    ],
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: _buildDataDisplay(),
                     ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: generatedReportId != null ? () async {
-                    // Handle email
-                    try {
-                      final reportsRepository = ref.read(reportsRepositoryProvider);
-                      await reportsRepository.emailReport(generatedReportId!);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Report emailed successfully'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Email failed: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  } : null,
-                  icon: const Icon(Icons.email, color: Colors.grey),
-                  label: const Text(
-                    'Email',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Download PDF Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: reportData != null ? () async {
+                // Handle PDF download
+                try {
+                  await _downloadPdf();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('PDF downloaded successfully'),
+                      backgroundColor: Color(0xFF4CAF50),
                     ),
-                    side: BorderSide(color: Colors.grey[300]!),
-                  ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('PDF download failed: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } : null,
+              icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+              label: const Text(
+                'Download PDF',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
                 ),
               ),
-            ],
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -407,6 +371,7 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
               onPressed: () {
                 setState(() {
                   currentStep = 0;
+                  reportData = null;
                 });
               },
               style: OutlinedButton.styleFrom(
@@ -434,14 +399,14 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
     final isSelected = selectedReportType == type;
     IconData icon;
     switch (type) {
-      case 'Payroll':
-        icon = Icons.people;
+      case 'Tax Reports':
+        icon = Icons.receipt_long;
         break;
-      case 'Tax':
-        icon = Icons.description;
+      case 'Balance Sheet':
+        icon = Icons.account_balance;
         break;
-      case 'Summary':
-        icon = Icons.bar_chart;
+      case 'Cash Flow':
+        icon = Icons.trending_up;
         break;
       default:
         icon = Icons.description;
@@ -455,8 +420,8 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
           });
         },
         child: Container(
-          margin: const EdgeInsets.only(right: 12),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFFF3F0FF) : Colors.white,
             border: Border.all(
@@ -466,20 +431,22 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                color: isSelected ? const Color(0xFF8B5CF6) : Colors.grey,
-                size: 24,
+                color: isSelected ? const Color(0xFF8B5CF6) : Colors.grey[600],
+                size: 28,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 type,
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                   color: isSelected ? const Color(0xFF8B5CF6) : Colors.grey[700],
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -611,23 +578,42 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
     });
 
     try {
-      final generateReportUseCase = ref.read(generateReportUseCaseProvider);
+      final reportsRepository = ref.read(reportsRepositoryProvider);
+      String reportId;
+      Map<String, dynamic> data;
 
-      final request = ReportGenerationRequest(
-        type: selectedReportType,
-        timePeriod: selectedTimePeriod,
-        format: selectedFormat,
-        includeDetailedBreakdown: includeDetailedBreakdown,
-        emailWhenGenerated: emailReportWhenGenerated,
-      );
+      // Handle the 3 financial report types with direct API calls
+      if (selectedReportType == 'Tax Reports') {
+        print("📤 Fetching Tax Reports...");
+        final taxReport = await reportsRepository.getTaxReports();
+        data = taxReport.toJson();
+        reportId = 'tax_report_${DateTime.now().millisecondsSinceEpoch}';
+        print("✅ Tax Reports fetched successfully");
+      } else if (selectedReportType == 'Balance Sheet') {
+        print("📤 Fetching Balance Sheet...");
+        final balanceSheet = await reportsRepository.getBalanceSheet();
+        data = balanceSheet.toJson();
+        reportId = 'balance_sheet_${DateTime.now().millisecondsSinceEpoch}';
+        print("✅ Balance Sheet fetched successfully");
+      } else if (selectedReportType == 'Cash Flow') {
+        print("📤 Fetching Cash Flow...");
+        final cashFlow = await reportsRepository.getCashFlow();
+        data = cashFlow.toJson();
+        reportId = 'cash_flow_${DateTime.now().millisecondsSinceEpoch}';
+        print("✅ Cash Flow fetched successfully");
+      } else {
+        throw Exception('Unsupported report type: $selectedReportType');
+      }
 
-      final reportId = await generateReportUseCase.execute(request);
+      // Check if widget is still mounted before updating state
+      if (!mounted) return;
+
       generatedReportId = reportId;
+      reportData = data;
 
       // If email is requested, send the email
       if (emailReportWhenGenerated) {
         try {
-          final reportsRepository = ref.read(reportsRepositoryProvider);
           await reportsRepository.emailReport(reportId);
         } catch (e) {
           // Email failed, but report was generated successfully
@@ -635,23 +621,344 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
         }
       }
 
+      // Check if widget is still mounted before updating state
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
         currentStep = 2; // success step
       });
     } catch (e) {
+      print("❌ Error generating report: $e");
+      
+      // Check if widget is still mounted before updating state
+      if (!mounted) return;
+      
       setState(() {
         isLoading = false;
         errorMessage = e.toString();
         currentStep = 0; // back to form
       });
-
+      
+      // Show more specific error message
+      String errorMsg = 'Failed to generate report';
+      if (e.toString().contains('type \'Null\' is not a subtype')) {
+        errorMsg = 'Data parsing error: Please check the API response format';
+      } else if (e.toString().contains('Network error')) {
+        errorMsg = 'Network error: Please check your internet connection';
+      } else if (e.toString().contains('Failed to get')) {
+        errorMsg = 'API error: ${e.toString().split(': ').last}';
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to generate report: ${e.toString()}'),
+          content: Text(errorMsg),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
         ),
       );
+    }
+  }
+
+  Future<void> _downloadPdf() async {
+    if (reportData == null) {
+      throw Exception('No report data available');
+    }
+
+    print('Generating PDF for $selectedReportType with data: $reportData');
+    
+    try {
+      String filePath;
+      
+      // Generate PDF based on report type
+      if (selectedReportType == 'Tax Reports') {
+        filePath = await PdfGenerationHelper.generateTaxReportPdf(reportData!);
+      } else if (selectedReportType == 'Balance Sheet') {
+        filePath = await PdfGenerationHelper.generateBalanceSheetPdf(reportData!);
+      } else if (selectedReportType == 'Cash Flow') {
+        filePath = await PdfGenerationHelper.generateCashFlowPdf(reportData!);
+      } else {
+        throw Exception('Unsupported report type: $selectedReportType');
+      }
+      
+      print('PDF generated successfully at: $filePath');
+      
+      // Check if widget is still mounted before showing snackbar
+      if (!mounted) return;
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('PDF saved to: $filePath'),
+          backgroundColor: const Color(0xFF4CAF50),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      print('❌ Error generating PDF: $e');
+      throw Exception('Failed to generate PDF: $e');
+    }
+  }
+
+  IconData _getReportIcon() {
+    switch (selectedReportType) {
+      case 'Tax Reports':
+        return Icons.receipt_long;
+      case 'Balance Sheet':
+        return Icons.account_balance;
+      case 'Cash Flow':
+        return Icons.trending_up;
+      default:
+        return Icons.description;
+    }
+  }
+
+  Widget _buildDataDisplay() {
+    if (reportData == null) {
+      return const Text(
+        'No data available',
+        style: TextStyle(color: Colors.grey),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Basic Info
+        _buildDataSection('Report Information', {
+          'ID': reportData!['id']?.toString() ?? 'N/A',
+          'Type': reportData!['report_type']?.toString() ?? 'N/A',
+          'Currency': reportData!['currency']?.toString() ?? 'N/A',
+          'Period Start': _formatDate(reportData!['period_start']),
+          'Period End': _formatDate(reportData!['period_end']),
+        }),
+        
+        const SizedBox(height: 16),
+        
+        // Summary Section
+        if (reportData!['summary'] != null) ...[
+          _buildDataSection('Summary', _formatSummaryData(reportData!['summary'])),
+          const SizedBox(height: 16),
+        ],
+        
+        // Activities/Items Section
+        if (selectedReportType == 'Cash Flow') ...[
+          if (reportData!['operating_activities'] != null && (reportData!['operating_activities'] as List).isNotEmpty) ...[
+            _buildActivitiesSection('Operating Activities', reportData!['operating_activities']),
+            const SizedBox(height: 12),
+          ],
+          if (reportData!['investing_activities'] != null && (reportData!['investing_activities'] as List).isNotEmpty) ...[
+            _buildActivitiesSection('Investing Activities', reportData!['investing_activities']),
+            const SizedBox(height: 12),
+          ],
+          if (reportData!['financing_activities'] != null && (reportData!['financing_activities'] as List).isNotEmpty) ...[
+            _buildActivitiesSection('Financing Activities', reportData!['financing_activities']),
+            const SizedBox(height: 12),
+          ],
+        ] else if (selectedReportType == 'Balance Sheet') ...[
+          if (reportData!['assets'] != null && (reportData!['assets'] as List).isNotEmpty) ...[
+            _buildActivitiesSection('Assets', reportData!['assets']),
+            const SizedBox(height: 12),
+          ],
+          if (reportData!['liabilities'] != null && (reportData!['liabilities'] as List).isNotEmpty) ...[
+            _buildActivitiesSection('Liabilities', reportData!['liabilities']),
+            const SizedBox(height: 12),
+          ],
+          if (reportData!['equity'] != null && (reportData!['equity'] as List).isNotEmpty) ...[
+            _buildActivitiesSection('Equity', reportData!['equity']),
+            const SizedBox(height: 12),
+          ],
+        ] else if (selectedReportType == 'Tax Reports') ...[
+          if (reportData!['categories'] != null && (reportData!['categories'] as List).isNotEmpty) ...[
+            _buildActivitiesSection('Tax Categories', reportData!['categories']),
+            const SizedBox(height: 12),
+          ],
+          if (reportData!['transactions'] != null && (reportData!['transactions'] as List).isNotEmpty) ...[
+            _buildActivitiesSection('Transactions', reportData!['transactions']),
+            const SizedBox(height: 12),
+          ],
+        ],
+        
+        // Raw Data (for debugging)
+        const SizedBox(height: 16),
+        const Text(
+          'Raw Data (Debug)',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Text(
+            reportData.toString(),
+            style: const TextStyle(
+              fontSize: 10,
+              fontFamily: 'monospace',
+              color: Colors.grey,
+            ),
+            maxLines: 10,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDataSection(String title, Map<String, String> data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...data.entries.map((entry) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 120,
+                child: Text(
+                  '${entry.key}:',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  entry.value,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )).toList(),
+      ],
+    );
+  }
+
+  Widget _buildActivitiesSection(String title, List<dynamic> activities) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...activities.take(5).map((activity) => Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                activity['description']?.toString() ?? activity['name']?.toString() ?? 'Unknown',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
+              if (activity['amount'] != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '\$${(activity['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+              if (activity['category'] != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Category: ${activity['category']}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        )).toList(),
+        if (activities.length > 5) ...[
+          Text(
+            '... and ${activities.length - 5} more items',
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Map<String, String> _formatSummaryData(Map<String, dynamic> summary) {
+    final Map<String, String> formatted = {};
+    
+    summary.forEach((key, value) {
+      if (value is num) {
+        formatted[key.replaceAll('_', ' ').toUpperCase()] = '\$${value.toStringAsFixed(2)}';
+      } else if (value is Map) {
+        // Handle nested objects
+        value.forEach((nestedKey, nestedValue) {
+          if (nestedValue is num) {
+            formatted['${key.replaceAll('_', ' ').toUpperCase()} - ${nestedKey.replaceAll('_', ' ').toUpperCase()}'] = '\$${nestedValue.toStringAsFixed(2)}';
+          }
+        });
+      } else {
+        formatted[key.replaceAll('_', ' ').toUpperCase()] = value.toString();
+      }
+    });
+    
+    return formatted;
+  }
+
+  String _formatDate(dynamic dateValue) {
+    if (dateValue == null) return 'N/A';
+    
+    try {
+      if (dateValue is String) {
+        final date = DateTime.parse(dateValue);
+        return '${date.day}/${date.month}/${date.year}';
+      }
+      return dateValue.toString();
+    } catch (e) {
+      return dateValue.toString();
     }
   }
 }

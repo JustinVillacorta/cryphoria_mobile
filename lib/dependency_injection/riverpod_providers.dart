@@ -223,7 +223,10 @@ final auditRepositoryProvider = Provider<AuditRepository>((ref) {
 });
 
 final reportsRepositoryProvider = Provider<ReportsRepository>((ref) {
-  return ReportsRepositoryImpl(remoteDataSource: ref.watch(reportsRemoteDataSourceProvider));
+  return ReportsRepositoryImpl(
+    remoteDataSource: ref.watch(reportsRemoteDataSourceProvider),
+    auditRemoteDataSource: ref.watch(auditRemoteDataSourceProvider),
+  );
 });
 
 // -----------------------------------------------------------------------------

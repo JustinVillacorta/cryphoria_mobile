@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 import '../models/audit/audit_report_model.dart';
 import '../models/audit/smart_contract_model.dart';
+import '../models/tax_report_model.dart';
+import '../models/balance_sheet_model.dart';
+import '../models/cash_flow_model.dart';
 import '../../domain/entities/audit_report.dart';
 import '../../domain/entities/smart_contract.dart';
 
@@ -15,6 +18,11 @@ abstract class AuditRemoteDataSource {
   Future<bool> deleteContract(String contractId);
   Future<List<ContractType>> getSupportedContractTypes();
   Future<bool> validateContractCode(String sourceCode);
+  
+  // Financial Reports
+  Future<TaxReportModel> getTaxReports();
+  Future<BalanceSheetModel> getBalanceSheet();
+  Future<CashFlowModel> getCashFlow();
 }
 
 class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
@@ -731,6 +739,845 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       }
     } on DioException catch (e) {
       throw Exception('Network error: ${e.message}');
+    }
+  }
+
+  // Financial Reports Implementation
+
+  @override
+  Future<TaxReportModel> getTaxReports() async {
+    try {
+      print("📤 Getting tax reports from /api/tax-reports/");
+      
+      final response = await dio.get('/api/tax-reports/');
+
+      print("📥 Tax reports response:");
+      print("📊 Status code: ${response.statusCode}");
+      print("📄 Response data: ${response.data}");
+
+      if (response.statusCode == 200) {
+        // Check if response data is null or empty
+        if (response.data == null) {
+          throw Exception('Empty response from tax reports endpoint');
+        }
+        
+        // Safely cast the response data with error handling
+        Map<String, dynamic> responseData;
+        try {
+          responseData = Map<String, dynamic>.from(response.data as Map);
+        } catch (e) {
+          print("❌ Error casting response data: $e");
+          print("📊 Response data type: ${response.data.runtimeType}");
+          print("📊 Response data: ${response.data}");
+          throw Exception('Failed to parse response data: $e');
+        }
+        
+        print("📊 Tax reports response structure: ${responseData.keys.toList()}");
+        print("📊 Tax reports success: ${responseData['success']}");
+        
+        // Handle the actual API response structure - Tax Reports endpoint returns cash_flow_statements
+        if (responseData['success'] == true && responseData['cash_flow_statements'] != null) {
+          final cashFlowStatements = List<dynamic>.from(responseData['cash_flow_statements'] as List);
+          if (cashFlowStatements.isNotEmpty) {
+            return _convertToTaxReportModel(Map<String, dynamic>.from(cashFlowStatements.first as Map));
+          } else {
+            throw Exception('No cash flow statements found in tax reports response');
+          }
+        } else if (responseData['success'] == true && responseData['tax_reports'] != null) {
+          // Handle if it actually returns tax reports
+          final taxReports = List<dynamic>.from(responseData['tax_reports'] as List);
+          if (taxReports.isNotEmpty) {
+            return _convertToTaxReportModel(Map<String, dynamic>.from(taxReports.first as Map));
+          } else {
+            throw Exception('No tax reports found');
+          }
+        } else if (responseData['success'] == true && responseData.isEmpty) {
+          // Handle empty response - create a basic tax report
+          print("⚠️ Empty tax reports response, creating basic tax report");
+          return _createEmptyTaxReport();
+        } else {
+          // If the response is directly the tax report data
+          return _convertToTaxReportModel(responseData);
+        }
+      } else {
+        throw Exception('Failed to get tax reports: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      print("❌ Error getting tax reports: $e");
+      throw Exception('Network error: ${e.message}');
+    }
+  }
+
+  /// Convert API tax report data to TaxReportModel format
+  TaxReportModel _convertToTaxReportModel(Map<String, dynamic> apiData) {
+    try {
+      print("🔄 Converting API data to TaxReportModel");
+      print("📊 API data keys: ${apiData.keys.toList()}");
+      
+      // Note: The API is returning cash flow data instead of tax report data
+      // We'll create a basic tax report structure from the available data
+      final operatingActivities = _safeConvertMap(apiData['operating_activities']);
+      final investingActivities = _safeConvertMap(apiData['investing_activities']);
+      final financingActivities = _safeConvertMap(apiData['financing_activities']);
+      final cashSummary = _safeConvertMap(apiData['cash_summary']);
+      final analysis = _safeConvertMap(apiData['analysis']);
+      final metadata = _safeConvertMap(apiData['metadata']);
+
+      print("📊 Operating activities: $operatingActivities");
+      print("📊 Cash summary: $cashSummary");
+      print("📊 Analysis: $analysis");
+
+      // Safely extract nested data
+      final cashReceipts = _safeConvertMap(operatingActivities['cash_receipts']);
+      final cashPayments = _safeConvertMap(operatingActivities['cash_payments']);
+      
+      // Calculate tax-related values safely
+      final totalIncome = _safeToDouble(cashReceipts['total']);
+      final totalDeductions = _safeToDouble(cashPayments['total']);
+      final taxPayments = _safeToDouble(cashPayments['tax_payments']);
+      final taxableIncome = totalIncome - totalDeductions;
+
+      print("📊 Calculated values - Income: $totalIncome, Deductions: $totalDeductions, Tax: $taxPayments");
+
+      // Create categories safely
+      List<Map<String, dynamic>> categories;
+      try {
+        print("🔄 Creating tax categories...");
+        categories = _convertTaxCategories(operatingActivities, investingActivities, financingActivities);
+        print("✅ Created ${categories.length} tax categories");
+      } catch (e) {
+        print("❌ Error creating tax categories: $e");
+        categories = []; // Fallback to empty list
+      }
+
+      // Create a basic tax report structure from cash flow data
+      final convertedData = {
+        'id': apiData['cash_flow_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        'report_type': 'Tax Report',
+        'report_date': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+        'period_start': apiData['period_start']?.toString() ?? DateTime.now().toIso8601String(),
+        'period_end': apiData['period_end']?.toString() ?? DateTime.now().toIso8601String(),
+        'currency': apiData['currency']?.toString() ?? 'USD',
+        'summary': {
+          'total_income': totalIncome,
+          'total_deductions': totalDeductions,
+          'taxable_income': taxableIncome,
+          'total_tax_owed': taxPayments,
+          'total_tax_paid': taxPayments,
+          'net_tax_owed': 0.0, // Calculate if needed
+          'tax_breakdown': {},
+          'income_breakdown': cashReceipts,
+          'deduction_breakdown': cashPayments,
+        },
+        'categories': categories,
+        'transactions': [],
+        'metadata': {
+          'user_id': apiData['user_id']?.toString(),
+          'generated_at': apiData['generated_at']?.toString(),
+          'transaction_count': metadata['transaction_count']?.toString(),
+          'payroll_entries': metadata['payroll_entries']?.toString(),
+          'note': 'Tax report generated from cash flow data',
+        },
+        'created_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+        'generated_at': apiData['generated_at']?.toString(),
+      };
+
+      print("✅ Converted tax report data: $convertedData");
+      
+      // Try to create the model with extra safety
+      try {
+        return TaxReportModel.fromJson(convertedData);
+      } catch (modelError) {
+        print("❌ Error creating TaxReportModel: $modelError");
+        print("📊 Converted data that failed: $convertedData");
+        
+        // Create a minimal valid model as fallback
+        final fallbackData = {
+          'id': apiData['cash_flow_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          'report_type': 'Tax Report',
+          'report_date': DateTime.now().toIso8601String(),
+          'period_start': DateTime.now().toIso8601String(),
+          'period_end': DateTime.now().toIso8601String(),
+          'currency': 'USD',
+          'summary': {
+            'total_income': 0.0,
+            'total_deductions': 0.0,
+            'taxable_income': 0.0,
+            'total_tax_owed': 0.0,
+            'total_tax_paid': 0.0,
+            'net_tax_owed': 0.0,
+            'tax_breakdown': {},
+            'income_breakdown': {},
+            'deduction_breakdown': {},
+          },
+          'categories': [],
+          'transactions': [],
+          'metadata': {
+            'user_id': apiData['user_id']?.toString() ?? 'unknown',
+            'generated_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+            'error': 'Data conversion failed, using fallback',
+          },
+          'created_at': DateTime.now().toIso8601String(),
+          'generated_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+        };
+        
+        return TaxReportModel.fromJson(fallbackData);
+      }
+    } catch (e, stackTrace) {
+      print("❌ Error converting tax report data: $e");
+      print("📊 Stack trace: $stackTrace");
+      rethrow;
+    }
+  }
+
+  /// Create an empty tax report when no data is available
+  TaxReportModel _createEmptyTaxReport() {
+    final emptyData = {
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'report_type': 'Tax Report',
+      'report_date': DateTime.now().toIso8601String(),
+      'period_start': DateTime.now().toIso8601String(),
+      'period_end': DateTime.now().toIso8601String(),
+      'currency': 'USD',
+      'summary': {
+        'total_income': 0.0,
+        'total_deductions': 0.0,
+        'taxable_income': 0.0,
+        'total_tax_owed': 0.0,
+        'total_tax_paid': 0.0,
+        'net_tax_owed': 0.0,
+        'tax_breakdown': {},
+        'income_breakdown': {},
+        'deduction_breakdown': {},
+      },
+      'categories': [],
+      'transactions': [],
+      'metadata': {
+        'user_id': 'unknown',
+        'generated_at': DateTime.now().toIso8601String(),
+        'note': 'Empty tax report - no data available',
+      },
+      'created_at': DateTime.now().toIso8601String(),
+      'generated_at': DateTime.now().toIso8601String(),
+    };
+    
+    return TaxReportModel.fromJson(emptyData);
+  }
+
+  @override
+  Future<BalanceSheetModel> getBalanceSheet() async {
+    try {
+      print("📤 Getting balance sheet from /api/balance-sheet/list/");
+      
+      final response = await dio.get('/api/balance-sheet/list/');
+
+      print("📥 Balance sheet response:");
+      print("📊 Status code: ${response.statusCode}");
+      print("📄 Response data: ${response.data}");
+
+      if (response.statusCode == 200) {
+        // Safely cast the response data
+        final responseData = Map<String, dynamic>.from(response.data as Map);
+        
+        // Handle the actual API response structure
+        if (responseData['success'] == true && responseData['balance_sheets'] != null) {
+          final balanceSheets = List<dynamic>.from(responseData['balance_sheets'] as List);
+          if (balanceSheets.isNotEmpty) {
+            return _convertToBalanceSheetModel(Map<String, dynamic>.from(balanceSheets.first as Map));
+          } else {
+            throw Exception('No balance sheets found');
+          }
+        } else {
+          // If the response is directly the balance sheet data
+          return _convertToBalanceSheetModel(responseData);
+        }
+      } else {
+        throw Exception('Failed to get balance sheet: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      print("❌ Error getting balance sheet: $e");
+      throw Exception('Network error: ${e.message}');
+    }
+  }
+
+  /// Convert API balance sheet data to BalanceSheetModel format
+  BalanceSheetModel _convertToBalanceSheetModel(Map<String, dynamic> apiData) {
+    try {
+      print("🔄 Converting API data to BalanceSheetModel");
+      print("📊 API data keys: ${apiData.keys.toList()}");
+      
+      // Extract data from the actual API response structure with extra safety
+      final assets = _safeConvertMap(apiData['assets']);
+      final liabilities = _safeConvertMap(apiData['liabilities']);
+      final equity = _safeConvertMap(apiData['equity']);
+      final totals = _safeConvertMap(apiData['totals']);
+      final summary = _safeConvertMap(apiData['summary']);
+      final metadata = _safeConvertMap(apiData['metadata']);
+      
+      print("📊 Assets structure: $assets");
+      print("📊 Totals structure: $totals");
+      print("📊 Summary structure: $summary");
+      
+      // Create a comprehensive balance sheet structure
+      final convertedData = {
+        'id': apiData['balance_sheet_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        'report_type': 'Balance Sheet',
+        'report_date': apiData['as_of_date']?.toString() ?? apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+        'period_start': apiData['as_of_date']?.toString() ?? DateTime.now().toIso8601String(),
+        'period_end': apiData['as_of_date']?.toString() ?? DateTime.now().toIso8601String(),
+        'currency': apiData['currency']?.toString() ?? 'USD',
+        'summary': {
+          'total_assets': _safeToDouble(totals['total_assets']),
+          'total_liabilities': _safeToDouble(totals['total_liabilities']),
+          'total_equity': _safeToDouble(totals['total_equity']),
+          'working_capital': 0.0, // Calculate if needed
+          'current_ratio': 0.0, // Calculate if needed
+          'debt_to_equity_ratio': summary['debt_to_equity_ratio']?.toString() ?? '0.0',
+          'asset_breakdown': _safeConvertMap(summary['asset_composition']),
+          'liability_breakdown': {},
+          'equity_breakdown': {},
+          'financial_position': summary['financial_position']?.toString() ?? 'Unknown',
+          'net_worth': _safeToDouble(summary['net_worth']),
+        },
+        'assets': _convertAssets(assets),
+        'liabilities': _convertLiabilities(liabilities),
+        'equity': _convertEquity(equity),
+        'metadata': {
+          'user_id': apiData['user_id']?.toString(),
+          'generated_at': apiData['generated_at']?.toString(),
+          'transaction_count': metadata['transaction_count']?.toString(),
+          'date_range': _safeConvertMap(metadata['date_range']),
+        },
+        'created_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+        'generated_at': apiData['generated_at']?.toString(),
+      };
+
+      print("✅ Converted balance sheet data: $convertedData");
+      
+      // Try to create the model with extra safety
+      try {
+        return BalanceSheetModel.fromJson(convertedData);
+      } catch (modelError) {
+        print("❌ Error creating BalanceSheetModel: $modelError");
+        print("📊 Converted data that failed: $convertedData");
+        
+        // Create a minimal valid model as fallback
+        final fallbackData = {
+          'id': apiData['balance_sheet_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          'report_type': 'Balance Sheet',
+          'report_date': DateTime.now().toIso8601String(),
+          'period_start': DateTime.now().toIso8601String(),
+          'period_end': DateTime.now().toIso8601String(),
+          'currency': 'USD',
+          'summary': {
+            'total_assets': 0.0,
+            'total_liabilities': 0.0,
+            'total_equity': 0.0,
+            'working_capital': 0.0,
+            'current_ratio': 0.0,
+            'debt_to_equity_ratio': '0.0',
+            'asset_breakdown': {},
+            'liability_breakdown': {},
+            'equity_breakdown': {},
+            'financial_position': 'Unknown',
+            'net_worth': 0.0,
+          },
+          'assets': [],
+          'liabilities': [],
+          'equity': [],
+          'metadata': {
+            'user_id': apiData['user_id']?.toString() ?? 'unknown',
+            'generated_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+            'error': 'Data conversion failed, using fallback',
+          },
+          'created_at': DateTime.now().toIso8601String(),
+          'generated_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+        };
+        
+        return BalanceSheetModel.fromJson(fallbackData);
+      }
+    } catch (e, stackTrace) {
+      print("❌ Error converting balance sheet data: $e");
+      print("📊 Stack trace: $stackTrace");
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CashFlowModel> getCashFlow() async {
+    try {
+      print("📤 Getting cash flow from /api/cash-flow/list/");
+      
+      final response = await dio.get('/api/cash-flow/list/');
+
+      print("📥 Cash flow response:");
+      print("📊 Status code: ${response.statusCode}");
+      print("📄 Response data: ${response.data}");
+
+      if (response.statusCode == 200) {
+        // Safely cast the response data with error handling
+        Map<String, dynamic> responseData;
+        try {
+          responseData = Map<String, dynamic>.from(response.data as Map);
+        } catch (e) {
+          print("❌ Error casting cash flow response data: $e");
+          print("📊 Response data type: ${response.data.runtimeType}");
+          print("📊 Response data: ${response.data}");
+          throw Exception('Failed to parse cash flow response data: $e');
+        }
+        
+        // Handle the actual API response structure - Cash Flow endpoint returns cash_flow_statements
+        if (responseData['success'] == true && responseData['cash_flow_statements'] != null) {
+          final cashFlowStatements = List<dynamic>.from(responseData['cash_flow_statements'] as List);
+          if (cashFlowStatements.isNotEmpty) {
+            // Take the first cash flow statement and convert it to cash flow model format
+            final cashFlowData = Map<String, dynamic>.from(cashFlowStatements.first as Map);
+            return _convertToCashFlowModel(cashFlowData);
+          } else {
+            throw Exception('No cash flow statements found');
+          }
+        } else if (responseData['success'] == true && responseData['balance_sheets'] != null) {
+          // Fallback: if it returns balance sheets instead
+          final balanceSheets = List<dynamic>.from(responseData['balance_sheets'] as List);
+          if (balanceSheets.isNotEmpty) {
+            final balanceSheetData = Map<String, dynamic>.from(balanceSheets.first as Map);
+            return _convertToCashFlowModel(balanceSheetData);
+          } else {
+            throw Exception('No balance sheets found');
+          }
+        } else {
+          throw Exception('Invalid response format: ${responseData['message'] ?? 'Unknown error'}');
+        }
+      } else {
+        throw Exception('Failed to get cash flow: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      print("❌ Error getting cash flow: $e");
+      throw Exception('Network error: ${e.message}');
+    }
+  }
+
+  /// Convert API cash flow data to CashFlowModel format
+  CashFlowModel _convertToCashFlowModel(Map<String, dynamic> apiData) {
+    try {
+      print("🔄 Converting API data to CashFlowModel");
+      print("📊 API data keys: ${apiData.keys.toList()}");
+      
+      // Check if this is actual cash flow data or balance sheet data
+      if (apiData.containsKey('operating_activities')) {
+        // This is actual cash flow data
+        final operatingActivities = _safeConvertMap(apiData['operating_activities']);
+        final investingActivities = _safeConvertMap(apiData['investing_activities']);
+        final financingActivities = _safeConvertMap(apiData['financing_activities']);
+        final cashSummary = _safeConvertMap(apiData['cash_summary']);
+        final metadata = _safeConvertMap(apiData['metadata']);
+
+        print("📊 Operating activities: $operatingActivities");
+        print("📊 Investing activities: $investingActivities");
+        print("📊 Financing activities: $financingActivities");
+
+        // Create proper cash flow structure from actual cash flow data
+        final convertedData = {
+          'id': apiData['cash_flow_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          'report_type': 'Cash Flow Statement',
+          'report_date': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+          'period_start': apiData['period_start']?.toString() ?? DateTime.now().toIso8601String(),
+          'period_end': apiData['period_end']?.toString() ?? DateTime.now().toIso8601String(),
+          'currency': apiData['currency']?.toString() ?? 'USD',
+          'summary': {
+            'net_cash_from_operations': _safeToDouble(operatingActivities['net_cash_flow']),
+            'net_cash_from_investing': _safeToDouble(investingActivities['net_cash_flow']),
+            'net_cash_from_financing': _safeToDouble(financingActivities['net_cash_flow']),
+            'net_change_in_cash': _safeToDouble(cashSummary['net_change_in_cash']),
+            'beginning_cash': _safeToDouble(cashSummary['beginning_cash']),
+            'ending_cash': _safeToDouble(cashSummary['ending_cash']),
+            'operating_breakdown': {
+              'cash_receipts': _safeToDouble(operatingActivities['cash_receipts']?['total']),
+              'cash_payments': _safeToDouble(operatingActivities['cash_payments']?['total']),
+            },
+            'investing_breakdown': {
+              'cash_receipts': _safeToDouble(investingActivities['cash_receipts']?['total']),
+              'cash_payments': _safeToDouble(investingActivities['cash_payments']?['total']),
+            },
+            'financing_breakdown': {
+              'cash_receipts': _safeToDouble(financingActivities['cash_receipts']?['total']),
+              'cash_payments': _safeToDouble(financingActivities['cash_payments']?['total']),
+            },
+          },
+          'operating_activities': _convertOperatingActivities(operatingActivities),
+          'investing_activities': _convertInvestingActivities(investingActivities),
+          'financing_activities': _convertFinancingActivities(financingActivities),
+          'metadata': {
+            'user_id': apiData['user_id']?.toString(),
+            'generated_at': apiData['generated_at']?.toString(),
+            'transaction_count': metadata['transaction_count']?.toString(),
+            'payroll_entries': metadata['payroll_entries']?.toString(),
+          },
+          'created_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+          'generated_at': apiData['generated_at']?.toString(),
+        };
+
+        print("✅ Converted cash flow data: $convertedData");
+        return CashFlowModel.fromJson(convertedData);
+      } else {
+        // This is balance sheet data being returned instead
+        final assets = _safeConvertMap(apiData['assets']);
+        final metadata = _safeConvertMap(apiData['metadata']);
+
+        print("📊 Assets: $assets");
+        print("⚠️ Note: Cash Flow endpoint returned balance sheet data");
+
+        // Create a basic cash flow structure from balance sheet data
+        final convertedData = {
+          'id': apiData['balance_sheet_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          'report_type': 'Cash Flow Statement',
+          'report_date': apiData['as_of_date']?.toString() ?? apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+          'period_start': apiData['as_of_date']?.toString() ?? DateTime.now().toIso8601String(),
+          'period_end': apiData['as_of_date']?.toString() ?? DateTime.now().toIso8601String(),
+          'currency': apiData['currency']?.toString() ?? 'USD',
+          'summary': {
+            'net_cash_from_operations': 0.0, // Not available in balance sheet data
+            'net_cash_from_investing': 0.0, // Not available in balance sheet data
+            'net_cash_from_financing': 0.0, // Not available in balance sheet data
+            'net_change_in_cash': 0.0, // Not available in balance sheet data
+            'beginning_cash': _safeToDouble(assets['current_assets']?['cash_equivalents']),
+            'ending_cash': _safeToDouble(assets['current_assets']?['cash_equivalents']),
+            'operating_breakdown': {
+              'cash_receipts': 0.0,
+              'cash_payments': 0.0,
+            },
+            'investing_breakdown': {
+              'cash_receipts': 0.0,
+              'cash_payments': 0.0,
+            },
+            'financing_breakdown': {
+              'cash_receipts': 0.0,
+              'cash_payments': 0.0,
+            },
+          },
+          'operating_activities': [],
+          'investing_activities': [],
+          'financing_activities': [],
+          'metadata': {
+            'user_id': apiData['user_id']?.toString(),
+            'generated_at': apiData['generated_at']?.toString(),
+            'transaction_count': metadata['transaction_count']?.toString(),
+            'note': 'Cash flow data not available - showing balance sheet data instead',
+          },
+          'created_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
+          'generated_at': apiData['generated_at']?.toString(),
+        };
+
+        print("✅ Converted balance sheet to cash flow data: $convertedData");
+        return CashFlowModel.fromJson(convertedData);
+      }
+    } catch (e, stackTrace) {
+      print("❌ Error converting cash flow data: $e");
+      print("📊 Stack trace: $stackTrace");
+      rethrow;
+    }
+  }
+
+
+  /// Helper method to safely convert any map to Map<String, dynamic>
+  Map<String, dynamic> _safeConvertMap(dynamic value) {
+    try {
+      if (value == null) return <String, dynamic>{};
+      if (value is Map<String, dynamic>) return value;
+      if (value is Map) {
+        // Recursively convert nested maps to ensure all values are properly typed
+        final Map<String, dynamic> result = {};
+        for (final entry in value.entries) {
+          final key = entry.key?.toString() ?? 'unknown';
+          final val = entry.value;
+          if (val is Map) {
+            result[key] = _safeConvertMap(val);
+          } else if (val is List) {
+            result[key] = _safeConvertList(val);
+          } else {
+            result[key] = val;
+          }
+        }
+        return result;
+      }
+      return <String, dynamic>{};
+    } catch (e) {
+      print("❌ Error in _safeConvertMap: $e");
+      return <String, dynamic>{};
+    }
+  }
+
+  /// Helper method to safely convert any list to List<dynamic>
+  List<dynamic> _safeConvertList(dynamic value) {
+    try {
+      if (value == null) return <dynamic>[];
+      if (value is List) {
+        return value.map((item) {
+          if (item is Map) {
+            return _safeConvertMap(item);
+          } else if (item is List) {
+            return _safeConvertList(item);
+          } else {
+            return item;
+          }
+        }).toList();
+      }
+      return <dynamic>[];
+    } catch (e) {
+      print("❌ Error in _safeConvertList: $e");
+      return <dynamic>[];
+    }
+  }
+
+  /// Helper method to safely convert any value to double
+  double _safeToDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      return parsed ?? 0.0;
+    }
+    return 0.0;
+  }
+
+
+  /// Convert assets data to list format
+  List<Map<String, dynamic>> _convertAssets(Map<String, dynamic> assets) {
+    final List<Map<String, dynamic>> assetList = [];
+    
+    final currentAssets = _safeConvertMap(assets['current_assets']);
+    final nonCurrentAssets = _safeConvertMap(assets['non_current_assets']);
+    
+    // Add current assets
+    if (currentAssets.isNotEmpty) {
+      assetList.add({
+        'id': 'current_assets',
+        'name': 'Current Assets',
+        'amount': _safeToDouble(currentAssets['total']),
+        'category': 'Current Assets',
+        'subcategory': 'Total',
+        'description': 'Total current assets including cash, receivables, and crypto holdings',
+      });
+    }
+    
+    // Add non-current assets
+    if (nonCurrentAssets.isNotEmpty) {
+      assetList.add({
+        'id': 'non_current_assets',
+        'name': 'Non-Current Assets',
+        'amount': _safeToDouble(nonCurrentAssets['total']),
+        'category': 'Non-Current Assets',
+        'subcategory': 'Total',
+        'description': 'Total non-current assets including equipment and investments',
+      });
+    }
+    
+    return assetList;
+  }
+
+  /// Convert liabilities data to list format
+  List<Map<String, dynamic>> _convertLiabilities(Map<String, dynamic> liabilities) {
+    final List<Map<String, dynamic>> liabilityList = [];
+    
+    final currentLiabilities = _safeConvertMap(liabilities['current_liabilities']);
+    final longTermLiabilities = _safeConvertMap(liabilities['long_term_liabilities']);
+    
+    // Add current liabilities
+    if (currentLiabilities.isNotEmpty) {
+      liabilityList.add({
+        'id': 'current_liabilities',
+        'name': 'Current Liabilities',
+        'amount': _safeToDouble(currentLiabilities['total']),
+        'category': 'Current Liabilities',
+        'subcategory': 'Total',
+        'description': 'Total current liabilities including payables and short-term debt',
+      });
+    }
+    
+    // Add long-term liabilities
+    if (longTermLiabilities.isNotEmpty) {
+      liabilityList.add({
+        'id': 'long_term_liabilities',
+        'name': 'Long-term Liabilities',
+        'amount': _safeToDouble(longTermLiabilities['total']),
+        'category': 'Long-term Liabilities',
+        'subcategory': 'Total',
+        'description': 'Total long-term liabilities including long-term debt',
+      });
+    }
+    
+    return liabilityList;
+  }
+
+  /// Convert equity data to list format
+  List<Map<String, dynamic>> _convertEquity(Map<String, dynamic> equity) {
+    final List<Map<String, dynamic>> equityList = [];
+    
+    if (equity.isNotEmpty) {
+      equityList.add({
+        'id': 'total_equity',
+        'name': 'Total Equity',
+        'amount': _safeToDouble(equity['total']),
+        'category': 'Equity',
+        'subcategory': 'Total',
+        'description': 'Total equity including retained earnings and unrealized gains/losses',
+      });
+    }
+    
+    return equityList;
+  }
+
+  /// Convert operating activities to list format
+  List<Map<String, dynamic>> _convertOperatingActivities(Map<String, dynamic> operatingData) {
+    try {
+      final List<Map<String, dynamic>> activities = [];
+      
+      // Add cash receipts
+      final cashReceipts = _safeConvertMap(operatingData['cash_receipts']);
+      final customerPayments = _safeToDouble(cashReceipts['customer_payments']);
+      if (customerPayments > 0) {
+        activities.add({
+          'id': 'op_rec_1',
+          'description': 'Customer Payments',
+          'amount': customerPayments,
+          'category': 'Operating',
+          'sub_category': 'Cash Receipts',
+          'transaction_date': DateTime.now().toIso8601String(),
+          'currency': 'USD',
+          'metadata': {},
+        });
+      }
+      
+      // Add cash payments
+      final cashPayments = _safeConvertMap(operatingData['cash_payments']);
+      final payrollPayments = _safeToDouble(cashPayments['payroll_payments']);
+      if (payrollPayments > 0) {
+        activities.add({
+          'id': 'op_pay_1',
+          'description': 'Payroll Payments',
+          'amount': -payrollPayments, // Negative for payments
+          'category': 'Operating',
+          'sub_category': 'Cash Payments',
+          'transaction_date': DateTime.now().toIso8601String(),
+          'currency': 'USD',
+          'metadata': {},
+        });
+      }
+      
+      return activities;
+    } catch (e) {
+      print("❌ Error converting operating activities: $e");
+      return [];
+    }
+  }
+
+  /// Convert investing activities to list format
+  List<Map<String, dynamic>> _convertInvestingActivities(Map<String, dynamic> investingData) {
+    try {
+      final List<Map<String, dynamic>> activities = [];
+      
+      final cashReceipts = _safeConvertMap(investingData['cash_receipts']);
+      final assetSales = _safeToDouble(cashReceipts['asset_sales']);
+      
+      // Add activities based on available data
+      if (assetSales > 0) {
+        activities.add({
+          'id': 'inv_rec_1',
+          'description': 'Asset Sales',
+          'amount': assetSales,
+          'category': 'Investing',
+          'sub_category': 'Asset Sales',
+          'transaction_date': DateTime.now().toIso8601String(),
+          'currency': 'USD',
+          'metadata': {},
+        });
+      }
+      
+      return activities;
+    } catch (e) {
+      print("❌ Error converting investing activities: $e");
+      return [];
+    }
+  }
+
+  /// Convert financing activities to list format
+  List<Map<String, dynamic>> _convertFinancingActivities(Map<String, dynamic> financingData) {
+    try {
+      final List<Map<String, dynamic>> activities = [];
+      
+      final cashReceipts = _safeConvertMap(financingData['cash_receipts']);
+      final loansReceived = _safeToDouble(cashReceipts['loans_received']);
+      
+      // Add activities based on available data
+      if (loansReceived > 0) {
+        activities.add({
+          'id': 'fin_rec_1',
+          'description': 'Loans Received',
+          'amount': loansReceived,
+          'category': 'Financing',
+          'sub_category': 'Loans',
+          'transaction_date': DateTime.now().toIso8601String(),
+          'currency': 'USD',
+          'metadata': {},
+        });
+      }
+      
+      return activities;
+    } catch (e) {
+      print("❌ Error converting financing activities: $e");
+      return [];
+    }
+  }
+
+  /// Convert tax categories from cash flow data
+  List<Map<String, dynamic>> _convertTaxCategories(
+    Map<String, dynamic> operating,
+    Map<String, dynamic> investing,
+    Map<String, dynamic> financing,
+  ) {
+    try {
+      final List<Map<String, dynamic>> categories = [];
+      
+      print("🔄 Converting tax categories from operating: ${operating.keys.toList()}");
+      
+      // Add operating income categories
+      final cashReceipts = _safeConvertMap(operating['cash_receipts']);
+      if (cashReceipts.isNotEmpty) {
+        final incomeAmount = _safeToDouble(cashReceipts['total']);
+        if (incomeAmount > 0) {
+          categories.add({
+            'id': 'operating_income',
+            'name': 'Operating Income',
+            'description': 'Total operating income from business activities',
+            'amount': incomeAmount,
+            'type': 'income',
+            'subCategories': [],
+          });
+        }
+      }
+      
+      // Add operating expense categories
+      final cashPayments = _safeConvertMap(operating['cash_payments']);
+      if (cashPayments.isNotEmpty) {
+        final expenseAmount = _safeToDouble(cashPayments['total']);
+        if (expenseAmount > 0) {
+          categories.add({
+            'id': 'operating_expenses',
+            'name': 'Operating Expenses',
+            'description': 'Total operating expenses including payroll and supplies',
+            'amount': expenseAmount,
+            'type': 'expense',
+            'subCategories': [],
+          });
+        }
+      }
+      
+      print("✅ Created ${categories.length} tax categories");
+      return categories;
+    } catch (e) {
+      print("❌ Error in _convertTaxCategories: $e");
+      return []; // Return empty list on error
     }
   }
 }

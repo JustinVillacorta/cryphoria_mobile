@@ -1,4 +1,7 @@
 import '../entities/transaction_report.dart';
+import '../entities/tax_report.dart';
+import '../entities/balance_sheet.dart';
+import '../entities/cash_flow.dart';
 
 abstract class ReportsRepository {
   /// Generate a report with specified parameters
@@ -21,6 +24,11 @@ abstract class ReportsRepository {
 
   /// Delete a report
   Future<bool> deleteReport(String reportId);
+
+  /// Financial Reports
+  Future<TaxReport> getTaxReports();
+  Future<BalanceSheet> getBalanceSheet();
+  Future<CashFlow> getCashFlow();
 }
 
 // Request model for report generation
