@@ -327,36 +327,30 @@ class EmployeeRegistrationRequest {
 }
 
 class PayrollCreateRequest {
+  final String employeeId;
   final String employeeName;
-  final String? employeeWallet;
   final double salaryAmount;
   final String salaryCurrency;
   final String paymentFrequency;
   final DateTime startDate;
-  final bool isActive;
-  final String? notes;
 
   PayrollCreateRequest({
+    required this.employeeId,
     required this.employeeName,
-    this.employeeWallet,
     required this.salaryAmount,
     required this.salaryCurrency,
     required this.paymentFrequency,
     required this.startDate,
-    required this.isActive,
-    this.notes,
   });
 
   Map<String, dynamic> toJson() {
     return {
+      'employee_id': employeeId,
       'employee_name': employeeName,
-      'employee_wallet': employeeWallet,
       'salary_amount': salaryAmount,
       'salary_currency': salaryCurrency,
       'payment_frequency': paymentFrequency,
       'start_date': startDate.toIso8601String().split('T')[0], // YYYY-MM-DD format
-      'is_active': isActive,
-      'notes': notes,
     };
   }
 }

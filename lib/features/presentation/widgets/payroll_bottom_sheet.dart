@@ -176,18 +176,12 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
           print('  - Existing Wallet: ${employee.payrollInfo?.employeeWallet}');
           
           final response = await ref.read(dioClientProvider).dio.post('/api/payroll/create/', data: {
-            'user_id': employee.userId, // CRITICAL: Backend needs this to fetch wallet
-            'employee_name': employee.displayName, // Now using correct name from proper endpoint
-            // Don't send empty wallet - let backend fetch it automatically
-            'employee_wallet': employee.payrollInfo?.employeeWallet?.isNotEmpty == true 
-                ? employee.payrollInfo!.employeeWallet 
-                : null,
+            'employee_id': employee.userId, // Fixed: Use employee_id instead of user_id
+            'employee_name': employee.displayName,
             'salary_amount': salaryAmount,
             'salary_currency': 'USD',
             'payment_frequency': 'MONTHLY',
             'start_date': payDate.toIso8601String().split('T')[0],
-            'is_active': true,
-            'notes': 'Generated from mobile payroll processing - $payrollType',
           });
           
           if (response.statusCode == 200 && response.data['success'] == true) {
@@ -208,25 +202,6 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         }
       }
 
-      // Fix any missing employee wallets using backend utility
-      print('DEBUG: Attempting to fix missing employee wallets...');
-      try {
-        final fixResponse = await ref.read(dioClientProvider).dio.post('/api/payroll/fix-missing-wallets/');
-        if (fixResponse.statusCode == 200 && fixResponse.data['success'] == true) {
-          final fixedCount = fixResponse.data['fixed_count'] ?? 0;
-          final failedCount = fixResponse.data['failed_count'] ?? 0;
-          final totalEntries = fixResponse.data['total_entries'] ?? 0;
-          print('DEBUG: Wallet fixing results:');
-          print('  - Fixed: $fixedCount entries');
-          print('  - Failed: $failedCount entries'); 
-          print('  - Total processed: $totalEntries entries');
-          print('  - Full response: ${fixResponse.data}');
-        } else {
-          print('DEBUG: Wallet fixing unsuccessful: ${fixResponse.data}');
-        }
-      } catch (e) {
-        print('DEBUG: Wallet fixing failed (non-critical): $e');
-      }
 
       // Create individual payslips for each employee
       final payslipRepository = ref.read(payslipRepositoryProvider);

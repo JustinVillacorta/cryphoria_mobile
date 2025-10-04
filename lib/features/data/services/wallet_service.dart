@@ -40,10 +40,37 @@ class WalletService {
       balance = 0.0;
     }
 
-    // Convert ETH balance to both PHP and USD
-    final rates = await currencyService.getETHRates();
-    final balanceInPHP = balance * (rates['php'] ?? 0.0);
-    final balanceInUSD = balance * (rates['usd'] ?? 0.0);
+    // Convert ETH balance to both PHP and USD using the conversion endpoint
+    double balanceInPHP = 0.0;
+    double balanceInUSD = 0.0;
+    
+    try {
+      // Convert to PHP
+      final phpResult = await currencyService.convertCryptoToFiat(
+        value: balance.toString(),
+        from: 'ETH',
+        to: 'PHP',
+      );
+      debugPrint('🔍 PHP conversion result: $phpResult');
+      balanceInPHP = (phpResult['converted_amount'] as num?)?.toDouble() ?? 0.0;
+      debugPrint('🔍 Parsed PHP balance: $balanceInPHP');
+      
+      // Convert to USD
+      final usdResult = await currencyService.convertCryptoToFiat(
+        value: balance.toString(),
+        from: 'ETH',
+        to: 'USD',
+      );
+      debugPrint('🔍 USD conversion result: $usdResult');
+      balanceInUSD = (usdResult['converted_amount'] as num?)?.toDouble() ?? 0.0;
+      debugPrint('🔍 Parsed USD balance: $balanceInUSD');
+    } catch (e) {
+      debugPrint('WalletService.connectWallet: Conversion failed, using fallback rates: $e');
+      // Fallback to old method if conversion endpoint fails
+      final rates = await currencyService.getETHRates();
+      balanceInPHP = balance * (rates['php'] ?? 0.0);
+      balanceInUSD = balance * (rates['usd'] ?? 0.0);
+    }
     
     return Wallet(
       id: walletData['wallet_address']?.toString() ?? address,
@@ -105,10 +132,37 @@ class WalletService {
         return null; // No wallet connected
       }
       
-      // Convert ETH balance to both PHP and USD
-      final rates = await currencyService.getETHRates();
-      final balanceInPHP = balanceEth * (rates['php'] ?? 0.0);
-      final balanceInUSD = balanceEth * (rates['usd'] ?? 0.0);
+      // Convert ETH balance to both PHP and USD using the conversion endpoint
+      double balanceInPHP = 0.0;
+      double balanceInUSD = 0.0;
+      
+      try {
+        // Convert to PHP
+        final phpResult = await currencyService.convertCryptoToFiat(
+          value: balanceEth.toString(),
+          from: 'ETH',
+          to: 'PHP',
+        );
+        debugPrint('🔍 getUserWallet PHP conversion result: $phpResult');
+        balanceInPHP = (phpResult['converted_amount'] as num?)?.toDouble() ?? 0.0;
+        debugPrint('🔍 getUserWallet Parsed PHP balance: $balanceInPHP');
+        
+        // Convert to USD
+        final usdResult = await currencyService.convertCryptoToFiat(
+          value: balanceEth.toString(),
+          from: 'ETH',
+          to: 'USD',
+        );
+        debugPrint('🔍 getUserWallet USD conversion result: $usdResult');
+        balanceInUSD = (usdResult['converted_amount'] as num?)?.toDouble() ?? 0.0;
+        debugPrint('🔍 getUserWallet Parsed USD balance: $balanceInUSD');
+      } catch (e) {
+        debugPrint('WalletService.getUserWallet: Conversion failed, using fallback rates: $e');
+        // Fallback to old method if conversion endpoint fails
+        final rates = await currencyService.getETHRates();
+        balanceInPHP = balanceEth * (rates['php'] ?? 0.0);
+        balanceInUSD = balanceEth * (rates['usd'] ?? 0.0);
+      }
       
       final wallet = Wallet(
         id: walletAddress,
@@ -144,9 +198,37 @@ class WalletService {
       final walletData = await remoteDataSource.getWalletBalance();
       final balanceEth = (walletData['balance_eth'] as num?)?.toDouble() ?? 0.0;
       
-      final rates = await currencyService.getETHRates();
-      final balanceInPHP = balanceEth * (rates['php'] ?? 0.0);
-      final balanceInUSD = balanceEth * (rates['usd'] ?? 0.0);
+      // Convert ETH balance to both PHP and USD using the conversion endpoint
+      double balanceInPHP = 0.0;
+      double balanceInUSD = 0.0;
+      
+      try {
+        // Convert to PHP
+        final phpResult = await currencyService.convertCryptoToFiat(
+          value: balanceEth.toString(),
+          from: 'ETH',
+          to: 'PHP',
+        );
+        debugPrint('🔍 refreshBalance PHP conversion result: $phpResult');
+        balanceInPHP = (phpResult['converted_amount'] as num?)?.toDouble() ?? 0.0;
+        debugPrint('🔍 refreshBalance Parsed PHP balance: $balanceInPHP');
+        
+        // Convert to USD
+        final usdResult = await currencyService.convertCryptoToFiat(
+          value: balanceEth.toString(),
+          from: 'ETH',
+          to: 'USD',
+        );
+        debugPrint('🔍 refreshBalance USD conversion result: $usdResult');
+        balanceInUSD = (usdResult['converted_amount'] as num?)?.toDouble() ?? 0.0;
+        debugPrint('🔍 refreshBalance Parsed USD balance: $balanceInUSD');
+      } catch (e) {
+        debugPrint('WalletService.refreshBalance: Conversion failed, using fallback rates: $e');
+        // Fallback to old method if conversion endpoint fails
+        final rates = await currencyService.getETHRates();
+        balanceInPHP = balanceEth * (rates['php'] ?? 0.0);
+        balanceInUSD = balanceEth * (rates['usd'] ?? 0.0);
+      }
 
       return wallet.copyWith(
         balance: balanceEth,
@@ -176,6 +258,19 @@ class WalletService {
       company: company,
       category: category,
       description: description,
+    );
+  }
+
+  /// Convert cryptocurrency to fiat currency
+  Future<Map<String, dynamic>> convertCryptoToFiat({
+    required String value,
+    required String from,
+    required String to,
+  }) async {
+    return await remoteDataSource.convertCryptoToFiat(
+      value: value,
+      from: from,
+      to: to,
     );
   }
 
