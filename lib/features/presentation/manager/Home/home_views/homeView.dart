@@ -1,3 +1,4 @@
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_wallet_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
@@ -45,6 +46,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
   Widget build(BuildContext context) {
     final walletState = ref.watch(walletNotifierProvider);
     final walletNotifier = ref.read(walletNotifierProvider.notifier);
+    final user = ref.watch(userProvider);
+
     return Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: PreferredSize(
@@ -64,13 +67,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       child: const Icon(Icons.person, color: Colors.grey),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Hi, Juan',
+                            '"Hi, ${user?.username ?? "User"}"n',
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 16,
@@ -121,7 +124,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const WalletCard(),
+                  const EmployeeWalletCardWidget(),
                   const SizedBox(height: 24),
                   QuickActions(
                     onPaymentSuccess: () {

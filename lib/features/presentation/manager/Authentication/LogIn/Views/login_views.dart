@@ -22,6 +22,8 @@ class _LogInState extends ConsumerState<LogIn> {
 
   void _onViewModelChanged(LoginViewModel viewModel) async {
     if (viewModel.authUser != null) {
+      // ✅ Save user globally
+      ref.read(userProvider.notifier).state = viewModel.authUser;
       // Role-based navigation after successful login
       // Use pushAndRemoveUntil to clear the entire navigation stack and prevent back button issues
       if (viewModel.authUser!.role == 'Manager') {

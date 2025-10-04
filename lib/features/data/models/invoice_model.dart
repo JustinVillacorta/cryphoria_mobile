@@ -1,0 +1,121 @@
+// lib/features/data/models/invoice_model.dart
+import '../../domain/entities/invoice.dart';
+
+class InvoiceModel extends Invoice {
+  InvoiceModel({
+    required super.invoiceId,
+    required super.userId,
+    required super.invoiceNumber,
+    required super.clientName,
+    super.clientEmail,
+    super.clientAddress,
+    required super.issueDate,
+    required super.dueDate,
+    required super.status,
+    required super.subtotal,
+    required super.taxRate,
+    required super.taxAmount,
+    required super.totalAmount,
+    required super.currency,
+    super.notes,
+    required super.items,
+    super.createdAt,
+    super.updatedAt,
+    super.cryptoPaymentAddress,
+    super.cryptoCurrency,
+    super.cryptoAmount,
+    super.sentAt,
+  });
+
+  factory InvoiceModel.fromJson(Map<String, dynamic> json) {
+    double toDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
+
+    List<InvoiceItem> parseItems(dynamic itemsData) {
+      if (itemsData == null) return [];
+      if (itemsData is! List) return [];
+      return itemsData
+          .map((item) => InvoiceItem.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+
+    return InvoiceModel(
+      invoiceId: json['invoice_id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      invoiceNumber: json['invoice_number']?.toString() ?? '',
+      clientName: json['client_name']?.toString() ?? '',
+      clientEmail: json['client_email']?.toString(),
+      clientAddress: json['client_address']?.toString(),
+      issueDate: json['issue_date']?.toString() ?? '',
+      dueDate: json['due_date']?.toString() ?? '',
+      status: json['status']?.toString() ?? '',
+      subtotal: toDouble(json['subtotal']),
+      taxRate: toDouble(json['tax_rate']),
+      taxAmount: toDouble(json['tax_amount']),
+      totalAmount: toDouble(json['total_amount']),
+      currency: json['currency']?.toString() ?? 'USD',
+      notes: json['notes']?.toString(),
+      items: parseItems(json['items']),
+      createdAt: json['created_at']?.toString(),
+      updatedAt: json['updated_at']?.toString(),
+      cryptoPaymentAddress: json['crypto_payment_address']?.toString(),
+      cryptoCurrency: json['crypto_currency']?.toString(),
+      cryptoAmount: toDouble(json['crypto_amount']),
+      sentAt: json['sent_at']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    "invoice_id": invoiceId,
+    "user_id": userId,
+    "invoice_number": invoiceNumber,
+    "client_name": clientName,
+    "client_email": clientEmail,
+    "client_address": clientAddress,
+    "issue_date": issueDate,
+    "due_date": dueDate,
+    "status": status,
+    "subtotal": subtotal,
+    "tax_rate": taxRate,
+    "tax_amount": taxAmount,
+    "total_amount": totalAmount,
+    "currency": currency,
+    "notes": notes,
+    "items": items.map((item) => item.toJson()).toList(),
+    "created_at": createdAt,
+    "updated_at": updatedAt,
+    "crypto_payment_address": cryptoPaymentAddress,
+    "crypto_currency": cryptoCurrency,
+    "crypto_amount": cryptoAmount,
+    "sent_at": sentAt,
+  };
+
+  Invoice toEntity() => Invoice(
+    invoiceId: invoiceId,
+    userId: userId,
+    invoiceNumber: invoiceNumber,
+    clientName: clientName,
+    clientEmail: clientEmail,
+    clientAddress: clientAddress,
+    issueDate: issueDate,
+    dueDate: dueDate,
+    status: status,
+    subtotal: subtotal,
+    taxRate: taxRate,
+    taxAmount: taxAmount,
+    totalAmount: totalAmount,
+    currency: currency,
+    notes: notes,
+    items: items,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    cryptoPaymentAddress: cryptoPaymentAddress,
+    cryptoCurrency: cryptoCurrency,
+    cryptoAmount: cryptoAmount,
+    sentAt: sentAt,
+  );
+}
