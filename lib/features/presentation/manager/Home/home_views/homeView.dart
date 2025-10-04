@@ -124,7 +124,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const EmployeeWalletCardWidget(),
+                  const WalletCard(),
                   const SizedBox(height: 24),
                   QuickActions(
                     onPaymentSuccess: () {
