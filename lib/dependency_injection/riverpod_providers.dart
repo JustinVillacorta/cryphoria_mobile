@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:cryphoria_mobile/features/data/data_sources/invoice_remote_data_source.dart';
+import 'package:cryphoria_mobile/features/data/repositories_impl/invoice_repository_impl.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
+import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -87,6 +90,13 @@ import '../features/data/data_sources/employee_remote_data_source.dart'
 import '../features/data/data_sources/EmployeeRemoteDataSource.dart'
     as employee_dashboard;
 
+import '../features/domain/repositories/invoice_repository.dart';
+import '../features/domain/usecases/Invoice/get_invoice_by_id_usecase.dart';
+import '../features/domain/usecases/Invoice/get_invoices_by_user_usecase.dart';
+
+
+
+
 
 
 // -----------------------------------------------------------------------------
@@ -105,8 +115,9 @@ final flutterSecureStorageProvider =
     Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
 
 
-
+// for username fetching
 final userProvider = StateProvider<AuthUser?>((ref) => null);
+
 
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
@@ -514,4 +525,37 @@ final payrollViewModelProvider = StateNotifierProvider<PayrollViewModel, Payroll
     updatePayrollEntryUseCase: ref.watch(updatePayrollEntryUseCaseProvider),
     getPayrollAnalyticsUseCase: ref.watch(getPayrollAnalyticsUseCaseProvider),
   );
+});
+
+final invoiceRemoteDataSourceProvider = Provider<InvoiceRemoteDataSource>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return InvoiceRemoteDataSource(dio: dioClient.dio);
+});
+
+final invoiceRepositoryProvider = Provider<InvoiceRepository>((ref) {
+  return InvoiceRepositoryImpl(
+    remoteDataSource: ref.watch(invoiceRemoteDataSourceProvider),
+  );
+});
+
+// --- UseCase providers ---
+final getInvoicesByUserUseCaseProvider = Provider<GetInvoicesByUser>((ref) {
+  return GetInvoicesByUser(ref.read(invoiceRepositoryProvider));
+});
+
+final getInvoiceByIdUseCaseProvider = Provider<GetInvoiceById>((ref) {  // Renamed
+  return GetInvoiceById(ref.read(invoiceRepositoryProvider));
+});
+
+// --- Async providers used by the UI ---
+// Fetch invoices for a given userId
+final invoicesByUserProvider = FutureProvider.family<List<Invoice>, String>((ref, userId) async {
+  final getInvoices = ref.read(getInvoicesByUserUseCaseProvider);
+  return await getInvoices(userId);
+});
+
+// Fetch a single invoice by invoiceId
+final invoiceByIdProvider = FutureProvider.family<Invoice, String>((ref, invoiceId) async {
+  final getInvoice = ref.read(getInvoiceByIdUseCaseProvider);  // Now references the correct provider
+  return await getInvoice(invoiceId);
 });

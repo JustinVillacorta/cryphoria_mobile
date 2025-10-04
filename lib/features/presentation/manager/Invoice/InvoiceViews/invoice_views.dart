@@ -1,87 +1,61 @@
-import 'package:flutter/material.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
+import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Invoice/invoice_views/invoice_detail_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class Invoice {
-  final String id;
-  final String clientName;
-  final String amount;
-  final String status;
-  final String date;
-  final String description;
-
-  Invoice({
-    required this.id,
-    required this.clientName, 
-    required this.amount,
-    required this.status,
-    required this.date,
-    required this.description,
-  });
-}
-
-class InvoiceScreen extends StatefulWidget {
+class InvoiceScreen extends ConsumerStatefulWidget {
   const InvoiceScreen({super.key});
 
   @override
-  State<InvoiceScreen> createState() => _InvoiceScreenState();
+  ConsumerState<InvoiceScreen> createState() => _InvoiceScreenState();
 }
 
-class _InvoiceScreenState extends State<InvoiceScreen> {
+class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
   String selectedFilter = 'All';
   String searchQuery = '';
   final TextEditingController searchController = TextEditingController();
-  
-  // Sample invoice data that matches your screenshots
-  final List<Invoice> invoices = [
-    Invoice(
-      id: 'INV-2023-004',
-      clientName: 'Tech Solutions Inc.',
-      amount: '\$1,120.00',
-      status: 'Paid',
-      date: 'June 15, 2023',
-      description: 'IT Consulting Services',
-    ),
-    Invoice(
-      id: 'INV-2023-003',
-      clientName: 'Office Depot',
-      amount: '\$350.75',
-      status: 'Paid', 
-      date: 'June 10, 2023',
-      description: 'Office Supplies',
-    ),
-    Invoice(
-      id: 'INV-2023-005',
-      clientName: 'John Smith',
-      amount: '\$2,500.00',
-      status: 'Pending',
-      date: 'June 20, 2023',
-      description: 'Monthly Salary - June 2023',
-    ),
-  ];
+  String? userId;
+  bool isLoadingUser = true;
 
-  List<Invoice> get filteredInvoices {
-    List<Invoice> filtered = invoices;
-    
-    // Apply search filter
-    if (searchQuery.isNotEmpty) {
-      filtered = filtered.where((invoice) =>
-        invoice.clientName.toLowerCase().contains(searchQuery.toLowerCase()) ||
-        invoice.id.toLowerCase().contains(searchQuery.toLowerCase())
-      ).toList();
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+  }
+
+  Future<void> _loadUserId() async {
+    try {
+      final authLocalDataSource = ref.read(authLocalDataSourceProvider);
+      final id = await authLocalDataSource.getToken();
+      setState(() {
+        userId = id;
+        isLoadingUser = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingUser = false;
+      });
     }
-    
-    // Apply status filter
-    if (selectedFilter != 'All') {
-      filtered = filtered.where((invoice) => 
-        invoice.status == selectedFilter
-      ).toList();
-    }
-    
-    return filtered;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoadingUser) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (userId == null) {
+      return const Scaffold(
+        body: Center(child: Text('Please log in to view invoices')),
+      );
+    }
+
+    // Fetch invoices for the current user
+    final invoicesAsync = ref.watch(invoicesByUserProvider(userId!));
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
@@ -158,8 +132,13 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
               // Invoice List
               Expanded(
-                child: filteredInvoices.isEmpty
-                    ? Center(
+                child: invoicesAsync.when(
+                  data: (invoices) {
+                    // Filter invoices based on search and status
+                    List<Invoice> filtered = _filterInvoices(invoices);
+
+                    if (filtered.isEmpty) {
+                      return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -187,20 +166,72 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                             ),
                           ],
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: filteredInvoices.length,
-                        itemBuilder: (context, index) {
-                          final invoice = filteredInvoices[index];
-                          return _buildInvoiceCard(invoice);
-                        },
-                      ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final invoice = filtered[index];
+                        return _buildInvoiceCard(invoice);
+                      },
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading invoices',
+                          style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '$err',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  List<Invoice> _filterInvoices(List<Invoice> invoices) {
+    List<Invoice> filtered = invoices;
+
+    // Apply search filter
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered.where((invoice) =>
+      invoice.clientName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          invoice.invoiceNumber.toLowerCase().contains(searchQuery.toLowerCase())
+      ).toList();
+    }
+
+    // Apply status filter (match "Paid" with "PAID", "Pending" with "SENT" or "DRAFT")
+    if (selectedFilter != 'All') {
+      if (selectedFilter == 'Paid') {
+        filtered = filtered.where((invoice) =>
+        invoice.status.toUpperCase() == 'PAID'
+        ).toList();
+      } else if (selectedFilter == 'Pending') {
+        filtered = filtered.where((invoice) =>
+        invoice.status.toUpperCase() == 'SENT' ||
+            invoice.status.toUpperCase() == 'DRAFT'
+        ).toList();
+      }
+    }
+
+    return filtered;
   }
 
   Widget _buildFilterTab(String filter) {
@@ -232,6 +263,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   }
 
   Widget _buildInvoiceCard(Invoice invoice) {
+    // Map backend status to display status
+    String displayStatus = invoice.status.toUpperCase() == 'PAID' ? 'Paid' : 'Pending';
+
+    // Get first item description or default text
+    String description = invoice.items.isNotEmpty
+        ? invoice.items.first.description
+        : 'Invoice items';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
@@ -251,7 +290,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => InvoiceDetailScreen(invoice: invoice),
+              builder: (context) => InvoiceDetailScreen(invoiceId: invoice.invoiceId),
             ),
           );
         },
@@ -278,17 +317,17 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: invoice.status == 'Paid' 
+                          color: displayStatus == 'Paid'
                               ? Colors.green[100]
                               : Colors.orange[100],
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          invoice.status,
+                          displayStatus,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: invoice.status == 'Paid'
+                            color: displayStatus == 'Paid'
                                 ? Colors.green[700]
                                 : Colors.orange[700],
                           ),
@@ -298,7 +337,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    invoice.id,
+                    invoice.invoiceNumber,
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],
@@ -309,14 +348,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Date: ${invoice.date}',
+                        'Date: ${_formatDate(invoice.issueDate)}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[500],
                         ),
                       ),
                       Text(
-                        invoice.amount,
+                        '${invoice.currency} ${invoice.totalAmount.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -328,20 +367,23 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Text(
-                        invoice.description,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
+                      Expanded(
+                        child: Text(
+                          description,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => InvoiceDetailScreen(invoice: invoice),
+                              builder: (context) => InvoiceDetailScreen(invoiceId: invoice.invoiceId),
                             ),
                           );
                         },
@@ -373,5 +415,22 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         ),
       ),
     );
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final months = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+      return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 }
