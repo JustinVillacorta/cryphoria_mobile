@@ -4,6 +4,18 @@ import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Add global error handler to catch disposal errors
+  FlutterError.onError = (FlutterErrorDetails details) {
+    if (details.exception.toString().contains('Cannot use "ref" after the widget was disposed')) {
+      // Silently ignore disposal errors to prevent app crashes
+      print('DEBUG: Caught disposal error, ignoring: ${details.exception}');
+      return;
+    }
+    // Let other errors be handled normally
+    FlutterError.presentError(details);
+  };
+  
   runApp(const ProviderScope(child: MyApp()));
 }
 

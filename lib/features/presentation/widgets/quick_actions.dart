@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/generate_report_bottom_sheet.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Invest/invest_main_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Invest/investment_portfolio_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/smart_invest_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Audit/Views/audit_contract_main_screen.dart';
 
 class QuickActions extends ConsumerStatefulWidget {
@@ -94,7 +93,7 @@ class _QuickActionsState extends ConsumerState<QuickActions> {
                   Icons.trending_up,
                   'Invest\nSmart',
                   Colors.purple,
-                  onTap: () => _navigateToInvestScreen(context),
+                  onTap: () => showSmartInvestBottomSheet(context),
                 ),
               ],
             ),
@@ -236,12 +235,12 @@ class _QuickActionsState extends ConsumerState<QuickActions> {
     );
   }
 
-  void _navigateToInvestScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const InvestMainScreen(),
-      ),
+  void showSmartInvestBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const SmartInvestBottomSheet(),
     );
   }
 
@@ -250,15 +249,6 @@ class _QuickActionsState extends ConsumerState<QuickActions> {
       context,
       MaterialPageRoute(
         builder: (context) => const AuditContractMainScreen(),
-      ),
-    );
-  }
-
-  void _navigateToPortfolioScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const InvestmentPortfolioScreen(),
       ),
     );
   }
