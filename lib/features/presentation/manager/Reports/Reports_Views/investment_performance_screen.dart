@@ -748,8 +748,6 @@ class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerforma
                       _buildSummaryRow('Cash Balance', '\$0.00'),
                       const SizedBox(height: 12),
                       Container(height: 1, color: Colors.grey[300]),
-                      const SizedBox(height: 12),
-                      _buildSummaryRow('Portfolio Performance', portfolio.totalValue >= 0 ? 'Positive' : 'Negative', isTotal: true, isGain: portfolio.totalValue >= 0),
                     ],
                   ),
                 ),
