@@ -202,12 +202,14 @@ class InvoiceItem {
   final int quantity;
   final double unitPrice;
   final double totalPrice;
+  final double taxAmount;
 
   InvoiceItem({
     required this.description,
     required this.quantity,
     required this.unitPrice,
     required this.totalPrice,
+    required this.taxAmount,
   });
 
   factory InvoiceItem.fromJson(Map<String, dynamic> json) {
@@ -231,6 +233,7 @@ class InvoiceItem {
       quantity: toInt(json['quantity']),
       unitPrice: toDouble(json['unit_price']),
       totalPrice: toDouble(json['total_price']),
+      taxAmount: toDouble(json['tax_amount']),
     );
   }
 
@@ -252,6 +255,8 @@ class InvoiceItem {
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
       totalPrice: totalPrice ?? this.totalPrice,
+      taxAmount: taxAmount,
     );
+
   }
 }
