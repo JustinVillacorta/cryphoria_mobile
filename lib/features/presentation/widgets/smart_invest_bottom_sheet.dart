@@ -20,7 +20,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   String newName = '';
   String newRole = 'Investor';
   String newNotes = '';
-  
+
   final List<String> roles = ['Investor', 'Partner', 'Vendor', 'Client'];
 
   @override
@@ -35,12 +35,12 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(smartInvestNotifierProvider);
-    
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
@@ -55,30 +55,46 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[200]!, width: 1),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.person,
-                color: Colors.purple[600],
-                size: 20,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.purple[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet,
+                  color: Colors.purple[600],
+                  size: 20,
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               const Text(
                 'Investment Address Book',
                 style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
               ),
               const Spacer(),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close, color: Colors.black87),
+                icon: const Icon(Icons.close, color: Colors.black54, size: 22),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
             ],
           ),
@@ -86,11 +102,12 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           const Text(
             'Select an entry to send investment ETH',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               color: Colors.grey,
+              fontWeight: FontWeight.w400,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           _buildSearchBar(),
         ],
       ),
@@ -103,33 +120,48 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[200]!),
             ),
             child: TextField(
               onChanged: (value) => setState(() => searchQuery = value),
-              decoration: const InputDecoration(
-                hintText: 'Search address book...',
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
+              style: const TextStyle(fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Search by name or address',
+                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 20),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
             ),
           ),
         ),
         const SizedBox(width: 12),
-        ElevatedButton.icon(
+        ElevatedButton(
           onPressed: () => _startAddingEntry(),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.purple[600],
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
+            elevation: 0,
           ),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add Entry'),
+          child: Row(
+            children: const [
+              Icon(Icons.add, size: 18),
+              SizedBox(width: 6),
+              Text(
+                'Add',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -190,16 +222,16 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       'subRole': entry.notes,
       'icon': Icons.business,
     }).toList();
-    
+
     print('📋 Address book entries:');
     for (var entry in entries) {
       print('📋 - ${entry['name']}: ${entry['walletAddress']}');
     }
-    
+
     final filteredEntries = entries.where((entry) {
       if (searchQuery.isEmpty) return true;
       return (entry['name'] as String).toLowerCase().contains(searchQuery.toLowerCase()) ||
-             (entry['walletAddress'] as String).toLowerCase().contains(searchQuery.toLowerCase());
+          (entry['walletAddress'] as String).toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
 
     if (filteredEntries.isEmpty) {
@@ -219,7 +251,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(20),
       itemCount: filteredEntries.length,
       itemBuilder: (context, index) {
         final entry = filteredEntries[index];
@@ -230,44 +262,33 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
 
   Widget _buildAddressEntry(Map<String, dynamic> entry) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            spreadRadius: 0,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
-      child: Column(
-        children: [
-          // Main content
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row with icon, name, and role
+            Row(
               children: [
-                // Company icon
                 Container(
-                  width: 56,
-                  height: 56,
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: Colors.purple[50],
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     entry['icon'] as IconData,
                     color: Colors.purple[600],
-                    size: 28,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 16),
-                
-                // Company info
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,86 +296,78 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                       Text(
                         entry['name'] as String,
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.purple[50],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          entry['role'] as String,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.purple[700],
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       Text(
                         entry['subRole'] as String,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.account_balance_wallet,
-                              size: 16,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                entry['walletAddress'] as String,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[700],
-                                  fontFamily: 'monospace',
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ],
                   ),
                 ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.purple[50],
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    entry['role'] as String,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.purple[700],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-          
-          // Action buttons
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
+            const SizedBox(height: 12),
+
+            // Wallet address
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      entry['walletAddress'] as String,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[700],
+                        fontFamily: 'monospace',
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.copy,
+                    size: 16,
+                    color: Colors.grey[500],
+                  ),
+                ],
               ),
             ),
-            child: Row(
+            const SizedBox(height: 12),
+
+            // Action buttons
+            Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: ElevatedButton(
                     onPressed: () {
                       print('📤 User clicked on entry: ${entry['name']} (${entry['walletAddress']})');
                       _sendEthToEntry(entry);
@@ -364,51 +377,47 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       elevation: 0,
                     ),
-                    icon: const Icon(Icons.send, size: 18),
-                    label: const Text(
-                      'Send ETH',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.arrow_forward, size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          'Send ETH',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[300]!),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => _editEntry(entry),
+                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Colors.grey[600],
+                    padding: const EdgeInsets.all(12),
                   ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => _editEntry(entry),
-                        icon: const Icon(Icons.edit, color: Colors.grey, size: 20),
-                        tooltip: 'Edit',
-                      ),
-                      Container(
-                        height: 24,
-                        width: 1,
-                        color: Colors.grey[300],
-                      ),
-                      IconButton(
-                        onPressed: () => _deleteEntry(entry),
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                        tooltip: 'Delete',
-                      ),
-                    ],
+                ),
+                IconButton(
+                  onPressed: () => _deleteEntry(entry),
+                  icon: const Icon(Icons.delete_outline, size: 20),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Colors.red[400],
+                    padding: const EdgeInsets.all(12),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -436,7 +445,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
             ],
           ),
           const SizedBox(height: 24),
-          
+
           // Wallet Address Field
           const Text(
             'Wallet Address',
@@ -459,7 +468,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Name Field
           const Text(
             'Name',
@@ -482,7 +491,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Role Field
           const Text(
             'Role',
@@ -527,7 +536,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Notes Field
           const Text(
             'Notes',
@@ -551,7 +560,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
             ),
           ),
           const SizedBox(height: 32),
-          
+
           // Action Buttons
           Row(
             children: [
@@ -632,7 +641,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     print('📤 _sendEthToEntry called with entry: $entry');
     print('📋 Recipient Name: ${entry['name']}');
     print('📋 Recipient Address: ${entry['walletAddress']}');
-    
+
     // Show the Send Investment ETH modal
     showModalBottomSheet(
       context: context,
@@ -713,7 +722,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       );
 
       await ref.read(smartInvestNotifierProvider.notifier).upsertAddressBookEntry(request);
-      
+
       setState(() {
         _resetForm();
         isAddingEntry = false;
@@ -755,7 +764,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       );
 
       await ref.read(smartInvestNotifierProvider.notifier).upsertAddressBookEntry(request);
-      
+
       setState(() {
         _resetForm();
         isEditingEntry = false;
