@@ -87,7 +87,7 @@ import '../features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart
 
 import '../features/data/data_sources/employee_remote_data_source.dart'
     as manager_employee;
-import '../features/data/data_sources/EmployeeRemoteDataSource.dart'
+import '../features/data/data_sources/employee_remote_data_source.dart'
     as employee_dashboard;
 
 import '../features/domain/repositories/invoice_repository.dart';
@@ -198,7 +198,9 @@ final managerEmployeeRemoteDataSourceProvider = Provider<
 
 final employeeDashboardRemoteDataSourceProvider =
     Provider<employee_dashboard.EmployeeRemoteDataSource>((ref) {
-  return employee_dashboard.EmployeeRemoteDataSourceImpl();
+  return employee_dashboard.EmployeeRemoteDataSourceImpl(
+    dio: ref.watch(dioClientProvider).dio,
+  );
 });
 
 final auditRemoteDataSourceProvider = Provider<AuditRemoteDataSource>((ref) {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import '../ViewModels/audit_results_viewmodel.dart';
 import '../../../../domain/entities/audit_report.dart';
 
 class OverallAssessmentScreen extends ConsumerWidget {

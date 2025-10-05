@@ -18,6 +18,12 @@ abstract class EmployeeRemoteDataSource {
   Future<void> processPayslipPayment(String payslipId);
   Future<List<Employee>> getManagerTeamWithWallets(); // Get employees with wallet addresses
   Future<String?> getEmployeeWalletAddress(String userId); // Get specific employee wallet
+  
+  // Employee dashboard methods (for compatibility with old usecase)
+  Future<Map<String, dynamic>> getEmployeeData(String employeeId);
+  Future<Map<String, dynamic>> getWalletData(String employeeId);
+  Future<Map<String, dynamic>> getPayoutInfo(String employeeId);
+  Future<List<Map<String, dynamic>>> getRecentTransactions(String employeeId, {int limit = 5});
 }
 
 class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
@@ -496,6 +502,59 @@ class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
     // For now, return null as the test endpoint has been removed
     print('DEBUG: Wallet lookup not implemented for user $userId');
     return null;
+  }
+
+  // Employee dashboard methods (for compatibility with old usecase)
+  @override
+  Future<Map<String, dynamic>> getEmployeeData(String employeeId) async {
+    try {
+      final response = await dio.get('/api/employees/$employeeId/');
+      return response.data;
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getWalletData(String employeeId) async {
+    try {
+      final response = await dio.get('/api/employees/$employeeId/wallet/');
+      return response.data;
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getPayoutInfo(String employeeId) async {
+    try {
+      final response = await dio.get('/api/employees/$employeeId/payout-info/');
+      return response.data;
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getRecentTransactions(String employeeId, {int limit = 5}) async {
+    try {
+      final response = await dio.get('/api/employees/$employeeId/transactions/', queryParameters: {'limit': limit});
+      return List<Map<String, dynamic>>.from(response.data);
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
   }
 
 }

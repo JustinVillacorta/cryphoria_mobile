@@ -3,7 +3,7 @@ import '../../entities/employee_top_bar.dart';
 import '../../entities/employee_transaction_status.dart';
 import '../../entities/employee_payout_info.dart';
 import '../../entities/employee_wallet.dart';
-import '../../../data/data_sources/EmployeeRemoteDataSource.dart';
+import '../../../data/data_sources/employee_remote_data_source.dart';
 
 class EmployeeDashboardData {
   final EmployeeTopBar employee;
