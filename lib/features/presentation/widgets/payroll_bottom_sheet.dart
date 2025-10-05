@@ -303,6 +303,10 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
 
       if (!mounted) return;
       
+      // Store provider references before async operations
+      final dioClient = ref.read(dioClientProvider);
+      final payslipRepository = ref.read(payslipRepositoryProvider);
+      
       // Show loading dialog
       showDialog(
         context: context,
@@ -339,7 +343,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
           print('  - Employee: ${employee.displayName}');
           print('  - Salary: $salaryAmount');
           
-          final response = await ref.read(dioClientProvider).dio.post('/api/payroll/create/', data: {
+          final response = await dioClient.dio.post('/api/payroll/create/', data: {
             'employee_id': employee.userId,
             'employee_name': employee.displayName,
             'salary_amount': salaryAmount,
@@ -381,7 +385,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         try {
           print('DEBUG: Processing payroll entry: $entryId');
           
-          final response = await ref.read(dioClientProvider).dio.post('/api/payroll/process/', data: {
+          final response = await dioClient.dio.post('/api/payroll/process/', data: {
             'entry_id': entryId,
           });
           
@@ -398,28 +402,74 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         }
       }
 
+      if (!mounted) return; // Check after payroll processing
+
+      // Step 3: Create payslips for each employee (same as Process Payroll)
+      int payslipSuccessCount = 0;
+
+      for (final employeePayroll in selectedEmployees) {
+        if (!mounted) break; // Check before each iteration
+        
+        final employee = employeePayroll.employee;
+        
+        // Get salary amount from text field
+        final salaryText = employeePayroll.salaryController.text.trim();
+        final salaryAmount = double.tryParse(salaryText) ?? 0.0;
+        
+        final payslipRequest = CreatePayslipRequest(
+          employeeId: employee.userId,
+          employeeName: employee.displayName,
+          employeeEmail: employee.email,
+          employeeWallet: employee.payrollInfo?.employeeWallet,
+          department: employee.department,
+          position: employee.position,
+          salaryAmount: salaryAmount,
+          salaryCurrency: 'USD',
+          cryptocurrency: 'ETH',
+          payPeriodStart: '${payPeriodStart.year}-${payPeriodStart.month.toString().padLeft(2, '0')}-${payPeriodStart.day.toString().padLeft(2, '0')}',
+          payPeriodEnd: '${payPeriodEnd.year}-${payPeriodEnd.month.toString().padLeft(2, '0')}-${payPeriodEnd.day.toString().padLeft(2, '0')}',
+          payDate: '${payDate.year}-${payDate.month.toString().padLeft(2, '0')}-${payDate.day.toString().padLeft(2, '0')}',
+          taxDeduction: 0.0,
+          insuranceDeduction: 0.0,
+          retirementDeduction: 0.0,
+          otherDeductions: 0.0,
+          overtimePay: 0.0,
+          bonus: 0.0,
+          allowances: 0.0,
+          notes: 'Generated from mobile payroll processing - $payrollType (Sent Now)',
+        );
+
+        try {
+          await payslipRepository.createPayslip(payslipRequest);
+          payslipSuccessCount++;
+          print('DEBUG: Payslip created for ${employee.displayName}');
+        } catch (e) {
+          print('ERROR: Failed to create payslip for ${employee.displayName}: $e');
+        }
+      }
+
       if (!mounted) return; // Check before UI operations
       
       // Close loading dialog
       Navigator.pop(context);
 
-      if (processedEntries == entryIds.length) {
+      if (processedEntries == entryIds.length && payslipSuccessCount == selectedEmployees.length) {
         // Close payroll bottom sheet
         Navigator.pop(context);
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Successfully sent payroll for $processedEntries employees'),
+              content: Text('Successfully sent payroll and created payslips for $processedEntries employees'),
               backgroundColor: Colors.green,
             ),
           );
         }
-      } else if (processedEntries > 0) {
+      } else if (processedEntries > 0 || payslipSuccessCount > 0) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Sent payroll for $processedEntries of ${entryIds.length} employees'),
+              content: Text('Sent payroll for $processedEntries employees, created $payslipSuccessCount payslips'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -1078,7 +1128,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
                 SizedBox(height: 8),
                 // Help text
                 Text(
-                  'Process Payroll: Creates entries and payslips\nSend Payroll Now: Immediately processes payments',
+                  'Process Payroll: Creates entries and payslips\nSend Payroll Now: Immediately processes payments and creates payslips',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
