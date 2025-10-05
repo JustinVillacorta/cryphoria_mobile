@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../Reports_ViewModel/portfolio_view_model.dart';
+import '../../../../domain/entities/portfolio.dart';
 
-class IncomeStatementScreen extends StatefulWidget {
+class IncomeStatementScreen extends ConsumerStatefulWidget {
   const IncomeStatementScreen({super.key});
 
   @override
-  State<IncomeStatementScreen> createState() => _IncomeStatementScreenState();
+  ConsumerState<IncomeStatementScreen> createState() => _IncomeStatementScreenState();
 }
 
-class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
+class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
   bool isChartView = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Load portfolio data when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(portfolioViewModelProvider.notifier).loadPortfolioValue();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final portfolioState = ref.watch(portfolioViewModelProvider);
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -30,116 +44,224 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          // Header Info
-          Container(
-            margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+        actions: [
+          if (portfolioState.hasData)
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.black87),
+              onPressed: () => ref.read(portfolioViewModelProvider.notifier).refresh(),
             ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'View your company\'s assets, liabilities, and equity',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // View Toggle
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => isChartView = true),
-                    child: Container(
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: isChartView ? const Color(0xFF8B5CF6) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Chart View',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isChartView ? Colors.white : Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => isChartView = false),
-                    child: Container(
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: !isChartView ? const Color(0xFF8B5CF6) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Table View',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: !isChartView ? Colors.white : Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 15),
-
-          // Content
-          Expanded(
-            child: isChartView ? _buildChartView() : _buildTableView(),
-          ),
         ],
       ),
+      body: _buildBody(portfolioState),
     );
   }
 
-  Widget _buildChartView() {
+  Widget _buildBody(PortfolioState state) {
+    if (state.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+        ),
+      );
+    }
+
+    if (state.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading portfolio data',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(portfolioViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!state.hasData || state.portfolio == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.account_balance_wallet,
+              size: 64,
+              color: Colors.grey[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No portfolio data available',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Generate portfolio data to view income statement',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(portfolioViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Refresh',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // Header Info
+        Container(
+          margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Portfolio Value: \$${state.portfolio!.totalValue.abs().toStringAsFixed(2)} ${state.portfolio!.currency}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // View Toggle
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => isChartView = true),
+                  child: Container(
+                    margin: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: isChartView ? const Color(0xFF8B5CF6) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Chart View',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isChartView ? Colors.white : Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => isChartView = false),
+                  child: Container(
+                    margin: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: !isChartView ? const Color(0xFF8B5CF6) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Table View',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: !isChartView ? Colors.white : Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 15),
+
+        // Content
+        Expanded(
+          child: isChartView ? _buildChartView(state.portfolio!) : _buildTableView(state.portfolio!),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChartView(Portfolio portfolio) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -279,19 +401,12 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
                 borderData: FlBorderData(show: false),
                 minX: 0,
                 maxX: 5,
-                minY: -10000,
-                maxY: 10000,
+                minY: _getMinY(portfolio),
+                maxY: _getMaxY(portfolio),
                 lineBarsData: [
-                  // Blue line (Revenue)
+                  // Blue line (Portfolio Value)
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 5000),
-                      FlSpot(1, 4800),
-                      FlSpot(2, 4600),
-                      FlSpot(3, 5200),
-                      FlSpot(4, 4900),
-                      FlSpot(5, 5400),
-                    ],
+                    spots: _getPortfolioValueSpots(portfolio),
                     isCurved: true,
                     gradient: LinearGradient(
                       colors: [
@@ -314,16 +429,9 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
                     ),
                     belowBarData: BarAreaData(show: false),
                   ),
-                  // Green line (Expenses)
+                  // Green line (Individual Holdings)
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 2500),
-                      FlSpot(1, 2300),
-                      FlSpot(2, -7500),
-                      FlSpot(3, 1800),
-                      FlSpot(4, 1600),
-                      FlSpot(5, 2200),
-                    ],
+                    spots: _getHoldingsSpots(portfolio),
                     isCurved: true,
                     gradient: LinearGradient(
                       colors: [
@@ -445,7 +553,7 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
     );
   }
 
-  Widget _buildTableView() {
+  Widget _buildTableView(Portfolio portfolio) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -535,56 +643,176 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
             ),
             child: Column(
               children: [
-                // Revenue Section
-                _buildMainRow('Revenue', '\$945,000.00'),
-                const SizedBox(height: 16),
+                // Table Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Color(0xFFF3F4F6)),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.description,
+                            color: Colors.blue[600],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Income Statement',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.file_download,
+                            color: Colors.green[600],
+                            size: 18,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Export to Excel',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
-                // Expenses Section
-                _buildMainRow('Expenses', '\$737,000.00'),
-                const SizedBox(height: 8),
-                _buildSubSectionHeader('Direct Expenses'),
-                _buildIncomeStatementRow('Cost of Goods Sold', '\$320,000.00'),
-                _buildTotalRow('Total Direct Expenses', '\$320,000.00'),
-                
-                const SizedBox(height: 12),
-                
-                _buildSubSectionHeader('Operating Expenses'),
-                _buildIncomeStatementRow('Salaries and Wages', '\$180,000.00'),
-                _buildTotalRow('Total Operating Expenses', '\$180,000.00'),
-                
-                const SizedBox(height: 12),
-                
-                _buildSubSectionHeader('Non-Operating Expenses'),
-                _buildIncomeStatementRow('Interest Expense', '\$12,000.00'),
-                _buildIncomeStatementRow('Tax Expense', '\$65,000.00'),
-                _buildTotalRow('Total Non-Operating Expenses', '\$77,000.00'),
+                // Date
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Row(
+                    children: [
+                      Text(
+                        'As of monthly',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 20),
 
-                // Profit Calculations
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
-                    ),
-                  ),
+                // Income Statement Content
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     children: [
-                      _buildProfitRow('Gross Profit', '\$625,000.00'),
-                      const SizedBox(height: 8),
-                      _buildProfitRow('Operating Profit', '\$285,000.00'),
-                      const SizedBox(height: 8),
-                      Container(height: 1, color: Colors.grey[300]),
-                      const SizedBox(height: 12),
-                      _buildProfitRow('Net Profit', '\$248,000.00', isNet: true),
+                      // Revenue Section
+                      _buildIncomeStatementRow(
+                        'REVENUE',
+                        '\$${portfolio.totalValue.abs().toStringAsFixed(2)}',
+                        isHeader: true,
+                        backgroundColor: Colors.green[50],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Expenses Section
+                      _buildIncomeStatementRow(
+                        'EXPENSES',
+                        '\$0.00',
+                        isHeader: true,
+                        backgroundColor: Colors.red[50],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Net Income Section
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(12),
+                            bottomRight: Radius.circular(12),
+                          ),
+                        ),
+                        child: _buildIncomeStatementRow(
+                          'NET INCOME',
+                          '\$${portfolio.totalValue.abs().toStringAsFixed(2)}',
+                          isHeader: true,
+                          backgroundColor: Colors.blue[50],
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Action Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey[400]!),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Close',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.download, size: 16, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        'Download Report',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 40),
@@ -593,70 +821,43 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
     );
   }
 
-  Widget _buildMainRow(String title, String amount) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            amount,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSubSectionHeader(String title) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Row(
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildIncomeStatementRow(String item, String amount) {
+  Widget _buildIncomeStatementRow(
+    String item, 
+    String amount, {
+    bool isHeader = false,
+    bool isSubItem = false,
+    Color? backgroundColor,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: isSubItem ? 40 : 20,
+        vertical: isHeader ? 16 : 8,
+      ),
+      decoration: backgroundColor != null 
+        ? BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(8),
+          )
+        : null,
       child: Row(
         children: [
           Text(
             item,
             style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
+              fontSize: isHeader ? 16 : 14,
+              fontWeight: isHeader ? FontWeight.bold : FontWeight.w500,
+              color: isHeader ? Colors.black87 : Colors.grey[700],
             ),
           ),
           const Spacer(),
           Text(
             amount,
             style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
+              fontSize: isHeader ? 16 : 14,
+              fontWeight: isHeader ? FontWeight.bold : FontWeight.w500,
+              color: isHeader ? Colors.black87 : Colors.grey[700],
             ),
           ),
         ],
@@ -664,59 +865,73 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
     );
   }
 
-  Widget _buildTotalRow(String label, String amount) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            amount,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
+
+  List<FlSpot> _getPortfolioValueSpots(Portfolio portfolio) {
+    // Generate dynamic chart data based on portfolio value
+    final totalValue = portfolio.totalValue.abs();
+    
+    // If total value is zero, provide sample data for demonstration
+    if (totalValue == 0.0) {
+      return [
+        FlSpot(0, 50000),
+        FlSpot(1, 45000),
+        FlSpot(2, 55000),
+        FlSpot(3, 40000),
+        FlSpot(4, 60000),
+        FlSpot(5, 52000),
+      ];
+    }
+    
+    return [
+      FlSpot(0, totalValue * 0.8),
+      FlSpot(1, totalValue * 0.7),
+      FlSpot(2, totalValue * 0.9),
+      FlSpot(3, totalValue * 0.6),
+      FlSpot(4, totalValue * 1.0),
+      FlSpot(5, totalValue * 0.85),
+    ];
   }
 
-  Widget _buildProfitRow(String label, String amount, {bool isNet = false}) {
-    return Row(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isNet ? 16 : 14,
-            fontWeight: isNet ? FontWeight.w700 : FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        const Spacer(),
-        Text(
-          amount,
-          style: TextStyle(
-            fontSize: isNet ? 16 : 14,
-            fontWeight: isNet ? FontWeight.w700 : FontWeight.w500,
-            color: isNet ? Colors.green[600] : Colors.black87,
-          ),
-        ),
-      ],
-    );
+  List<FlSpot> _getHoldingsSpots(Portfolio portfolio) {
+    // Generate dynamic chart data based on individual holdings
+    if (portfolio.breakdown.isNotEmpty) {
+      final avgHoldingValue = portfolio.breakdown.fold(0.0, (sum, holding) => sum + holding.value.abs()) / portfolio.breakdown.length;
+      return [
+        FlSpot(0, avgHoldingValue * 0.8),
+        FlSpot(1, avgHoldingValue * 0.7),
+        FlSpot(2, avgHoldingValue * 0.9),
+        FlSpot(3, avgHoldingValue * 0.6),
+        FlSpot(4, avgHoldingValue * 0.95),
+        FlSpot(5, avgHoldingValue * 0.85),
+      ];
+    }
+    
+    // If no holdings, provide sample data for demonstration
+    return [
+      FlSpot(0, 10000),
+      FlSpot(1, 8000),
+      FlSpot(2, 12000),
+      FlSpot(3, 7000),
+      FlSpot(4, 15000),
+      FlSpot(5, 11000),
+    ];
+  }
+
+  double _getMinY(Portfolio portfolio) {
+    final totalValue = portfolio.totalValue.abs();
+    final avgHoldingValue = portfolio.breakdown.isNotEmpty 
+        ? portfolio.breakdown.fold(0.0, (sum, holding) => sum + holding.value.abs()) / portfolio.breakdown.length
+        : 0.0;
+    final minValue = [totalValue * 0.5, avgHoldingValue * 0.5].reduce((a, b) => a < b ? a : b);
+    return minValue - (minValue * 0.1);
+  }
+
+  double _getMaxY(Portfolio portfolio) {
+    final totalValue = portfolio.totalValue.abs();
+    final avgHoldingValue = portfolio.breakdown.isNotEmpty 
+        ? portfolio.breakdown.fold(0.0, (sum, holding) => sum + holding.value.abs()) / portfolio.breakdown.length
+        : 0.0;
+    final maxValue = [totalValue, avgHoldingValue].reduce((a, b) => a > b ? a : b);
+    return maxValue + (maxValue * 0.1);
   }
 }

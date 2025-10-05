@@ -35,7 +35,7 @@ class PayslipDetailsView extends ConsumerWidget {
           ),
           IconButton(
             icon: Icon(Icons.payment),
-            onPressed: payslip.status == PayslipStatus.generated 
+            onPressed: (payslip.status ?? '') == 'GENERATED' 
                 ? () => _processPayment(context)
                 : null,
           ),
@@ -84,7 +84,7 @@ class PayslipDetailsView extends ConsumerWidget {
                   radius: screenWidth * 0.08,
                   backgroundColor: Color(0xFF9747FF),
                   child: Text(
-                    payslip.employeeName.substring(0, 1).toUpperCase(),
+                    (payslip.employeeName ?? 'U').substring(0, 1).toUpperCase(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: screenWidth * 0.05,
@@ -98,7 +98,7 @@ class PayslipDetailsView extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        payslip.employeeName,
+                        payslip.employeeName ?? 'Unknown Employee',
                         style: TextStyle(
                           fontSize: screenWidth * 0.05,
                           fontWeight: FontWeight.w600,
@@ -107,7 +107,7 @@ class PayslipDetailsView extends ConsumerWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        payslip.position,
+                        payslip.position ?? 'No position specified',
                         style: TextStyle(
                           fontSize: screenWidth * 0.035,
                           color: Colors.grey[600],
@@ -115,7 +115,7 @@ class PayslipDetailsView extends ConsumerWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        payslip.department,
+                        payslip.department ?? 'No department specified',
                         style: TextStyle(
                           fontSize: screenWidth * 0.03,
                           color: Colors.grey[500],
@@ -143,7 +143,7 @@ class PayslipDetailsView extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      payslip.payslipNumber,
+                      payslip.payslipNumber ?? 'Unknown Number',
                       style: TextStyle(
                         fontSize: screenWidth * 0.035,
                         fontWeight: FontWeight.w600,
@@ -280,7 +280,7 @@ class PayslipDetailsView extends ConsumerWidget {
             if (payslip.cryptoAmount > 0) ...[
               SizedBox(height: 8),
               Text(
-                '${payslip.cryptoAmount.toStringAsFixed(6)} ${payslip.cryptocurrency}',
+                '${payslip.cryptoAmount.toStringAsFixed(6)} ${payslip.cryptocurrency ?? 'Unknown'}',
                 style: TextStyle(
                   fontSize: screenWidth * 0.035,
                   fontWeight: FontWeight.w500,
@@ -315,17 +315,17 @@ class PayslipDetailsView extends ConsumerWidget {
             Row(
               children: [
                 Icon(
-                  _getStatusIcon(payslip.status),
-                  color: _getStatusColor(payslip.status),
+                  _getStatusIcon(payslip.statusEnum),
+                  color: _getStatusColor(payslip.statusEnum),
                   size: screenWidth * 0.06,
                 ),
                 SizedBox(width: 12),
                 Text(
-                  payslip.status.displayName,
+                  payslip.statusEnum.displayName,
                   style: TextStyle(
                     fontSize: screenWidth * 0.04,
                     fontWeight: FontWeight.w600,
-                    color: _getStatusColor(payslip.status),
+                    color: _getStatusColor(payslip.statusEnum),
                   ),
                 ),
               ],
@@ -384,30 +384,42 @@ class PayslipDetailsView extends ConsumerWidget {
 
   IconData _getStatusIcon(PayslipStatus status) {
     switch (status) {
+      case PayslipStatus.draft:
+        return Icons.edit;
+      case PayslipStatus.generated:
+        return Icons.description;
+      case PayslipStatus.sent:
+        return Icons.send;
       case PayslipStatus.paid:
         return Icons.check_circle;
+      case PayslipStatus.cancelled:
+        return Icons.cancel;
       case PayslipStatus.processing:
         return Icons.hourglass_empty;
       case PayslipStatus.failed:
         return Icons.error;
       case PayslipStatus.pending:
         return Icons.schedule;
-      case PayslipStatus.generated:
-        return Icons.description;
     }
   }
 
   Color _getStatusColor(PayslipStatus status) {
     switch (status) {
+      case PayslipStatus.draft:
+        return Colors.orange;
+      case PayslipStatus.generated:
+        return Colors.blue;
+      case PayslipStatus.sent:
+        return Colors.purple;
       case PayslipStatus.paid:
         return Colors.green;
+      case PayslipStatus.cancelled:
+        return Colors.red;
       case PayslipStatus.processing:
-        return Colors.orange;
+        return Colors.amber;
       case PayslipStatus.failed:
         return Colors.red;
       case PayslipStatus.pending:
-        return Colors.blue;
-      case PayslipStatus.generated:
         return Colors.grey;
     }
   }

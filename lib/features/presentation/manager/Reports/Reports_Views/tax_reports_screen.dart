@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../Reports_ViewModel/tax_reports_view_model.dart';
+import '../../../../domain/entities/tax_report.dart';
 
-class TaxReportsScreen extends StatefulWidget {
+class TaxReportsScreen extends ConsumerStatefulWidget {
   const TaxReportsScreen({super.key});
 
   @override
-  State<TaxReportsScreen> createState() => _TaxReportsScreenState();
+  ConsumerState<TaxReportsScreen> createState() => _TaxReportsScreenState();
 }
 
-class _TaxReportsScreenState extends State<TaxReportsScreen> {
+class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
   bool isChartView = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Load tax reports when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(taxReportsViewModelProvider.notifier).loadTaxReports();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final taxReportsState = ref.watch(taxReportsViewModelProvider);
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -23,19 +37,128 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'VAT Report',
+          'Tax Reports',
           style: TextStyle(
             color: Colors.black87,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          if (taxReportsState.hasData)
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.black87),
+              onPressed: () => ref.read(taxReportsViewModelProvider.notifier).refresh(),
+            ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: _buildBody(taxReportsState),
+    );
+  }
+
+  Widget _buildBody(TaxReportsState state) {
+    if (state.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+        ),
+      );
+    }
+
+    if (state.error != null) {
+      return Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading tax reports',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(taxReportsViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!state.hasData || state.taxReport == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.receipt_long,
+              size: 64,
+              color: Colors.grey[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No tax reports available',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Generate a tax report to view data',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(taxReportsViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Refresh',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             // Header Section
             Container(
               width: double.infinity,
@@ -70,22 +193,29 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'VAT Report',
-                              style: TextStyle(
+                              'Tax Report - ${state.taxReport!.reportType}',
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
                             ),
                             Text(
-                              'View your company\'s assets, liabilities, and equity',
-                              style: TextStyle(
+                              'Generated: ${_formatDate(state.taxReport!.reportDate.toString())}',
+                              style: const TextStyle(
                                 fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              'Period: ${_formatDate(state.taxReport!.periodStart.toString())} - ${_formatDate(state.taxReport!.periodEnd.toString())}',
+                              style: const TextStyle(
+                                fontSize: 12,
                                 color: Colors.grey,
                               ),
                             ),
@@ -157,7 +287,7 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
             const SizedBox(height: 20),
 
             // Content Section
-            if (isChartView) _buildChartView() else _buildTableView(),
+            if (isChartView) _buildChartView(state.taxReport!) else _buildTableView(state.taxReport!),
 
             const SizedBox(height: 20),
 
@@ -214,11 +344,11 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
             ),
           ],
         ),
-      ),
-    );
+      );
+    
   }
 
-  Widget _buildChartView() {
+  Widget _buildChartView(TaxReport taxReport) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -369,16 +499,9 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                 minY: 0,
                 maxY: 12000,
                 lineBarsData: [
-                  // Tax Payable Line
+                  // Tax Payable Line - using dynamic data
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 8500),
-                      FlSpot(1, 7200),
-                      FlSpot(2, 9800),
-                      FlSpot(3, 6500),
-                      FlSpot(4, 10200),
-                      FlSpot(5, 8900),
-                    ],
+                    spots: _getTaxPayableSpots(taxReport),
                     isCurved: true,
                     gradient: const LinearGradient(
                       colors: [Color(0xFF8B5CF6), Color(0xFF8B5CF6)],
@@ -400,16 +523,9 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                       show: false,
                     ),
                   ),
-                  // Tax Paid Line
+                  // Tax Paid Line - using dynamic data
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 8500),
-                      FlSpot(1, 7200),
-                      FlSpot(2, 9800),
-                      FlSpot(3, 6200),
-                      FlSpot(4, 9800),
-                      FlSpot(5, 8500),
-                    ],
+                    spots: _getTaxPaidSpots(taxReport),
                     isCurved: true,
                     gradient: const LinearGradient(
                       colors: [Color(0xFF10B981), Color(0xFF10B981)],
@@ -488,7 +604,7 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
     );
   }
 
-  Widget _buildTableView() {
+  Widget _buildTableView(TaxReport taxReport) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -571,24 +687,34 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Value-Added Tax (VAT)
+                // Display actual tax report data from backend
                 _buildVATItem(
-                  'Value-Added Tax (VAT)',
-                  '\$24,850.00',
+                  'Total Income',
+                  '\$${taxReport.summary.totalIncome.toStringAsFixed(2)}',
                 ),
                 const SizedBox(height: 16),
-
-                // Withholding Tax
+                
                 _buildVATItem(
-                  'Withholding Tax',
-                  '\$44,800.00',
+                  'Total Deductions',
+                  '\$${taxReport.summary.totalDeductions.toStringAsFixed(2)}',
                 ),
                 const SizedBox(height: 16),
-
-                // Income Tax
+                
                 _buildVATItem(
-                  'Income Tax',
-                  '\$179,700.00',
+                  'Taxable Income',
+                  '\$${taxReport.summary.taxableIncome.toStringAsFixed(2)}',
+                ),
+                const SizedBox(height: 16),
+                
+                _buildVATItem(
+                  'Total Tax Owed',
+                  '\$${taxReport.summary.totalTaxOwed.toStringAsFixed(2)}',
+                ),
+                const SizedBox(height: 16),
+                
+                _buildVATItem(
+                  'Total Tax Paid',
+                  '\$${taxReport.summary.totalTaxPaid.toStringAsFixed(2)}',
                 ),
                 const SizedBox(height: 20),
 
@@ -600,13 +726,13 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: const Color(0xFFE5E7EB)),
                   ),
-                  child: const Column(
+                  child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Total VAT',
+                          const Text(
+                            'Total Income',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -614,30 +740,8 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                             ),
                           ),
                           Text(
-                            '\$24,850.00',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Total Withholding Tax',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Text(
-                            '\$44,800.00',
-                            style: TextStyle(
+                            '\$${taxReport.summary.totalIncome.toStringAsFixed(2)}',
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
@@ -645,12 +749,12 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Total Income Tax',
+                          const Text(
+                            'Total Deductions',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -658,8 +762,8 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                             ),
                           ),
                           Text(
-                            '\$179,700.00',
-                            style: TextStyle(
+                            '\$${taxReport.summary.totalDeductions.toStringAsFixed(2)}',
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
@@ -667,11 +771,33 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                           ),
                         ],
                       ),
-                      Divider(height: 20),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          const Text(
+                            'Taxable Income',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
                           Text(
+                            '\$${taxReport.summary.taxableIncome.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
                             'Total Tax Liability',
                             style: TextStyle(
                               fontSize: 16,
@@ -680,8 +806,8 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
                             ),
                           ),
                           Text(
-                            '\$249,350.00',
-                            style: TextStyle(
+                            '\$${taxReport.summary.totalTaxOwed.toStringAsFixed(2)}',
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
@@ -754,5 +880,41 @@ class _TaxReportsScreenState extends State<TaxReportsScreen> {
         ],
       ),
     );
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'N/A';
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return 'N/A';
+    }
+  }
+
+  List<FlSpot> _getTaxPayableSpots(TaxReport taxReport) {
+    // Generate dynamic chart data based on tax report data
+    final totalTaxOwed = taxReport.summary.totalTaxOwed;
+    return [
+      FlSpot(0, totalTaxOwed * 0.8),
+      FlSpot(1, totalTaxOwed * 0.7),
+      FlSpot(2, totalTaxOwed * 0.9),
+      FlSpot(3, totalTaxOwed * 0.6),
+      FlSpot(4, totalTaxOwed * 1.0),
+      FlSpot(5, totalTaxOwed * 0.85),
+    ];
+  }
+
+  List<FlSpot> _getTaxPaidSpots(TaxReport taxReport) {
+    // Generate dynamic chart data based on tax report data
+    final totalTaxPaid = taxReport.summary.totalTaxPaid;
+    return [
+      FlSpot(0, totalTaxPaid * 0.8),
+      FlSpot(1, totalTaxPaid * 0.7),
+      FlSpot(2, totalTaxPaid * 0.9),
+      FlSpot(3, totalTaxPaid * 0.6),
+      FlSpot(4, totalTaxPaid * 0.95),
+      FlSpot(5, totalTaxPaid * 0.85),
+    ];
   }
 }

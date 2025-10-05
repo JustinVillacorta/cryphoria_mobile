@@ -42,7 +42,7 @@ class PayslipListItem extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            payslip.employeeName,
+                            payslip.employeeName ?? 'Unknown Employee',
                             style: TextStyle(
                               fontSize: screenWidth * 0.045,
                               fontWeight: FontWeight.w600,
@@ -51,7 +51,7 @@ class PayslipListItem extends StatelessWidget {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            payslip.position,
+                            payslip.position ?? 'No position specified',
                             style: TextStyle(
                               fontSize: screenWidth * 0.035,
                               color: Colors.grey[600],
@@ -68,19 +68,19 @@ class PayslipListItem extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(payslip.status).withOpacity(0.1),
+                        color: _getStatusColor(payslip.statusEnum).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: _getStatusColor(payslip.status),
+                          color: _getStatusColor(payslip.statusEnum),
                           width: 1,
                         ),
                       ),
                       child: Text(
-                        payslip.status.displayName,
+                        payslip.statusEnum.displayName,
                         style: TextStyle(
                           fontSize: screenWidth * 0.03,
                           fontWeight: FontWeight.w500,
-                          color: _getStatusColor(payslip.status),
+                          color: _getStatusColor(payslip.statusEnum),
                         ),
                       ),
                     ),
@@ -142,7 +142,7 @@ class PayslipListItem extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            payslip.cryptocurrency,
+                            payslip.cryptocurrency ?? 'Unknown',
                             style: TextStyle(
                               fontSize: screenWidth * 0.03,
                               color: Colors.grey[600],
@@ -192,15 +192,21 @@ class PayslipListItem extends StatelessWidget {
 
   Color _getStatusColor(PayslipStatus status) {
     switch (status) {
+      case PayslipStatus.draft:
+        return Colors.orange;
+      case PayslipStatus.generated:
+        return Colors.blue;
+      case PayslipStatus.sent:
+        return Colors.purple;
       case PayslipStatus.paid:
         return Colors.green;
+      case PayslipStatus.cancelled:
+        return Colors.red;
       case PayslipStatus.processing:
-        return Colors.orange;
+        return Colors.amber;
       case PayslipStatus.failed:
         return Colors.red;
       case PayslipStatus.pending:
-        return Colors.blue;
-      case PayslipStatus.generated:
         return Colors.grey;
     }
   }

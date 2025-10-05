@@ -746,14 +746,14 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(payslip.status).withOpacity(0.1),
+                    color: _getStatusColor(payslip.statusEnum).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    payslip.status.displayName,
+                    payslip.statusEnum.displayName,
                     style: TextStyle(
                       fontSize: 10,
-                      color: _getStatusColor(payslip.status),
+                      color: _getStatusColor(payslip.statusEnum),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -792,15 +792,21 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
 
   Color _getStatusColor(payslip_entity.PayslipStatus status) {
     switch (status) {
+      case payslip_entity.PayslipStatus.draft:
+        return Colors.orange;
+      case payslip_entity.PayslipStatus.generated:
+        return Colors.blue;
+      case payslip_entity.PayslipStatus.sent:
+        return Colors.purple;
       case payslip_entity.PayslipStatus.paid:
         return Colors.green;
-      case payslip_entity.PayslipStatus.pending:
-        return Colors.orange;
+      case payslip_entity.PayslipStatus.cancelled:
+        return Colors.red;
       case payslip_entity.PayslipStatus.processing:
-        return Colors.blue;
+        return Colors.amber;
       case payslip_entity.PayslipStatus.failed:
         return Colors.red;
-      case payslip_entity.PayslipStatus.generated:
+      case payslip_entity.PayslipStatus.pending:
         return Colors.grey;
     }
   }

@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../Reports_ViewModel/portfolio_view_model.dart';
+import '../../../../domain/entities/portfolio.dart';
 
-class InvestmentPerformanceScreen extends StatefulWidget {
+class InvestmentPerformanceScreen extends ConsumerStatefulWidget {
   const InvestmentPerformanceScreen({super.key});
 
   @override
-  State<InvestmentPerformanceScreen> createState() => _InvestmentPerformanceScreenState();
+  ConsumerState<InvestmentPerformanceScreen> createState() => _InvestmentPerformanceScreenState();
 }
 
-class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScreen> {
+class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerformanceScreen> {
   bool isChartView = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Load portfolio data when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(portfolioViewModelProvider.notifier).loadPortfolioValue();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final portfolioState = ref.watch(portfolioViewModelProvider);
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -30,41 +44,150 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          if (portfolioState.hasData)
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.black87),
+              onPressed: () => ref.read(portfolioViewModelProvider.notifier).refresh(),
+            ),
+        ],
       ),
-      body: Column(
-        children: [
-          // Header Info
-          Container(
-            margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'View your company\'s assets, liabilities, and equity',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
+      body: _buildBody(portfolioState),
+    );
+  }
 
-          // View Toggle
-          Container(
+  Widget _buildBody(PortfolioState state) {
+    if (state.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+        ),
+      );
+    }
+
+    if (state.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading portfolio data',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(portfolioViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!state.hasData || state.portfolio == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.trending_up,
+              size: 64,
+              color: Colors.grey[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No portfolio data available',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Generate portfolio data to view investment performance',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(portfolioViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Refresh',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // Header Info
+        Container(
+          margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Portfolio Value: \$${state.portfolio!.totalValue.abs().toStringAsFixed(2)} ${state.portfolio!.currency}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // View Toggle
+        Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             height: 48,
             decoration: BoxDecoration(
@@ -132,14 +255,14 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
 
           // Content
           Expanded(
-            child: isChartView ? _buildChartView() : _buildTableView(),
+            child: isChartView ? _buildChartView(state.portfolio!) : _buildTableView(state.portfolio!),
           ),
         ],
-      ),
-    );
+      );
+    }
   }
 
-  Widget _buildChartView() {
+  Widget _buildChartView(Portfolio portfolio) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -279,19 +402,12 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
                 borderData: FlBorderData(show: false),
                 minX: 0,
                 maxX: 5,
-                minY: -10000,
-                maxY: 10000,
+                minY: _getMinY(portfolio),
+                maxY: _getMaxY(portfolio),
                 lineBarsData: [
                   // Blue line (Portfolio Value)
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 5000),
-                      FlSpot(1, 3000),
-                      FlSpot(2, 2800),
-                      FlSpot(3, 3500),
-                      FlSpot(4, 3200),
-                      FlSpot(5, 3800),
-                    ],
+                    spots: _getPortfolioValueSpots(portfolio),
                     isCurved: true,
                     gradient: LinearGradient(
                       colors: [
@@ -316,14 +432,7 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
                   ),
                   // Green line (Investment Performance)
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 1500),
-                      FlSpot(1, 1200),
-                      FlSpot(2, -7500),
-                      FlSpot(3, -1000),
-                      FlSpot(4, -800),
-                      FlSpot(5, -500),
-                    ],
+                    spots: _getHoldingsSpots(portfolio),
                     isCurved: true,
                     gradient: LinearGradient(
                       colors: [
@@ -445,7 +554,7 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
     );
   }
 
-  Widget _buildTableView() {
+  Widget _buildTableView(Portfolio portfolio) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -535,16 +644,86 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
             ),
             child: Column(
               children: [
-                // Stocks Section
-                _buildMainRow('Stocks', '\$168,500.00'),
+                // Table Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Color(0xFFF3F4F6)),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.trending_up,
+                            color: Colors.blue[600],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Investment Performance',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.file_download,
+                            color: Colors.green[600],
+                            size: 18,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Export to Excel',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Date
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Row(
+                    children: [
+                      Text(
+                        'As of monthly',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Investment Performance Fields
+                _buildMainRow('TOTAL PORTFOLIO VALUE', '\$${portfolio.totalValue.abs().toStringAsFixed(2)} ${portfolio.currency}'),
                 const SizedBox(height: 8),
-                _buildStockRow('Apple Inc.', 'ROI: -36.0%', '\$68,000.00', '+ \$16,000.00', false),
-                _buildStockRow('Microsoft Corp.', 'ROI: -30.0%', '\$58,500.00', '+ \$13,500.00', false),
-                _buildStockRow('Amazon.com Inc.', 'ROI: -20.0%', '\$42,000.00', '+ \$7,000.00', false),
                 
-                const SizedBox(height: 12),
+                _buildMainRow('TOTAL COST BASIS', '\$${portfolio.totalValue.abs().toStringAsFixed(2)} ${portfolio.currency}'),
+                const SizedBox(height: 8),
                 
-                _buildTotalRow('Total Stocks', 'ROI: 29.8%', '\$168,500.00', '+ \$36,500.00'),
+                _buildMainRow('UNREALIZED G/L', '\$0.00'),
+                const SizedBox(height: 8),
+                
+                _buildMainRow('CASH BALANCE', '\$0.00'),
 
                 const SizedBox(height: 20),
 
@@ -560,27 +739,17 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
                   ),
                   child: Column(
                     children: [
-                      _buildSummaryRow('Total Initial Investment', '\$740,000.00'),
+                      _buildSummaryRow('Total Portfolio Value', '\$${portfolio.totalValue.abs().toStringAsFixed(2)} ${portfolio.currency}'),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Total Current Value', '\$878,250.00'),
+                      _buildSummaryRow('Total Cost Basis', '\$${portfolio.totalValue.abs().toStringAsFixed(2)} ${portfolio.currency}'),
+                      const SizedBox(height: 8),
+                      _buildSummaryRow('Unrealized G/L', '\$0.00'),
+                      const SizedBox(height: 8),
+                      _buildSummaryRow('Cash Balance', '\$0.00'),
                       const SizedBox(height: 12),
                       Container(height: 1, color: Colors.grey[300]),
                       const SizedBox(height: 12),
-                      _buildSummaryRow('Total Gain', '+ \$138,250.00', isTotal: true, isGain: true),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'ROI: 18.7%',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildSummaryRow('Portfolio Performance', portfolio.totalValue >= 0 ? 'Positive' : 'Negative', isTotal: true, isGain: portfolio.totalValue >= 0),
                     ],
                   ),
                 ),
@@ -588,11 +757,67 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
             ),
           ),
 
-          const SizedBox(height: 5),
+          const SizedBox(height: 20),
+
+          // Action Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey[400]!),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Close',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.download, size: 16, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        'Download Report',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
+
+
 
   Widget _buildMainRow(String title, String amount) {
     return Container(
@@ -627,164 +852,20 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
     );
   }
 
-  Widget _buildStockRow(String company, String roi, String amount, String gain, bool isNegative) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  company,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  roi,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  amount,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  gain,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isNegative ? Colors.red[600] : Colors.green[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildTotalRow(String label, String roi, String amount, String gain) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  roi,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  amount,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  gain,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.green[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSummaryRow(String label, String amount, {bool isTotal = false, bool isGain = false}) {
     return Row(
       children: [
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: isTotal ? 16 : 14,
-              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
-              color: Colors.black87,
-            ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isTotal ? 16 : 14,
+            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
+            color: Colors.black87,
           ),
         ),
-        const SizedBox(width: 8),
+        const Spacer(),
         Text(
           amount,
           style: TextStyle(
@@ -798,4 +879,74 @@ class _InvestmentPerformanceScreenState extends State<InvestmentPerformanceScree
       ],
     );
   }
-}
+
+  List<FlSpot> _getPortfolioValueSpots(Portfolio portfolio) {
+    // Generate dynamic chart data based on portfolio value
+    final totalValue = portfolio.totalValue.abs();
+    
+    // If total value is zero, provide sample data for demonstration
+    if (totalValue == 0.0) {
+      return [
+        FlSpot(0, 50000),
+        FlSpot(1, 45000),
+        FlSpot(2, 55000),
+        FlSpot(3, 40000),
+        FlSpot(4, 60000),
+        FlSpot(5, 52000),
+      ];
+    }
+    
+    return [
+      FlSpot(0, totalValue * 0.8),
+      FlSpot(1, totalValue * 0.7),
+      FlSpot(2, totalValue * 0.9),
+      FlSpot(3, totalValue * 0.6),
+      FlSpot(4, totalValue * 1.0),
+      FlSpot(5, totalValue * 0.85),
+    ];
+  }
+
+  List<FlSpot> _getHoldingsSpots(Portfolio portfolio) {
+    // Generate dynamic chart data based on individual holdings
+    if (portfolio.breakdown.isNotEmpty) {
+      final avgHoldingValue = portfolio.breakdown.fold(0.0, (sum, holding) => sum + holding.value.abs()) / portfolio.breakdown.length;
+      return [
+        FlSpot(0, avgHoldingValue * 0.8),
+        FlSpot(1, avgHoldingValue * 0.7),
+        FlSpot(2, avgHoldingValue * 0.9),
+        FlSpot(3, avgHoldingValue * 0.6),
+        FlSpot(4, avgHoldingValue * 0.95),
+        FlSpot(5, avgHoldingValue * 0.85),
+      ];
+    }
+    
+    // If no holdings, provide sample data for demonstration
+    return [
+      FlSpot(0, 10000),
+      FlSpot(1, 8000),
+      FlSpot(2, 12000),
+      FlSpot(3, 7000),
+      FlSpot(4, 15000),
+      FlSpot(5, 11000),
+    ];
+  }
+
+  double _getMinY(Portfolio portfolio) {
+    final totalValue = portfolio.totalValue.abs();
+    final avgHoldingValue = portfolio.breakdown.isNotEmpty 
+        ? portfolio.breakdown.fold(0.0, (sum, holding) => sum + holding.value.abs()) / portfolio.breakdown.length
+        : 0.0;
+    final minValue = [totalValue * 0.5, avgHoldingValue * 0.5].reduce((a, b) => a < b ? a : b);
+    return minValue - (minValue * 0.1);
+  }
+
+  double _getMaxY(Portfolio portfolio) {
+    final totalValue = portfolio.totalValue.abs();
+    final avgHoldingValue = portfolio.breakdown.isNotEmpty 
+        ? portfolio.breakdown.fold(0.0, (sum, holding) => sum + holding.value.abs()) / portfolio.breakdown.length
+        : 0.0;
+    final maxValue = [totalValue, avgHoldingValue].reduce((a, b) => a > b ? a : b);
+    return maxValue + (maxValue * 0.1);
+  }
+
+

@@ -1,7 +1,8 @@
-import '../entities/transaction_report.dart';
 import '../entities/tax_report.dart';
 import '../entities/balance_sheet.dart';
 import '../entities/cash_flow.dart';
+import '../entities/portfolio.dart';
+import '../entities/payslip.dart';
 
 abstract class ReportsRepository {
   /// Generate a report with specified parameters
@@ -29,6 +30,8 @@ abstract class ReportsRepository {
   Future<TaxReport> getTaxReports();
   Future<BalanceSheet> getBalanceSheet();
   Future<CashFlow> getCashFlow();
+  Future<Portfolio> getPortfolioValue();
+  Future<PayslipsResponse> getPayslips();
 }
 
 // Request model for report generation

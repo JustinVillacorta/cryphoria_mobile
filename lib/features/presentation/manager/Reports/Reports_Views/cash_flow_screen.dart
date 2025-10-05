@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../Reports_ViewModel/cash_flow_view_model.dart';
+import '../../../../domain/entities/cash_flow.dart';
 
-class CashFlowScreen extends StatefulWidget {
+class CashFlowScreen extends ConsumerStatefulWidget {
   const CashFlowScreen({super.key});
 
   @override
-  State<CashFlowScreen> createState() => _CashFlowScreenState();
+  ConsumerState<CashFlowScreen> createState() => _CashFlowScreenState();
 }
 
-class _CashFlowScreenState extends State<CashFlowScreen> {
+class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   bool isChartView = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Load cash flow when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(cashFlowViewModelProvider.notifier).loadCashFlow();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final cashFlowState = ref.watch(cashFlowViewModelProvider);
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -30,9 +44,118 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          if (cashFlowState.hasData)
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.black87),
+              onPressed: () => ref.read(cashFlowViewModelProvider.notifier).refresh(),
+            ),
+        ],
       ),
-      body: Column(
-        children: [
+      body: _buildBody(cashFlowState),
+    );
+  }
+
+  Widget _buildBody(CashFlowState state) {
+    if (state.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+        ),
+      );
+    }
+
+    if (state.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading cash flow',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(cashFlowViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!state.hasData || state.cashFlow == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.trending_up,
+              size: 64,
+              color: Colors.grey[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No cash flow data available',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Generate a cash flow report to view data',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(cashFlowViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Refresh',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
           // Header Info
           Container(
             margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -132,14 +255,13 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
 
           // Content
           Expanded(
-            child: isChartView ? _buildChartView() : _buildTableView(),
+            child: isChartView ? _buildChartView(state.cashFlow!) : _buildTableView(state.cashFlow!),
           ),
         ],
-      ),
-    );
+      );
   }
 
-  Widget _buildChartView() {
+  Widget _buildChartView(CashFlow cashFlow) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -204,7 +326,7 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 2500,
+                  horizontalInterval: 1000, // Reduced interval for better visibility
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: Colors.grey[200]!,
@@ -279,29 +401,30 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
                     ),
                   ),
                 ),
-                borderData: FlBorderData(show: false),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(
+                    color: Colors.grey[300]!,
+                    width: 1,
+                  ),
+                ),
                 minX: 0,
                 maxX: 5,
-                minY: -10000,
-                maxY: 10000,
+                minY: -1500,
+                maxY: 5000,
                 lineBarsData: [
                   // Blue line (Operating Cash Flow)
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 5000),
-                      FlSpot(1, 4500),
-                      FlSpot(2, 3500),
-                      FlSpot(3, 4200),
-                      FlSpot(4, 3800),
-                      FlSpot(5, 4000),
+                    spots: [
+                      FlSpot(0, 4000),
+                      FlSpot(1, 4200),
+                      FlSpot(2, 3800),
+                      FlSpot(3, 4500),
+                      FlSpot(4, 4100),
+                      FlSpot(5, 4300),
                     ],
-                    isCurved: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.blue.withOpacity(0.8),
-                        Colors.blue.withOpacity(0.8),
-                      ],
-                    ),
+                    isCurved: false,
+                    color: Colors.blue,
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
@@ -319,21 +442,16 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
                   ),
                   // Green line (Investing Cash Flow)
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 0),
-                      FlSpot(1, 0),
-                      FlSpot(2, -7000),
-                      FlSpot(3, -2000),
-                      FlSpot(4, -1500),
-                      FlSpot(5, -1000),
+                    spots: [
+                      FlSpot(0, -500),
+                      FlSpot(1, -800),
+                      FlSpot(2, -1200),
+                      FlSpot(3, -600),
+                      FlSpot(4, -900),
+                      FlSpot(5, -700),
                     ],
-                    isCurved: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.green.withOpacity(0.8),
-                        Colors.green.withOpacity(0.8),
-                      ],
-                    ),
+                    isCurved: false,
+                    color: Colors.green,
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
@@ -448,7 +566,7 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
     );
   }
 
-  Widget _buildTableView() {
+  Widget _buildTableView(CashFlow cashFlow) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -538,31 +656,40 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
             ),
             child: Column(
               children: [
-                // Operating Activities Section
-                _buildSectionHeader('Operating Activities', '\$64,000.00', Colors.green[600]!),
+                // Operating Activities Section - using dynamic data from summary
+                _buildSectionHeader('Operating Activities', '\$${cashFlow.summary.netCashFromOperations.toStringAsFixed(2)}', Colors.green[600]!),
                 const SizedBox(height: 8),
-                _buildCashFlowRow('Net Income', '\$120,000.00', Colors.green[600]!),
-                _buildCashFlowRow('Depreciation', '\$40,000.00', Colors.green[600]!),
-                _buildCashFlowRow('Increase in Accounts Receivable', '-\$35,000.00', Colors.red[600]!),
-                _buildCashFlowRow('Decrease in Inventory', '\$15,000.00', Colors.green[600]!),
-                _buildCashFlowRow('Increase in Accounts Payable', '\$22,000.00', Colors.green[600]!),
-                _buildCashFlowRow('SSS Payments', '-\$15,000.00', Colors.red[600]!),
-                _buildCashFlowRow('PhilHealth Payments', '-\$10,000.00', Colors.red[600]!),
-                _buildCashFlowRow('Pag-IBIG Payments', '-\$8,000.00', Colors.red[600]!),
-                _buildCashFlowRow('Tax Payments', '-\$65,000.00', Colors.red[600]!),
-                
-                const SizedBox(height: 12),
-                _buildTotalRow('Net Cash from Operating Activities', '\$64,000.00', Colors.green[600]!),
+                ...cashFlow.operatingActivities.map((activity) => 
+                  _buildCashFlowRow(activity.description, '\$${activity.amount.toStringAsFixed(2)}', 
+                    activity.amount >= 0 ? Colors.green[600]! : Colors.red[600]!)
+                ).toList(),
+                _buildTotalRow('Net Cash from Operating Activities', '\$${cashFlow.summary.netCashFromOperations.toStringAsFixed(2)}', Colors.green[600]!),
 
                 const SizedBox(height: 20),
 
-                // Investing Activities Section
-                _buildSectionHeader('Investing Activities', '-\$90,000.00', Colors.red[600]!),
+                // Investing Activities Section - using dynamic data from summary
+                _buildSectionHeader('Investing Activities', '\$${cashFlow.summary.netCashFromInvesting.toStringAsFixed(2)}', 
+                  cashFlow.summary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
                 const SizedBox(height: 8),
-                _buildCashFlowRow('Deductions', '-\$120,000.00', Colors.red[600]!),
-                
-                const SizedBox(height: 12),
-                _buildTotalRow('Net Cash from Investing Activities', '-\$90,000.00', Colors.red[600]!),
+                ...cashFlow.investingActivities.map((activity) => 
+                  _buildCashFlowRow(activity.description, '\$${activity.amount.toStringAsFixed(2)}', 
+                    activity.amount >= 0 ? Colors.green[600]! : Colors.red[600]!)
+                ).toList(),
+                _buildTotalRow('Net Cash from Investing Activities', '\$${cashFlow.summary.netCashFromInvesting.toStringAsFixed(2)}', 
+                  cashFlow.summary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
+
+                const SizedBox(height: 20),
+
+                // Financing Activities Section - using dynamic data from summary
+                _buildSectionHeader('Financing Activities', '\$${cashFlow.summary.netCashFromFinancing.toStringAsFixed(2)}', 
+                  cashFlow.summary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
+                const SizedBox(height: 8),
+                ...cashFlow.financingActivities.map((activity) => 
+                  _buildCashFlowRow(activity.description, '\$${activity.amount.toStringAsFixed(2)}', 
+                    activity.amount >= 0 ? Colors.green[600]! : Colors.red[600]!)
+                ).toList(),
+                _buildTotalRow('Net Cash from Financing Activities', '\$${cashFlow.summary.netCashFromFinancing.toStringAsFixed(2)}', 
+                  cashFlow.summary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
 
                 const SizedBox(height: 20),
 
@@ -578,13 +705,19 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildSummaryRow('Net Cash from Operating Activities', '\$64,000.00', Colors.green[600]!),
+                      _buildSummaryRow('Net Cash from Operating Activities', '\$${cashFlow.summary.netCashFromOperations.toStringAsFixed(2)}', 
+                        cashFlow.summary.netCashFromOperations >= 0 ? Colors.green[600]! : Colors.red[600]!),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Net Cash from Investing Activities', '-\$90,000.00', Colors.red[600]!),
+                      _buildSummaryRow('Net Cash from Investing Activities', '\$${cashFlow.summary.netCashFromInvesting.toStringAsFixed(2)}', 
+                        cashFlow.summary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
+                      const SizedBox(height: 8),
+                      _buildSummaryRow('Net Cash from Financing Activities', '\$${cashFlow.summary.netCashFromFinancing.toStringAsFixed(2)}', 
+                        cashFlow.summary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
                       const SizedBox(height: 12),
                       Container(height: 1, color: Colors.grey[300]),
                       const SizedBox(height: 12),
-                      _buildSummaryRow('Net Change in Cash', '\$22,000.00', Colors.green[600]!, isTotal: true),
+                      _buildSummaryRow('Net Change in Cash', '\$${cashFlow.summary.netChangeInCash.toStringAsFixed(2)}', 
+                        cashFlow.summary.netChangeInCash >= 0 ? Colors.green[600]! : Colors.red[600]!, isTotal: true),
                     ],
                   ),
                 ),
@@ -705,5 +838,102 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
         ),
       ],
     );
+  }
+
+  // Helper methods for generating dynamic chart data
+  List<FlSpot> _getOperatingCashFlowSpots(CashFlow cashFlow) {
+    // Generate 6 data points based on operating cash flow
+    final operatingCashFlow = cashFlow.summary.netCashFromOperations;
+    
+    print("📊 Operating Cash Flow: $operatingCashFlow");
+    
+    // If operating cash flow is zero, provide sample data for demonstration
+    if (operatingCashFlow == 0.0) {
+      final spots = [
+        FlSpot(0, 4000),
+        FlSpot(1, 4200),
+        FlSpot(2, 3800),
+        FlSpot(3, 4500),
+        FlSpot(4, 4100),
+        FlSpot(5, 4300),
+      ];
+      print("📊 Operating Cash Flow Spots (Sample): $spots");
+      return spots;
+    }
+    
+    final spots = [
+      FlSpot(0, operatingCashFlow * 0.8),
+      FlSpot(1, operatingCashFlow * 0.9),
+      FlSpot(2, operatingCashFlow * 0.85),
+      FlSpot(3, operatingCashFlow * 0.95),
+      FlSpot(4, operatingCashFlow * 0.88),
+      FlSpot(5, operatingCashFlow),
+    ];
+    print("📊 Operating Cash Flow Spots (Real): $spots");
+    return spots;
+  }
+
+  List<FlSpot> _getInvestingCashFlowSpots(CashFlow cashFlow) {
+    // Generate 6 data points based on investing cash flow
+    final investingCashFlow = cashFlow.summary.netCashFromInvesting;
+    
+    print("📊 Investing Cash Flow: $investingCashFlow");
+    
+    // If investing cash flow is zero, provide sample data for demonstration
+    if (investingCashFlow == 0.0) {
+      final spots = [
+        FlSpot(0, -500),
+        FlSpot(1, -800),
+        FlSpot(2, -1200),
+        FlSpot(3, -600),
+        FlSpot(4, -900),
+        FlSpot(5, -700),
+      ];
+      print("📊 Investing Cash Flow Spots (Sample): $spots");
+      return spots;
+    }
+    
+    final spots = [
+      FlSpot(0, investingCashFlow * 0.5),
+      FlSpot(1, investingCashFlow * 0.7),
+      FlSpot(2, investingCashFlow * 0.6),
+      FlSpot(3, investingCashFlow * 0.8),
+      FlSpot(4, investingCashFlow * 0.9),
+      FlSpot(5, investingCashFlow),
+    ];
+    print("📊 Investing Cash Flow Spots (Real): $spots");
+    return spots;
+  }
+
+  double _getMinY(CashFlow cashFlow) {
+    final operatingCashFlow = cashFlow.summary.netCashFromOperations;
+    final investingCashFlow = cashFlow.summary.netCashFromInvesting;
+    
+    // If both are zero, use sample data range
+    if (operatingCashFlow == 0.0 && investingCashFlow == 0.0) {
+      print("📊 Y-Axis Min (Sample): -1500");
+      return -1500; // Reasonable range for sample data
+    }
+    
+    final minValue = [operatingCashFlow * 0.5, investingCashFlow * 0.5].reduce((a, b) => a < b ? a : b);
+    final result = minValue - (minValue.abs() * 0.1);
+    print("📊 Y-Axis Min (Real): $result");
+    return result;
+  }
+
+  double _getMaxY(CashFlow cashFlow) {
+    final operatingCashFlow = cashFlow.summary.netCashFromOperations;
+    final investingCashFlow = cashFlow.summary.netCashFromInvesting;
+    
+    // If both are zero, use sample data range
+    if (operatingCashFlow == 0.0 && investingCashFlow == 0.0) {
+      print("📊 Y-Axis Max (Sample): 5000");
+      return 5000; // Reasonable range for sample data
+    }
+    
+    final maxValue = [operatingCashFlow, investingCashFlow].reduce((a, b) => a > b ? a : b);
+    final result = maxValue + (maxValue.abs() * 0.1);
+    print("📊 Y-Axis Max (Real): $result");
+    return result;
   }
 }

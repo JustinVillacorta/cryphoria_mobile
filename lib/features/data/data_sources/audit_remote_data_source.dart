@@ -4,6 +4,8 @@ import '../models/audit/smart_contract_model.dart';
 import '../models/tax_report_model.dart';
 import '../models/balance_sheet_model.dart';
 import '../models/cash_flow_model.dart';
+import '../models/portfolio_model.dart';
+import '../models/payslip_model.dart';
 import '../../domain/entities/audit_report.dart';
 import '../../domain/entities/smart_contract.dart';
 
@@ -23,6 +25,8 @@ abstract class AuditRemoteDataSource {
   Future<TaxReportModel> getTaxReports();
   Future<BalanceSheetModel> getBalanceSheet();
   Future<CashFlowModel> getCashFlow();
+  Future<PortfolioModel> getPortfolioValue();
+  Future<PayslipsResponseModel> getPayslips();
 }
 
 class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
@@ -1580,4 +1584,89 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       return []; // Return empty list on error
     }
   }
+
+  @override
+  Future<PortfolioModel> getPortfolioValue() async {
+    try {
+      print("📤 Getting portfolio value from /api/portfolio/value/");
+      
+      final response = await dio.get('/api/portfolio/value/', queryParameters: {
+        'currency': 'USD',
+      });
+
+      print("📥 Portfolio value response:");
+      print("📊 Status code: ${response.statusCode}");
+      print("📄 Response data: ${response.data}");
+
+      if (response.statusCode == 200) {
+        // Safely cast the response data
+        final responseData = Map<String, dynamic>.from(response.data as Map);
+        
+        // Handle the actual API response structure
+        if (responseData['success'] == true) {
+          return PortfolioModel.fromJson(responseData);
+        } else {
+          throw Exception('Failed to get portfolio value: ${responseData['message'] ?? 'Unknown error'}');
+        }
+      } else {
+        throw Exception('Failed to get portfolio value: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      print("❌ Error getting portfolio value: $e");
+      throw Exception('Network error: ${e.message}');
+    }
+  }
+
+      @override
+      Future<PayslipsResponseModel> getPayslips() async {
+        try {
+          print("📤 Getting payslips from /api/payslips/list/");
+          
+          final response = await dio.get('/api/payslips/list/');
+
+          print("📥 Payslips response:");
+          print("📊 Status code: ${response.statusCode}");
+          print("📄 Response data: ${response.data}");
+          print("📄 Response data type: ${response.data.runtimeType}");
+          
+          // Log the actual structure
+          if (response.data is Map) {
+            final data = response.data as Map;
+            print("🔍 Response keys: ${data.keys.toList()}");
+            if (data.containsKey('payslips') && data['payslips'] is List) {
+              final payslips = data['payslips'] as List;
+              print("📋 Payslips count: ${payslips.length}");
+              if (payslips.isNotEmpty) {
+                print("📄 First payslip keys: ${(payslips.first as Map).keys.toList()}");
+              }
+            }
+          }
+
+          if (response.statusCode == 200) {
+            // Safely cast the response data
+            final responseData = Map<String, dynamic>.from(response.data as Map);
+            
+            print("🔍 Response data type: ${responseData.runtimeType}");
+            print("🔍 Success field: ${responseData['success']} (${responseData['success'].runtimeType})");
+            print("🔍 Payslips field: ${responseData['payslips']} (${responseData['payslips'].runtimeType})");
+            
+            // Handle the actual API response structure
+            if (responseData['success'] == true) {
+              print("✅ Success field is true, parsing payslips...");
+              return PayslipsResponseModel.fromJson(responseData);
+            } else {
+              throw Exception('Failed to get payslips: ${responseData['message'] ?? 'Unknown error'}');
+            }
+          } else {
+            throw Exception('Failed to get payslips: ${response.statusMessage}');
+          }
+        } on DioException catch (e) {
+          print("❌ DioException getting payslips: $e");
+          throw Exception('Network error: ${e.message}');
+        } catch (e, stackTrace) {
+          print("❌ General error getting payslips: $e");
+          print("📄 Stack trace: $stackTrace");
+          throw Exception('Failed to get payslips: $e');
+        }
+      }
 }

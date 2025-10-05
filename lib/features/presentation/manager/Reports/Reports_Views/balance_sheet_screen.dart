@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../Reports_ViewModel/balance_sheet_view_model.dart';
+import '../../../../domain/entities/balance_sheet.dart';
 
-class BalanceSheetScreen extends StatefulWidget {
+class BalanceSheetScreen extends ConsumerStatefulWidget {
   const BalanceSheetScreen({super.key});
 
   @override
-  State<BalanceSheetScreen> createState() => _BalanceSheetScreenState();
+  ConsumerState<BalanceSheetScreen> createState() => _BalanceSheetScreenState();
 }
 
-class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
+class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   bool isChartView = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Load balance sheet when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(balanceSheetViewModelProvider.notifier).loadBalanceSheet();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final balanceSheetState = ref.watch(balanceSheetViewModelProvider);
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -30,9 +44,118 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          if (balanceSheetState.hasData)
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.black87),
+              onPressed: () => ref.read(balanceSheetViewModelProvider.notifier).refresh(),
+            ),
+        ],
       ),
-      body: Column(
-        children: [
+      body: _buildBody(balanceSheetState),
+    );
+  }
+
+  Widget _buildBody(BalanceSheetState state) {
+    if (state.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+        ),
+      );
+    }
+
+    if (state.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading balance sheet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(balanceSheetViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!state.hasData || state.balanceSheet == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.account_balance,
+              size: 64,
+              color: Colors.grey[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No balance sheet available',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Generate a balance sheet to view data',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => ref.read(balanceSheetViewModelProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Refresh',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
           // Header Info
           Container(
             margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -132,14 +255,13 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
 
           // Content
           Expanded(
-            child: isChartView ? _buildChartView() : _buildTableView(),
+            child: isChartView ? _buildChartView(state.balanceSheet!) : _buildTableView(state.balanceSheet!),
           ),
         ],
-      ),
     );
   }
 
-  Widget _buildChartView() {
+  Widget _buildChartView(BalanceSheet balanceSheet) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -279,35 +401,23 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                 borderData: FlBorderData(show: false),
                 minX: 0,
                 maxX: 5,
-                minY: -12500,
-                maxY: 10000,
+                minY: _getMinY(balanceSheet),
+                maxY: _getMaxY(balanceSheet),
                 lineBarsData: [
                   // Blue line (Assets)
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 5000),
-                      FlSpot(1, 4500),
-                      FlSpot(2, 4200),
-                      FlSpot(3, 4800),
-                      FlSpot(4, 4600),
-                      FlSpot(5, 5200),
-                    ],
-                    isCurved: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.blue.withOpacity(0.8),
-                        Colors.blue.withOpacity(0.8),
-                      ],
-                    ),
-                    barWidth: 3,
+                    spots: _getAssetsSpots(balanceSheet),
+                    isCurved: false,
+                    color: Colors.blue,
+                    barWidth: 2,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
                         return FlDotCirclePainter(
-                          radius: 4,
+                          radius: 3,
                           color: Colors.blue,
-                          strokeWidth: 2,
+                          strokeWidth: 1,
                           strokeColor: Colors.white,
                         );
                       },
@@ -316,30 +426,18 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                   ),
                   // Green line (Liabilities)
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 2500),
-                      FlSpot(1, 2000),
-                      FlSpot(2, -10000),
-                      FlSpot(3, 1500),
-                      FlSpot(4, 1000),
-                      FlSpot(5, 2800),
-                    ],
-                    isCurved: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.green.withOpacity(0.8),
-                        Colors.green.withOpacity(0.8),
-                      ],
-                    ),
-                    barWidth: 3,
+                    spots: _getLiabilitiesSpots(balanceSheet),
+                    isCurved: false,
+                    color: Colors.green,
+                    barWidth: 2,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
                         return FlDotCirclePainter(
-                          radius: 4,
+                          radius: 3,
                           color: Colors.green,
-                          strokeWidth: 2,
+                          strokeWidth: 1,
                           strokeColor: Colors.white,
                         );
                       },
@@ -445,7 +543,7 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
     );
   }
 
-  Widget _buildTableView() {
+  Widget _buildTableView(BalanceSheet balanceSheet) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -535,32 +633,47 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
             ),
             child: Column(
               children: [
-                // Assets Section
-                _buildSectionHeader('Assets', '\$1,047,000.00', true),
+                // Assets Section - using dynamic data from summary
+                _buildSectionHeader('Assets', '\$${balanceSheet.summary.totalAssets.toStringAsFixed(2)}', true),
                 _buildSubSection('Current Assets', '(Short-term, highly liquid)'),
-                _buildBalanceSheetRow('Cash', '\$125,000.00'),
-                _buildBalanceSheetRow('Accounts Receivable', '\$85,000.00'),
-                _buildBalanceSheetRow('Inventory', '\$65,000.00'),
-                _buildBalanceSheetRow('Prepaid Expenses', '\$12,000.00'),
-                _buildTotalRow('Total Current Assets', '\$287,000.00'),
+                ...balanceSheet.assets.where((asset) => asset.isCurrent).map((asset) => 
+                  _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
+                ).toList(),
+                _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.where((asset) => asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
                 
                 const SizedBox(height: 16),
                 
                 _buildSubSection('Non-Current Assets', '(Long-term investments)'),
-                _buildBalanceSheetRow('Land', '\$250,000.00'),
-                _buildBalanceSheetRow('Buildings', '\$450,000.00'),
-                _buildBalanceSheetRow('Equipment', '\$180,000.00'),
-                _buildBalanceSheetRow('Accumulated Depreciation', '-\$120,000.00', isNegative: true),
-                _buildTotalRow('Total Non-Current Assets', '\$760,000.00'),
+                ...balanceSheet.assets.where((asset) => !asset.isCurrent).map((asset) => 
+                  _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
+                ).toList(),
+                _buildTotalRow('Total Non-Current Assets', '\$${balanceSheet.assets.where((asset) => !asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
 
                 const SizedBox(height: 20),
 
-                // Liabilities Section
-                _buildSectionHeader('Liabilities', '\$693,000.00', true),
+                // Liabilities Section - using dynamic data from summary
+                _buildSectionHeader('Liabilities', '\$${balanceSheet.summary.totalLiabilities.toStringAsFixed(2)}', true),
+                _buildSubSection('Current Liabilities', '(Due within one year)'),
+                ...balanceSheet.liabilities.where((liability) => liability.isCurrent).map((liability) => 
+                  _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
+                ).toList(),
+                _buildTotalRow('Total Current Liabilities', '\$${balanceSheet.liabilities.where((liability) => liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
+                
+                const SizedBox(height: 16),
+                
+                _buildSubSection('Long-term Liabilities', '(Due after one year)'),
+                ...balanceSheet.liabilities.where((liability) => !liability.isCurrent).map((liability) => 
+                  _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
+                ).toList(),
+                _buildTotalRow('Total Long-term Liabilities', '\$${balanceSheet.liabilities.where((liability) => !liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
+
                 const SizedBox(height: 20),
 
-                // Equity Section
-                _buildSectionHeader('Equity', '\$354,000.00', true),
+                // Equity Section - using dynamic data from summary
+                _buildSectionHeader('Equity', '\$${balanceSheet.summary.totalEquity.toStringAsFixed(2)}', true),
+                ...balanceSheet.equity.map((equity) => 
+                  _buildBalanceSheetRow(equity.name, '\$${equity.amount.toStringAsFixed(2)}')
+                ).toList(),
                 const SizedBox(height: 20),
 
                 // Summary Section
@@ -575,15 +688,15 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildSummaryRow('Total Assets', '\$1,047,000.00'),
+                      _buildSummaryRow('Total Assets', '\$${balanceSheet.summary.totalAssets.toStringAsFixed(2)}'),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Total Liabilities', '\$693,000.00'),
+                      _buildSummaryRow('Total Liabilities', '\$${balanceSheet.summary.totalLiabilities.toStringAsFixed(2)}'),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Total Equity', '\$354,000.00'),
+                      _buildSummaryRow('Total Equity', '\$${balanceSheet.summary.totalEquity.toStringAsFixed(2)}'),
                       const SizedBox(height: 12),
                       Container(height: 1, color: Colors.grey[300]),
                       const SizedBox(height: 12),
-                      _buildSummaryRow('Liabilities + Equity', '\$1,047,000.00', isTotal: true),
+                      _buildSummaryRow('Liabilities + Equity', '\$${(balanceSheet.summary.totalLiabilities + balanceSheet.summary.totalEquity).toStringAsFixed(2)}', isTotal: true),
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -762,5 +875,84 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
         ),
       ],
     );
+  }
+
+  // Helper methods for generating dynamic chart data
+  List<FlSpot> _getAssetsSpots(BalanceSheet balanceSheet) {
+    // Generate 6 data points based on total assets
+    final totalAssets = balanceSheet.summary.totalAssets;
+    
+    // If total assets is zero, provide sample data for demonstration
+    if (totalAssets == 0.0) {
+      return [
+        FlSpot(0, 5000),
+        FlSpot(1, 4500),
+        FlSpot(2, 4200),
+        FlSpot(3, 4800),
+        FlSpot(4, 4600),
+        FlSpot(5, 5200),
+      ];
+    }
+    
+    return [
+      FlSpot(0, totalAssets * 0.8),
+      FlSpot(1, totalAssets * 0.9),
+      FlSpot(2, totalAssets * 0.85),
+      FlSpot(3, totalAssets * 0.95),
+      FlSpot(4, totalAssets * 0.88),
+      FlSpot(5, totalAssets),
+    ];
+  }
+
+  List<FlSpot> _getLiabilitiesSpots(BalanceSheet balanceSheet) {
+    // Generate 6 data points based on total liabilities
+    final totalLiabilities = balanceSheet.summary.totalLiabilities;
+    
+    // If total liabilities is zero, provide sample data for demonstration
+    if (totalLiabilities == 0.0) {
+      return [
+        FlSpot(0, 2500),
+        FlSpot(1, 2000),
+        FlSpot(2, 1800),
+        FlSpot(3, 2200),
+        FlSpot(4, 1900),
+        FlSpot(5, 2100),
+      ];
+    }
+    
+    return [
+      FlSpot(0, totalLiabilities * 0.7),
+      FlSpot(1, totalLiabilities * 0.8),
+      FlSpot(2, totalLiabilities * 0.75),
+      FlSpot(3, totalLiabilities * 0.85),
+      FlSpot(4, totalLiabilities * 0.9),
+      FlSpot(5, totalLiabilities),
+    ];
+  }
+
+  double _getMinY(BalanceSheet balanceSheet) {
+    final totalAssets = balanceSheet.summary.totalAssets;
+    final totalLiabilities = balanceSheet.summary.totalLiabilities;
+    
+    // If both are zero, use sample data range
+    if (totalAssets == 0.0 && totalLiabilities == 0.0) {
+      return 0;
+    }
+    
+    final minValue = [totalAssets * 0.7, totalLiabilities * 0.7].reduce((a, b) => a < b ? a : b);
+    return minValue - (minValue * 0.1);
+  }
+
+  double _getMaxY(BalanceSheet balanceSheet) {
+    final totalAssets = balanceSheet.summary.totalAssets;
+    final totalLiabilities = balanceSheet.summary.totalLiabilities;
+    
+    // If both are zero, use sample data range
+    if (totalAssets == 0.0 && totalLiabilities == 0.0) {
+      return 6000;
+    }
+    
+    final maxValue = [totalAssets, totalLiabilities].reduce((a, b) => a > b ? a : b);
+    return maxValue + (maxValue * 0.1);
   }
 }
