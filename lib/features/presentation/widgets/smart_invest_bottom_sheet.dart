@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'send_investment_eth_modal.dart';
+import '../providers/smart_invest_providers.dart';
+import '../../domain/entities/smart_invest.dart';
 
 class SmartInvestBottomSheet extends ConsumerStatefulWidget {
   const SmartInvestBottomSheet({Key? key}) : super(key: key);
@@ -20,36 +22,20 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   String newNotes = '';
   
   final List<String> roles = ['Investor', 'Partner', 'Vendor', 'Client'];
-  
-  List<Map<String, dynamic>> addressBookEntries = [
-    {
-      'id': '1',
-      'name': 'Google Inc',
-      'role': 'Partner',
-      'walletAddress': '0x760780ccd0D4cc77DF0C4D97A5FE7ef7f7D0F18b',
-      'subRole': 'Primary Partner',
-      'icon': Icons.business,
-    },
-    {
-      'id': '2',
-      'name': 'Microsoft Corporation',
-      'role': 'Investor',
-      'walletAddress': '0x1234567890abcdef1234567890abcdef12345678',
-      'subRole': 'Series A Investor',
-      'icon': Icons.business,
-    },
-    {
-      'id': '3',
-      'name': 'Apple Inc',
-      'role': 'Vendor',
-      'walletAddress': '0xabcdef1234567890abcdef1234567890abcdef12',
-      'subRole': 'Technology Partner',
-      'icon': Icons.business,
-    },
-  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Load address book entries when the bottom sheet opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(smartInvestNotifierProvider.notifier).getAddressBookList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(smartInvestNotifierProvider);
+    
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
@@ -60,7 +46,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         children: [
           _buildHeader(),
           Expanded(
-            child: isAddingEntry || isEditingEntry ? _buildEntryForm() : _buildAddressBookList(),
+            child: isAddingEntry || isEditingEntry ? _buildEntryForm() : _buildAddressBookList(state),
           ),
         ],
       ),
@@ -149,11 +135,71 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     );
   }
 
-  Widget _buildAddressBookList() {
-    final filteredEntries = addressBookEntries.where((entry) {
+  Widget _buildAddressBookList(SmartInvestState state) {
+    // Show loading state
+    if (state.isAddressBookLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'Loading address book...',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show error state
+    if (state.addressBookError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load address book',
+              style: TextStyle(fontSize: 16, color: Colors.red[600]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.addressBookError!,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => ref.read(smartInvestNotifierProvider.notifier).getAddressBookList(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Convert API data to display format
+    final entries = state.addressBookEntries.map((entry) => {
+      'id': entry.address,
+      'name': entry.name,
+      'role': entry.role,
+      'walletAddress': entry.address,
+      'subRole': entry.notes,
+      'icon': Icons.business,
+    }).toList();
+    
+    print('📋 Address book entries:');
+    for (var entry in entries) {
+      print('📋 - ${entry['name']}: ${entry['walletAddress']}');
+    }
+    
+    final filteredEntries = entries.where((entry) {
       if (searchQuery.isEmpty) return true;
-      return entry['name'].toLowerCase().contains(searchQuery.toLowerCase()) ||
-             entry['walletAddress'].toLowerCase().contains(searchQuery.toLowerCase());
+      return (entry['name'] as String).toLowerCase().contains(searchQuery.toLowerCase()) ||
+             (entry['walletAddress'] as String).toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
 
     if (filteredEntries.isEmpty) {
@@ -309,7 +355,10 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _sendEthToEntry(entry),
+                    onPressed: () {
+                      print('📤 User clicked on entry: ${entry['name']} (${entry['walletAddress']})');
+                      _sendEthToEntry(entry);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple[600],
                       foregroundColor: Colors.white,
@@ -580,6 +629,10 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   }
 
   void _sendEthToEntry(Map<String, dynamic> entry) {
+    print('📤 _sendEthToEntry called with entry: $entry');
+    print('📋 Recipient Name: ${entry['name']}');
+    print('📋 Recipient Address: ${entry['walletAddress']}');
+    
     // Show the Send Investment ETH modal
     showModalBottomSheet(
       context: context,
@@ -622,15 +675,14 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                addressBookEntries.removeWhere((e) => e['id'] == entry['id']);
-              });
+            onPressed: () async {
               Navigator.pop(context);
+              // Note: The current API doesn't have a delete endpoint
+              // For now, we'll show a message that deletion is not supported
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${entry['name']} deleted successfully'),
-                  backgroundColor: Colors.green,
+                const SnackBar(
+                  content: Text('Delete functionality not yet implemented in API'),
+                  backgroundColor: Colors.orange,
                 ),
               );
             },
@@ -641,7 +693,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     );
   }
 
-  void _addEntry() {
+  void _addEntry() async {
     if (newWalletAddress.isEmpty || newName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -652,29 +704,38 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       return;
     }
 
-    setState(() {
-      addressBookEntries.add({
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'name': newName,
-        'role': newRole,
-        'walletAddress': newWalletAddress,
-        'subRole': newNotes.isNotEmpty ? newNotes : 'New Entry',
-        'icon': Icons.business,
-      });
-      
-      _resetForm();
-      isAddingEntry = false;
-    });
+    try {
+      final request = AddressBookUpsertRequest(
+        address: newWalletAddress,
+        name: newName,
+        role: newRole,
+        notes: newNotes,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Entry added successfully'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      await ref.read(smartInvestNotifierProvider.notifier).upsertAddressBookEntry(request);
+      
+      setState(() {
+        _resetForm();
+        isAddingEntry = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Entry added successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add entry: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
-  void _updateEntry() {
+  void _updateEntry() async {
     if (newWalletAddress.isEmpty || newName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -685,28 +746,34 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       return;
     }
 
-    setState(() {
-      final index = addressBookEntries.indexWhere((e) => e['id'] == editingEntryId);
-      if (index != -1) {
-        addressBookEntries[index] = {
-          'id': editingEntryId,
-          'name': newName,
-          'role': newRole,
-          'walletAddress': newWalletAddress,
-          'subRole': newNotes.isNotEmpty ? newNotes : 'Updated Entry',
-          'icon': Icons.business,
-        };
-      }
-      
-      _resetForm();
-      isEditingEntry = false;
-    });
+    try {
+      final request = AddressBookUpsertRequest(
+        address: newWalletAddress,
+        name: newName,
+        role: newRole,
+        notes: newNotes,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Entry updated successfully'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      await ref.read(smartInvestNotifierProvider.notifier).upsertAddressBookEntry(request);
+      
+      setState(() {
+        _resetForm();
+        isEditingEntry = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Entry updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update entry: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

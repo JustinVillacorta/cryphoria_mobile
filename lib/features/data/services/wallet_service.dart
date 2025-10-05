@@ -249,7 +249,20 @@ class WalletService {
     String? company,
     String? category,
     String? description,
+    bool? isInvesting,
+    String? investorName,
   }) async {
+      print('🌐 WalletService.sendEth called with:');
+      print('📋 toAddress: $toAddress');
+      print('📋 amount: $amount');
+      print('📋 company: $company');
+      print('📋 category: $category');
+      print('📋 description: $description');
+      print('📋 isInvesting: $isInvesting');
+      print('📋 investorName: $investorName');
+      print('📋 toAddress length: ${toAddress.length}');
+      print('📋 toAddress starts with 0x: ${toAddress.startsWith('0x')}');
+    
     return await remoteDataSource.sendEth(
       toAddress: toAddress,
       amount: amount,
@@ -258,6 +271,8 @@ class WalletService {
       company: company,
       category: category,
       description: description,
+      isInvesting: isInvesting,
+      investorName: investorName,
     );
   }
 

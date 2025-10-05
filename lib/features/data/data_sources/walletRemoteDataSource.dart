@@ -79,9 +79,40 @@ class WalletRemoteDataSource {
     String? company,
     String? category,
     String? description,
+    bool? isInvesting,
+    String? investorName,
   }) async {
     final url = '${baseUrl}send_eth/';
     try {
+      final requestData = {
+        'to_address': toAddress, // Backend expects 'to_address', not 'to'
+        'amount': amount,
+        if (gasPrice != null) 'gas_price': gasPrice,
+        if (gasLimit != null) 'gas_limit': gasLimit,
+        if (company != null) 'company': company,
+        if (category != null) 'category': category,
+        if (description != null) 'description': description,
+        if (isInvesting != null) 'is_investing': isInvesting,
+        if (investorName != null) 'investor_name': investorName,
+      };
+      
+      // Validate address format
+      if (!toAddress.startsWith('0x') || toAddress.length != 42) {
+        throw Exception('Invalid address format: $toAddress');
+      }
+      
+      // Check if this is a known problematic address
+      if (toAddress.toLowerCase() == '0x180aea398ca37802102bc88b5f9a706faf487d03') {
+        print('⚠️ WARNING: This address has been problematic in tests. Consider using a different address.');
+      }
+      
+      print('🌐 WalletRemoteDataSource.sendEth called');
+      print('📋 Request data: $requestData');
+      print('📋 URL: $url');
+      print('📋 toAddress parameter: $toAddress');
+      print('📋 toAddress in requestData: ${requestData['to_address']}');
+      print('📋 Are they equal? ${toAddress == requestData['to_address']}');
+      
       final response = await dio.post(
         url,
         options: Options(
@@ -89,15 +120,7 @@ class WalletRemoteDataSource {
             "Content-Type": "application/json",
           },
         ),
-        data: {
-          'to_address': toAddress,
-          'amount': amount,
-          if (gasPrice != null) 'gas_price': gasPrice,
-          if (gasLimit != null) 'gas_limit': gasLimit,
-          if (company != null) 'company': company,
-          if (category != null) 'category': category,
-          if (description != null) 'description': description,
-        },
+        data: requestData,
       );
       
       if (response.data['success'] == true) {
