@@ -176,18 +176,12 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
           print('  - Existing Wallet: ${employee.payrollInfo?.employeeWallet}');
           
           final response = await ref.read(dioClientProvider).dio.post('/api/payroll/create/', data: {
-            'user_id': employee.userId, // CRITICAL: Backend needs this to fetch wallet
-            'employee_name': employee.displayName, // Now using correct name from proper endpoint
-            // Don't send empty wallet - let backend fetch it automatically
-            'employee_wallet': employee.payrollInfo?.employeeWallet?.isNotEmpty == true 
-                ? employee.payrollInfo!.employeeWallet 
-                : null,
+            'employee_id': employee.userId, // Fixed: Use employee_id instead of user_id
+            'employee_name': employee.displayName,
             'salary_amount': salaryAmount,
             'salary_currency': 'USD',
             'payment_frequency': 'MONTHLY',
             'start_date': payDate.toIso8601String().split('T')[0],
-            'is_active': true,
-            'notes': 'Generated from mobile payroll processing - $payrollType',
           });
           
           if (response.statusCode == 200 && response.data['success'] == true) {
@@ -208,25 +202,6 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         }
       }
 
-      // Fix any missing employee wallets using backend utility
-      print('DEBUG: Attempting to fix missing employee wallets...');
-      try {
-        final fixResponse = await ref.read(dioClientProvider).dio.post('/api/payroll/fix-missing-wallets/');
-        if (fixResponse.statusCode == 200 && fixResponse.data['success'] == true) {
-          final fixedCount = fixResponse.data['fixed_count'] ?? 0;
-          final failedCount = fixResponse.data['failed_count'] ?? 0;
-          final totalEntries = fixResponse.data['total_entries'] ?? 0;
-          print('DEBUG: Wallet fixing results:');
-          print('  - Fixed: $fixedCount entries');
-          print('  - Failed: $failedCount entries'); 
-          print('  - Total processed: $totalEntries entries');
-          print('  - Full response: ${fixResponse.data}');
-        } else {
-          print('DEBUG: Wallet fixing unsuccessful: ${fixResponse.data}');
-        }
-      } catch (e) {
-        print('DEBUG: Wallet fixing failed (non-critical): $e');
-      }
 
       // Create individual payslips for each employee
       final payslipRepository = ref.read(payslipRepositoryProvider);
@@ -305,6 +280,166 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error processing payroll: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _processPayrollNow() async {
+    if (!mounted) return;
+    
+    try {
+      final selectedEmployees = employeePayrollList.where((e) => e.isSelected).toList();
+      
+      if (selectedEmployees.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please select at least one employee')),
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Color(0xFF9747FF)),
+              SizedBox(height: 16),
+              Text(
+                'Sending payroll now...',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Step 1: Create payroll entries and collect entry IDs
+      final entryIds = <String>[];
+      
+      for (final employeePayroll in selectedEmployees) {
+        final employee = employeePayroll.employee;
+        final salaryText = employeePayroll.salaryController.text.trim();
+        final salaryAmount = double.tryParse(salaryText) ?? 0.0;
+        
+        try {
+          print('DEBUG: Creating payroll entry for immediate processing:');
+          print('  - Employee: ${employee.displayName}');
+          print('  - Salary: $salaryAmount');
+          
+          final response = await ref.read(dioClientProvider).dio.post('/api/payroll/create/', data: {
+            'employee_id': employee.userId,
+            'employee_name': employee.displayName,
+            'salary_amount': salaryAmount,
+            'salary_currency': 'USD',
+            'payment_frequency': 'MONTHLY',
+            'start_date': payDate.toIso8601String().split('T')[0],
+          });
+          
+          if (response.statusCode == 200 && response.data['success'] == true) {
+            final entryId = response.data['payroll_entry']['entry_id'];
+            entryIds.add(entryId);
+            print('DEBUG: Payroll entry created with ID: $entryId');
+          } else {
+            print('ERROR: Failed to create payroll entry for ${employee.displayName}');
+            print('  - Status: ${response.statusCode}');
+            print('  - Response: ${response.data}');
+          }
+        } catch (e) {
+          print('ERROR: Exception creating payroll entry for ${employee.displayName}: $e');
+        }
+      }
+
+      if (entryIds.isEmpty) {
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create payroll entries. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Step 2: Process each payroll entry immediately
+      int processedEntries = 0;
+      
+      for (final entryId in entryIds) {
+        try {
+          print('DEBUG: Processing payroll entry: $entryId');
+          
+          final response = await ref.read(dioClientProvider).dio.post('/api/payroll/process/', data: {
+            'entry_id': entryId,
+          });
+          
+          if (response.statusCode == 200 && response.data['success'] == true) {
+            processedEntries++;
+            print('DEBUG: Successfully processed payroll entry: $entryId');
+          } else {
+            print('ERROR: Failed to process payroll entry: $entryId');
+            print('  - Status: ${response.statusCode}');
+            print('  - Response: ${response.data}');
+          }
+        } catch (e) {
+          print('ERROR: Exception processing payroll entry $entryId: $e');
+        }
+      }
+
+      if (!mounted) return; // Check before UI operations
+      
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (processedEntries == entryIds.length) {
+        // Close payroll bottom sheet
+        Navigator.pop(context);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Successfully sent payroll for $processedEntries employees'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else if (processedEntries > 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Sent payroll for $processedEntries of ${entryIds.length} employees'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to send payroll. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sending payroll: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -876,34 +1011,80 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
             decoration: BoxDecoration(
               border: Border(top: BorderSide(color: Colors.grey[200]!)),
             ),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: Colors.grey[300]!),
+                // Action buttons row
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.grey[700]),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: selectedCount > 0 ? () => _processPayroll() : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[600],
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Text(
+                          'Process Payroll',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                SizedBox(width: 16),
-                Expanded(
+                SizedBox(height: 12),
+                // Send Payroll Now button
+                SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: selectedCount > 0 ? () => _processPayroll() : null,
+                    onPressed: selectedCount > 0 ? () => _processPayrollNow() : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF9747FF),
                       padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: Text(
-                      'Process Payroll',
-                      style: TextStyle(color: Colors.white),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.send, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Send Payroll Now',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                ),
+                SizedBox(height: 8),
+                // Help text
+                Text(
+                  'Process Payroll: Creates entries and payslips\nSend Payroll Now: Immediately processes payments',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    height: 1.3,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
