@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_view/employee_userprofile_view.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_view/home_employee_view.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/Payslip/payslip_view/payslip_view.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/Payslip/payslip_view/payslip_history_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_navbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

@@ -1,45 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../payslip_entry_details_view/payslip_entry_details_view.dart';
+import 'payslip_entry_details_view.dart';
+import '../providers/payroll_history_providers.dart';
+import '../../../../domain/entities/payroll_entry.dart';
+import '../../../../domain/entities/payroll_details_response.dart';
+import '../../../../domain/entities/payroll_statistics.dart';
 
-class PayslipScreen extends StatelessWidget {
+class PayslipScreen extends ConsumerWidget {
   const PayslipScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // Sample data - replace with actual data from your state management
-    final payslipHistory = [
-      {
-        'entryId': 'ec20ba0d-2795-4e86-aa49-098cc51b4996',
-        'amount': 0.02199440463643279,
-        'status': 'COMPLETED',
-        'date': DateTime(2025, 10, 5),
-        'cryptocurrency': 'ETH',
-      },
-      {
-        'entryId': 'f8b2c3d4-e5f6-7890-1234-567890123456',
-        'amount': 0.01567890123456789,
-        'status': 'COMPLETED',
-        'date': DateTime(2025, 10, 4),
-        'cryptocurrency': 'ETH',
-      },
-      {
-        'entryId': 'a1b2c3d4-e5f6-7890-1234-567890123456',
-        'amount': 0.03210987654321098,
-        'status': 'FAILED',
-        'date': DateTime(2025, 10, 3),
-        'cryptocurrency': 'ETH',
-      },
-    ];
-
-    final summaryData = {
-      'totalEntries': 27,
-      'completed': 12,
-      'scheduled': 0,
-      'failed': 1,
-      'totalPaid': 134230.00,
-      'totalPending': 0.00,
-    };
+  Widget build(BuildContext context, WidgetRef ref) {
+    final payrollDetailsAsync = ref.watch(payrollDetailsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -77,35 +50,80 @@ class PayslipScreen extends StatelessWidget {
         ),
         toolbarHeight: 80,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Mobile Layout - Stack vertically for clean mobile experience
-            Column(
-              children: [
-                // Summary Cards
-                _buildTotalEntriesCard(summaryData),
-                const SizedBox(height: 12),
-                _buildPaymentStatisticsCard(summaryData),
-                const SizedBox(height: 12),
-                _buildFinancialSummaryCard(summaryData),
-                const SizedBox(height: 16),
-                
-                // Payslip Entries Table
-                _buildPayslipEntriesCard(context, payslipHistory),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ],
+      body: payrollDetailsAsync.when(
+        data: (payrollDetails) => _buildContent(context, payrollDetails),
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stackTrace) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load payroll data',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.invalidate(payrollDetailsProvider);
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Widget _buildContent(BuildContext context, PayrollDetailsResponse payrollDetails) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Mobile Layout - Stack vertically for clean mobile experience
+          Column(
+            children: [
+              // Summary Cards
+              _buildTotalEntriesCard(payrollDetails.payrollStatistics),
+              const SizedBox(height: 12),
+              _buildPaymentStatisticsCard(payrollDetails.payrollStatistics),
+              const SizedBox(height: 12),
+              _buildFinancialSummaryCard(payrollDetails.payrollStatistics),
+              const SizedBox(height: 16),
+              
+              // Payslip Entries Table
+              _buildPayslipEntriesCard(context, payrollDetails.payrollEntries),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget _buildTotalEntriesCard(Map<String, dynamic> data) {
+  Widget _buildTotalEntriesCard(PayrollStatistics data) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -140,7 +158,7 @@ class PayslipScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '${data['totalEntries']}',
+                  '${data.totalEntries}',
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
@@ -167,7 +185,7 @@ class PayslipScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentStatisticsCard(Map<String, dynamic> data) {
+  Widget _buildPaymentStatisticsCard(PayrollStatistics data) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -193,11 +211,11 @@ class PayslipScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _buildStatisticRow('Completed', data['completed'], Colors.green, Icons.check_circle),
+          _buildStatisticRow('Completed', data.completedPayments, Colors.green, Icons.check_circle),
           const SizedBox(height: 8),
-          _buildStatisticRow('Scheduled', data['scheduled'], Colors.blue, Icons.schedule),
+          _buildStatisticRow('Scheduled', data.scheduledPayments, Colors.blue, Icons.schedule),
           const SizedBox(height: 8),
-          _buildStatisticRow('Failed', data['failed'], Colors.red, Icons.error),
+          _buildStatisticRow('Failed', data.failedPayments, Colors.red, Icons.error),
         ],
       ),
     );
@@ -236,7 +254,7 @@ class PayslipScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFinancialSummaryCard(Map<String, dynamic> data) {
+  Widget _buildFinancialSummaryCard(PayrollStatistics data) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -262,9 +280,9 @@ class PayslipScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _buildFinancialRow('Total Paid', '\$${data['totalPaid'].toStringAsFixed(2)}', Colors.green, Icons.attach_money),
+          _buildFinancialRow('Total Paid', '\$${data.totalPaidUsd.toStringAsFixed(2)}', Colors.green, Icons.attach_money),
           const SizedBox(height: 8),
-          _buildFinancialRow('Total Pending', '\$${data['totalPending'].toStringAsFixed(2)}', Colors.orange, Icons.schedule),
+          _buildFinancialRow('Total Pending', '\$${data.totalPendingUsd.toStringAsFixed(2)}', Colors.orange, Icons.schedule),
         ],
       ),
     );
@@ -303,7 +321,7 @@ class PayslipScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPayslipEntriesCard(BuildContext context, List<Map<String, dynamic>> payslipHistory) {
+  Widget _buildPayslipEntriesCard(BuildContext context, List<PayrollEntry> payrollEntries) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -339,16 +357,16 @@ class PayslipScreen extends StatelessWidget {
           const SizedBox(height: 16),
           
           // Card-based entries list
-          ...payslipHistory.map((entry) => _buildPayslipEntryCard(context, entry)).toList(),
+          ...payrollEntries.map((entry) => _buildPayslipEntryCard(context, entry)).toList(),
         ],
       ),
     );
   }
 
-  Widget _buildPayslipEntryCard(BuildContext context, Map<String, dynamic> entry) {
-    final String date = DateFormat('MMM dd, yyyy').format(entry['date']);
-    final String cryptoAmount = '${entry['amount'].toStringAsFixed(4)} ${entry['cryptocurrency']}';
-    final String fiatAmount = '\$${(entry['amount'] * 2000).toStringAsFixed(2)} USD'; // Sample conversion rate
+  Widget _buildPayslipEntryCard(BuildContext context, PayrollEntry entry) {
+    final String date = DateFormat('MMM dd, yyyy').format(entry.paymentDate);
+    final String cryptoAmount = '${entry.amount.toStringAsFixed(4)} ${entry.cryptocurrency ?? 'ETH'}';
+    final String fiatAmount = '\$${entry.usdEquivalent.toStringAsFixed(2)} USD';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -369,7 +387,7 @@ class PayslipScreen extends StatelessWidget {
           // Navigate to payslip entry details
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => PayslipEntryDetailsView(entry: entry),
+              builder: (context) => PayslipEntryDetailsView(entryId: entry.entryId ?? ''),
             ),
           );
         },
@@ -395,24 +413,24 @@ class PayslipScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(entry['status']).withOpacity(0.1),
+                        color: _getStatusColor(entry.status ?? 'PENDING').withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            _getStatusIcon(entry['status']), 
-                            color: _getStatusColor(entry['status']), 
+                            _getStatusIcon(entry.status ?? 'PENDING'), 
+                            color: _getStatusColor(entry.status ?? 'PENDING'), 
                             size: 12
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            entry['status'].toUpperCase(),
+                            (entry.status ?? 'PENDING').toUpperCase(),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: _getStatusColor(entry['status']),
+                              color: _getStatusColor(entry.status ?? 'PENDING'),
                             ),
                           ),
                         ],
@@ -420,7 +438,7 @@ class PayslipScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'ID: ${entry['entryId'].toString().substring(0, 8)}...',
+                      'ID: ${(entry.entryId ?? 'unknown').substring(0, 8)}...',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -468,6 +486,10 @@ class PayslipScreen extends StatelessWidget {
         return Colors.blue;
       case 'FAILED':
         return Colors.red;
+      case 'PROCESSING':
+        return Colors.orange;
+      case 'PENDING':
+        return Colors.grey;
       default:
         return Colors.grey;
     }
@@ -481,6 +503,10 @@ class PayslipScreen extends StatelessWidget {
         return Icons.schedule;
       case 'FAILED':
         return Icons.error;
+      case 'PROCESSING':
+        return Icons.hourglass_empty;
+      case 'PENDING':
+        return Icons.schedule;
       default:
         return Icons.help;
     }
