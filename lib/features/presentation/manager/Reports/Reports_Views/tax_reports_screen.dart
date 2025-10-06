@@ -159,18 +159,29 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            // Header Section
+            // Professional Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFFF59E0B).withOpacity(0.1),
+                    const Color(0xFF8B5CF6).withOpacity(0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFF59E0B).withOpacity(0.2),
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+                    color: const Color(0xFFF59E0B).withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -180,19 +191,18 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                   Row(
                     children: [
                       Container(
-                        width: 40,
-                        height: 40,
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B),
-                          borderRadius: BorderRadius.circular(8),
+                          color: const Color(0xFFF59E0B).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
                           Icons.receipt_long,
-                          color: Colors.white,
-                          size: 20,
+                          color: Color(0xFFF59E0B),
+                          size: 24,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,27 +210,54 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                             Text(
                               'Tax Report - ${state.taxReport!.reportType}',
                               style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
                                 color: Colors.black87,
                               ),
                             ),
+                            const SizedBox(height: 4),
                             Text(
                               'Generated: ${_formatDate(state.taxReport!.reportDate.toString())}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey,
+                                color: Colors.grey[600],
+                                height: 1.4,
                               ),
                             ),
                             Text(
                               'Period: ${_formatDate(state.taxReport!.periodStart.toString())} - ${_formatDate(state.taxReport!.periodEnd.toString())}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey,
+                                color: Colors.grey[500],
                               ),
                             ),
                           ],
                         ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _buildMetricCard(
+                        'Total Income',
+                        '\$${state.taxReport!.summary.totalIncome.toStringAsFixed(2)}',
+                        const Color(0xFF10B981),
+                        Icons.trending_up,
+                      ),
+                      const SizedBox(width: 12),
+                      _buildMetricCard(
+                        'Total Deductions',
+                        '\$${state.taxReport!.summary.totalDeductions.toStringAsFixed(2)}',
+                        const Color(0xFF3B82F6),
+                        Icons.remove_circle_outline,
+                      ),
+                      const SizedBox(width: 12),
+                      _buildMetricCard(
+                        'Tax Owed',
+                        '\$${state.taxReport!.summary.totalTaxOwed.toStringAsFixed(2)}',
+                        const Color(0xFFEF4444),
+                        Icons.account_balance,
                       ),
                     ],
                   ),
@@ -916,5 +953,64 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
       FlSpot(4, totalTaxPaid * 0.95),
       FlSpot(5, totalTaxPaid * 0.85),
     ];
+  }
+
+  Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  color: color,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

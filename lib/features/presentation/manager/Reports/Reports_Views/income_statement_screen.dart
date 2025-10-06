@@ -156,46 +156,119 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
 
     return Column(
       children: [
-        // Header Info
+        // Professional Header
         Container(
-          margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF3B82F6).withOpacity(0.1),
+                const Color(0xFF8B5CF6).withOpacity(0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF3B82F6).withOpacity(0.2),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
+                color: const Color(0xFF3B82F6).withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Portfolio Value: \$${state.portfolio!.totalValue.abs().toStringAsFixed(2)} ${state.portfolio!.currency}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  height: 1.4,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B82F6).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.bar_chart,
+                      color: Color(0xFF3B82F6),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Income Statement',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Revenue and expenses as of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _buildMetricCard(
+                    'Revenue',
+                    '\$${state.portfolio!.totalValue.abs().toStringAsFixed(2)}',
+                    const Color(0xFF10B981),
+                    Icons.trending_up,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildMetricCard(
+                    'Expenses',
+                    '\$0.00',
+                    const Color(0xFFEF4444),
+                    Icons.trending_down,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildMetricCard(
+                    'Net Income',
+                    '\$${state.portfolio!.totalValue.abs().toStringAsFixed(2)}',
+                    const Color(0xFF3B82F6),
+                    Icons.account_balance_wallet,
+                  ),
+                ],
               ),
             ],
           ),
         ),
 
-        // View Toggle
+        // Professional View Toggle
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
-          height: 48,
+          height: 52,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.grey[200]!,
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withOpacity(0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -207,19 +280,44 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                 child: GestureDetector(
                   onTap: () => setState(() => isChartView = true),
                   child: Container(
-                    margin: const EdgeInsets.all(4),
+                    margin: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: isChartView ? const Color(0xFF8B5CF6) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
+                      gradient: isChartView 
+                        ? const LinearGradient(
+                            colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                      color: isChartView ? null : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: isChartView ? [
+                        BoxShadow(
+                          color: const Color(0xFF3B82F6).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ] : null,
                     ),
                     child: Center(
-                      child: Text(
-                        'Chart View',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isChartView ? Colors.white : Colors.grey[600],
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.bar_chart,
+                            size: 18,
+                            color: isChartView ? Colors.white : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Chart View',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isChartView ? Colors.white : Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -229,19 +327,44 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                 child: GestureDetector(
                   onTap: () => setState(() => isChartView = false),
                   child: Container(
-                    margin: const EdgeInsets.all(4),
+                    margin: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: !isChartView ? const Color(0xFF8B5CF6) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
+                      gradient: !isChartView 
+                        ? const LinearGradient(
+                            colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                      color: !isChartView ? null : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: !isChartView ? [
+                        BoxShadow(
+                          color: const Color(0xFF3B82F6).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ] : null,
                     ),
                     child: Center(
-                      child: Text(
-                        'Table View',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: !isChartView ? Colors.white : Colors.grey[600],
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.table_chart,
+                            size: 18,
+                            color: !isChartView ? Colors.white : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Table View',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: !isChartView ? Colors.white : Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -933,5 +1056,64 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
         : 0.0;
     final maxValue = [totalValue, avgHoldingValue].reduce((a, b) => a > b ? a : b);
     return maxValue + (maxValue * 0.1);
+  }
+
+  Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  color: color,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

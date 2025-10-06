@@ -13,6 +13,9 @@ class BalanceSheetScreen extends ConsumerStatefulWidget {
 
 class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   bool isChartView = true;
+  bool isAssetsExpanded = true;
+  bool isLiabilitiesExpanded = true;
+  bool isEquityExpanded = true;
 
   @override
   void initState() {
@@ -156,100 +159,223 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
     return Column(
       children: [
-          // Header Info
-          Container(
-            margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
+        // Professional Header
+        Container(
+          margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF8B5CF6).withOpacity(0.1),
+                const Color(0xFF3B82F6).withOpacity(0.1),
               ],
             ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'View your company\'s assets, liabilities, and equity',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF8B5CF6).withOpacity(0.2),
+              width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-
-          // View Toggle
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => isChartView = true),
-                    child: Container(
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: isChartView ? const Color(0xFF8B5CF6) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Chart View',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.account_balance,
+                      color: Color(0xFF8B5CF6),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Balance Sheet',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Financial position as of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _buildMetricCard(
+                    'Total Assets',
+                    '\$${state.balanceSheet!.summary.totalAssets.toStringAsFixed(2)}',
+                    const Color(0xFF10B981),
+                    Icons.trending_up,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildMetricCard(
+                    'Total Liabilities',
+                    '\$${state.balanceSheet!.summary.totalLiabilities.toStringAsFixed(2)}',
+                    const Color(0xFFEF4444),
+                    Icons.trending_down,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildMetricCard(
+                    'Total Equity',
+                    '\$${state.balanceSheet!.summary.totalEquity.toStringAsFixed(2)}',
+                    const Color(0xFF3B82F6),
+                    Icons.account_balance_wallet,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Professional View Toggle
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          height: 52,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.grey[200]!,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => isChartView = true),
+                  child: Container(
+                    margin: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      gradient: isChartView 
+                        ? const LinearGradient(
+                            colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                      color: isChartView ? null : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: isChartView ? [
+                        BoxShadow(
+                          color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ] : null,
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.bar_chart,
+                            size: 18,
                             color: isChartView ? Colors.white : Colors.grey[600],
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Chart View',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isChartView ? Colors.white : Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => isChartView = false),
-                    child: Container(
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: !isChartView ? const Color(0xFF8B5CF6) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Table View',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => isChartView = false),
+                  child: Container(
+                    margin: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      gradient: !isChartView 
+                        ? const LinearGradient(
+                            colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                      color: !isChartView ? null : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: !isChartView ? [
+                        BoxShadow(
+                          color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ] : null,
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.table_chart,
+                            size: 18,
                             color: !isChartView ? Colors.white : Colors.grey[600],
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Table View',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: !isChartView ? Colors.white : Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
 
           const SizedBox(height: 15),
 
@@ -266,61 +392,118 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          // Filter and Report Type
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Daily Report',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(Icons.filter_list, size: 16, color: Colors.purple[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Filter',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.purple[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+        // Professional Chart Header
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.grey[200]!,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.trending_up,
+                      color: Color(0xFF8B5CF6),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Financial Performance Trend',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Assets vs Liabilities over time',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_today, size: 14, color: Colors.purple[600]),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Monthly',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.purple[600],
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
 
-          const SizedBox(height: 20),
+        const SizedBox(height: 20),
 
-          // Chart Container
-          Container(
-            height: 300,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+        // Professional Chart Container
+        Container(
+          height: 350,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.grey[200]!,
+              width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 15,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
             child: LineChart(
               LineChartData(
                 gridData: FlGridData(
@@ -451,37 +634,82 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
           const SizedBox(height: 20),
 
-          // Summary Card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF8B5CF6).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.2)),
+        // Professional Summary Card
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF8B5CF6).withOpacity(0.05),
+                const Color(0xFF3B82F6).withOpacity(0.05),
+              ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Summary',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.purple[700],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF8B5CF6).withOpacity(0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                blurRadius: 15,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.insights,
+                      color: Color(0xFF8B5CF6),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Financial Insights',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey[200]!,
+                    width: 1,
                   ),
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Your financial performance shows a 15% increase in revenue compared to the previous period, with expenses growing at a slower rate of 8%.',
+                child: const Text(
+                  'Your balance sheet shows a healthy financial position with assets exceeding liabilities, indicating strong financial stability and growth potential.',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
-                    height: 1.5,
+                    height: 1.6,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
 
           const SizedBox(height: 20),
 
@@ -634,46 +862,67 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
             child: Column(
               children: [
                 // Assets Section - using dynamic data from summary
-                _buildSectionHeader('Assets', '\$${balanceSheet.summary.totalAssets.toStringAsFixed(2)}', true),
-                _buildSubSection('Current Assets', '(Short-term, highly liquid)'),
-                ...balanceSheet.assets.where((asset) => asset.isCurrent).map((asset) => 
-                  _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
-                ).toList(),
-                _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.where((asset) => asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
-                
-                const SizedBox(height: 16),
-                
-                _buildSubSection('Non-Current Assets', '(Long-term investments)'),
-                ...balanceSheet.assets.where((asset) => !asset.isCurrent).map((asset) => 
-                  _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
-                ).toList(),
-                _buildTotalRow('Total Non-Current Assets', '\$${balanceSheet.assets.where((asset) => !asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
+                _buildCollapsibleSectionHeader(
+                  'Assets', 
+                  '\$${balanceSheet.summary.totalAssets.toStringAsFixed(2)}', 
+                  isAssetsExpanded,
+                  () => setState(() => isAssetsExpanded = !isAssetsExpanded),
+                ),
+                if (isAssetsExpanded) ...[
+                  _buildSubSection('Current Assets', '(Short-term, highly liquid)'),
+                  ...balanceSheet.assets.where((asset) => asset.isCurrent).map((asset) => 
+                    _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
+                  ).toList(),
+                  _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.where((asset) => asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
+                  
+                  const SizedBox(height: 16),
+                  
+                  _buildSubSection('Non-Current Assets', '(Long-term investments)'),
+                  ...balanceSheet.assets.where((asset) => !asset.isCurrent).map((asset) => 
+                    _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
+                  ).toList(),
+                  _buildTotalRow('Total Non-Current Assets', '\$${balanceSheet.assets.where((asset) => !asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
+                ],
 
                 const SizedBox(height: 20),
 
                 // Liabilities Section - using dynamic data from summary
-                _buildSectionHeader('Liabilities', '\$${balanceSheet.summary.totalLiabilities.toStringAsFixed(2)}', true),
-                _buildSubSection('Current Liabilities', '(Due within one year)'),
-                ...balanceSheet.liabilities.where((liability) => liability.isCurrent).map((liability) => 
-                  _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
-                ).toList(),
-                _buildTotalRow('Total Current Liabilities', '\$${balanceSheet.liabilities.where((liability) => liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
-                
-                const SizedBox(height: 16),
-                
-                _buildSubSection('Long-term Liabilities', '(Due after one year)'),
-                ...balanceSheet.liabilities.where((liability) => !liability.isCurrent).map((liability) => 
-                  _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
-                ).toList(),
-                _buildTotalRow('Total Long-term Liabilities', '\$${balanceSheet.liabilities.where((liability) => !liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
+                _buildCollapsibleSectionHeader(
+                  'Liabilities', 
+                  '\$${balanceSheet.summary.totalLiabilities.toStringAsFixed(2)}', 
+                  isLiabilitiesExpanded,
+                  () => setState(() => isLiabilitiesExpanded = !isLiabilitiesExpanded),
+                ),
+                if (isLiabilitiesExpanded) ...[
+                  _buildSubSection('Current Liabilities', '(Due within one year)'),
+                  ...balanceSheet.liabilities.where((liability) => liability.isCurrent).map((liability) => 
+                    _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
+                  ).toList(),
+                  _buildTotalRow('Total Current Liabilities', '\$${balanceSheet.liabilities.where((liability) => liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
+                  
+                  const SizedBox(height: 16),
+                  
+                  _buildSubSection('Long-term Liabilities', '(Due after one year)'),
+                  ...balanceSheet.liabilities.where((liability) => !liability.isCurrent).map((liability) => 
+                    _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
+                  ).toList(),
+                  _buildTotalRow('Total Long-term Liabilities', '\$${balanceSheet.liabilities.where((liability) => !liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
+                ],
 
                 const SizedBox(height: 20),
 
                 // Equity Section - using dynamic data from summary
-                _buildSectionHeader('Equity', '\$${balanceSheet.summary.totalEquity.toStringAsFixed(2)}', true),
-                ...balanceSheet.equity.map((equity) => 
-                  _buildBalanceSheetRow(equity.name, '\$${equity.amount.toStringAsFixed(2)}')
-                ).toList(),
+                _buildCollapsibleSectionHeader(
+                  'Equity', 
+                  '\$${balanceSheet.summary.totalEquity.toStringAsFixed(2)}', 
+                  isEquityExpanded,
+                  () => setState(() => isEquityExpanded = !isEquityExpanded),
+                ),
+                if (isEquityExpanded) ...[
+                  ...balanceSheet.equity.map((equity) => 
+                    _buildBalanceSheetRow(equity.name, '\$${equity.amount.toStringAsFixed(2)}')
+                  ).toList(),
+                ],
                 const SizedBox(height: 20),
 
                 // Summary Section
@@ -734,33 +983,49 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String amount, bool hasDropdown) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
+
+  Widget _buildCollapsibleSectionHeader(String title, String amount, bool isExpanded, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          border: Border(
+            bottom: BorderSide(color: Colors.grey[200]!),
           ),
-          const Spacer(),
-          Text(
-            amount,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
+        ),
+        child: Row(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
             ),
-          ),
-          if (hasDropdown) ...[
+            const Spacer(),
+            Text(
+              amount,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
             const SizedBox(width: 8),
-            Icon(Icons.keyboard_arrow_down, color: Colors.grey[400]),
+            AnimatedRotation(
+              turns: isExpanded ? 0.5 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                Icons.keyboard_arrow_down,
+                color: Colors.grey[600],
+                size: 20,
+              ),
+            ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -954,5 +1219,64 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     
     final maxValue = [totalAssets, totalLiabilities].reduce((a, b) => a > b ? a : b);
     return maxValue + (maxValue * 0.1);
+  }
+
+  Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  color: color,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
