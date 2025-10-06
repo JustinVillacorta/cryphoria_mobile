@@ -73,7 +73,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            '"Hi, ${user?.username ?? "User"}"n',
+                            '"Hi, ${user?.firstName ?? "User"}"',
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 16,

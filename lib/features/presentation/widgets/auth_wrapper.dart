@@ -68,7 +68,7 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
       final authUser = await _authLocalDataSource.getAuthUser();
 
       print('🔍 AuthWrapper: Retrieved auth user - '
-          '${authUser?.username ?? 'null'}');
+          '${authUser?.firstName ?? 'null'}');
 
       if (authUser != null && authUser.token.isNotEmpty) {
         print('🔍 AuthWrapper: Found valid token (length: '
@@ -81,7 +81,7 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
             _isLoading = false;
           });
           print('🟢 AuthWrapper: User authenticated successfully - '
-              '${authUser.username}');
+              '${authUser.firstName}');
         } else {
           print(
               '🟡 AuthWrapper: Found pending approval token - clearing and redirecting');
@@ -168,11 +168,11 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
 
       if (_cachedAuthUser!.role == 'Manager') {
         print('🔀 AuthWrapper: Navigating to Manager screens for user: '
-            '${_cachedAuthUser!.username}');
+            '${_cachedAuthUser!.firstName}');
         return const WidgetTree();
       } else {
         print('🔀 AuthWrapper: Navigating to Employee screens for user: '
-            '${_cachedAuthUser!.username}');
+            '${_cachedAuthUser!.firstName}');
         return const EmployeeWidgetTree();
       }
     }

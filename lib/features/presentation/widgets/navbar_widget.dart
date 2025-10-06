@@ -26,7 +26,7 @@ class CustomNavBar extends StatelessWidget {
       tablet: const EdgeInsets.only(bottom: 10.0, left: 20.0, right: 20.0),
       desktop: const EdgeInsets.only(bottom: 12.0, left: 24.0, right: 24.0),
     );
-    
+
     return Padding(
       padding: navBarMargin,
       child: ClipRRect(
@@ -36,24 +36,27 @@ class CustomNavBar extends StatelessWidget {
           child: Container(
             height: navBarHeight,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.12), // Darker with higher opacity
               borderRadius: BorderRadius.circular(30.0),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3), // Slightly more visible border
+                color: Colors.white.withOpacity(0.3), // softer border
                 width: 1.0,
               ),
               boxShadow: [
+                // main subtle shadow
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 25,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 6),
                 ),
+                // faint top highlight for glass effect
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.1),
-                  blurRadius: 5,
+                  color: Colors.white.withOpacity(0.4),
+                  blurRadius: 4,
                   offset: const Offset(0, -1),
                 ),
               ],
+              color: Colors.white.withOpacity(0.1), // translucent background
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -61,7 +64,7 @@ class CustomNavBar extends StatelessWidget {
                 _buildNavItem(CupertinoIcons.house, 0),
                 _buildNavItem(CupertinoIcons.person_2, 1),
                 _buildNavItem(CupertinoIcons.mail, 2), // Payroll
-                _buildNavItem(CupertinoIcons.chart_bar, 3), // Invoices  
+                _buildNavItem(CupertinoIcons.chart_bar, 3), // Invoices
                 _buildNavItem(CupertinoIcons.person, 4),
               ],
             ),
@@ -82,7 +85,7 @@ class CustomNavBar extends StatelessWidget {
         
         return IconButton(
           icon: Icon(icon, size: iconSize),
-          color: currentIndex == index ? Colors.white : Colors.grey,
+          color: currentIndex == index ? Color(0xFF9747FF) : Colors.grey,
           onPressed: () => onTap(index),
           padding: EdgeInsets.all(context.responsiveValue(
             mobile: 8.0,

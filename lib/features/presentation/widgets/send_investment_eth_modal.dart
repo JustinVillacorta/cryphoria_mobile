@@ -373,10 +373,9 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
                   ),
                 ),
                 child: const Text(
-                  'Back to Address Book',
+                  'Back',
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
                     color: Colors.grey,
                   ),
                   textAlign: TextAlign.center,
@@ -416,7 +415,6 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
                   isLoading ? 'Sending...' : 'Send Investment',
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),

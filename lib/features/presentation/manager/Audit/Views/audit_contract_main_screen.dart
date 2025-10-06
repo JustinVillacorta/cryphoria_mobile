@@ -67,7 +67,7 @@ class AuditContractMainScreen extends StatelessWidget {
                     Icon(
                       Icons.security,
                       size: 80,
-                      color: Colors.purple[300],
+                      color: Color(0xFFB373FF),
                     ),
                     
                     const SizedBox(height: 24),
@@ -76,8 +76,8 @@ class AuditContractMainScreen extends StatelessWidget {
                       'Smart Contract Audit',
                       style: TextStyle(
                         fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black54,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -108,7 +108,7 @@ class AuditContractMainScreen extends StatelessWidget {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
+                          backgroundColor: Color(0xFF9747FF),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -147,7 +147,7 @@ class AuditContractMainScreen extends StatelessWidget {
           width: stepSize,
           height: stepSize,
           decoration: BoxDecoration(
-            color: isActive || isCompleted ? Colors.purple : Colors.grey[300],
+            color: isActive || isCompleted ? Color(0xFF9747FF) : Colors.grey[300],
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -162,7 +162,7 @@ class AuditContractMainScreen extends StatelessWidget {
                     style: TextStyle(
                       color: isActive ? Colors.white : Colors.grey[600],
                       fontSize: context.fontSize(14),
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
           ),
@@ -175,7 +175,7 @@ class AuditContractMainScreen extends StatelessWidget {
     return Expanded(
       child: Container(
         height: 2,
-        color: isCompleted ? Colors.purple : Colors.grey[300],
+        color: isCompleted ? Color(0xFF9747FF) : Colors.grey[300],
       ),
     );
   }

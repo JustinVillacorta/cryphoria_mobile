@@ -75,16 +75,32 @@ class RecentTransactions extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
 
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: state.transactions.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final transaction = state.transactions[index];
-            return _buildTransactionItem(transaction);
-          },
-        ),
+        // ✅ Limit to 5 transactions
+        ...(() {
+          final limitedTransactions = state.transactions.take(5).toList();
+
+          if (state.transactions.isEmpty) {
+            return [
+              const Text(
+                'No recent transactions.',
+                style: TextStyle(color: Colors.grey),
+              )
+            ];
+          } else {
+            return [
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: limitedTransactions.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final transaction = limitedTransactions[index];
+                  return _buildTransactionItem(transaction);
+                },
+              )
+            ];
+          }
+        })(),
       ],
     );
   }

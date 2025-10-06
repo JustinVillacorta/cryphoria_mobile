@@ -180,13 +180,36 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.employee.displayName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        // Name + Active status on same line
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.employee.displayName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding:
+                              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.green, width: 1.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Active',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -205,21 +228,6 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'Active',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
                     ),
                   ),
                 ],
@@ -384,8 +392,8 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     return _buildCard(
       title: 'Payslip Summary',
       titleStyle: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
         color: Colors.black87,
       ),
       children: [
@@ -396,7 +404,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
               Text(
                 '\$${latestPayslip.finalNetPay.toStringAsFixed(2)}',
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -574,7 +582,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF9747FF),
+                      color: Colors.black54,
                     ),
                   ),
                   const Text(
@@ -598,7 +606,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: Colors.black54,
                     ),
                   ),
                   const Text(
@@ -621,8 +629,8 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     return _buildCard(
       title: 'Payslip History',
       titleStyle: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
         color: Colors.black87,
       ),
       children: [

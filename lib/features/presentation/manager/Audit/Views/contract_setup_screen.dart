@@ -139,7 +139,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
                 style: TextStyle(
                   fontSize: context.fontSize(12),
                   color: _contractNameController.text.isNotEmpty 
-                      ? Colors.purple 
+                      ? Color(0xFF9747FF)
                       : Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
@@ -149,7 +149,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
                 'Upload\nContract',
                 style: TextStyle(
                   fontSize: context.fontSize(12),
-                  color: _isFileUploaded ? Colors.purple : Colors.grey[600],
+                  color: _isFileUploaded ? Color(0xFF9747FF) : Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -186,7 +186,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
       width: stepSize,
       height: stepSize,
       decoration: BoxDecoration(
-        color: isCompleted ? Colors.purple : (isActive ? Colors.purple : Colors.grey[300]),
+        color: isCompleted ? Color(0xFF9747FF) : (isActive ? Color(0xFF9747FF) : Colors.grey[300]),
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -212,7 +212,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
     return Expanded(
       child: Container(
         height: 2,
-        color: isCompleted ? Colors.purple : Colors.grey[300],
+        color: isCompleted ? Color(0xFF9747FF) : Colors.grey[300],
       ),
     );
   }
@@ -243,12 +243,12 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
                   desktop: 10.0,
                 )),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.1),
+                  color: Color(0xFF9747FF).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   Icons.edit_document,
-                  color: Colors.purple,
+                  color: Color(0xFF9747FF),
                   size: context.iconSize(20),
                 ),
               ),
@@ -286,7 +286,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.purple, width: 2),
+                borderSide: const BorderSide(color: Color(0xFF9747FF), width: 2),
               ),
               contentPadding: context.responsiveValue(
                 mobile: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -530,7 +530,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
       child: ElevatedButton(
         onPressed: _canProceed && !_isUploading ? _proceedToAnalysis : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.purple,
+          backgroundColor: Color(0xFF9747FF),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

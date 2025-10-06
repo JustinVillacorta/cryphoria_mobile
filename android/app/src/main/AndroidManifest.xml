@@ -9,7 +9,7 @@
         android:minSdkVersion="30" />
     
     <application
-        android:label="cryphoria_mobile"
+        android:label="Cryphoria"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

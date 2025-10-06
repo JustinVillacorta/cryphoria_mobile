@@ -294,7 +294,7 @@ class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Contract Setup', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                    Text('AI Analysis', style: TextStyle(fontSize: 12, color: Colors.purple, fontWeight: FontWeight.w600)),
+                    Text('AI Analysis', style: TextStyle(fontSize: 12, color: Color(0xFF9747FF), fontWeight: FontWeight.w500)),
                     Text('Audit Results', style: TextStyle(fontSize: 12, color: Colors.grey)),
                     Text('Assessment', style: TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
@@ -316,7 +316,7 @@ class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.purple[100]!,
+                                  color: Color(0xFFE1BFFF)!,
                                   width: 3,
                                 ),
                               ),
@@ -324,12 +324,12 @@ class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
                                 margin: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.purple[50],
+                                  color: Color(0xFFF3E5FF),
                                 ),
                                 child: const Icon(
                                   Icons.analytics_outlined,
                                   size: 48,
-                                  color: Colors.purple,
+                                  color: Color(0xFF9747FF),
                                 ),
                               ),
                             ),
@@ -340,16 +340,16 @@ class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
                       const Text(
                         'Analyzing Smart Contract',
                         style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black54,
                         ),
                       ),
                       const SizedBox(height: 12),
                       const Text(
                         'Our AI is performing a comprehensive\naudit of your smart contract',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           color: Colors.grey,
                           height: 1.4,
                         ),

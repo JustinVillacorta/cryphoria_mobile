@@ -43,7 +43,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
           elevation: 0,
           flexibleSpace: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   const Expanded(
@@ -79,16 +79,20 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
               ? Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: TextField(
                         decoration: InputDecoration(
                           hintText: 'Search employees...',
                           prefixIcon: const Icon(Icons.search, color: Colors.grey),
                           filled: true,
                           fillColor: Colors.white,
-                          border: OutlineInputBorder(
+                          enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                            borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Color(0xFF9747FF), width: 1.5),
                           ),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
@@ -96,7 +100,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -104,7 +108,6 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                             'Employee Lists',
                             style: TextStyle(
                               fontSize: 18,
-                              fontWeight: FontWeight.w600,
                               color: Colors.black,
                             ),
                           ),
@@ -113,22 +116,22 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Colors.purple.withOpacity(0.1),
+                                color: Color(0xFF9747FF).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.filter_list, color: Colors.purple, size: 16),
+                                  Icon(Icons.filter_list, color: Color(0xFF9747FF), size: 16),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Filter',
-                                    style: TextStyle(color: Colors.purple, fontWeight: FontWeight.w500),
+                                    style: TextStyle(color: Color(0xFF9747FF), fontWeight: FontWeight.w500),
                                   ),
                                   const SizedBox(width: 4),
                                   Icon(
                                     _isFilterExpanded ? Icons.expand_less : Icons.expand_more,
-                                    color: Colors.purple,
+                                    color: Color(0xFF9747FF),
                                     size: 16,
                                   ),
                                 ],
@@ -173,7 +176,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
             width: 160,
             height: 160,
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.1),
+              color: Color(0xFF9747FF).withOpacity(0.1),
               borderRadius: BorderRadius.circular(80),
             ),
             child: Stack(
@@ -187,7 +190,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                     width: 8,
                     height: 8,
                     decoration: const BoxDecoration(
-                      color: Colors.purple,
+                      color: Color(0xFF9747FF),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -199,7 +202,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: Colors.purple.withOpacity(0.5),
+                      color: Color(0xFF9747FF).withOpacity(0.5),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -209,7 +212,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.purple,
+                    color: Color(0xFF9747FF),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -343,10 +346,10 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.purple : Colors.white,
+                        color: isSelected ? Color(0xFF9747FF) : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected ? Colors.purple : Colors.grey.shade300,
+                          color: isSelected ? Color(0xFF9747FF): Colors.grey.shade300,
                         ),
                       ),
                       child: Text(

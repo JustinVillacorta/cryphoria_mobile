@@ -1,6 +1,6 @@
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Invoice/invoice_views/invoice_detail_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Invoice/invoice_detail_screen_view/invoice_detail_screen.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/delete_confirmation_dialog.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/swipable_invoice_card.card.dart';
 import 'package:flutter/material.dart';

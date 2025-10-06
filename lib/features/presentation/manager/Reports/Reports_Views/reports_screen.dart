@@ -17,13 +17,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
   int selectedTabIndex = 0;
   int selectedPeriodIndex = 0;
 
-  final List<String> tabs = ['Financial Statements', 'Payroll Reports', 'Tax Reports'];
+  final List<String> tabs = ['Financial', 'Payroll ', 'Tax '];
   final List<String> periods = ['Daily', 'Weekly', 'Monthly', 'Quarterly'];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -49,7 +49,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -106,14 +106,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           color: isSelected ? const Color(0xFF8B5CF6) : Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                          borderRadius: BorderRadius.circular(50), // smoother radius
+                          border: Border.all(
+                            color: isSelected ? const Color(0xFF8B5CF6) : Colors.grey[300]!,
+                            width: 1.2, // subtle border
+                          ),
                         ),
                         child: Center(
                           child: Text(
@@ -121,7 +118,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : Colors.grey[600],
+                              color: isSelected ? Colors.white : Colors.grey[700],
                             ),
                           ),
                         ),
@@ -130,6 +127,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   );
                 }),
               ),
+
               const SizedBox(height: 24),
 
               // Report Cards Grid
@@ -186,7 +184,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.01),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -518,7 +516,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.01),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -600,7 +598,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.01),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
