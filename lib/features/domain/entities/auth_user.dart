@@ -1,6 +1,6 @@
 class AuthUser {
   final String userId;
-  final String username;
+  final String firstName;
   final String email;
   final String role;
   final String token;
@@ -9,7 +9,7 @@ class AuthUser {
 
   AuthUser({
     required this.userId,
-    required this.username,
+    required this.firstName,
     required this.email,
     required this.role,
     required this.token,
@@ -20,7 +20,7 @@ class AuthUser {
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     return AuthUser(
       userId: json['id']?.toString() ?? json['user_id']?.toString() ?? '',
-      username: json['username']?.toString() ?? json['email']?.toString() ?? '',
+      firstName: json['first_name']?.toString() ?? json['email']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
       role: json['role']?.toString() ?? 'Employee',
       token: json['token']?.toString() ?? '',
@@ -32,7 +32,7 @@ class AuthUser {
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
-      'username': username,
+      'first_name': firstName,
       'email': email,
       'role': role,
       'token': token,

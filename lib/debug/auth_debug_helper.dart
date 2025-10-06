@@ -17,7 +17,7 @@ class AuthDebugHelper {
       
       if (authUser != null) {
         print("🔍 AUTH DEBUG - Found cached user:");
-        print("  - Username: ${authUser.username}");
+        print("  - Email: ${authUser.email}");
         print("  - Token exists: ${authUser.token.isNotEmpty}");
         print("  - Token length: ${authUser.token.length}");
         print("  - Approved: ${authUser.approved}");

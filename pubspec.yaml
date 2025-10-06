@@ -57,11 +57,15 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  video_player: ^2.8.1
   flutter_svg: ^2.0.7
   test: ^1.24.0
   mockito: ^5.4.2
   build_runner: ^2.4.7
   mocktail: ^1.0.1
+  flutter_launcher_icons: ^0.13.1
+
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -78,9 +82,24 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/icons/
+    - assets/icons/logo.png
+    - assets/video/intro.mp4
+    - assets/images/wallet_bg.png
+    - assets/images/wallet_bg2.png
 
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/ic_launcher.png"
+
+
+flutter_native_splash:
+  color: "#000000"  # Just a plain color
+  # Remove the image line completely
+  android_12:
+    color: "#000000"
+    # Remove the image line here too
 
   # To add assets to your application, add an assets section, like this:
   # assets:

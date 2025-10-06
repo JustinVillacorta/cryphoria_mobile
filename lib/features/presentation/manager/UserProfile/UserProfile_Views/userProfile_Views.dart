@@ -28,7 +28,7 @@ class _userProfileState extends ConsumerState<userProfile> {
 
     if (authUser != null) {
       setState(() {
-        _username = authUser.username;
+        _username = authUser.firstName;
         _email = authUser.email;
       });
     }

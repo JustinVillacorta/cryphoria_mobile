@@ -71,12 +71,12 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.purple[50],
+                  color: Color(0xFFF3E5FF),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   Icons.account_balance_wallet,
-                  color: Colors.purple[600],
+                  color: Color(0xFF873FFF),
                   size: 20,
                 ),
               ),
@@ -85,7 +85,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                 'Investment Address Book',
                 style: TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   color: Colors.black87,
                 ),
               ),
@@ -141,7 +141,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         ElevatedButton(
           onPressed: () => _startAddingEntry(),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.purple[600],
+            backgroundColor: Color(0xFF873FFF),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             shape: RoundedRectangleBorder(
@@ -157,7 +157,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                 'Add',
                 style: TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -279,12 +279,12 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.purple[50],
+                    color: Color(0xFFF3E5FF),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     entry['icon'] as IconData,
-                    color: Colors.purple[600],
+                    color: Color(0xFF873FFF),
                     size: 20,
                   ),
                 ),
@@ -316,14 +316,14 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.purple[50],
+                    color: Color(0xFFF3E5FF),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     entry['role'] as String,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.purple[700],
+                      color: Color(0xFF7436FF),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -373,7 +373,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                       _sendEthToEntry(entry);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple[600],
+                      backgroundColor: Color(0xFF873FFF),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -384,7 +384,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
-                        Icon(Icons.arrow_forward, size: 16),
+                        Icon(Icons.send, size: 16),
                         SizedBox(width: 8),
                         Text(
                           'Send ETH',
@@ -589,7 +589,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                 child: ElevatedButton(
                   onPressed: isEditingEntry ? _updateEntry : _addEntry,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple[600],
+                    backgroundColor: Color(0xFF873FFF),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(

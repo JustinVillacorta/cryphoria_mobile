@@ -67,12 +67,12 @@ class LoginViewModel extends ChangeNotifier {
         throw Exception('Saved token does not match current token');
       }
       
-      if (savedUser.username != _authUser?.username) {
+      if (savedUser.firstName != _authUser?.firstName) {
         throw Exception('Saved username does not match current username');
       }
       
       print('✅ LoginViewModel: Authentication persistence verified successfully');
-      print('  - Username: ${savedUser.username}');
+      print('  - Username: ${savedUser.firstName}');
       print('  - Token length: ${savedUser.token.length}');
       print('  - Approved: ${savedUser.approved}');
       

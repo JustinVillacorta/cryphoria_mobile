@@ -239,7 +239,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
                 children: [
                   Text('Contract Setup', style: TextStyle(fontSize: 12, color: Colors.grey)),
                   Text('AI Analysis', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  Text('Audit Results', style: TextStyle(fontSize: 12, color: Colors.purple, fontWeight: FontWeight.w600)),
+                  Text('Audit Results', style: TextStyle(fontSize: 12, color: Color(0xFF9747FF), fontWeight: FontWeight.w600)),
                   Text('Assessment', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 ],
               ),

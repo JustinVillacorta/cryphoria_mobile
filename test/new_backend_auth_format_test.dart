@@ -27,7 +27,7 @@ void main() {
       expect(loginResponse.message, 'Login successful');
       expect(loginResponse.data.userId, '60f0c8b8e4b0c8a9f8e9b9c9');
       expect(loginResponse.data.email, 'test@example.com');
-      expect(loginResponse.data.username, 'test@example.com');
+      expect(loginResponse.data.firstName, 'test@example.com');
       expect(loginResponse.data.role, 'Employee');
       expect(loginResponse.data.token, 'abc123-session-token-xyz789');
       expect(loginResponse.data.approved, true); // Should map from is_verified
@@ -49,7 +49,7 @@ void main() {
 
       expect(authUser.userId, '60f0c8b8e4b0c8a9f8e9b9c9');
       expect(authUser.email, 'test@example.com');
-      expect(authUser.username, 'test@example.com');
+      expect(authUser.firstName, 'test@example.com');
       expect(authUser.role, 'Manager');
       expect(authUser.token, 'session-token-123');
       expect(authUser.approved, false); // Should map from is_verified

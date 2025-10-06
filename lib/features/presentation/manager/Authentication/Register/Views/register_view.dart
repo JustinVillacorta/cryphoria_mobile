@@ -113,7 +113,18 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'I am creating an account as a:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
 
                 // Role Selection Cards
                 Row(
@@ -123,7 +134,6 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                         role: 'Manager',
                         icon: Icons.manage_accounts,
                         title: 'Manager',
-                        subtitle: 'Create invoices, manage employees\nand manage employee workflow.',
                         isSelected: _selectedRole == 'Manager',
                         onTap: () => setState(() => _selectedRole = 'Manager'),
                       ),
@@ -134,7 +144,6 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                         role: 'Employee',
                         icon: Icons.person,
                         title: 'Employee',
-                        subtitle: 'Manage wallets, track\nexpenses, and check payment history.',
                         isSelected: _selectedRole == 'Employee',
                         onTap: () => setState(() => _selectedRole = 'Employee'),
                       ),
@@ -336,7 +345,6 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     required String role,
     required IconData icon,
     required String title,
-    required String subtitle,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -374,15 +382,6 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                 fontWeight: FontWeight.w600,
                 color: isSelected ? const Color(0xFF8B5CF6) : Colors.black87,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.black54,
-              ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
