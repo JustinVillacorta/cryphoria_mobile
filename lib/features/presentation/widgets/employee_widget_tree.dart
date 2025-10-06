@@ -7,18 +7,23 @@ import 'package:cryphoria_mobile/features/presentation/widgets/employee_navbar.d
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-List<Widget> employeePages = [
-  HomeEmployeeScreen(employeeId: 'employee_id'),
-  PayslipScreen(),
-  EmployeeUserProfileScreen(),
-];
-
 class EmployeeWidgetTree extends ConsumerWidget {
   const EmployeeWidgetTree({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPage = ref.watch(selectedEmployeePageProvider);
+    final user = ref.watch(userProvider);
+    
+    // Get the actual user ID from the logged-in user
+    final employeeId = user?.userId ?? 'unknown';
+    
+    // Create employee pages with the actual user ID
+    final employeePages = [
+      HomeEmployeeScreen(employeeId: employeeId),
+      PayslipScreen(),
+      EmployeeUserProfileScreen(),
+    ];
     
     return PopScope(
       canPop: false,
