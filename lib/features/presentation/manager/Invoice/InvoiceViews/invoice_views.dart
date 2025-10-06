@@ -1,8 +1,11 @@
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Invoice/invoice_views/invoice_detail_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/delete_confirmation_dialog.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/swipable_invoice_card.card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 
 class InvoiceScreen extends ConsumerStatefulWidget {
   const InvoiceScreen({super.key});
@@ -177,7 +180,11 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
                       },
                     );
                   },
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF8B5CF6),
+                    ),
+                  ),
                   error: (err, stack) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -211,23 +218,29 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
 
     // Apply search filter
     if (searchQuery.isNotEmpty) {
-      filtered = filtered.where((invoice) =>
-      invoice.clientName.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          invoice.invoiceNumber.toLowerCase().contains(searchQuery.toLowerCase())
-      ).toList();
+      filtered = filtered
+          .where((invoice) =>
+      invoice.clientName
+          .toLowerCase()
+          .contains(searchQuery.toLowerCase()) ||
+          invoice.invoiceNumber
+              .toLowerCase()
+              .contains(searchQuery.toLowerCase()))
+          .toList();
     }
 
     // Apply status filter (match "Paid" with "PAID", "Pending" with "SENT" or "DRAFT")
     if (selectedFilter != 'All') {
       if (selectedFilter == 'Paid') {
-        filtered = filtered.where((invoice) =>
-        invoice.status.toUpperCase() == 'PAID'
-        ).toList();
+        filtered = filtered
+            .where((invoice) => invoice.status.toUpperCase() == 'PAID')
+            .toList();
       } else if (selectedFilter == 'Pending') {
-        filtered = filtered.where((invoice) =>
+        filtered = filtered
+            .where((invoice) =>
         invoice.status.toUpperCase() == 'SENT' ||
-            invoice.status.toUpperCase() == 'DRAFT'
-        ).toList();
+            invoice.status.toUpperCase() == 'DRAFT')
+            .toList();
       }
     }
 
@@ -264,167 +277,91 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
 
   Widget _buildInvoiceCard(Invoice invoice) {
     // Map backend status to display status
-    String displayStatus = invoice.status.toUpperCase() == 'PAID' ? 'Paid' : 'Pending';
+    String displayStatus =
+    invoice.status.toUpperCase() == 'PAID' ? 'Paid' : 'Pending';
 
     // Get first item description or default text
     String description = invoice.items.isNotEmpty
-        ? invoice.items.first.description
+        ? (invoice.items.first.description ?? 'Invoice items')
         : 'Invoice items';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return SwipeableInvoiceCard(
+      invoice: invoice,
+      description: description,
+      displayStatus: displayStatus,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                InvoiceDetailScreen(invoiceId: invoice.invoiceId),
           ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => InvoiceDetailScreen(invoiceId: invoice.invoiceId),
-            ),
-          );
-        },
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        invoice.clientName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: displayStatus == 'Paid'
-                              ? Colors.green[100]
-                              : Colors.orange[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          displayStatus,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: displayStatus == 'Paid'
-                                ? Colors.green[700]
-                                : Colors.orange[700],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    invoice.invoiceNumber,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Date: ${_formatDate(invoice.issueDate)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                      Text(
-                        '${invoice.currency} ${invoice.totalAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          description,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[500],
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => InvoiceDetailScreen(invoiceId: invoice.invoiceId),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF8B5CF6),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Text(
-                            'View Details',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
+      onDelete: () => _handleDeleteInvoice(invoice),
     );
   }
 
-  String _formatDate(String dateStr) {
-    try {
-      final date = DateTime.parse(dateStr);
-      final months = ['January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'];
-      return '${months[date.month - 1]} ${date.day}, ${date.year}';
-    } catch (e) {
-      return dateStr;
+  Future<void> _handleDeleteInvoice(Invoice invoice) async {
+    final confirmed = await DeleteConfirmationDialog.show(
+      context: context,
+      invoiceNumber: invoice.invoiceNumber,
+    );
+
+    if (confirmed == true) {
+      try {
+        // TODO: Implement delete invoice use case
+        // await ref.read(deleteInvoiceProvider(invoice.invoiceId).future);
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: const [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Invoice deleted successfully'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+
+        // Refresh the invoice list
+        // ref.invalidate(invoicesByUserProvider(userId!));
+      } catch (e) {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Failed to delete invoice: $e'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
     }
   }
 
