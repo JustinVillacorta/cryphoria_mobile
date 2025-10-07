@@ -2,7 +2,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/entities/create_payslip_request.dart';
-import '../../../../domain/usecases/get_user_payslips_use_case.dart';
+import '../../../../domain/usecases/payslip/get_user_payslips_use_case.dart';
 import 'payslip_list_state.dart';
 
 class PayslipListViewModel extends StateNotifier<PayslipListState> {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../Reports_ViewModel/portfolio_view_model.dart';
 import '../../../../domain/entities/portfolio.dart';
+import '../../../widgets/excel_export_helper.dart';
 
 class IncomeStatementScreen extends ConsumerStatefulWidget {
   const IncomeStatementScreen({super.key});
@@ -708,27 +709,30 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                 ),
               ),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[200]!),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.download, size: 14, color: Colors.green[600]),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Export to Excel',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.green[600],
+              GestureDetector(
+                onTap: () => _exportToExcel(context, portfolio),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green[200]!),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.download, size: 14, color: Colors.green[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Export to Excel',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green[600],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1115,5 +1119,53 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _exportToExcel(BuildContext context, Portfolio portfolio) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Generate Excel file
+      final filePath = await ExcelExportHelper.exportIncomeStatementToExcel(portfolio);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Excel file saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate Excel file: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }

@@ -5,8 +5,8 @@ import '../../../../domain/entities/payroll_details_response.dart';
 import '../../../../domain/entities/payroll_entry.dart';
 import '../../../../domain/entities/payslip.dart';
 import '../../../../domain/entities/payroll_statistics.dart';
-import '../../../../domain/usecases/get_payroll_details_usecase.dart';
-import '../../../../domain/usecases/get_payroll_entry_details_usecase.dart';
+import '../../../../domain/usecases/payslip/get_payroll_details_usecase.dart';
+import '../../../../domain/usecases/payslip/get_payroll_entry_details_usecase.dart';
 import '../../../../../dependency_injection/riverpod_providers.dart';
 
 // Provider for the use case

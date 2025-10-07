@@ -51,6 +51,7 @@ dependencies:
   pdf: ^3.10.7
   path_provider: ^2.1.1
   open_file: ^3.3.2
+  excel: ^4.0.6
 
 
 

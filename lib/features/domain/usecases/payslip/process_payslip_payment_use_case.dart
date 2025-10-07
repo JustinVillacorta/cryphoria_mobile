@@ -1,6 +1,6 @@
 // lib/features/domain/usecases/process_payslip_payment_use_case.dart
 
-import '../repositories/payslip_repository.dart';
+import '../../repositories/payslip_repository.dart';
 
 class ProcessPayslipPaymentUseCase {
   final PayslipRepository repository;
