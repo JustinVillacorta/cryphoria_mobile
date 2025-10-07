@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ComplianceView/compliance_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
@@ -212,13 +213,15 @@ class _userProfileState extends ConsumerState<userProfile> {
                     _buildMenuItem(
                       context: context,
                       icon: Icons.lock_outline,
-                      title: 'Change Password',
-                      subtitle: 'Update your account password',
+                      title: 'Compliance',
+                      subtitle: 'Manage your compliance documents',
                       iconColor: const Color(0xFF8B5CF6),
                       onTap: () {
-                        // TODO: Implement change password
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Feature coming soon')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ComplianceViewScreen(),
+                          ),
                         );
                       },
                     ),
