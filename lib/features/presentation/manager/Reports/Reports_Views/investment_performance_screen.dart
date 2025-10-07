@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../Reports_ViewModel/portfolio_view_model.dart';
 import '../../../../domain/entities/portfolio.dart';
+import '../../../widgets/excel_export_helper.dart';
+import '../../../widgets/pdf_generation_helper.dart';
 
 class InvestmentPerformanceScreen extends ConsumerStatefulWidget {
   const InvestmentPerformanceScreen({super.key});
@@ -381,8 +383,7 @@ class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerforma
             child: isChartView ? _buildChartView(state.portfolio!) : _buildTableView(state.portfolio!),
           ),
         ],
-      );
-    }
+    );
   }
 
   Widget _buildChartView(Portfolio portfolio) {
@@ -624,7 +625,7 @@ class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerforma
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, portfolio),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.grey[400]!),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -644,7 +645,7 @@ class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerforma
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, portfolio),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -709,27 +710,30 @@ class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerforma
                 ),
               ),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[200]!),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.download, size: 14, color: Colors.green[600]),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Export to Excel',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.green[600],
+              GestureDetector(
+                onTap: () => _exportToExcel(context, portfolio),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green[200]!),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.download, size: 14, color: Colors.green[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Export to Excel',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green[600],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -885,7 +889,7 @@ class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerforma
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, portfolio),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.grey[400]!),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -905,7 +909,7 @@ class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerforma
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, portfolio),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1130,3 +1134,115 @@ class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerforma
       ),
     );
   }
+
+  Future<void> _exportToExcel(BuildContext context, Portfolio portfolio) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Generate Excel file
+      final filePath = await ExcelExportHelper.exportInvestmentPerformanceToExcel(portfolio);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Excel file saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate Excel file: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadPdf(BuildContext context, Portfolio portfolio) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Convert Portfolio to report data format for PDF generation
+      final reportData = {
+        'summary': {
+          'total_value': portfolio.totalValue,
+          'currency': portfolio.currency,
+          'success': portfolio.success,
+        },
+        'holdings': portfolio.breakdown.map((holding) => {
+          'cryptocurrency': holding.cryptocurrency,
+          'amount': holding.amount.abs(),
+          'current_price': holding.currentPrice.abs(),
+          'value': holding.value.abs(),
+        }).toList(),
+      };
+
+      // Generate PDF
+      final filePath = await PdfGenerationHelper.generateInvestmentPerformancePdf(reportData);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate PDF: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+}

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../Reports_ViewModel/cash_flow_view_model.dart';
 import '../../../../domain/entities/cash_flow.dart';
+import '../../../widgets/excel_export_helper.dart';
+import '../../../widgets/pdf_generation_helper.dart';
 
 class CashFlowScreen extends ConsumerStatefulWidget {
   const CashFlowScreen({super.key});
@@ -656,7 +658,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, cashFlow),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -721,27 +723,30 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                 ),
               ),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[200]!),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.download, size: 14, color: Colors.green[600]),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Export to Excel',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.green[600],
+              GestureDetector(
+                onTap: () => _exportToExcel(context, cashFlow),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green[200]!),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.download, size: 14, color: Colors.green[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Export to Excel',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green[600],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1117,5 +1122,123 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _exportToExcel(BuildContext context, CashFlow cashFlow) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Generate Excel file
+      final filePath = await ExcelExportHelper.exportCashFlowToExcel(cashFlow);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Excel file saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate Excel file: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadPdf(BuildContext context, CashFlow cashFlow) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Convert CashFlow to report data format for PDF generation
+      final reportData = {
+        'summary': {
+          'net_cash_from_operations': cashFlow.summary.netCashFromOperations,
+          'net_cash_from_investing': cashFlow.summary.netCashFromInvesting,
+          'net_cash_from_financing': cashFlow.summary.netCashFromFinancing,
+          'net_change_in_cash': cashFlow.summary.netChangeInCash,
+        },
+        'operating_activities': cashFlow.operatingActivities.map((activity) => {
+          'description': activity.description,
+          'amount': activity.amount,
+        }).toList(),
+        'investing_activities': cashFlow.investingActivities.map((activity) => {
+          'description': activity.description,
+          'amount': activity.amount,
+        }).toList(),
+        'financing_activities': cashFlow.financingActivities.map((activity) => {
+          'description': activity.description,
+          'amount': activity.amount,
+        }).toList(),
+      };
+
+      // Generate PDF
+      final filePath = await PdfGenerationHelper.generateCashFlowPdf(reportData);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate PDF: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }

@@ -1,8 +1,8 @@
 // lib/features/domain/usecases/get_user_payslips_use_case.dart
 
-import '../entities/payslip.dart';
-import '../entities/create_payslip_request.dart';
-import '../repositories/payslip_repository.dart';
+import '../../entities/payslip.dart';
+import '../../entities/create_payslip_request.dart';
+import '../../repositories/payslip_repository.dart';
 
 class GetUserPayslipsUseCase {
   final PayslipRepository repository;

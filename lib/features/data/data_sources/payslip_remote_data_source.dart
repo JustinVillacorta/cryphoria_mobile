@@ -3,6 +3,8 @@
 import 'package:dio/dio.dart';
 import '../../domain/entities/create_payslip_request.dart';
 import '../models/payslip_model.dart';
+import '../models/payroll_details_response_model.dart';
+import '../models/payroll_entry_model.dart';
 
 abstract class PayslipRemoteDataSource {
   Future<List<PayslipModel>> getUserPayslips({
@@ -17,6 +19,8 @@ abstract class PayslipRemoteDataSource {
   Future<bool> sendPayslipEmail(String payslipId);
   Future<bool> processPayslipPayment(String payslipId);
   Future<PayslipModel> getPayslipDetails(String payslipId);
+  Future<PayrollDetailsResponseModel> getPayrollDetails();
+  Future<PayrollEntryModel> getPayrollEntryDetails(String entryId);
 }
 
 class PayslipRemoteDataSourceImpl implements PayslipRemoteDataSource {
@@ -288,6 +292,160 @@ class PayslipRemoteDataSourceImpl implements PayslipRemoteDataSource {
     } catch (e) {
       print('Error fetching payslip details: $e');
       throw Exception('Failed to fetch payslip details: $e');
+    }
+  }
+
+  @override
+  Future<PayrollDetailsResponseModel> getPayrollDetails() async {
+    try {
+      print('Fetching payroll details');
+
+      final response = await dio.get(
+        '$baseUrl/api/employee/payroll/details/',
+      );
+
+      print('Payroll details response code: ${response.statusCode}');
+      print('Payroll details response: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        
+        if (responseData is Map<String, dynamic>) {
+          if (responseData['success'] == true) {
+            return PayrollDetailsResponseModel.fromJson(responseData);
+          } else {
+            throw Exception(responseData['error'] ?? 'Failed to fetch payroll details');
+          }
+        } else {
+          throw Exception('Invalid response format');
+        }
+      } else {
+        throw Exception('Failed to fetch payroll details: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print('DioException during payroll details fetch: ${e.message}');
+      
+      String errorMessage = 'Failed to fetch payroll details';
+      if (e.response?.data != null) {
+        final errorData = e.response!.data;
+        if (errorData is Map<String, dynamic>) {
+          errorMessage = errorData['error']?.toString() ?? 
+                        errorData['message']?.toString() ?? 
+                        errorMessage;
+        }
+      }
+      throw Exception(errorMessage);
+    } catch (e) {
+      print('Error fetching payroll details: $e');
+      throw Exception('Failed to fetch payroll details: $e');
+    }
+  }
+
+  @override
+  Future<PayrollEntryModel> getPayrollEntryDetails(String entryId) async {
+    try {
+      print('Fetching payroll entry details for: $entryId');
+
+      final response = await dio.get(
+        '$baseUrl/api/employee/payroll/entry-details/',
+        queryParameters: {'entry_id': entryId},
+      );
+
+      print('Payroll entry details response code: ${response.statusCode}');
+      print('Payroll entry details response: ${response.data}');
+      print('Response data type: ${response.data.runtimeType}');
+      print('Response data length: ${response.data.toString().length}');
+      
+      if (response.data is Map<String, dynamic>) {
+        final responseMap = response.data as Map<String, dynamic>;
+        print('Response keys: ${responseMap.keys.toList()}');
+        print('Response values: ${responseMap.values.map((v) => v.runtimeType).toList()}');
+        
+        // Check for common response patterns
+        if (responseMap.containsKey('success')) {
+          print('Has success field: ${responseMap['success']}');
+        }
+        if (responseMap.containsKey('payroll_entry')) {
+          print('Has payroll_entry field: ${responseMap['payroll_entry'] != null}');
+        }
+        if (responseMap.containsKey('entry')) {
+          print('Has entry field: ${responseMap['entry'] != null}');
+        }
+        if (responseMap.containsKey('data')) {
+          print('Has data field: ${responseMap['data'] != null}');
+        }
+        if (responseMap.containsKey('entry_id')) {
+          print('Has entry_id field: ${responseMap['entry_id']}');
+        }
+        if (responseMap.containsKey('error')) {
+          print('Has error field: ${responseMap['error']}');
+        }
+      }
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        
+        if (responseData is Map<String, dynamic>) {
+          try {
+            // Check if response has success field and payroll_entry field
+            if (responseData['success'] == true && responseData['payroll_entry'] != null) {
+              print('Parsing entry from success.payroll_entry field');
+              return PayrollEntryModel.fromJson(responseData['payroll_entry']);
+            }
+            // Check if response has success field and entry field
+            else if (responseData['success'] == true && responseData['entry'] != null) {
+              print('Parsing entry from success.entry field');
+              return PayrollEntryModel.fromJson(responseData['entry']);
+            }
+            // Check if response has success field and data field
+            else if (responseData['success'] == true && responseData['data'] != null) {
+              print('Parsing entry from success.data field');
+              return PayrollEntryModel.fromJson(responseData['data']);
+            }
+            // Check if response is the entry data directly
+            else if (responseData['entry_id'] != null) {
+              print('Parsing entry directly from response');
+              return PayrollEntryModel.fromJson(responseData);
+            }
+            // Check if response has error field
+            else if (responseData['error'] != null) {
+              print('Response contains error: ${responseData['error']}');
+              throw Exception(responseData['error']);
+            }
+            // Default error
+            else {
+              print('No valid entry data found in response');
+              print('Available fields: ${responseData.keys.toList()}');
+              throw Exception('No valid entry data found in response');
+            }
+          } catch (e) {
+            print('Error parsing PayrollEntryModel: $e');
+            print('Response data that failed to parse: $responseData');
+            rethrow;
+          }
+        } else {
+          print('Response is not a Map<String, dynamic>, it is: ${responseData.runtimeType}');
+          throw Exception('Invalid response format');
+        }
+      } else {
+        throw Exception('Failed to fetch payroll entry details: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print('DioException during payroll entry details fetch: ${e.message}');
+      
+      String errorMessage = 'Failed to fetch payroll entry details';
+      if (e.response?.data != null) {
+        final errorData = e.response!.data;
+        if (errorData is Map<String, dynamic>) {
+          errorMessage = errorData['error']?.toString() ?? 
+                        errorData['message']?.toString() ?? 
+                        errorMessage;
+        }
+      }
+      throw Exception(errorMessage);
+    } catch (e) {
+      print('Error fetching payroll entry details: $e');
+      throw Exception('Failed to fetch payroll entry details: $e');
     }
   }
 }

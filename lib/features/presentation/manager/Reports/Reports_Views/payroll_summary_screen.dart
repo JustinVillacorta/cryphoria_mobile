@@ -4,6 +4,8 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../Payroll/payroll_management_screen.dart';
 import '../Reports_ViewModel/payroll_reports_view_model.dart';
 import '../../../../domain/entities/payslip.dart';
+import '../../../widgets/excel_export_helper.dart';
+import '../../../widgets/pdf_generation_helper.dart';
 
 class PayrollSummaryScreen extends ConsumerStatefulWidget {
   const PayrollSummaryScreen({super.key});
@@ -549,7 +551,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, payslipsResponse),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.grey[400]!),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -571,7 +573,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, payslipsResponse),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -665,27 +667,30 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
                 ),
               ),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[200]!),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.download, size: 14, color: Colors.green[600]),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Export to Excel',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.green[600],
+              GestureDetector(
+                onTap: () => _exportToExcel(context, payslipsResponse),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green[200]!),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.download, size: 14, color: Colors.green[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Export to Excel',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green[600],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -945,4 +950,113 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
     );
   }
 
+  Future<void> _exportToExcel(BuildContext context, PayslipsResponse payslipsResponse) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Generate Excel file
+      final filePath = await ExcelExportHelper.exportPayrollSummaryToExcel(payslipsResponse);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Excel file saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate Excel file: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadPdf(BuildContext context, PayslipsResponse payslipsResponse) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Convert PayslipsResponse to report data format for PDF generation
+      final reportData = {
+        'summary': {
+          'total_employees': payslipsResponse.payslips.length,
+          'total_amount': payslipsResponse.payslips.fold(0.0, (sum, payslip) => sum + payslip.finalNetPay),
+          'currency': 'USD',
+        },
+        'payslips': payslipsResponse.payslips.map((payslip) => {
+          'employee_name': payslip.employeeName ?? 'Unknown',
+          'final_net_pay': payslip.finalNetPay,
+          'tax_deduction': payslip.taxDeduction,
+        }).toList(),
+      };
+
+      // Generate PDF
+      final filePath = await PdfGenerationHelper.generatePayrollSummaryPdf(reportData);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate PDF: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
 }

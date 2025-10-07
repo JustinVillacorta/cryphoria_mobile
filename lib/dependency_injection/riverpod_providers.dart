@@ -47,10 +47,10 @@ import '../features/domain/usecases/Employee_management/get_payslips_usecase.dar
 import '../features/data/data_sources/payslip_remote_data_source.dart';
 import '../features/data/repositories_impl/payslip_repository_impl.dart';
 import '../features/domain/repositories/payslip_repository.dart';
-import '../features/domain/usecases/get_user_payslips_use_case.dart';
-import '../features/domain/usecases/create_payslip_use_case.dart' as payslip_uc;
-import '../features/domain/usecases/generate_payslip_pdf_use_case.dart';
-import '../features/domain/usecases/process_payslip_payment_use_case.dart';
+import '../features/domain/usecases/payslip/get_user_payslips_use_case.dart';
+import '../features/domain/usecases/payslip/create_payslip_use_case.dart' as payslip_uc;
+import '../features/domain/usecases/payslip/generate_payslip_pdf_use_case.dart';
+import '../features/domain/usecases/payslip/process_payslip_payment_use_case.dart';
 import '../features/presentation/manager/Payslip/ViewModels/payslip_list_viewmodel.dart';
 import '../features/presentation/manager/Payslip/ViewModels/payslip_list_state.dart';
 import '../features/presentation/manager/Payslip/ViewModels/create_payslip_viewmodel.dart';
