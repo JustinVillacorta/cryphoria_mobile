@@ -71,6 +71,9 @@ import '../features/domain/usecases/Logout/logout_usecase.dart';
 import '../features/domain/usecases/Register/register_use_case.dart';
 import '../features/domain/usecases/OTP_Verification/verify_otp_use_case.dart';
 import '../features/domain/usecases/OTP_Verification/resend_otp_use_case.dart';
+import '../features/domain/usecases/Forgot_Password/request_password_reset_use_case.dart';
+import '../features/domain/usecases/Forgot_Password/reset_password_use_case.dart';
+import '../features/domain/usecases/Forgot_Password/resend_password_reset_use_case.dart';
 import '../features/domain/usecases/Reports/generate_report_usecase.dart';
 import '../features/domain/usecases/Reports/get_report_status_usecase.dart';
 import '../features/domain/usecases/Reports/get_user_reports_usecase.dart';
@@ -84,6 +87,8 @@ import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_Vi
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import '../features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
 import '../features/presentation/manager/Authentication/OTP_Verification/ViewModel/otp_verification_view_model.dart';
+import '../features/presentation/manager/Authentication/Forgot_Password/ViewModel/forgot_password_request_view_model.dart';
+import '../features/presentation/manager/Authentication/Forgot_Password/ViewModel/forgot_password_confirm_view_model.dart';
 import '../features/presentation/manager/Employee_Management(manager_screens)/employee_viewmodel/employee_viewmodel.dart';
 import '../features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
 
@@ -277,6 +282,18 @@ final resendOTPUseCaseProvider = Provider<ResendOTP>((ref) {
   return ResendOTP(ref.watch(authRepositoryProvider));
 });
 
+final requestPasswordResetUseCaseProvider = Provider<RequestPasswordReset>((ref) {
+  return RequestPasswordReset(ref.watch(authRepositoryProvider));
+});
+
+final resetPasswordUseCaseProvider = Provider<ResetPassword>((ref) {
+  return ResetPassword(ref.watch(authRepositoryProvider));
+});
+
+final resendPasswordResetUseCaseProvider = Provider<ResendPasswordReset>((ref) {
+  return ResendPasswordReset(ref.watch(authRepositoryProvider));
+});
+
 
 final getAllEmployeesUseCaseProvider = Provider<GetAllEmployeesUseCase>((ref) {
   return GetAllEmployeesUseCase(repository: ref.watch(employeeRepositoryProvider));
@@ -362,6 +379,21 @@ final otpVerificationViewModelProvider =
   return OTPVerificationViewModel(
     verifyOTPUseCase: ref.watch(verifyOTPUseCaseProvider),
     resendOTPUseCase: ref.watch(resendOTPUseCaseProvider),
+  );
+});
+
+final forgotPasswordRequestViewModelProvider =
+    ChangeNotifierProvider<ForgotPasswordRequestViewModel>((ref) {
+  return ForgotPasswordRequestViewModel(
+    requestPasswordResetUseCase: ref.watch(requestPasswordResetUseCaseProvider),
+  );
+});
+
+final forgotPasswordConfirmViewModelProvider =
+    ChangeNotifierProvider<ForgotPasswordConfirmViewModel>((ref) {
+  return ForgotPasswordConfirmViewModel(
+    resetPasswordUseCase: ref.watch(resetPasswordUseCaseProvider),
+    resendPasswordResetUseCase: ref.watch(resendPasswordResetUseCaseProvider),
   );
 });
 
