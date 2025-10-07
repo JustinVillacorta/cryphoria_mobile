@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../Reports_ViewModel/portfolio_view_model.dart';
 import '../../../../domain/entities/portfolio.dart';
 import '../../../widgets/excel_export_helper.dart';
+import '../../../widgets/pdf_generation_helper.dart';
 
 class IncomeStatementScreen extends ConsumerStatefulWidget {
   const IncomeStatementScreen({super.key});
@@ -624,7 +625,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, portfolio),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.grey[400]!),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -644,7 +645,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, portfolio),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -895,7 +896,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, portfolio),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.grey[400]!),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -915,7 +916,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, portfolio),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1161,6 +1162,67 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to generate Excel file: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadPdf(BuildContext context, Portfolio portfolio) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Convert Portfolio to report data format for PDF generation
+      final reportData = {
+        'summary': {
+          'total_revenue': portfolio.totalValue.abs(),
+          'total_expenses': 0.0, // Not available in Portfolio entity
+          'net_income': portfolio.totalValue.abs(),
+        },
+        'revenue': portfolio.breakdown.map((holding) => {
+          'name': '${holding.cryptocurrency} Holdings',
+          'amount': holding.value.abs(),
+        }).toList(),
+      };
+
+      // Generate PDF
+      final filePath = await PdfGenerationHelper.generateIncomeStatementPdf(reportData);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate PDF: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),

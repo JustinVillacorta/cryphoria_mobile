@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../Reports_ViewModel/balance_sheet_view_model.dart';
 import '../../../../domain/entities/balance_sheet.dart';
 import '../../../widgets/excel_export_helper.dart';
+import '../../../widgets/pdf_generation_helper.dart';
 
 class BalanceSheetScreen extends ConsumerStatefulWidget {
   const BalanceSheetScreen({super.key});
@@ -739,7 +740,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => _downloadPdf(context, balanceSheet),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1324,6 +1325,75 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to generate Excel file: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadPdf(BuildContext context, BalanceSheet balanceSheet) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Convert BalanceSheet to report data format for PDF generation
+      final reportData = {
+        'summary': {
+          'total_assets': balanceSheet.summary.totalAssets,
+          'total_liabilities': balanceSheet.summary.totalLiabilities,
+          'total_equity': balanceSheet.summary.totalEquity,
+        },
+        'assets': balanceSheet.assets.map((asset) => {
+          'name': asset.name,
+          'amount': asset.amount,
+        }).toList(),
+        'liabilities': balanceSheet.liabilities.map((liability) => {
+          'name': liability.name,
+          'amount': liability.amount,
+        }).toList(),
+        'equity': balanceSheet.equity.map((equity) => {
+          'name': equity.name,
+          'amount': equity.amount,
+        }).toList(),
+      };
+
+      // Generate PDF
+      final filePath = await PdfGenerationHelper.generateBalanceSheetPdf(reportData);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate PDF: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),

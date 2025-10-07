@@ -619,6 +619,276 @@ class PdfGenerationHelper {
     }
   }
   
+  static Future<String> generateIncomeStatementPdf(Map<String, dynamic> reportData) async {
+    final pdf = pw.Document();
+    
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Header(
+                level: 0,
+                child: pw.Text(
+                  'Income Statement',
+                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              
+              // Summary
+              if (reportData['summary'] != null) ...[
+                pw.Text(
+                  'Financial Summary',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text('Total Revenue: \$${reportData['summary']['total_revenue']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Total Expenses: \$${reportData['summary']['total_expenses']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Net Income: \$${reportData['summary']['net_income']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.SizedBox(height: 20),
+              ],
+              
+              // Revenue
+              if (reportData['revenue'] != null) ...[
+                pw.Text(
+                  'Revenue',
+                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Table(
+                  border: pw.TableBorder.all(),
+                  columnWidths: {
+                    0: pw.FlexColumnWidth(2),
+                    1: pw.FlexColumnWidth(1),
+                  },
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Revenue Source', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Amount', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    ...(reportData['revenue'] as List<dynamic>).map((item) => pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(item['name'] ?? ''),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(item['amount'] ?? 0).toStringAsFixed(2)}'),
+                        ),
+                      ],
+                    )).toList(),
+                  ],
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+    
+    return await _savePdf(pdf, 'income_statement');
+  }
+  
+  static Future<String> generateInvestmentPerformancePdf(Map<String, dynamic> reportData) async {
+    final pdf = pw.Document();
+    
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Header(
+                level: 0,
+                child: pw.Text(
+                  'Investment Performance Report',
+                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              
+              // Summary
+              if (reportData['summary'] != null) ...[
+                pw.Text(
+                  'Portfolio Summary',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text('Total Value: \$${reportData['summary']['total_value']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Currency: ${reportData['summary']['currency'] ?? 'USD'}'),
+                pw.Text('Success: ${reportData['summary']['success'] ?? false}'),
+                pw.SizedBox(height: 20),
+              ],
+              
+              // Holdings
+              if (reportData['holdings'] != null) ...[
+                pw.Text(
+                  'Portfolio Holdings',
+                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Table(
+                  border: pw.TableBorder.all(),
+                  columnWidths: {
+                    0: pw.FlexColumnWidth(1),
+                    1: pw.FlexColumnWidth(1),
+                    2: pw.FlexColumnWidth(1),
+                    3: pw.FlexColumnWidth(1),
+                  },
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Crypto', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Amount', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Price', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Value', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    ...(reportData['holdings'] as List<dynamic>).map((holding) => pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(holding['cryptocurrency'] ?? ''),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text((holding['amount'] ?? 0).abs().toStringAsFixed(6)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(holding['current_price'] ?? 0).abs().toStringAsFixed(2)}'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(holding['value'] ?? 0).abs().toStringAsFixed(2)}'),
+                        ),
+                      ],
+                    )).toList(),
+                  ],
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+    
+    return await _savePdf(pdf, 'investment_performance');
+  }
+  
+  static Future<String> generatePayrollSummaryPdf(Map<String, dynamic> reportData) async {
+    final pdf = pw.Document();
+    
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Header(
+                level: 0,
+                child: pw.Text(
+                  'Payroll Summary Report',
+                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              
+              // Summary
+              if (reportData['summary'] != null) ...[
+                pw.Text(
+                  'Payroll Summary',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text('Total Employees: ${reportData['summary']['total_employees'] ?? 0}'),
+                pw.Text('Total Amount: \$${reportData['summary']['total_amount']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Currency: ${reportData['summary']['currency'] ?? 'USD'}'),
+                pw.SizedBox(height: 20),
+              ],
+              
+              // Payslips
+              if (reportData['payslips'] != null) ...[
+                pw.Text(
+                  'Employee Payslips',
+                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Table(
+                  border: pw.TableBorder.all(),
+                  columnWidths: {
+                    0: pw.FlexColumnWidth(2),
+                    1: pw.FlexColumnWidth(1),
+                    2: pw.FlexColumnWidth(1),
+                  },
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Employee', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Net Pay', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Tax', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    ...(reportData['payslips'] as List<dynamic>).map((payslip) => pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(payslip['employee_name'] ?? 'Unknown'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(payslip['final_net_pay'] ?? 0).toStringAsFixed(2)}'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(payslip['tax_deduction'] ?? 0).toStringAsFixed(2)}'),
+                        ),
+                      ],
+                    )).toList(),
+                  ],
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+    
+    return await _savePdf(pdf, 'payroll_summary');
+  }
+  
   static Future<String> _savePdf(pw.Document pdf, String fileName) async {
     final bytes = await pdf.save();
     final directory = await getApplicationDocumentsDirectory();

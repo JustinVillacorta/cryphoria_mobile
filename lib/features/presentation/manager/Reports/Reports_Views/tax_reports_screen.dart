@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../Reports_ViewModel/tax_reports_view_model.dart';
 import '../../../../domain/entities/tax_report.dart';
 import '../../../widgets/excel_export_helper.dart';
+import '../../../widgets/pdf_generation_helper.dart';
 
 class TaxReportsScreen extends ConsumerStatefulWidget {
   const TaxReportsScreen({super.key});
@@ -354,7 +355,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () => _downloadPdf(context, state.taxReport!),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF8B5CF6),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1058,6 +1059,68 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to generate Excel file: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadPdf(BuildContext context, TaxReport taxReport) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Convert TaxReport to report data format for PDF generation
+      final reportData = {
+        'summary': {
+          'total_income': taxReport.summary.totalIncome,
+          'total_deductions': taxReport.summary.totalDeductions,
+          'taxable_income': taxReport.summary.taxableIncome,
+          'total_tax_owed': taxReport.summary.totalTaxOwed,
+        },
+        'categories': taxReport.categories.map((category) => {
+          'name': category.name,
+          'amount': category.amount,
+        }).toList(),
+      };
+
+      // Generate PDF
+      final filePath = await PdfGenerationHelper.generateTaxReportPdf(reportData);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate PDF: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
