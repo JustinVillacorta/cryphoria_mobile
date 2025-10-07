@@ -26,6 +26,16 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<bool> verifyOTP(String email, String code) async {
+    return await remoteDataSource.verifyOTP(email, code);
+  }
+
+  @override
+  Future<void> resendOTP(String email) async {
+    await remoteDataSource.resendOTP(email);
+  }
+
+  @override
   Future<bool> logout() async {
     final success = await remoteDataSource.logout();
     if (success) {

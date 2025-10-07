@@ -69,6 +69,8 @@ import '../features/presentation/manager/Payroll/ViewModel/payroll_view_model.da
 import '../features/domain/usecases/Login/login_usecase.dart';
 import '../features/domain/usecases/Logout/logout_usecase.dart';
 import '../features/domain/usecases/Register/register_use_case.dart';
+import '../features/domain/usecases/OTP_Verification/verify_otp_use_case.dart';
+import '../features/domain/usecases/OTP_Verification/resend_otp_use_case.dart';
 import '../features/domain/usecases/Reports/generate_report_usecase.dart';
 import '../features/domain/usecases/Reports/get_report_status_usecase.dart';
 import '../features/domain/usecases/Reports/get_user_reports_usecase.dart';
@@ -81,6 +83,7 @@ import '../features/presentation/manager/Audit/ViewModels/audit_results_viewmode
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import '../features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
+import '../features/presentation/manager/Authentication/OTP_Verification/ViewModel/otp_verification_view_model.dart';
 import '../features/presentation/manager/Employee_Management(manager_screens)/employee_viewmodel/employee_viewmodel.dart';
 import '../features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
 
@@ -108,7 +111,7 @@ final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
     return 'http://192.168.1.105:8000';
   }
-  return 'http://127.0.0.1:8000';
+  return 'http://192.168.1.105:8000';
 });
 
 final flutterSecureStorageProvider =
@@ -266,6 +269,14 @@ final registerUseCaseProvider = Provider<Register>((ref) {
   return Register(ref.watch(authRepositoryProvider));
 });
 
+final verifyOTPUseCaseProvider = Provider<VerifyOTP>((ref) {
+  return VerifyOTP(ref.watch(authRepositoryProvider));
+});
+
+final resendOTPUseCaseProvider = Provider<ResendOTP>((ref) {
+  return ResendOTP(ref.watch(authRepositoryProvider));
+});
+
 
 final getAllEmployeesUseCaseProvider = Provider<GetAllEmployeesUseCase>((ref) {
   return GetAllEmployeesUseCase(repository: ref.watch(employeeRepositoryProvider));
@@ -343,6 +354,14 @@ final registerViewModelProvider =
     ChangeNotifierProvider<RegisterViewModel>((ref) {
   return RegisterViewModel(
     registerUseCase: ref.watch(registerUseCaseProvider),
+  );
+});
+
+final otpVerificationViewModelProvider =
+    ChangeNotifierProvider<OTPVerificationViewModel>((ref) {
+  return OTPVerificationViewModel(
+    verifyOTPUseCase: ref.watch(verifyOTPUseCaseProvider),
+    resendOTPUseCase: ref.watch(resendOTPUseCaseProvider),
   );
 });
 

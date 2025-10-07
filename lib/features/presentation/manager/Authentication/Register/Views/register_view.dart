@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/OTP_Verification/Views/otp_verification_view.dart';
 
 class RegisterView extends ConsumerStatefulWidget {
   const RegisterView({super.key});
@@ -469,17 +470,21 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
       if (!mounted) return;
       
       if (viewModel.error == null && viewModel.registerResponse != null) {
-        // Registration successful - redirect to login screen
+        // Registration successful - redirect to OTP verification screen
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Please log in.'),
+            content: Text('Registration successful! Please verify your email.'),
             backgroundColor: Colors.green,
           ),
         );
         
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LogIn()),
+          MaterialPageRoute(
+            builder: (context) => OTPVerificationView(
+              email: _emailController.text,
+            ),
+          ),
         );
       } else if (viewModel.error != null) {
         // Show error message - this is already handled by the UI
