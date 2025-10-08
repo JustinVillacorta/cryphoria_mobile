@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'payslip_entry_details_view.dart';
+import 'payslip_details_view.dart';
 import '../providers/payroll_history_providers.dart';
-import '../../../../domain/entities/payroll_entry.dart';
-import '../../../../domain/entities/payroll_details_response.dart';
-import '../../../../domain/entities/payroll_statistics.dart';
+import '../../../../domain/entities/payslip.dart';
 
 class PayslipScreen extends ConsumerWidget {
   const PayslipScreen({Key? key}) : super(key: key);
@@ -96,7 +94,7 @@ class PayslipScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, PayrollDetailsResponse payrollDetails) {
+  Widget _buildContent(BuildContext context, PayslipsResponse payrollDetails) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -106,15 +104,15 @@ class PayslipScreen extends ConsumerWidget {
           Column(
             children: [
               // Summary Cards
-              _buildTotalEntriesCard(payrollDetails.payrollStatistics),
+              _buildTotalEntriesCard(payrollDetails.payslips),
               const SizedBox(height: 12),
-              _buildPaymentStatisticsCard(payrollDetails.payrollStatistics),
+              _buildPaymentStatisticsCard(payrollDetails.payslips),
               const SizedBox(height: 12),
-              _buildFinancialSummaryCard(payrollDetails.payrollStatistics),
+              _buildFinancialSummaryCard(payrollDetails.payslips),
               const SizedBox(height: 16),
               
               // Payslip Entries Table
-              _buildPayslipEntriesCard(context, payrollDetails.payrollEntries),
+              _buildPayslipEntriesCard(context, payrollDetails.payslips),
               const SizedBox(height: 20),
             ],
           ),
@@ -123,7 +121,7 @@ class PayslipScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTotalEntriesCard(PayrollStatistics data) {
+  Widget _buildTotalEntriesCard(List<Payslip> payslips) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -158,7 +156,7 @@ class PayslipScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '${data.totalEntries}',
+                  '${payslips.length}',
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
@@ -185,7 +183,7 @@ class PayslipScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPaymentStatisticsCard(PayrollStatistics data) {
+  Widget _buildPaymentStatisticsCard(List<Payslip> payslips) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -211,11 +209,11 @@ class PayslipScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _buildStatisticRow('Completed', data.completedPayments, Colors.green, Icons.check_circle),
+          _buildStatisticRow('Paid', payslips.where((p) => p.status == 'PAID').length, Colors.green, Icons.check_circle),
           const SizedBox(height: 8),
-          _buildStatisticRow('Scheduled', data.scheduledPayments, Colors.blue, Icons.schedule),
+          _buildStatisticRow('Sent', payslips.where((p) => p.status == 'SENT').length, Colors.blue, Icons.send),
           const SizedBox(height: 8),
-          _buildStatisticRow('Failed', data.failedPayments, Colors.red, Icons.error),
+          _buildStatisticRow('Generated', payslips.where((p) => p.status == 'GENERATED').length, Colors.orange, Icons.schedule),
         ],
       ),
     );
@@ -254,7 +252,7 @@ class PayslipScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFinancialSummaryCard(PayrollStatistics data) {
+  Widget _buildFinancialSummaryCard(List<Payslip> payslips) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -280,9 +278,9 @@ class PayslipScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _buildFinancialRow('Total Paid', '\$${data.totalPaidUsd.toStringAsFixed(2)}', Colors.green, Icons.attach_money),
+          _buildFinancialRow('Total Paid', '\$${payslips.where((p) => p.status == 'PAID').fold(0.0, (sum, p) => sum + p.finalNetPay).toStringAsFixed(2)}', Colors.green, Icons.attach_money),
           const SizedBox(height: 8),
-          _buildFinancialRow('Total Pending', '\$${data.totalPendingUsd.toStringAsFixed(2)}', Colors.orange, Icons.schedule),
+          _buildFinancialRow('Total Pending', '\$${payslips.where((p) => p.status != 'PAID').fold(0.0, (sum, p) => sum + p.finalNetPay).toStringAsFixed(2)}', Colors.orange, Icons.schedule),
         ],
       ),
     );
@@ -321,7 +319,7 @@ class PayslipScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPayslipEntriesCard(BuildContext context, List<PayrollEntry> payrollEntries) {
+  Widget _buildPayslipEntriesCard(BuildContext context, List<Payslip> payslips) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -357,16 +355,16 @@ class PayslipScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           
           // Card-based entries list
-          ...payrollEntries.map((entry) => _buildPayslipEntryCard(context, entry)).toList(),
+          ...payslips.map((payslip) => _buildPayslipEntryCard(context, payslip)).toList(),
         ],
       ),
     );
   }
 
-  Widget _buildPayslipEntryCard(BuildContext context, PayrollEntry entry) {
-    final String date = DateFormat('MMM dd, yyyy').format(entry.paymentDate);
-    final String cryptoAmount = '${entry.amount.toStringAsFixed(4)} ${entry.cryptocurrency ?? 'ETH'}';
-    final String fiatAmount = '\$${entry.usdEquivalent.toStringAsFixed(2)} USD';
+  Widget _buildPayslipEntryCard(BuildContext context, Payslip payslip) {
+    final String date = DateFormat('MMM dd, yyyy').format(payslip.payDate);
+    final String cryptoAmount = '${payslip.cryptoAmount.toStringAsFixed(4)} ${payslip.cryptocurrency ?? 'ETH'}';
+    final String fiatAmount = '\$${payslip.finalNetPay.toStringAsFixed(2)} USD';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -384,10 +382,10 @@ class PayslipScreen extends ConsumerWidget {
       ),
       child: InkWell(
         onTap: () {
-          // Navigate to payslip entry details
+          // Navigate to payslip details
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => PayslipEntryDetailsView(entryId: entry.entryId ?? ''),
+              builder: (context) => PayslipDetailsView(payslipId: payslip.payslipId ?? ''),
             ),
           );
         },
@@ -413,24 +411,24 @@ class PayslipScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(entry.status ?? 'PENDING').withOpacity(0.1),
+                        color: _getStatusColor(payslip.status ?? 'PENDING').withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            _getStatusIcon(entry.status ?? 'PENDING'), 
-                            color: _getStatusColor(entry.status ?? 'PENDING'), 
+                            _getStatusIcon(payslip.status ?? 'PENDING'), 
+                            color: _getStatusColor(payslip.status ?? 'PENDING'), 
                             size: 12
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            (entry.status ?? 'PENDING').toUpperCase(),
+                            (payslip.status ?? 'PENDING').toUpperCase(),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: _getStatusColor(entry.status ?? 'PENDING'),
+                              color: _getStatusColor(payslip.status ?? 'PENDING'),
                             ),
                           ),
                         ],
@@ -438,7 +436,7 @@ class PayslipScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'ID: ${(entry.entryId ?? 'unknown').substring(0, 8)}...',
+                      'ID: ${(payslip.payslipId ?? 'unknown').substring(0, 8)}...',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -481,15 +479,20 @@ class PayslipScreen extends ConsumerWidget {
   Color _getStatusColor(String status) {
     switch (status.toUpperCase()) {
       case 'COMPLETED':
+      case 'PAID':
         return Colors.green;
       case 'SCHEDULED':
+      case 'GENERATED':
         return Colors.blue;
       case 'FAILED':
         return Colors.red;
       case 'PROCESSING':
         return Colors.orange;
       case 'PENDING':
+      case 'DRAFT':
         return Colors.grey;
+      case 'SENT':
+        return Colors.purple;
       default:
         return Colors.grey;
     }
@@ -498,15 +501,20 @@ class PayslipScreen extends ConsumerWidget {
   IconData _getStatusIcon(String status) {
     switch (status.toUpperCase()) {
       case 'COMPLETED':
+      case 'PAID':
         return Icons.check_circle;
       case 'SCHEDULED':
+      case 'GENERATED':
         return Icons.schedule;
       case 'FAILED':
         return Icons.error;
       case 'PROCESSING':
         return Icons.hourglass_empty;
       case 'PENDING':
+      case 'DRAFT':
         return Icons.schedule;
+      case 'SENT':
+        return Icons.send;
       default:
         return Icons.help;
     }

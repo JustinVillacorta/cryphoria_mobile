@@ -1,4 +1,3 @@
-import 'package:cryphoria_mobile/features/data/models/invoice_model.dart';
 import 'package:dio/dio.dart';
 import '../../domain/entities/invoice.dart';
 
@@ -8,11 +7,8 @@ class InvoiceRemoteDataSource {
 
   Future<List<Invoice>> getUserInvoices(String userId) async {
     try {
-      // Use the existing /api/invoices/list/ endpoint with query parameter
-      final response = await dio.get(
-        '/api/invoices/list/',
-        queryParameters: {'user_id': userId},
-      );
+      // Use the existing /api/invoices/list/ endpoint - returns invoices for authenticated user
+      final response = await dio.get('/api/invoices/list/');
 
       final data = response.data;
 

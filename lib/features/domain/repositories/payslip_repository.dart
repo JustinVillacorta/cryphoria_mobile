@@ -2,7 +2,6 @@
 
 import '../entities/payslip.dart';
 import '../entities/create_payslip_request.dart';
-import '../entities/payroll_details_response.dart';
 import '../entities/payroll_entry.dart';
 
 abstract class PayslipRepository {
@@ -30,7 +29,7 @@ abstract class PayslipRepository {
   Future<Payslip> getPayslipDetails(String payslipId);
 
   /// Get payroll details including statistics and entries
-  Future<PayrollDetailsResponse> getPayrollDetails();
+  Future<PayslipsResponse> getPayrollDetails();
 
   /// Get detailed payroll entry information
   Future<PayrollEntry> getPayrollEntryDetails(String entryId);

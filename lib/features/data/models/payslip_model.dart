@@ -26,6 +26,8 @@ class PayslipModel extends Payslip {
     required super.retirementDeduction,
     required super.otherDeductions,
     required super.totalDeductions,
+    required super.grossAmount,
+    required super.netAmount,
     required super.finalNetPay,
     super.cryptocurrency,
     required super.cryptoAmount,
@@ -36,6 +38,13 @@ class PayslipModel extends Payslip {
     required super.issuedAt,
     super.paymentProcessed,
     super.pdfGenerated,
+    super.taxBreakdown,
+    super.taxDeductions,
+    required super.totalTaxDeducted,
+    super.taxRatesApplied,
+    super.taxConfigSource,
+    super.pdfGeneratedAt,
+    super.sentAt,
   });
 
       factory PayslipModel.fromJson(Map<String, dynamic> json) {
@@ -127,6 +136,8 @@ class PayslipModel extends Payslip {
             retirementDeduction: (json['retirement_deduction'] as num?)?.toDouble() ?? 0.0,
             otherDeductions: (json['other_deductions'] as num?)?.toDouble() ?? 0.0,
             totalDeductions: (json['total_deductions'] as num?)?.toDouble() ?? 0.0,
+            grossAmount: (json['gross_amount'] as num?)?.toDouble() ?? 0.0,
+            netAmount: (json['net_amount'] as num?)?.toDouble() ?? 0.0,
             finalNetPay: (json['final_net_pay'] as num?)?.toDouble() ?? 0.0,
             cryptocurrency: json['cryptocurrency'] as String?,
             cryptoAmount: (json['crypto_amount'] as num?)?.toDouble() ?? 0.0,
@@ -137,6 +148,17 @@ class PayslipModel extends Payslip {
             issuedAt: DateTime.parse(json['issued_at'] as String? ?? DateTime.now().toIso8601String()),
             paymentProcessed: json['payment_processed'] as bool?,
             pdfGenerated: json['pdf_generated'] as bool?,
+            taxBreakdown: json['tax_breakdown'] as Map<String, dynamic>?,
+            taxDeductions: json['tax_deductions'] as Map<String, dynamic>?,
+            totalTaxDeducted: (json['total_tax_deducted'] as num?)?.toDouble() ?? 0.0,
+            taxRatesApplied: json['tax_rates_applied'] as Map<String, dynamic>?,
+            taxConfigSource: json['tax_config_source'] as String?,
+            pdfGeneratedAt: json['pdf_generated_at'] != null 
+                ? DateTime.parse(json['pdf_generated_at'] as String) 
+                : null,
+            sentAt: json['sent_at'] != null 
+                ? DateTime.parse(json['sent_at'] as String) 
+                : null,
           );
           
           print("✅ Successfully parsed payslip: ${payslip.employeeName}");
@@ -214,6 +236,8 @@ class PayslipModel extends Payslip {
       retirementDeduction: retirementDeduction,
       otherDeductions: otherDeductions,
       totalDeductions: totalDeductions,
+      grossAmount: grossAmount,
+      netAmount: netAmount,
       finalNetPay: finalNetPay,
       cryptocurrency: cryptocurrency,
       cryptoAmount: cryptoAmount,
@@ -224,6 +248,13 @@ class PayslipModel extends Payslip {
       issuedAt: issuedAt,
       paymentProcessed: paymentProcessed,
       pdfGenerated: pdfGenerated,
+      taxBreakdown: taxBreakdown,
+      taxDeductions: taxDeductions,
+      totalTaxDeducted: totalTaxDeducted,
+      taxRatesApplied: taxRatesApplied,
+      taxConfigSource: taxConfigSource,
+      pdfGeneratedAt: pdfGeneratedAt,
+      sentAt: sentAt,
     );
   }
 }
@@ -232,6 +263,7 @@ class PayslipsResponseModel extends PayslipsResponse {
   const PayslipsResponseModel({
     required super.success,
     required super.payslips,
+    required super.totalCount,
   });
 
       factory PayslipsResponseModel.fromJson(Map<String, dynamic> json) {
@@ -246,6 +278,7 @@ class PayslipsResponseModel extends PayslipsResponse {
             payslips: (json['payslips'] as List<dynamic>)
                 .map((e) => PayslipModel.fromJson(e as Map<String, dynamic>))
                 .toList(),
+            totalCount: json['total_count'] as int? ?? 0,
           );
           
           print("✅ Successfully parsed PayslipsResponse with ${response.payslips.length} payslips");
@@ -269,6 +302,7 @@ class PayslipsResponseModel extends PayslipsResponse {
     return PayslipsResponse(
       success: success,
       payslips: payslips.map((e) => (e as PayslipModel).toEntity()).toList(),
+      totalCount: totalCount,
     );
   }
 }

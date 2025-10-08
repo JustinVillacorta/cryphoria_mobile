@@ -282,7 +282,7 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
 
     // Get first item description or default text
     String description = invoice.items.isNotEmpty
-        ? (invoice.items.first.description ?? 'Invoice items')
+        ? invoice.items.first.description
         : 'Invoice items';
 
     return SwipeableInvoiceCard(

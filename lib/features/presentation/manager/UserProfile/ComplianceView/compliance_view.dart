@@ -144,7 +144,7 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+            const Text(
                 'My Documents',
                 style: TextStyle(
                   fontSize: 18,

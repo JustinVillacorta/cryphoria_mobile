@@ -1,5 +1,4 @@
 import 'package:cryphoria_mobile/features/presentation/onboarding_screen/onboarding_screen.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 

@@ -1,6 +1,5 @@
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_view/home_employee_view.dart';
 
 class SalaryTransactionsScreen extends StatefulWidget {
   const SalaryTransactionsScreen({Key? key}) : super(key: key);

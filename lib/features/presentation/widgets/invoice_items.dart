@@ -141,16 +141,14 @@ class InvoiceItemsWidget extends StatelessWidget {
                               color: Colors.black87,
                             ),
                           ),
-                          if (item.description != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              item.description!,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
+                          const SizedBox(height: 4),
+                          Text(
+                            item.description,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ),

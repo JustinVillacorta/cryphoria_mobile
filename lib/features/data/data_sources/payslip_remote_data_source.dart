@@ -2,8 +2,8 @@
 
 import 'package:dio/dio.dart';
 import '../../domain/entities/create_payslip_request.dart';
+import '../../domain/entities/payslip.dart';
 import '../models/payslip_model.dart';
-import '../models/payroll_details_response_model.dart';
 import '../models/payroll_entry_model.dart';
 
 abstract class PayslipRemoteDataSource {
@@ -19,7 +19,7 @@ abstract class PayslipRemoteDataSource {
   Future<bool> sendPayslipEmail(String payslipId);
   Future<bool> processPayslipPayment(String payslipId);
   Future<PayslipModel> getPayslipDetails(String payslipId);
-  Future<PayrollDetailsResponseModel> getPayrollDetails();
+  Future<PayslipsResponse> getPayrollDetails();
   Future<PayrollEntryModel> getPayrollEntryDetails(String entryId);
 }
 
@@ -296,7 +296,7 @@ class PayslipRemoteDataSourceImpl implements PayslipRemoteDataSource {
   }
 
   @override
-  Future<PayrollDetailsResponseModel> getPayrollDetails() async {
+  Future<PayslipsResponse> getPayrollDetails() async {
     try {
       print('Fetching payroll details');
 
@@ -312,7 +312,7 @@ class PayslipRemoteDataSourceImpl implements PayslipRemoteDataSource {
         
         if (responseData is Map<String, dynamic>) {
           if (responseData['success'] == true) {
-            return PayrollDetailsResponseModel.fromJson(responseData);
+            return PayslipsResponse.fromJson(responseData);
           } else {
             throw Exception(responseData['error'] ?? 'Failed to fetch payroll details');
           }

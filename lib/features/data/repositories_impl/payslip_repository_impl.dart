@@ -2,7 +2,6 @@
 
 import '../../domain/entities/payslip.dart';
 import '../../domain/entities/create_payslip_request.dart';
-import '../../domain/entities/payroll_details_response.dart';
 import '../../domain/entities/payroll_entry.dart';
 import '../../domain/repositories/payslip_repository.dart';
 import '../data_sources/payslip_remote_data_source.dart';
@@ -66,10 +65,10 @@ class PayslipRepositoryImpl implements PayslipRepository {
   }
 
   @override
-  Future<PayrollDetailsResponse> getPayrollDetails() async {
+  Future<PayslipsResponse> getPayrollDetails() async {
     try {
       final response = await remoteDataSource.getPayrollDetails();
-      return response.toEntity();
+      return response;
     } catch (e) {
       throw Exception('Failed to load payroll details: $e');
     }

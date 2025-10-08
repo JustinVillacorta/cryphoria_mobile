@@ -497,15 +497,20 @@ class PayslipEntryDetailsView extends ConsumerWidget {
   Color _getStatusColor(String status) {
     switch (status.toUpperCase()) {
       case 'COMPLETED':
+      case 'PAID':
         return Colors.green;
       case 'SCHEDULED':
+      case 'GENERATED':
         return Colors.blue;
       case 'FAILED':
         return Colors.red;
       case 'PROCESSING':
         return Colors.orange;
       case 'PENDING':
+      case 'DRAFT':
         return Colors.grey;
+      case 'SENT':
+        return Colors.purple;
       default:
         return Colors.grey;
     }
@@ -514,15 +519,20 @@ class PayslipEntryDetailsView extends ConsumerWidget {
   IconData _getStatusIcon(String status) {
     switch (status.toUpperCase()) {
       case 'COMPLETED':
+      case 'PAID':
         return Icons.check_circle;
       case 'SCHEDULED':
+      case 'GENERATED':
         return Icons.schedule;
       case 'FAILED':
         return Icons.error;
       case 'PROCESSING':
         return Icons.hourglass_empty;
       case 'PENDING':
+      case 'DRAFT':
         return Icons.schedule;
+      case 'SENT':
+        return Icons.send;
       default:
         return Icons.help;
     }

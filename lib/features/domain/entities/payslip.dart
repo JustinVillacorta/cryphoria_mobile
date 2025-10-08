@@ -125,6 +125,8 @@ class Payslip {
   final double retirementDeduction;
   final double otherDeductions;
   final double totalDeductions;
+  final double grossAmount;
+  final double netAmount;
   final double finalNetPay;
   final String? cryptocurrency;
   final double cryptoAmount;
@@ -135,6 +137,13 @@ class Payslip {
   final DateTime issuedAt;
   final bool? paymentProcessed;
   final bool? pdfGenerated;
+  final Map<String, dynamic>? taxBreakdown;
+  final Map<String, dynamic>? taxDeductions;
+  final double totalTaxDeducted;
+  final Map<String, dynamic>? taxRatesApplied;
+  final String? taxConfigSource;
+  final DateTime? pdfGeneratedAt;
+  final DateTime? sentAt;
 
   const Payslip({
     this.id,
@@ -161,6 +170,8 @@ class Payslip {
     required this.retirementDeduction,
     required this.otherDeductions,
     required this.totalDeductions,
+    required this.grossAmount,
+    required this.netAmount,
     required this.finalNetPay,
     this.cryptocurrency,
     required this.cryptoAmount,
@@ -171,44 +182,64 @@ class Payslip {
     required this.issuedAt,
     this.paymentProcessed,
     this.pdfGenerated,
+    this.taxBreakdown,
+    this.taxDeductions,
+    required this.totalTaxDeducted,
+    this.taxRatesApplied,
+    this.taxConfigSource,
+    this.pdfGeneratedAt,
+    this.sentAt,
   });
 
   factory Payslip.fromJson(Map<String, dynamic> json) {
     return Payslip(
-      id: json['_id'] as String,
-      payslipId: json['payslip_id'] as String,
-      payslipNumber: json['payslip_number'] as String,
-      userId: json['user_id'] as String,
-      employeeId: json['employee_id'] as String,
-      employeeName: json['employee_name'] as String,
-      employeeEmail: json['employee_email'] as String,
+      id: json['_id'] as String?,
+      payslipId: json['payslip_id'] as String?,
+      payslipNumber: json['payslip_number'] as String?,
+      userId: json['user_id'] as String?,
+      employeeId: json['employee_id'] as String?,
+      employeeName: json['employee_name'] as String?,
+      employeeEmail: json['employee_email'] as String?,
       employeeWallet: json['employee_wallet'] as String?,
       department: json['department'] as String?,
       position: json['position'] as String?,
-      payPeriodStart: DateTime.parse(json['pay_period_start'] as String),
-      payPeriodEnd: DateTime.parse(json['pay_period_end'] as String),
-      payDate: DateTime.parse(json['pay_date'] as String),
-      baseSalary: (json['base_salary'] as num).toDouble(),
+      payPeriodStart: DateTime.parse(json['pay_period_start'] as String? ?? DateTime.now().toIso8601String()),
+      payPeriodEnd: DateTime.parse(json['pay_period_end'] as String? ?? DateTime.now().toIso8601String()),
+      payDate: DateTime.parse(json['pay_date'] as String? ?? DateTime.now().toIso8601String()),
+      baseSalary: (json['base_salary'] as num?)?.toDouble() ?? 0.0,
       salaryCurrency: json['salary_currency'] as String?,
-      overtimePay: (json['overtime_pay'] as num).toDouble(),
-      bonus: (json['bonus'] as num).toDouble(),
-      allowances: (json['allowances'] as num).toDouble(),
-      totalEarnings: (json['total_earnings'] as num).toDouble(),
-      taxDeduction: (json['tax_deduction'] as num).toDouble(),
-      insuranceDeduction: (json['insurance_deduction'] as num).toDouble(),
-      retirementDeduction: (json['retirement_deduction'] as num).toDouble(),
-      otherDeductions: (json['other_deductions'] as num).toDouble(),
-      totalDeductions: (json['total_deductions'] as num).toDouble(),
-      finalNetPay: (json['final_net_pay'] as num).toDouble(),
+      overtimePay: (json['overtime_pay'] as num?)?.toDouble() ?? 0.0,
+      bonus: (json['bonus'] as num?)?.toDouble() ?? 0.0,
+      allowances: (json['allowances'] as num?)?.toDouble() ?? 0.0,
+      totalEarnings: (json['total_earnings'] as num?)?.toDouble() ?? 0.0,
+      taxDeduction: (json['tax_deduction'] as num?)?.toDouble() ?? 0.0,
+      insuranceDeduction: (json['insurance_deduction'] as num?)?.toDouble() ?? 0.0,
+      retirementDeduction: (json['retirement_deduction'] as num?)?.toDouble() ?? 0.0,
+      otherDeductions: (json['other_deductions'] as num?)?.toDouble() ?? 0.0,
+      totalDeductions: (json['total_deductions'] as num?)?.toDouble() ?? 0.0,
+      grossAmount: (json['gross_amount'] as num?)?.toDouble() ?? 0.0,
+      netAmount: (json['net_amount'] as num?)?.toDouble() ?? 0.0,
+      finalNetPay: (json['final_net_pay'] as num?)?.toDouble() ?? 0.0,
       cryptocurrency: json['cryptocurrency'] as String?,
-      cryptoAmount: (json['crypto_amount'] as num).toDouble(),
-      usdEquivalent: (json['usd_equivalent'] as num).toDouble(),
+      cryptoAmount: (json['crypto_amount'] as num?)?.toDouble() ?? 0.0,
+      usdEquivalent: (json['usd_equivalent'] as num?)?.toDouble() ?? 0.0,
       status: json['status'] as String?,
       notes: json['notes'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      issuedAt: DateTime.parse(json['issued_at'] as String),
+      createdAt: DateTime.parse(json['created_at'] as String? ?? DateTime.now().toIso8601String()),
+      issuedAt: DateTime.parse(json['issued_at'] as String? ?? DateTime.now().toIso8601String()),
       paymentProcessed: json['payment_processed'] as bool?,
       pdfGenerated: json['pdf_generated'] as bool?,
+      taxBreakdown: json['tax_breakdown'] as Map<String, dynamic>?,
+      taxDeductions: json['tax_deductions'] as Map<String, dynamic>?,
+      totalTaxDeducted: (json['total_tax_deducted'] as num?)?.toDouble() ?? 0.0,
+      taxRatesApplied: json['tax_rates_applied'] as Map<String, dynamic>?,
+      taxConfigSource: json['tax_config_source'] as String?,
+      pdfGeneratedAt: json['pdf_generated_at'] != null 
+          ? DateTime.parse(json['pdf_generated_at'] as String) 
+          : null,
+      sentAt: json['sent_at'] != null 
+          ? DateTime.parse(json['sent_at'] as String) 
+          : null,
     );
   }
 
@@ -240,6 +271,8 @@ class Payslip {
       'retirement_deduction': retirementDeduction,
       'other_deductions': otherDeductions,
       'total_deductions': totalDeductions,
+      'gross_amount': grossAmount,
+      'net_amount': netAmount,
       'final_net_pay': finalNetPay,
       'cryptocurrency': cryptocurrency,
       'crypto_amount': cryptoAmount,
@@ -250,6 +283,13 @@ class Payslip {
       'issued_at': issuedAt.toIso8601String(),
       'payment_processed': paymentProcessed,
       'pdf_generated': pdfGenerated,
+      'tax_breakdown': taxBreakdown,
+      'tax_deductions': taxDeductions,
+      'total_tax_deducted': totalTaxDeducted,
+      'tax_rates_applied': taxRatesApplied,
+      'tax_config_source': taxConfigSource,
+      'pdf_generated_at': pdfGeneratedAt?.toIso8601String(),
+      'sent_at': sentAt?.toIso8601String(),
     };
   }
 }
@@ -257,10 +297,12 @@ class Payslip {
 class PayslipsResponse {
   final bool success;
   final List<Payslip> payslips;
+  final int totalCount;
 
   const PayslipsResponse({
     required this.success,
     required this.payslips,
+    required this.totalCount,
   });
 
   factory PayslipsResponse.fromJson(Map<String, dynamic> json) {
@@ -269,6 +311,7 @@ class PayslipsResponse {
       payslips: (json['payslips'] as List<dynamic>)
           .map((e) => Payslip.fromJson(e as Map<String, dynamic>))
           .toList(),
+      totalCount: json['total_count'] as int? ?? 0,
     );
   }
 
@@ -276,6 +319,7 @@ class PayslipsResponse {
     return {
       'success': success,
       'payslips': payslips.map((e) => e.toJson()).toList(),
+      'total_count': totalCount,
     };
   }
 }

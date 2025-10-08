@@ -1,4 +1,3 @@
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_wallet_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
@@ -16,17 +15,11 @@ class HomeView extends ConsumerStatefulWidget {
 
 class _HomeViewState extends ConsumerState<HomeView> {
   late ScrollController _scrollController;
-  double _scrollOffset = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController()
-      ..addListener(() {
-        setState(() {
-          _scrollOffset = _scrollController.offset;
-        });
-      });
+    _scrollController = ScrollController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final walletService = ref.read(walletServiceProvider);

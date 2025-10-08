@@ -1,7 +1,6 @@
 import 'package:cryphoria_mobile/features/presentation/splash_screen/splash_screen_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

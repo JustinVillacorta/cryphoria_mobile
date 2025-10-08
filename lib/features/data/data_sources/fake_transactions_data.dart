@@ -156,7 +156,7 @@ class FakeTransactionsDataSource {
     if (_ethPaymentService != null) {
       try {
         final ethTransactions =
-            await _ethPaymentService!.getRecentPaymentTransactions(limit: 2);
+            await _ethPaymentService.getRecentPaymentTransactions(limit: 2);
         allTransactions.addAll(ethTransactions);
       } catch (e) {
         print('⚠️ Could not fetch ETH sent transactions: $e');
@@ -175,21 +175,4 @@ class FakeTransactionsDataSource {
     return allTransactions.take(limit).toList();
   }
 
-  /// Format transaction timestamp for display
-  String _formatTransactionTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
-    }
-  }
 }

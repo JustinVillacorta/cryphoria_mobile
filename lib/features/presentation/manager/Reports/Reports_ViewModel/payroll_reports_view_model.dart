@@ -89,6 +89,8 @@ class PayrollReportsViewModel extends StateNotifier<PayrollReportsState> {
                 retirementDeduction: 200.0,
                 otherDeductions: 100.0,
                 totalDeductions: 1600.0,
+                grossAmount: 6700.0,
+                netAmount: 5100.0,
                 finalNetPay: 5100.0,
                 cryptoAmount: 0.1,
                 usdEquivalent: 5100.0,
@@ -98,6 +100,7 @@ class PayrollReportsViewModel extends StateNotifier<PayrollReportsState> {
                 issuedAt: DateTime.now(),
                 paymentProcessed: true,
                 pdfGenerated: true,
+                totalTaxDeducted: 1600.0,
               ),
               Payslip(
                 id: 'sample_2',
@@ -122,6 +125,8 @@ class PayrollReportsViewModel extends StateNotifier<PayrollReportsState> {
                 retirementDeduction: 250.0,
                 otherDeductions: 0.0,
                 totalDeductions: 1800.0,
+                grossAmount: 6800.0,
+                netAmount: 5000.0,
                 finalNetPay: 5000.0,
                 cryptoAmount: 0.08,
                 usdEquivalent: 5000.0,
@@ -131,8 +136,10 @@ class PayrollReportsViewModel extends StateNotifier<PayrollReportsState> {
                 issuedAt: DateTime.now(),
                 paymentProcessed: true,
                 pdfGenerated: true,
+                totalTaxDeducted: 1800.0,
               ),
             ],
+            totalCount: 2,
           );
           
           state = state.copyWith(
