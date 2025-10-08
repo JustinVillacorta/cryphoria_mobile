@@ -30,7 +30,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
     final portfolioState = ref.watch(portfolioViewModelProvider);
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFFF8F9FA),
         elevation: 0,
@@ -156,233 +156,237 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
       );
     }
 
-    return Column(
-      children: [
-        // Professional Header
-        Container(
-          margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF3B82F6).withOpacity(0.1),
-                const Color(0xFF8B5CF6).withOpacity(0.1),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: [
+          // Header container
+          Container(
+            margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[200]!, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
               ],
             ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFF3B82F6).withOpacity(0.2),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF3B82F6).withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3B82F6).withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.bar_chart,
+                        color: Color(0xFF3B82F6),
+                        size: 24,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.bar_chart,
-                      color: Color(0xFF3B82F6),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Income Statement',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Revenue and expenses as of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _buildMetricCard(
-                    'Revenue',
-                    '\$${state.portfolio!.totalValue.abs().toStringAsFixed(2)}',
-                    const Color(0xFF10B981),
-                    Icons.trending_up,
-                  ),
-                  const SizedBox(width: 12),
-                  _buildMetricCard(
-                    'Expenses',
-                    '\$0.00',
-                    const Color(0xFFEF4444),
-                    Icons.trending_down,
-                  ),
-                  const SizedBox(width: 12),
-                  _buildMetricCard(
-                    'Net Income',
-                    '\$${state.portfolio!.totalValue.abs().toStringAsFixed(2)}',
-                    const Color(0xFF3B82F6),
-                    Icons.account_balance_wallet,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        // Professional View Toggle
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          height: 52,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.grey[200]!,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => isChartView = true),
-                  child: Container(
-                    margin: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      gradient: isChartView 
-                        ? const LinearGradient(
-                            colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
-                      color: isChartView ? null : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: isChartView ? [
-                        BoxShadow(
-                          color: const Color(0xFF3B82F6).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ] : null,
-                    ),
-                    child: Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.bar_chart,
-                            size: 18,
-                            color: isChartView ? Colors.white : Colors.grey[600],
+                          const Text(
+                            'Income Statement',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(height: 4),
                           Text(
-                            'Chart View',
+                            'Revenue and expenses as of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[600],
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMetricCard(
+                        'Revenue',
+                        '\$${state.portfolio!.totalValue.abs().toStringAsFixed(2)}',
+                        const Color(0xFF10B981),
+                        Icons.trending_up,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildMetricCard(
+                        'Expenses',
+                        '\$0.00',
+                        const Color(0xFFEF4444),
+                        Icons.trending_down,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMetricCard(
+                        'Net Income',
+                        '\$${state.portfolio!.totalValue.abs().toStringAsFixed(2)}',
+                        const Color(0xFF3B82F6),
+                        Icons.account_balance_wallet,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // View toggle (unchanged layout but kept inside scroll)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[200]!, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => isChartView = true),
+                    child: Container(
+                      margin: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: isChartView
+                            ? const LinearGradient(
+                                colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : null,
+                        color: isChartView ? null : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: isChartView
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF3B82F6).withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.bar_chart,
+                              size: 18,
                               color: isChartView ? Colors.white : Colors.grey[600],
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              'Chart View',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isChartView ? Colors.white : Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => isChartView = false),
-                  child: Container(
-                    margin: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      gradient: !isChartView 
-                        ? const LinearGradient(
-                            colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
-                      color: !isChartView ? null : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: !isChartView ? [
-                        BoxShadow(
-                          color: const Color(0xFF3B82F6).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ] : null,
-                    ),
-                    child: Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.table_chart,
-                            size: 18,
-                            color: !isChartView ? Colors.white : Colors.grey[600],
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Table View',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => isChartView = false),
+                    child: Container(
+                      margin: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: !isChartView
+                            ? const LinearGradient(
+                                colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : null,
+                        color: !isChartView ? null : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: !isChartView
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF3B82F6).withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.table_chart,
+                              size: 18,
                               color: !isChartView ? Colors.white : Colors.grey[600],
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              'Table View',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: !isChartView ? Colors.white : Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
 
-        const SizedBox(height: 15),
+          const SizedBox(height: 15),
 
-        // Content
-        Expanded(
-          child: isChartView ? _buildChartView(state.portfolio!) : _buildTableView(state.portfolio!),
-        ),
-      ],
+          // Content (chart or table)
+          isChartView ? _buildChartView(state.portfolio!) : _buildTableView(state.portfolio!),
+        ],
+      ),
     );
   }
 
@@ -627,7 +631,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                 child: OutlinedButton(
                   onPressed: () => _downloadPdf(context, portfolio),
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey[400]!),
+                    side: BorderSide(color: const Color(0xFF8B5CF6)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -636,7 +640,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                   child: const Text(
                     'Close',
                     style: TextStyle(
-                      color: Colors.black87,
+                      color: Color(0xFF8B5CF6),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -715,21 +719,21 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.green[50],
+                    color: const Color(0xFF8B5CF6).withOpacity(0.08),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green[200]!),
+                    border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.download, size: 14, color: Colors.green[600]),
-                      const SizedBox(width: 6),
+                    children: const [
+                      Icon(Icons.download, size: 14, color: Color(0xFF8B5CF6)),
+                      SizedBox(width: 6),
                       Text(
                         'Export to Excel',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: Colors.green[600],
+                          color: Color(0xFF8B5CF6),
                         ),
                       ),
                     ],
@@ -1064,60 +1068,65 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
   }
 
   Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 0.8,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  icon,
-                  color: color,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[600],
-                    ),
-                    overflow: TextOverflow.ellipsis,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: color,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(height: 8),
-            Text(
+            child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: color,
+                color: Colors.black,
               ),
               overflow: TextOverflow.ellipsis,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

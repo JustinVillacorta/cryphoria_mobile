@@ -4,7 +4,6 @@ import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/quick_actions.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/recent_transactions.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/revenue_chart.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -118,7 +117,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const WalletCard(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
                   QuickActions(
                     onPaymentSuccess: () {
                       walletNotifier.refreshTransactions();
@@ -126,8 +125,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   ),
                   const SizedBox(height: 24),
                   const RecentTransactions(),
-                  const SizedBox(height: 24),
-                  const RevenueChart(),
+                  // RevenueChart removed from home view per request
                 ],
               ),
             );

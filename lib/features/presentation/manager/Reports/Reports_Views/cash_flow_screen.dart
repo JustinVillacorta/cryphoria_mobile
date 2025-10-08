@@ -156,234 +156,238 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       );
     }
 
-    return Column(
-      children: [
-        // Professional Header
-        Container(
-          margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF10B981).withOpacity(0.1),
-                const Color(0xFF3B82F6).withOpacity(0.1),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        children: [
+          // Professional Header (white, subtle border)
+          Container(
+            margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.grey[200]!,
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
               ],
             ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFF10B981).withOpacity(0.2),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF10B981).withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.trending_up,
+                        color: Color(0xFF8B5CF6),
+                        size: 24,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.trending_up,
-                      color: Color(0xFF10B981),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Cash Flow Statement',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Cash movements as of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _buildMetricCard(
-                    'Operating Cash Flow',
-                    '\$${state.cashFlow!.summary.netCashFromOperations.toStringAsFixed(2)}',
-                    const Color(0xFF10B981),
-                    Icons.trending_up,
-                  ),
-                  const SizedBox(width: 12),
-                  _buildMetricCard(
-                    'Investing Cash Flow',
-                    '\$${state.cashFlow!.summary.netCashFromInvesting.toStringAsFixed(2)}',
-                    const Color(0xFFEF4444),
-                    Icons.trending_down,
-                  ),
-                  const SizedBox(width: 12),
-                  _buildMetricCard(
-                    'Net Change',
-                    '\$${state.cashFlow!.summary.netChangeInCash.toStringAsFixed(2)}',
-                    const Color(0xFF3B82F6),
-                    Icons.account_balance_wallet,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        // Professional View Toggle
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          height: 52,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.grey[200]!,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => isChartView = true),
-                  child: Container(
-                    margin: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      gradient: isChartView 
-                        ? const LinearGradient(
-                            colors: [Color(0xFF10B981), Color(0xFF059669)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
-                      color: isChartView ? null : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: isChartView ? [
-                        BoxShadow(
-                          color: const Color(0xFF10B981).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ] : null,
-                    ),
-                    child: Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.bar_chart,
-                            size: 18,
-                            color: isChartView ? Colors.white : Colors.grey[600],
+                          const Text(
+                            'Cash Flow Statement',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(height: 4),
                           Text(
-                            'Chart View',
+                            'Cash movements as of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[600],
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMetricCard(
+                        'Operating Cash Flow',
+                        '\$${state.cashFlow!.summary.netCashFromOperations.toStringAsFixed(2)}',
+                        const Color(0xFF10B981),
+                        Icons.trending_up,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildMetricCard(
+                        'Investing Cash Flow',
+                        '\$${state.cashFlow!.summary.netCashFromInvesting.toStringAsFixed(2)}',
+                        const Color(0xFFEF4444),
+                        Icons.trending_down,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMetricCard(
+                        'Net Change',
+                        '\$${state.cashFlow!.summary.netChangeInCash.toStringAsFixed(2)}',
+                        const Color(0xFF3B82F6),
+                        Icons.account_balance_wallet,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Professional View Toggle
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.grey[200]!,
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => isChartView = true),
+                    child: Container(
+                      margin: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: isChartView 
+                          ? const LinearGradient(
+                              colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                        color: isChartView ? null : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: isChartView ? [
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ] : null,
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.bar_chart,
+                              size: 18,
                               color: isChartView ? Colors.white : Colors.grey[600],
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              'Chart View',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isChartView ? Colors.white : Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => isChartView = false),
-                  child: Container(
-                    margin: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      gradient: !isChartView 
-                        ? const LinearGradient(
-                            colors: [Color(0xFF10B981), Color(0xFF059669)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
-                      color: !isChartView ? null : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: !isChartView ? [
-                        BoxShadow(
-                          color: const Color(0xFF10B981).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ] : null,
-                    ),
-                    child: Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.table_chart,
-                            size: 18,
-                            color: !isChartView ? Colors.white : Colors.grey[600],
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => isChartView = false),
+                    child: Container(
+                      margin: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: !isChartView 
+                          ? const LinearGradient(
+                              colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                        color: !isChartView ? null : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: !isChartView ? [
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Table View',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                        ] : null,
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.table_chart,
+                              size: 18,
                               color: !isChartView ? Colors.white : Colors.grey[600],
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              'Table View',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: !isChartView ? Colors.white : Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
 
           const SizedBox(height: 15),
 
           // Content
-          Expanded(
-            child: isChartView ? _buildChartView(state.cashFlow!) : _buildTableView(state.cashFlow!),
-          ),
+          isChartView ? _buildChartView(state.cashFlow!) : _buildTableView(state.cashFlow!),
         ],
-      );
+      ),
+    );
   }
 
   Widget _buildChartView(CashFlow cashFlow) {
@@ -535,19 +539,12 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                 ),
                 minX: 0,
                 maxX: 5,
-                minY: -1500,
-                maxY: 5000,
+                minY: _getMinY(cashFlow),
+                maxY: _getMaxY(cashFlow),
                 lineBarsData: [
                   // Blue line (Operating Cash Flow)
                   LineChartBarData(
-                    spots: [
-                      FlSpot(0, 4000),
-                      FlSpot(1, 4200),
-                      FlSpot(2, 3800),
-                      FlSpot(3, 4500),
-                      FlSpot(4, 4100),
-                      FlSpot(5, 4300),
-                    ],
+                    spots: _getOperatingCashFlowSpots(cashFlow),
                     isCurved: false,
                     color: Colors.blue,
                     barWidth: 3,
@@ -567,14 +564,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                   ),
                   // Green line (Investing Cash Flow)
                   LineChartBarData(
-                    spots: [
-                      FlSpot(0, -500),
-                      FlSpot(1, -800),
-                      FlSpot(2, -1200),
-                      FlSpot(3, -600),
-                      FlSpot(4, -900),
-                      FlSpot(5, -700),
-                    ],
+                    spots: _getInvestingCashFlowSpots(cashFlow),
                     isCurved: false,
                     color: Colors.green,
                     barWidth: 3,
