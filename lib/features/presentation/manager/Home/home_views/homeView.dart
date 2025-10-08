@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/manager_home_skeleton.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/quick_actions.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/recent_transactions.dart';
 
@@ -100,7 +101,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         body: Builder(
           builder: (context) {
             if (walletState.isLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const ManagerHomeSkeleton();
             }
             if (walletState.error != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {

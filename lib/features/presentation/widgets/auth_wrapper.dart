@@ -7,6 +7,7 @@ import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/manager_home_skeleton.dart';
 
 class AuthWrapper extends ConsumerStatefulWidget {
   const AuthWrapper({super.key});
@@ -136,25 +137,11 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
+      // Show the manager skeleton while checking authentication
       return const Scaffold(
         backgroundColor: Colors.black,
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(color: Colors.purple),
-              SizedBox(height: 16),
-              Text(
-                'Checking authentication...',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Verifying stored credentials',
-                style: TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ],
-          ),
+          child: ManagerHomeSkeleton(),
         ),
       );
     }
