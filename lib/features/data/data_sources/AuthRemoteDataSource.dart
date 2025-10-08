@@ -6,6 +6,15 @@ abstract class AuthRemoteDataSource {
   Future<LoginResponse> login(String email, String password);
   Future<LoginResponse> register(String username, String password, String passwordConfirm, String email, String firstName, String lastName, String securityAnswer, {String? role});
   
+  // OTP verification
+  Future<bool> verifyOTP(String email, String code);
+  Future<void> resendOTP(String email);
+  
+  // Password reset
+  Future<void> requestPasswordReset(String email);
+  Future<void> resetPassword(String email, String otp, String newPassword);
+  Future<void> resendPasswordReset(String email);
+  
   // Basic authentication
   Future<bool> logout();
   Future<bool> validateSession();
@@ -191,6 +200,161 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return response.statusCode == 200;
     } on DioException catch (e) {
       final message = e.response?.data['detail']?.toString() ?? 'Session validation failed';
+      throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<bool> verifyOTP(String email, String code) async {
+    try {
+      final data = {
+        'email': email,
+        'code': code,
+      };
+      
+      final response = await dio.post(
+        '$baseUrl/api/auth/verify-email/',
+        data: data,
+      );
+      
+      print('Verify OTP request data: $data');
+      print('Verify OTP response code: ${response.statusCode}');
+      print('Verify OTP response body: ${response.data}');
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+      
+      throw ServerException(
+        response.data['error']?.toString() ?? 'OTP verification failed with status ${response.statusCode}'
+      );
+    } on DioException catch (e) {
+      print('Verify OTP DioException: ${e.response?.statusCode} - ${e.response?.data}');
+      final message = e.response?.data['error']?.toString() ?? 
+                     e.response?.data['detail']?.toString() ?? 
+                     'OTP verification failed';
+      throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<void> resendOTP(String email) async {
+    try {
+      final data = {
+        'email': email,
+      };
+      
+      final response = await dio.post(
+        '$baseUrl/api/auth/resend-otp/',
+        data: data,
+      );
+      
+      print('Resend OTP request data: $data');
+      print('Resend OTP response code: ${response.statusCode}');
+      print('Resend OTP response body: ${response.data}');
+
+      if (response.statusCode != 200) {
+        throw ServerException(
+          response.data['error']?.toString() ?? 'Failed to resend OTP with status ${response.statusCode}'
+        );
+      }
+    } on DioException catch (e) {
+      print('Resend OTP DioException: ${e.response?.statusCode} - ${e.response?.data}');
+      final message = e.response?.data['error']?.toString() ?? 
+                     e.response?.data['detail']?.toString() ?? 
+                     'Failed to resend OTP';
+      throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<void> requestPasswordReset(String email) async {
+    try {
+      final data = {
+        'email': email,
+      };
+      
+      final response = await dio.post(
+        '$baseUrl/api/auth/password-reset-request/',
+        data: data,
+      );
+      
+      print('Request password reset data: $data');
+      print('Request password reset response code: ${response.statusCode}');
+      print('Request password reset response body: ${response.data}');
+
+      if (response.statusCode != 200) {
+        throw ServerException(
+          response.data['error']?.toString() ?? 'Failed to request password reset with status ${response.statusCode}'
+        );
+      }
+    } on DioException catch (e) {
+      print('Request password reset DioException: ${e.response?.statusCode} - ${e.response?.data}');
+      final message = e.response?.data['error']?.toString() ?? 
+                     e.response?.data['detail']?.toString() ?? 
+                     'Failed to request password reset';
+      throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String email, String otp, String newPassword) async {
+    try {
+      final data = {
+        'email': email,
+        'otp': otp,
+        'new_password': newPassword,
+      };
+      
+      final response = await dio.post(
+        '$baseUrl/api/auth/password-reset/',
+        data: data,
+      );
+      
+      print('Reset password data: $data');
+      print('Reset password response code: ${response.statusCode}');
+      print('Reset password response body: ${response.data}');
+
+      if (response.statusCode != 200) {
+        throw ServerException(
+          response.data['error']?.toString() ?? 'Password reset failed with status ${response.statusCode}'
+        );
+      }
+    } on DioException catch (e) {
+      print('Reset password DioException: ${e.response?.statusCode} - ${e.response?.data}');
+      final message = e.response?.data['error']?.toString() ?? 
+                     e.response?.data['detail']?.toString() ?? 
+                     'Password reset failed';
+      throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<void> resendPasswordReset(String email) async {
+    try {
+      final data = {
+        'email': email,
+      };
+      
+      final response = await dio.post(
+        '$baseUrl/api/auth/password-reset-request/',
+        data: data,
+      );
+      
+      print('Resend password reset data: $data');
+      print('Resend password reset response code: ${response.statusCode}');
+      print('Resend password reset response body: ${response.data}');
+
+      if (response.statusCode != 200) {
+        throw ServerException(
+          response.data['error']?.toString() ?? 'Failed to resend password reset with status ${response.statusCode}'
+        );
+      }
+    } on DioException catch (e) {
+      print('Resend password reset DioException: ${e.response?.statusCode} - ${e.response?.data}');
+      final message = e.response?.data['error']?.toString() ?? 
+                     e.response?.data['detail']?.toString() ?? 
+                     'Failed to resend password reset';
       throw ServerException(message);
     }
   }
