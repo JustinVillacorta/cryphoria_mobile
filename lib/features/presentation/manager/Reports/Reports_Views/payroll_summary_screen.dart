@@ -190,32 +190,27 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
         }
 
     print("🎯 Building main content with ${state.payslipsResponse!.payslips.length} payslips");
-    
-    return Column(
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
       children: [
-        // Professional Header
+        // Professional Header (white background, subtle border + shadow)
         Container(
           margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF8B5CF6).withOpacity(0.1),
-                const Color(0xFF3B82F6).withOpacity(0.1),
-              ],
-            ),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFF8B5CF6).withOpacity(0.2),
+              color: Colors.grey[200]!,
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -264,27 +259,38 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
                 ],
               ),
               const SizedBox(height: 16),
+              // Two metric cards on first row, third below
               Row(
                 children: [
-                  _buildMetricCard(
-                    'Total Payslips',
-                    '${state.payslipsResponse!.payslips.length}',
-                    const Color(0xFF10B981),
-                    Icons.assignment,
+                  Expanded(
+                    child: _buildMetricCard(
+                      'Total Payslips',
+                      '${state.payslipsResponse!.payslips.length}',
+                      const Color(0xFF10B981),
+                      Icons.assignment,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  _buildMetricCard(
-                    'Total Payroll',
-                    '\$${state.payslipsResponse!.payslips.fold(0.0, (sum, p) => sum + p.finalNetPay).toStringAsFixed(2)}',
-                    const Color(0xFF3B82F6),
-                    Icons.account_balance_wallet,
+                  Expanded(
+                    child: _buildMetricCard(
+                      'Total Payroll',
+                      '\$${state.payslipsResponse!.payslips.fold(0.0, (sum, p) => sum + p.finalNetPay).toStringAsFixed(2)}',
+                      const Color(0xFF3B82F6),
+                      Icons.account_balance_wallet,
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  _buildMetricCard(
-                    'Avg Salary',
-                    '\$${(state.payslipsResponse!.payslips.fold(0.0, (sum, p) => sum + p.finalNetPay) / state.payslipsResponse!.payslips.length).toStringAsFixed(2)}',
-                    const Color(0xFFF59E0B),
-                    Icons.trending_up,
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMetricCard(
+                      'Avg Salary',
+                      '\$${(state.payslipsResponse!.payslips.fold(0.0, (sum, p) => sum + p.finalNetPay) / state.payslipsResponse!.payslips.length).toStringAsFixed(2)}',
+                      const Color(0xFFF59E0B),
+                      Icons.trending_up,
+                    ),
                   ),
                 ],
               ),
@@ -359,12 +365,11 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
 
         const SizedBox(height: 10),
 
-        // Content
-        Expanded(
-          child: isChartView ? _buildChartView(state.payslipsResponse!) : _buildTableView(state.payslipsResponse!),
-        ),
+        // Content (chart/table) - parent now scrolls
+        isChartView ? _buildChartView(state.payslipsResponse!) : _buildTableView(state.payslipsResponse!),
       ],
-    );
+    ),
+  );
   }
 
   Widget _buildChartView(PayslipsResponse payslipsResponse) {
@@ -553,7 +558,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
                 child: OutlinedButton(
                   onPressed: () => _downloadPdf(context, payslipsResponse),
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey[400]!),
+                    side: BorderSide(color: const Color(0xFF8B5CF6)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -564,7 +569,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: Color(0xFF8B5CF6),
                     ),
                   ),
                 ),
@@ -899,12 +904,12 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: color.withOpacity(0.2),
+            color: Colors.grey[200]!,
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.1),
+              color: Colors.black.withOpacity(0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -915,10 +920,17 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  icon,
-                  color: color,
-                  size: 16,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 16,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -935,14 +947,21 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: color,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
               ),
-              overflow: TextOverflow.ellipsis,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

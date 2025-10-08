@@ -14,7 +14,7 @@ class _ManagerConnectWalletBottomSheetState extends ConsumerState<ManagerConnect
   bool _isValidFormat = true;
   bool _isLoading = false;
   String _selectedWallet = 'MetaMask';
-  final List<String> _wallets = ['MetaMask', 'Trust Wallet', 'Coinbase'];
+  // Wallet type fixed to MetaMask
 
   @override
   void dispose() {
@@ -122,7 +122,7 @@ class _ManagerConnectWalletBottomSheetState extends ConsumerState<ManagerConnect
             ),
             const SizedBox(height: 8),
             const Text(
-              'Please enter your private key below to connect your wallet to Cryphoria.',
+              'Connect MetaMask by entering its private key below.',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
@@ -139,20 +139,19 @@ class _ManagerConnectWalletBottomSheetState extends ConsumerState<ManagerConnect
               ),
             ),
             const SizedBox(height: 8),
-            DropdownButton<String>(
-              value: _selectedWallet,
-              isExpanded: true,
-              items: _wallets.map((wallet) => DropdownMenuItem(
-                value: wallet,
-                child: Text(wallet),
-              )).toList(),
-              onChanged: _isLoading
-                  ? null
-                  : (value) {
-                if (value != null) {
-                  setState(() => _selectedWallet = value);
-                }
-              },
+            // Wallet type fixed to MetaMask
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+                color: Colors.grey[50],
+              ),
+              child: Text(
+                'MetaMask',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
+              ),
             ),
             const SizedBox(height: 16),
             const Text(

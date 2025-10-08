@@ -330,68 +330,148 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
   }
 
   Widget _buildNoWalletView(double screenWidth, double screenHeight, bool isInteractive) {
+    // Mirror the connected wallet layout but show zero values and provide
+    // a "Connect Wallet" option in the three-dot menu when interactive.
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: EdgeInsets.all(screenWidth * 0.04),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-          ),
-          child: Icon(
-            Icons.account_balance_wallet_outlined,
-            color: Colors.white,
-            size: screenWidth * 0.08,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Current Wallet',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: screenWidth * 0.035,
+                ),
+              ),
+            ),
+            if (isInteractive)
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+                color: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                onSelected: (value) async {
+                  if (value == 'connect') {
+                    _showConnectWalletBottomSheet(context);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'connect',
+                    child: Row(
+                      children: [
+                        Icon(Icons.link, color: Colors.black87),
+                        SizedBox(width: 12),
+                        Text('Connect Wallet'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+          ],
         ),
-        SizedBox(height: screenHeight * 0.025),
+
+        const SizedBox(height: 4),
         Text(
           'No Wallet Connected',
           style: TextStyle(
             color: Colors.white,
-            fontSize: screenWidth * 0.055,
+            fontSize: screenWidth * 0.04,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Balance (zero) and fiat conversion
+        Text(
+          '0.000000 ETH',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: screenWidth * 0.08,
             fontWeight: FontWeight.bold,
           ),
-          textAlign: TextAlign.center,
         ),
-        SizedBox(height: screenHeight * 0.01),
-        Text(
-          'Connect your wallet to view your balance.',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: screenWidth * 0.035,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        SizedBox(height: screenHeight * 0.03),
-        if (isInteractive)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => _showConnectWalletBottomSheet(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.018),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Colors.white, width: 1),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Converted to ${_showUSD ? 'USD' : 'PHP'}',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: screenWidth * 0.03,
+                  ),
                 ),
-                elevation: 0,
-              ),
-              child: Text(
-                'Connect Wallet',
-                style: TextStyle(
-                  fontSize: screenWidth * 0.04,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                const SizedBox(height: 2),
+                Text(
+                  _showUSD ? '\$0.00' : '₱0.00',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.035,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
+              ],
             ),
-          ),
+            if (isInteractive)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: DropdownButton<String>(
+                  value: _showUSD ? 'USD' : 'PHP',
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 16),
+                  dropdownColor: Colors.white,
+                  underline: const SizedBox(),
+                  isDense: true,
+                  // Show the selected item in white when the dropdown is closed
+                  selectedItemBuilder: (BuildContext context) {
+                    return ['PHP', 'USD'].map<Widget>((String item) {
+                      return Text(
+                        item,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.03,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }).toList();
+                  },
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.03,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _showUSD = newValue == 'USD';
+                      });
+                    }
+                  },
+                  items: ['PHP', 'USD'].map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(
+                        value,
+                        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -408,14 +488,15 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
       children: [
         Row(
           children: [
-            Text(
-              'Current Wallet',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: screenWidth * 0.035,
+            Expanded(
+              child: Text(
+                'Current Wallet',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: screenWidth * 0.035,
+                ),
               ),
             ),
-            const Spacer(),
             if (isInteractive)
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, color: Colors.white, size: 20),
@@ -600,6 +681,19 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
                   dropdownColor: Colors.white,
                   underline: const SizedBox(),
                   isDense: true,
+                  // Show the selected item in white when the dropdown is closed
+                  selectedItemBuilder: (BuildContext context) {
+                    return ['PHP', 'USD'].map<Widget>((String item) {
+                      return Text(
+                        item,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.03,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }).toList();
+                  },
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: screenWidth * 0.03,

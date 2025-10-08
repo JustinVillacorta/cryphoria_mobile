@@ -15,7 +15,6 @@ class _ConnectPrivateKeyBottomSheetState extends ConsumerState<ConnectPrivateKey
   bool _isValidFormat = true;
   bool _isLoading = false;
   String _selectedWallet = 'MetaMask';
-  final List<String> _wallets = ['MetaMask', 'Trust Wallet', 'Coinbase'];
 
   @override
   void dispose() {
@@ -93,7 +92,7 @@ class _ConnectPrivateKeyBottomSheetState extends ConsumerState<ConnectPrivateKey
       ),
       child: Padding(
         padding: EdgeInsets.only(
-          left: 24,
+          left: 0,
           right: 24,
           top: 24,
           bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -103,25 +102,30 @@ class _ConnectPrivateKeyBottomSheetState extends ConsumerState<ConnectPrivateKey
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const Text(
-                  'Connect with Private Key',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  behavior: HitTestBehavior.opaque,
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Icon(Icons.arrow_back, color: Colors.black, size: 24),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            const Text(
+              'Connect with Private Key',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
             const SizedBox(height: 8),
             const Text(
-              'Please enter your private key below to connect your wallet to Cryphoria.',
+              'Connect MetaMask by entering its private key below.',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
@@ -138,20 +142,19 @@ class _ConnectPrivateKeyBottomSheetState extends ConsumerState<ConnectPrivateKey
               ),
             ),
             const SizedBox(height: 8),
-            DropdownButton<String>(
-              value: _selectedWallet,
-              isExpanded: true,
-              items: _wallets.map((wallet) => DropdownMenuItem(
-                value: wallet,
-                child: Text(wallet),
-              )).toList(),
-              onChanged: _isLoading
-                  ? null
-                  : (value) {
-                if (value != null) {
-                  setState(() => _selectedWallet = value);
-                }
-              },
+            // Wallet type fixed to MetaMask
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+                color: Colors.grey[50],
+              ),
+              child: Text(
+                'MetaMask',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
+              ),
             ),
             const SizedBox(height: 16),
             const Text(

@@ -161,29 +161,19 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            // Professional Header
+            // Professional Header (white + subtle border)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFFF59E0B).withOpacity(0.1),
-                    const Color(0xFF8B5CF6).withOpacity(0.1),
-                  ],
-                ),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFFF59E0B).withOpacity(0.2),
-                  width: 1,
-                ),
+                border: Border.all(color: Colors.grey[200]!, width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF59E0B).withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -195,7 +185,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B).withOpacity(0.1),
+                          color: const Color(0xFFF59E0B).withOpacity(0.06),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -241,25 +231,35 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      _buildMetricCard(
-                        'Total Income',
-                        '\$${state.taxReport!.summary.totalIncome.toStringAsFixed(2)}',
-                        const Color(0xFF10B981),
-                        Icons.trending_up,
+                      Expanded(
+                        child: _buildMetricCard(
+                          'Total Income',
+                          '\$${state.taxReport!.summary.totalIncome.toStringAsFixed(2)}',
+                          const Color(0xFF10B981),
+                          Icons.trending_up,
+                        ),
                       ),
                       const SizedBox(width: 12),
-                      _buildMetricCard(
-                        'Total Deductions',
-                        '\$${state.taxReport!.summary.totalDeductions.toStringAsFixed(2)}',
-                        const Color(0xFF3B82F6),
-                        Icons.remove_circle_outline,
+                      Expanded(
+                        child: _buildMetricCard(
+                          'Total Deductions',
+                          '\$${state.taxReport!.summary.totalDeductions.toStringAsFixed(2)}',
+                          const Color(0xFF3B82F6),
+                          Icons.remove_circle_outline,
+                        ),
                       ),
-                      const SizedBox(width: 12),
-                      _buildMetricCard(
-                        'Tax Owed',
-                        '\$${state.taxReport!.summary.totalTaxOwed.toStringAsFixed(2)}',
-                        const Color(0xFFEF4444),
-                        Icons.account_balance,
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildMetricCard(
+                          'Tax Owed',
+                          '\$${state.taxReport!.summary.totalTaxOwed.toStringAsFixed(2)}',
+                          const Color(0xFFEF4444),
+                          Icons.account_balance,
+                        ),
                       ),
                     ],
                   ),
@@ -961,60 +961,65 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
   }
 
   Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 0.8,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  icon,
-                  color: color,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[600],
-                    ),
-                    overflow: TextOverflow.ellipsis,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: color,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(height: 8),
-            Text(
+            child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: color,
+                color: Colors.black,
               ),
               overflow: TextOverflow.ellipsis,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

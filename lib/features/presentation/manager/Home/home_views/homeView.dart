@@ -5,7 +5,6 @@ import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/quick_actions.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/recent_transactions.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/revenue_chart.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -16,17 +15,11 @@ class HomeView extends ConsumerStatefulWidget {
 
 class _HomeViewState extends ConsumerState<HomeView> {
   late ScrollController _scrollController;
-  double _scrollOffset = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController()
-      ..addListener(() {
-        setState(() {
-          _scrollOffset = _scrollController.offset;
-        });
-      });
+    _scrollController = ScrollController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final walletService = ref.read(walletServiceProvider);
@@ -125,7 +118,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const WalletCard(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
                   QuickActions(
                     onPaymentSuccess: () {
                       walletNotifier.refreshTransactions();
@@ -133,8 +126,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   ),
                   const SizedBox(height: 24),
                   const RecentTransactions(),
-                  const SizedBox(height: 24),
-                  const RevenueChart(),
+                  // RevenueChart removed from home view per request
                 ],
               ),
             );
