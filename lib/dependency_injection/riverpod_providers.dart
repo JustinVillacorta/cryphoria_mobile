@@ -17,11 +17,13 @@ import '../features/data/data_sources/eth_transaction_data_source.dart';
 import '../features/data/data_sources/fake_transactions_data.dart';
 import '../features/data/data_sources/reports_remote_data_source.dart';
 import '../features/data/data_sources/walletRemoteDataSource.dart';
+import '../features/data/data_sources/document_upload_remote_data_source.dart';
 import '../features/data/notifiers/audit_notifier.dart';
 import '../features/data/repositories_impl/AuthRepositoryImpl.dart';
 import '../features/data/repositories_impl/audit_repository_impl.dart';
 import '../features/data/repositories_impl/employee_repository_impl.dart';
 import '../features/data/repositories_impl/reports_repository_impl.dart';
+import '../features/data/repositories_impl/document_upload_repository_impl.dart';
 import '../features/data/services/currency_conversion_service.dart';
 
 import '../features/data/services/eth_payment_service.dart';
@@ -35,6 +37,8 @@ import '../features/domain/usecases/Audit/get_audit_report_usecase.dart';
 import '../features/domain/usecases/Audit/get_audit_status_usecase.dart';
 import '../features/domain/usecases/Audit/submit_audit_usecase.dart';
 import '../features/domain/usecases/Audit/upload_contract_usecase.dart';
+import '../features/domain/usecases/DocumentUpload/upload_business_documents_usecase.dart';
+import '../features/domain/repositories/document_upload_repository.dart';
 import '../features/domain/usecases/EmployeeHome/employee_home_usecase.dart';
 import '../features/domain/usecases/Employee_management/add_employee_to_team_usecase.dart';
 import '../features/domain/usecases/Employee_management/create_payslip_usecase.dart';
@@ -195,6 +199,23 @@ final fakeTransactionsDataSourceProvider =
 final ethTransactionDataSourceProvider =
     Provider<EthTransactionDataSource>((ref) {
   return EthTransactionDataSource(dioClient: ref.watch(dioClientProvider));
+});
+
+// Document Upload Providers
+final documentUploadRemoteDataSourceProvider = Provider<DocumentUploadRemoteDataSource>((ref) {
+  return DocumentUploadRemoteDataSourceImpl(dio: ref.watch(dioClientProvider).dio);
+});
+
+final documentUploadRepositoryProvider = Provider<DocumentUploadRepository>((ref) {
+  return DocumentUploadRepositoryImpl(
+    remoteDataSource: ref.watch(documentUploadRemoteDataSourceProvider),
+  );
+});
+
+final uploadBusinessDocumentsUseCaseProvider = Provider<UploadBusinessDocumentsUseCase>((ref) {
+  return UploadBusinessDocumentsUseCase(
+    repository: ref.watch(documentUploadRepositoryProvider),
+  );
 });
 
 final managerEmployeeRemoteDataSourceProvider = Provider<
