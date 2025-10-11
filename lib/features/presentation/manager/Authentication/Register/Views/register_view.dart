@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/gestures.dart';
+
+import 'package:cryphoria_mobile/features/presentation/widgets/terms_and_conditions_content.dart';
 
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/role_selector.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/OTP_Verification/Views/otp_verification_view.dart';
 
 class RegisterView extends ConsumerStatefulWidget {
@@ -23,8 +27,31 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   // Role selection state
   String _selectedRole = 'Employee'; // Default to Employee
 
+  // Gesture recognizers for tappable Terms/Privacy text
+  late TapGestureRecognizer _termsRecognizer;
+  late TapGestureRecognizer _privacyRecognizer;
+  // Whether the user has accepted terms (main checkbox)
+  bool _agreed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () async {
+        final accepted = await _showTermsModal();
+        if (accepted == true && mounted) setState(() => _agreed = true);
+      };
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () async {
+        final accepted = await _showPrivacyModal();
+        if (accepted == true && mounted) setState(() => _agreed = true);
+      };
+  }
+
   @override
   void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -33,6 +60,22 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     _lastNameController.dispose();
     _securityAnswerController.dispose();
     super.dispose();
+  }
+
+  Future<bool?> _showTermsModal() async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const _AgreementDialog(title: 'Terms and Conditions'),
+    );
+  }
+
+  Future<bool?> _showPrivacyModal() async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const _AgreementDialog(title: 'Privacy Policy'),
+    );
   }
 
   @override
@@ -125,31 +168,12 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                 ),
                 SizedBox(height: 12),
 
-                // Role Selection Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildRoleCard(
-                        role: 'Manager',
-                        icon: Icons.manage_accounts,
-                        title: 'Manager',
-                        isSelected: _selectedRole == 'Manager',
-                        onTap: () => setState(() => _selectedRole = 'Manager'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildRoleCard(
-                        role: 'Employee',
-                        icon: Icons.person,
-                        title: 'Employee',
-                        isSelected: _selectedRole == 'Employee',
-                        onTap: () => setState(() => _selectedRole = 'Employee'),
-                      ),
-                    ),
-                  ],
+                // Role Selection
+                RoleSelector(
+                  selectedRole: _selectedRole,
+                  onRoleSelected: (role) => setState(() => _selectedRole = role),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
 
                 // First Name field
                 _buildTextField(
@@ -216,9 +240,11 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                       height: 20,
                       width: 20,
                       child: Checkbox(
-                        value: true, // You may want to track this state
-                        onChanged: (value) {
-                          // Handle checkbox state
+                        value: _agreed,
+                        onChanged: (value) async {
+                          // Open modal when user taps checkbox
+                          final accepted = await _showTermsModal();
+                          if (accepted == true && mounted) setState(() => _agreed = true);
                         },
                         activeColor: const Color(0xFF8B5CF6),
                       ),
@@ -226,28 +252,30 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: RichText(
-                        text: const TextSpan(
-                          text: 'I agree to the ',
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                          children: [
-                            TextSpan(
-                              text: 'Terms and Conditions',
-                              style: TextStyle(
-                                color: Color(0xFF8B5CF6),
-                                decoration: TextDecoration.underline,
-                              ),
+                            text: TextSpan(
+                              text: 'I agree to the ',
+                              style: const TextStyle(color: Colors.black54, fontSize: 14),
+                              children: [
+                                TextSpan(
+                                  text: 'Terms and Conditions',
+                                  style: const TextStyle(
+                                    color: Color(0xFF8B5CF6),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  recognizer: _termsRecognizer,
+                                ),
+                                const TextSpan(text: ' and '),
+                                TextSpan(
+                                  text: 'Privacy Policy',
+                                  style: const TextStyle(
+                                    color: Color(0xFF8B5CF6),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  recognizer: _privacyRecognizer,
+                                ),
+                                const TextSpan(text: '.'),
+                              ],
                             ),
-                            TextSpan(text: ' and '),
-                            TextSpan(
-                              text: 'Privacy Policy',
-                              style: TextStyle(
-                                color: Color(0xFF8B5CF6),
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                            TextSpan(text: '.'),
-                          ],
-                        ),
                       ),
                     ),
                   ],
@@ -501,5 +529,89 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
         ),
       );
     }
+  }
+}
+
+class _AgreementDialog extends StatefulWidget {
+  final String title;
+  const _AgreementDialog({Key? key, required this.title}) : super(key: key);
+
+  @override
+  State<_AgreementDialog> createState() => _AgreementDialogState();
+}
+
+class _AgreementDialogState extends State<_AgreementDialog> {
+  final ScrollController _scrollController = ScrollController();
+  bool _checked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_checked && _scrollController.position.atEdge) {
+      final isBottom = _scrollController.position.pixels == _scrollController.position.maxScrollExtent;
+      if (isBottom) {
+        setState(() => _checked = true);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SizedBox(
+        width: 600,
+        height: 400,
+        child: Column(
+          children: [
+            Expanded(
+              child: Scrollbar(
+                thumbVisibility: true,
+                controller: _scrollController,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: const TermsAndConditionsContent(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Checkbox(
+                  value: _checked,
+                  onChanged: (v) => setState(() => _checked = v ?? false),
+                  activeColor: const Color(0xFF8B5CF6),
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text('I agree to the Terms and Conditions and Privacy Policy.'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Close'),
+        ),
+        TextButton(
+          onPressed: _checked ? () => Navigator.of(context).pop(true) : null,
+          child: const Text('Accept'),
+        ),
+      ],
+    );
   }
 }

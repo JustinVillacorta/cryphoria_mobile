@@ -455,7 +455,7 @@ packages:
     source: hosted
     version: "3.1.2"
   flutter_svg:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: flutter_svg
       sha256: cd57f7969b4679317c17af6fd16ee233c1e60a82ed209d8a475c54fd6fd6f845
