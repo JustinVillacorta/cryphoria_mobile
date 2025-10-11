@@ -22,14 +22,32 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   String newNotes = '';
 
   final List<String> roles = ['Investor', 'Partner', 'Vendor', 'Client'];
+  
+  // TextEditingController instances for proper text field management
+  late TextEditingController _walletAddressController;
+  late TextEditingController _nameController;
+  late TextEditingController _notesController;
 
   @override
   void initState() {
     super.initState();
+    // Initialize TextEditingController instances
+    _walletAddressController = TextEditingController(text: newWalletAddress);
+    _nameController = TextEditingController(text: newName);
+    _notesController = TextEditingController(text: newNotes);
+    
     // Load address book entries when the bottom sheet opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(smartInvestNotifierProvider.notifier).getAddressBookList();
     });
+  }
+
+  @override
+  void dispose() {
+    _walletAddressController.dispose();
+    _nameController.dispose();
+    _notesController.dispose();
+    super.dispose();
   }
 
   @override
@@ -457,7 +475,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 8),
           TextField(
-            controller: TextEditingController(text: newWalletAddress),
+            controller: _walletAddressController,
             onChanged: (value) => setState(() => newWalletAddress = value),
             decoration: const InputDecoration(
               hintText: '0x...',
@@ -480,7 +498,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 8),
           TextField(
-            controller: TextEditingController(text: newName),
+            controller: _nameController,
             onChanged: (value) => setState(() => newName = value),
             decoration: const InputDecoration(
               hintText: 'John Doe',
@@ -548,7 +566,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 8),
           TextField(
-            controller: TextEditingController(text: newNotes),
+            controller: _notesController,
             onChanged: (value) => setState(() => newNotes = value),
             maxLines: 3,
             decoration: const InputDecoration(
@@ -635,6 +653,11 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     newName = '';
     newRole = 'Investor';
     newNotes = '';
+    
+    // Reset controller text values
+    _walletAddressController.text = '';
+    _nameController.text = '';
+    _notesController.text = '';
   }
 
   void _sendEthToEntry(Map<String, dynamic> entry) {
@@ -664,6 +687,11 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       // Convert lowercase role to capitalized for dropdown
       newRole = _capitalizeFirst(entry['role'] as String);
       newNotes = entry['subRole'];
+      
+      // Update controller text values
+      _walletAddressController.text = newWalletAddress;
+      _nameController.text = newName;
+      _notesController.text = newNotes;
     });
   }
 
