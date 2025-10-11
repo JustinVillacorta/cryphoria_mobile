@@ -17,7 +17,6 @@ class PaymentBottomSheet extends ConsumerStatefulWidget {
 
 class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   int currentStep = 0;
-  String selectedToken = 'ETH';
   String amount = '';
   String recipientName = '';
   String recipientAddress = '';
@@ -33,7 +32,6 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   bool _isSendingPayment = false;
   bool _isDisposed = false;
 
-  final List<String> tokens = ['ETH', 'BTC', 'USDT', 'USDC'];
   final List<String> categories = [
     'Office Expenses',
     'Travel',
@@ -225,6 +223,14 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     return '${(amountValue + gasValue).toStringAsFixed(6)} ETH';
   }
 
+  String _calculateUSDEquivalent() {
+    final amountValue = double.tryParse(amount) ?? 0.0;
+    // ETH to USD conversion - in real app, this would use current exchange rates
+    const double ethUsdRate = 3200.0; // Example ETH price
+    final usdAmount = amountValue * ethUsdRate;
+    return '\$${usdAmount.toStringAsFixed(2)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -285,18 +291,16 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
       child: Row(
         children: [
-          _buildStepIndicator('Recipient', 0),
+          _buildStepIndicator('Details', 0),
           _buildProgressLine(0),
-          _buildStepIndicator('Token/Asset', 1),
-          _buildProgressLine(1),
-          _buildStepIndicator('Confirm', 2),
+          _buildStepIndicator('Confirm', 1),
         ],
       ),
     );
   }
 
   Widget _buildStepIndicator(String label, int step) {
-    final isActive = step <= currentStep;
+    final isCompleted = step < currentStep;
     final isCurrent = step == currentStep;
 
     return Column(
@@ -306,12 +310,12 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
           height: 24,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isActive ? const Color(0xFF8B5CF6) : Colors.grey[300],
+            color: isCompleted ? const Color(0xFF8B5CF6) : Colors.grey[300],
             border: isCurrent
                 ? Border.all(color: const Color(0xFF8B5CF6), width: 2)
                 : null,
           ),
-          child: isActive
+          child: isCompleted
               ? const Icon(Icons.check, color: Colors.white, size: 16)
               : null,
         ),
@@ -320,8 +324,8 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
           label,
           style: TextStyle(
             fontSize: 10,
-            color: isActive ? const Color(0xFF8B5CF6) : Colors.grey[600],
-            fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+            color: isCompleted ? const Color(0xFF8B5CF6) : Colors.grey[600],
+            fontWeight: isCompleted ? FontWeight.w500 : FontWeight.normal,
           ),
         ),
       ],
@@ -343,213 +347,171 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   Widget _buildCurrentStep() {
     switch (currentStep) {
       case 0:
-        return _buildRecipientStep();
+        return _buildDetailsStep();
       case 1:
-        return _buildTokenStep();
-      case 2:
         return _buildConfirmStep();
       default:
-        return _buildRecipientStep();
+        return _buildDetailsStep();
     }
   }
 
-  Widget _buildRecipientStep() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Company/Recipient Name',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
+  Widget _buildDetailsStep() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Recipient Information Section
+            const Text(
+              'Recipient Information',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            onChanged: (value) => recipientName = value,
-            decoration: InputDecoration(
-              hintText: 'Enter company or recipient name',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
+            const SizedBox(height: 16),
+            const Text(
+              'Company/Recipient Name',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
-              ),
-              contentPadding: const EdgeInsets.all(16),
             ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Recipient Address / Company Wallet',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (value) => recipientName = value,
+              decoration: InputDecoration(
+                hintText: 'Enter company or recipient name',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            onChanged: (value) => recipientAddress = value,
-            decoration: InputDecoration(
-              hintText: 'Enter wallet address',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
+            const SizedBox(height: 16),
+            const Text(
+              'Recipient Address / Company Wallet',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
-              ),
-              contentPadding: const EdgeInsets.all(16),
             ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Category',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (value) => recipientAddress = value,
+              decoration: InputDecoration(
+                hintText: 'Enter wallet address',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-
-          DropdownButtonFormField<String>(
-            value: category,
-            onChanged: (value) => setState(() => category = value!),
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
+            const SizedBox(height: 16),
+            const Text(
+              'Category',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.black54),
             ),
-            icon: const SizedBox.shrink(),
-            items: categories.map((cat) => DropdownMenuItem(
-              value: cat,
-              child: Text(cat),
-            )).toList(),
-          ),
-        ],
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: category,
+              onChanged: (value) => setState(() => category = value!),
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.black54),
+              ),
+              icon: const SizedBox.shrink(),
+              items: categories.map((cat) => DropdownMenuItem(
+                value: cat,
+                child: Text(cat),
+              )).toList(),
+            ),
+            
+            const SizedBox(height: 32),
+            
+            // Amount Section
+            const Text(
+              'Payment Amount',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Amount (ETH)',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (value) => amount = value,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: 'Enter amount',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildTokenStep() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Amount',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            onChanged: (value) => amount = value,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              hintText: '23',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
-              ),
-              contentPadding: const EdgeInsets.all(16),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Select Token',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: tokens.map((token) => _buildTokenChip(token)).toList(),
-          ),
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Equivalent in USD:',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                    const Text(
-                      '\$72800.00',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 16),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Network Gas Fee:',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                    const Text(
-                      '0.007 ETH',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildConfirmStep() {
     return Padding(
@@ -570,7 +532,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
               'To:', recipientName.isEmpty ? _formatAddress(recipientAddress) : recipientName, 
               recipientName.isEmpty ? recipientAddress : null),
           _buildPreviewRow(
-              'Amount:', '${amount.isEmpty ? '0' : amount} $selectedToken'),
+              'Amount:', '${amount.isEmpty ? '0' : amount} ETH'),
           _buildPreviewRow(
               'Description:', description.isEmpty ? 'No description' : description),
           _buildPreviewRow('Category:', category),
@@ -723,71 +685,46 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     );
   }
 
-  Widget _buildTokenChip(String token) {
-    final isSelected = selectedToken == token;
-    return GestureDetector(
-      onTap: () => setState(() => selectedToken = token),
-      child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF8B5CF6) : Colors.transparent,
-          border: Border.all(
-            color: isSelected ? const Color(0xFF8B5CF6) : Colors.grey[300]!,
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          token,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[700],
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildBottomActions() {
     return Container(
       padding: const EdgeInsets.all(24),
       child: Row(
         children: [
-          if (currentStep > 0)
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {
-                  if (currentStep > 0) {
-                    setState(() {
-                      currentStep--;
-                    });
-                  }
-                },
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  side: BorderSide(color: Colors.grey[300]!),
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () {
+                if (currentStep > 0) {
+                  setState(() {
+                    currentStep--;
+                  });
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
-                  ),
+                side: BorderSide(color: Colors.grey[300]!),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-          if (currentStep > 0) const SizedBox(width: 16),
+          ),
+          const SizedBox(width: 16),
           Expanded(
-            flex: currentStep == 0 ? 1 : 2,
             child: ElevatedButton(
               onPressed: _isSendingPayment ? null : () async {
-                if (currentStep < 2) {
-                  // If moving to confirmation step (step 2), estimate gas
-                  if (currentStep == 1 && widget.wallet != null && amount.isNotEmpty && recipientAddress.isNotEmpty) {
+                if (currentStep < 1) {
+                  // If moving to confirmation step (step 1), estimate gas
+                  if (widget.wallet != null && amount.isNotEmpty && recipientAddress.isNotEmpty) {
                     await _estimateGas();
                   }
                   setState(() {
@@ -825,7 +762,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                     ),
                   )
                 : Text(
-                    currentStep == 2 ? 'Send Payment' : 'Continue',
+                    currentStep == 1 ? 'Send Payment' : 'Continue',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
