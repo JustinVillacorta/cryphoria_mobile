@@ -4,6 +4,7 @@ import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/manager_home_skeleton.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/quick_actions.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/crypto_news_strip.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/recent_transactions.dart';
 
 class HomeView extends ConsumerStatefulWidget {
@@ -111,24 +112,23 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 walletNotifier.clearError();
               });
             }
-            return SingleChildScrollView(
+            return ListView(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const WalletCard(),
-                  const SizedBox(height: 14),
-                  QuickActions(
-                    onPaymentSuccess: () {
-                      walletNotifier.refreshTransactions();
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  const RecentTransactions(),
-                  // RevenueChart removed from home view per request
-                ],
-              ),
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                const WalletCard(),
+                QuickActions(
+                  onPaymentSuccess: () {
+                    walletNotifier.refreshTransactions();
+                  },
+                ),
+                const SizedBox(height: 16),
+                const CryptoNewsSection(),
+                const SizedBox(height: 24),
+                const RecentTransactions(),
+                // RevenueChart removed from home view per request
+              ],
             );
           },
         ),

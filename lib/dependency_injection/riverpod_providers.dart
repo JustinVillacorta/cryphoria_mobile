@@ -118,19 +118,16 @@ import '../features/domain/usecases/Invoice/get_invoices_by_user_usecase.dart';
 
 final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
-    return 'http://192.168.1.105:8000';
+    return 'http://192.168.1.108:8000';
   }
-  return 'http://192.168.1.105:8000';
+  return 'http://192.168.1.108:8000';
 });
 
 final flutterSecureStorageProvider =
     Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
 
-
 // for username fetching
 final userProvider = StateProvider<AuthUser?>((ref) => null);
-
-
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
   return AuthLocalDataSourceImpl(secureStorage: ref.watch(flutterSecureStorageProvider));

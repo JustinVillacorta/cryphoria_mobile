@@ -16,21 +16,14 @@ class QuickActions extends ConsumerStatefulWidget {
   ConsumerState<QuickActions> createState() => _QuickActionsState();
 }
 
-class _QuickActionsState extends ConsumerState<QuickActions> {
+class _QuickActionsState extends ConsumerState<QuickActions> with SingleTickerProviderStateMixin {
   final ScrollController _quickActionController = ScrollController();
-  double _progress = 0.0;
+  // progress indicator removed; keep controller for potential future use
+  bool _expanded = false;
 
   @override
   void initState() {
     super.initState();
-    _quickActionController.addListener(() {
-      if (!_quickActionController.hasClients) return;
-      final maxScroll = _quickActionController.position.maxScrollExtent;
-      final current = _quickActionController.offset;
-      setState(() {
-        _progress = (current / maxScroll).clamp(0.0, 1.0);
-      });
-    });
   }
 
   @override
@@ -54,46 +47,53 @@ class _QuickActionsState extends ConsumerState<QuickActions> {
         ),
         const SizedBox(height: 16),
 
-        // Horizontal scroll row
+        // Horizontal scroll row (shows 4 items; tapping More expands to show 2 extra actions inline)
         SizedBox(
-          height: 100,
-          child: SingleChildScrollView(
-            controller: _quickActionController,
-            scrollDirection: Axis.horizontal,
+          height: 110,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 0.0),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _buildQuickActionItem(
-                  Icons.send,
-                  'Send\nPayment',
-                  Colors.blue,
-                  onTap: () => showPaymentBottomSheet(context),
+                Expanded(
+                  child: Center(
+                    child: _buildQuickActionItem(
+                      Icons.send,
+                      'Send\nPayment',
+                      const Color(0xff9747FF),
+                      onTap: () => showPaymentBottomSheet(context),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 16),
-                _buildQuickActionItem(
-                    Icons.receipt_long,
-                    'Send\nPayroll',
-                    Colors.orange,
-                  onTap: () => showPayrollBottomSheet(context),
+                Expanded(
+                  child: Center(
+                    child: _buildQuickActionItem(
+                      Icons.receipt_long,
+                      'Send\nPayroll',
+                      const Color(0xff9747FF),
+                      onTap: () => showPayrollBottomSheet(context),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 16),
-                _buildQuickActionItem(
-                  Icons.description, 
-                  'Audit\nContract', 
-                  Colors.teal,
-                  onTap: () => _navigateToAuditScreen(context),
+                Expanded(
+                  child: Center(
+                    child: _buildQuickActionItem(
+                      Icons.description,
+                      'Audit\nContract',
+                      const Color(0xff9747FF),
+                      onTap: () => _navigateToAuditScreen(context),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 16),
-                _buildQuickActionItem(
-                  Icons.bar_chart, 
-                  'Generate\nReport', 
-                  Colors.green,
-                  onTap: () => showGenerateReportBottomSheet(context),
-                ),
-                _buildQuickActionItem(
-                  Icons.trending_up,
-                  'Invest\nSmart',
-                  Colors.purple,
-                  onTap: () => showSmartInvestBottomSheet(context),
+                Expanded(
+                  child: Center(
+                    child: _buildQuickActionItem(
+                      Icons.more_horiz,
+                      _expanded ? 'Less' : 'More',
+                      const Color(0xff9747FF),
+                      onTap: () => setState(() => _expanded = !_expanded),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -102,47 +102,36 @@ class _QuickActionsState extends ConsumerState<QuickActions> {
 
         const SizedBox(height: 8),
 
-        // Tiny pill-like indicator
-        Align(
-          alignment: Alignment.center,
-          child: SizedBox(
-            width: 40,
-            height: 6,  // thickness of the bar
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final double barWidth = constraints.maxWidth;
-                final double indicatorWidth = 20; // pill size
-                final double offset = (barWidth - indicatorWidth) * _progress;
-
-                return Stack(
-                  children: [
-                    // grey background track
-                    Container(
-                      width: barWidth,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(10),
+        // Expandable area: shows extra actions below the row when expanded
+        AnimatedSize(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          child: _expanded
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      _buildQuickActionItem(
+                        Icons.bar_chart,
+                        'Generate\nReport',
+                        const Color(0xff9747FF),
+                        onTap: () => showGenerateReportBottomSheet(context),
                       ),
-                    ),
-                    // purple pill
-                    Positioned(
-                      left: offset,
-                      child: Container(
-                        width: indicatorWidth,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: Colors.purple,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                      const SizedBox(width: 24),
+                      _buildQuickActionItem(
+                        Icons.trending_up,
+                        'Invest\nSmart',
+                        const Color(0xff9747FF),
+                        onTap: () => showSmartInvestBottomSheet(context),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
+
+        // Removed the pill-like indicator; replaced with a single-row of 4 actions
       ],
     );
   }
@@ -151,14 +140,14 @@ class _QuickActionsState extends ConsumerState<QuickActions> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 70,
+        width: 80,
         child: Column(
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 60,
+              height: 60,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0x1A9747FF),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -172,7 +161,7 @@ class _QuickActionsState extends ConsumerState<QuickActions> {
               child: Icon(
                 icon,
                 color: color,
-                size: 24,
+                size: 28,
               ),
             ),
             const SizedBox(height: 8),
@@ -252,4 +241,6 @@ class _QuickActionsState extends ConsumerState<QuickActions> {
       ),
     );
   }
+
+  // (No bottom-sheet for More — inline expansion handled in the row)
 }

@@ -61,7 +61,7 @@ class _GradientTranslation extends GradientTransform {
 }
 
 class _Bone extends StatelessWidget {
-  const _Bone({this.height = 12, this.width, this.radius = 10, Key? key}) : super(key: key);
+  const _Bone({this.height = 14, this.width, this.radius = 12, Key? key}) : super(key: key);
   final double height;
   final double? width;
   final double radius;
@@ -92,28 +92,21 @@ class ManagerHomeSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pad = padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+    final pad = padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 18);
     final cardColor = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
 
-    return _Shimmer(
-      child: SingleChildScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        child: Padding(
-          padding: pad,
-          child: Column(
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+      child: _Shimmer(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Padding(
+            padding: pad,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                children: [
-                  const CircleAvatar(radius: 24, backgroundColor: Colors.black12),
-                  const SizedBox(width: 12),
-                  const Expanded(child: _Bone(height: 14, width: double.infinity)),
-                  const SizedBox(width: 12),
-                  const _Bone(height: 24, width: 24, radius: 6),
-                ],
-              ),
-              const SizedBox(height: 16),
+              
 
               // Wallet card
               Container(
@@ -126,17 +119,17 @@ class ManagerHomeSkeleton extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
-                    _Bone(height: 16, width: 140),
-                    SizedBox(height: 10),
-                    _Bone(height: 28, width: 200),
+                    _Bone(height: 18, width: 160),
+                    SizedBox(height: 12),
+                    _Bone(height: 34, width: 220),
                     SizedBox(height: 14),
                     Row(
                       children: [
-                        _Bone(height: 12, width: 80),
+                        _Bone(height: 14, width: 100),
                         SizedBox(width: 16),
-                        _Bone(height: 12, width: 80),
+                        _Bone(height: 14, width: 100),
                         Spacer(),
-                        _Bone(height: 28, width: 90, radius: 8),
+                        _Bone(height: 36, width: 110, radius: 10),
                       ],
                     ),
                   ],
@@ -147,7 +140,7 @@ class ManagerHomeSkeleton extends StatelessWidget {
 
               // Quick actions row
               SizedBox(
-                height: 84,
+                height: 96,
                 child: Row(
                   children: List.generate(actionsCount, (i) {
                     return Expanded(
@@ -156,9 +149,9 @@ class ManagerHomeSkeleton extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            _Bone(height: 44, width: 44, radius: 12),
-                            SizedBox(height: 8),
-                            _Bone(height: 10, width: 60),
+                            _Bone(height: 52, width: 52, radius: 14),
+                            SizedBox(height: 10),
+                            _Bone(height: 12, width: 60),
                           ],
                         ),
                       ),
@@ -167,8 +160,8 @@ class ManagerHomeSkeleton extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 8),
-              const _Bone(height: 14, width: 120),
+              const SizedBox(height: 20),
+              const _Bone(height: 16, width: 140),
               const SizedBox(height: 8),
 
               // List items
@@ -180,20 +173,20 @@ class ManagerHomeSkeleton extends StatelessWidget {
                 itemBuilder: (_, __) {
                   return Row(
                     children: const [
-                      CircleAvatar(radius: 18, backgroundColor: Colors.black12),
+                      CircleAvatar(radius: 22, backgroundColor: Colors.black12),
                       SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _Bone(height: 12, width: double.infinity),
-                            SizedBox(height: 6),
-                            _Bone(height: 10, width: 180),
+                            _Bone(height: 14, width: double.infinity),
+                            SizedBox(height: 8),
+                            _Bone(height: 12, width: 200),
                           ],
                         ),
                       ),
                       SizedBox(width: 12),
-                      _Bone(height: 16, width: 60),
+                      _Bone(height: 18, width: 70),
                     ],
                   );
                 },
@@ -203,6 +196,7 @@ class ManagerHomeSkeleton extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

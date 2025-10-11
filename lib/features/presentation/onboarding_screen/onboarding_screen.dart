@@ -2,6 +2,7 @@ import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Re
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
+import 'dart:async';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -14,11 +15,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   late VideoPlayerController _videoController;
   bool _isVideoInitialized = false;
   String? _errorMessage;
+  // Words to cycle through with fade animation
+  final List<String> _words = ['Growth', 'Insights', 'Simplicity'];
+  int _wordIndex = 0;
+  Timer? _wordTimer;
 
   @override
   void initState() {
     super.initState();
     _initializeVideo();
+    // Start cycling headline words
+    _wordTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted) return;
+      setState(() {
+        _wordIndex = (_wordIndex + 1) % _words.length;
+      });
+    });
   }
 
   void _initializeVideo() {
@@ -46,6 +58,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void dispose() {
     _videoController.dispose();
+    _wordTimer?.cancel();
     super.dispose();
   }
 
@@ -131,29 +144,92 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Phrase with "Growth" in purple
-                  RichText(
-                    text: const TextSpan(
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.3,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(0, 2),
-                            blurRadius: 8,
-                            color: Colors.black45,
-                          ),
-                        ],
-                      ),
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        TextSpan(text: 'Smarter Crypto Finance\nfor '),
-                        TextSpan(
-                          text: 'Growth',
+                        const Text(
+                          'Smarter Crypto Finance',
                           style: TextStyle(
-                            color: Color(0xFF9747FF),
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            height: 1.3,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 2),
+                                blurRadius: 8,
+                                color: Colors.black45,
+                              ),
+                            ],
                           ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            const Text(
+                              'for ',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                height: 1.3,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(0, 2),
+                                    blurRadius: 8,
+                                    color: Colors.black45,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            // Animated word
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 700),
+                              switchInCurve: Curves.easeIn,
+                              switchOutCurve: Curves.easeOut,
+                              layoutBuilder: (currentChild, previousChildren) {
+                                // Overlap children so fade is smooth
+                                return Stack(
+                                  alignment: Alignment.centerLeft,
+                                  children: [
+                                    ...previousChildren,
+                                    if (currentChild != null) currentChild,
+                                  ],
+                                );
+                              },
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: Align(alignment: Alignment.centerLeft, child: child),
+                                );
+                              },
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  _words[_wordIndex],
+                                  key: ValueKey<int>(_wordIndex),
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF9747FF),
+                                    shadows: [
+                                      Shadow(
+                                        offset: Offset(0, 2),
+                                        blurRadius: 8,
+                                        color: Colors.black45,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
