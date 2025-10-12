@@ -965,18 +965,10 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     
     print("📊 Operating Cash Flow: $operatingCashFlow");
     
-    // If operating cash flow is zero, provide sample data for demonstration
+    // If operating cash flow is zero, return empty data
     if (operatingCashFlow == 0.0) {
-      final spots = [
-        FlSpot(0, 4000),
-        FlSpot(1, 4200),
-        FlSpot(2, 3800),
-        FlSpot(3, 4500),
-        FlSpot(4, 4100),
-        FlSpot(5, 4300),
-      ];
-      print("📊 Operating Cash Flow Spots (Sample): $spots");
-      return spots;
+      print("📊 Operating Cash Flow Spots (Empty): No data available");
+      return [];
     }
     
     final spots = [
@@ -997,18 +989,10 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     
     print("📊 Investing Cash Flow: $investingCashFlow");
     
-    // If investing cash flow is zero, provide sample data for demonstration
+    // If investing cash flow is zero, return empty data
     if (investingCashFlow == 0.0) {
-      final spots = [
-        FlSpot(0, -500),
-        FlSpot(1, -800),
-        FlSpot(2, -1200),
-        FlSpot(3, -600),
-        FlSpot(4, -900),
-        FlSpot(5, -700),
-      ];
-      print("📊 Investing Cash Flow Spots (Sample): $spots");
-      return spots;
+      print("📊 Investing Cash Flow Spots (Empty): No data available");
+      return [];
     }
     
     final spots = [
@@ -1027,10 +1011,10 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final operatingCashFlow = cashFlow.summary.netCashFromOperations;
     final investingCashFlow = cashFlow.summary.netCashFromInvesting;
     
-    // If both are zero, use sample data range
+    // If both are zero, return 0 for empty chart
     if (operatingCashFlow == 0.0 && investingCashFlow == 0.0) {
-      print("📊 Y-Axis Min (Sample): -1500");
-      return -1500; // Reasonable range for sample data
+      print("📊 Y-Axis Min (Empty): 0");
+      return 0;
     }
     
     final minValue = [operatingCashFlow * 0.5, investingCashFlow * 0.5].reduce((a, b) => a < b ? a : b);
@@ -1043,10 +1027,10 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final operatingCashFlow = cashFlow.summary.netCashFromOperations;
     final investingCashFlow = cashFlow.summary.netCashFromInvesting;
     
-    // If both are zero, use sample data range
+    // If both are zero, return 100 for empty chart
     if (operatingCashFlow == 0.0 && investingCashFlow == 0.0) {
-      print("📊 Y-Axis Max (Sample): 5000");
-      return 5000; // Reasonable range for sample data
+      print("📊 Y-Axis Max (Empty): 100");
+      return 100;
     }
     
     final maxValue = [operatingCashFlow, investingCashFlow].reduce((a, b) => a > b ? a : b);
