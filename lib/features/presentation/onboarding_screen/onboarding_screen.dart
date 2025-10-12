@@ -1,3 +1,4 @@
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -62,20 +63,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const AuthWrapper(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 600),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -291,7 +279,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Already have an account text
                   Center(
                     child: GestureDetector(
-                      onTap: _navigateToLogin,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LogIn(),
+                          ),
+                        );
+                      },
                       child: RichText(
                         text: TextSpan(
                           style: TextStyle(

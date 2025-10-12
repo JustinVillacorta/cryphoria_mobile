@@ -242,7 +242,6 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
       child: Column(
         children: [
           _buildHeader(),
-          _buildProgressIndicator(),
           Expanded(
             child: _buildCurrentStep(),
           ),
@@ -687,6 +686,10 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
 
 
   Widget _buildBottomActions() {
+    // Form validity: require connected wallet, recipient address, and a positive numeric amount.
+    final double amountValue = double.tryParse(amount) ?? 0.0;
+    final bool isFormValid = widget.wallet != null && recipientAddress.trim().isNotEmpty && amountValue > 0;
+
     return Container(
       padding: const EdgeInsets.all(24),
       child: Row(
@@ -721,54 +724,59 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
-              onPressed: _isSendingPayment ? null : () async {
-                if (currentStep < 1) {
-                  // If moving to confirmation step (step 1), estimate gas
-                  if (widget.wallet != null && amount.isNotEmpty && recipientAddress.isNotEmpty) {
-                    await _estimateGas();
-                  }
-                  setState(() {
-                    currentStep++;
-                  });
-                } else {
-                  // Handle payment confirmation
-                  if (widget.wallet != null) {
-                    await _sendPayment();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No wallet connected'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
+              // Disable button when sending, or when on step 0 and form is invalid.
+              onPressed: (_isSendingPayment || (currentStep == 0 && !isFormValid))
+                  ? null
+                  : () async {
+                      if (currentStep < 1) {
+                        // If moving to confirmation step (step 1), estimate gas
+                        if (widget.wallet != null && amount.isNotEmpty && recipientAddress.isNotEmpty) {
+                          await _estimateGas();
+                        }
+                        setState(() {
+                          currentStep++;
+                        });
+                      } else {
+                        // Handle payment confirmation
+                        if (widget.wallet != null && isFormValid) {
+                          await _sendPayment();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please complete recipient information and enter a valid amount'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8B5CF6),
+                backgroundColor: (_isSendingPayment || (currentStep == 0 && !isFormValid))
+                    ? Colors.grey // visually indicate disabled state
+                    : const Color(0xFF8B5CF6),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 0,
               ),
-              child: _isSendingPayment 
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              child: _isSendingPayment
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      currentStep == 1 ? 'Send Payment' : 'Continue',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
-                  )
-                : Text(
-                    currentStep == 1 ? 'Send Payment' : 'Continue',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
             ),
           ),
         ],
@@ -776,3 +784,4 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     );
   }
 }
+

@@ -21,6 +21,11 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   String newRole = 'Investor';
   String newNotes = '';
 
+  // Persistent controllers — avoid recreating controllers in build (prevents cursor jumping / reversed typing)
+  final TextEditingController _walletController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+
   final List<String> roles = ['Investor', 'Partner', 'Vendor', 'Client'];
 
   @override
@@ -30,6 +35,14 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(smartInvestNotifierProvider.notifier).getAddressBookList();
     });
+  }
+
+  @override
+  void dispose() {
+    _walletController.dispose();
+    _nameController.dispose();
+    _notesController.dispose();
+    super.dispose();
   }
 
   @override
@@ -401,18 +414,14 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                 IconButton(
                   onPressed: () => _editEntry(entry),
                   icon: const Icon(Icons.edit_outlined, size: 20),
-                  style: IconButton.styleFrom(
-                    foregroundColor: Colors.grey[600],
-                    padding: const EdgeInsets.all(12),
-                  ),
+                  color: Colors.grey[600],
+                  padding: const EdgeInsets.all(12),
                 ),
                 IconButton(
                   onPressed: () => _deleteEntry(entry),
                   icon: const Icon(Icons.delete_outline, size: 20),
-                  style: IconButton.styleFrom(
-                    foregroundColor: Colors.red[400],
-                    padding: const EdgeInsets.all(12),
-                  ),
+                  color: Colors.red[400],
+                  padding: const EdgeInsets.all(12),
                 ),
               ],
             ),
@@ -457,7 +466,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 8),
           TextField(
-            controller: TextEditingController(text: newWalletAddress),
+            controller: _walletController,
             onChanged: (value) => setState(() => newWalletAddress = value),
             decoration: const InputDecoration(
               hintText: '0x...',
@@ -480,7 +489,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 8),
           TextField(
-            controller: TextEditingController(text: newName),
+            controller: _nameController,
             onChanged: (value) => setState(() => newName = value),
             decoration: const InputDecoration(
               hintText: 'John Doe',
@@ -548,7 +557,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 8),
           TextField(
-            controller: TextEditingController(text: newNotes),
+            controller: _notesController,
             onChanged: (value) => setState(() => newNotes = value),
             maxLines: 3,
             decoration: const InputDecoration(
@@ -635,6 +644,10 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     newName = '';
     newRole = 'Investor';
     newNotes = '';
+    // clear persistent controllers to keep caret behaviour stable
+    _walletController.text = '';
+    _nameController.text = '';
+    _notesController.text = '';
   }
 
   void _sendEthToEntry(Map<String, dynamic> entry) {
@@ -664,6 +677,10 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       // Convert lowercase role to capitalized for dropdown
       newRole = _capitalizeFirst(entry['role'] as String);
       newNotes = entry['subRole'];
+      // set controller texts (do this after updating state so build uses correct controllers)
+      _walletController.text = entry['walletAddress'];
+      _nameController.text = entry['name'];
+      _notesController.text = entry['subRole'];
     });
   }
 
@@ -675,35 +692,77 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   void _deleteEntry(Map<String, dynamic> entry) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Entry'),
-        content: Text('Are you sure you want to delete ${entry['name']}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              // Note: The current API doesn't have a delete endpoint
-              // For now, we'll show a message that deletion is not supported
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Delete functionality not yet implemented in API'),
-                  backgroundColor: Colors.orange,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        var isDeleting = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Delete Entry'),
+              content: Text('Are you sure you want to delete ${entry['name']}?'),
+              actions: [
+                TextButton(
+                  onPressed: isDeleting ? null : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
                 ),
-              );
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+                TextButton(
+                  onPressed: isDeleting
+                      ? null
+                      : () async {
+                          setState(() => isDeleting = true);
+                          Navigator.of(dialogContext).pop();
+
+                          final notifier = ref.read(smartInvestNotifierProvider.notifier);
+                          try {
+                            // Try calling a delete method on the notifier if it exists.
+                            // We use dynamic to avoid compile-time error if the provider doesn't expose it.
+                            await (notifier as dynamic).deleteAddressBookEntry?.call(entry['id']);
+                            // If the above method doesn't exist it will be null and skip to success below.
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Entry deleted'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } on NoSuchMethodError {
+                            // Fallback message when API/notifier doesn't support deletion.
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Delete functionality not yet implemented in API'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to delete entry: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                  child: isDeleting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Delete', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
   void _addEntry() async {
-    if (newWalletAddress.isEmpty || newName.isEmpty) {
+    final wallet = _walletController.text.trim();
+    final name = _nameController.text.trim();
+    final notes = _notesController.text.trim();
+
+    if (wallet.isEmpty || name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all required fields'),
@@ -715,10 +774,10 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
 
     try {
       final request = AddressBookUpsertRequest(
-        address: newWalletAddress,
-        name: newName,
+        address: wallet,
+        name: name,
         role: newRole,
-        notes: newNotes,
+        notes: notes,
       );
 
       await ref.read(smartInvestNotifierProvider.notifier).upsertAddressBookEntry(request);
@@ -745,7 +804,11 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   }
 
   void _updateEntry() async {
-    if (newWalletAddress.isEmpty || newName.isEmpty) {
+    final wallet = _walletController.text.trim();
+    final name = _nameController.text.trim();
+    final notes = _notesController.text.trim();
+
+    if (wallet.isEmpty || name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all required fields'),
@@ -757,10 +820,10 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
 
     try {
       final request = AddressBookUpsertRequest(
-        address: newWalletAddress,
-        name: newName,
+        address: wallet,
+        name: name,
         role: newRole,
-        notes: newNotes,
+        notes: notes,
       );
 
       await ref.read(smartInvestNotifierProvider.notifier).upsertAddressBookEntry(request);

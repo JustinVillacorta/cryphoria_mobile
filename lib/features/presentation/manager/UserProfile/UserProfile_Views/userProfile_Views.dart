@@ -1,5 +1,8 @@
 import 'dart:ui';
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/security/security_view/change_password_view.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ComplianceView/compliance_view.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/HelpandSupport/help_and_support_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
@@ -232,13 +235,15 @@ class _userProfileState extends ConsumerState<userProfile> {
                     _buildMenuItem(
                       context: context,
                       icon: Icons.privacy_tip_outlined,
-                      title: 'Privacy Settings',
-                      subtitle: 'Control your privacy preferences',
+                      title: 'Security',
+                      subtitle: 'Change your password and secure your account',
                       iconColor: const Color(0xFF8B5CF6),
                       onTap: () {
-                        // TODO: Implement privacy settings
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Feature coming soon')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ChangePasswordView(),
+                          ),
                         );
                       },
                     ),
@@ -249,13 +254,15 @@ class _userProfileState extends ConsumerState<userProfile> {
                     _buildMenuItem(
                       context: context,
                       icon: Icons.security_outlined,
-                      title: 'Security',
+                      title: 'Help and Support',
                       subtitle: 'Account security settings',
                       iconColor: const Color(0xFF8B5CF6),
                       onTap: () {
-                        // TODO: Implement security settings
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Feature coming soon')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HelpAndSupportView(),
+                          ),
                         );
                       },
                     ),

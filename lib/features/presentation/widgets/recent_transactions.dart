@@ -25,10 +25,13 @@ class RecentTransactions extends ConsumerWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Recent Transactions',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              ),
           ),
+      
           const SizedBox(height: 16),
           Text('Error: ${state.error}'),
           const SizedBox(height: 8),
@@ -39,6 +42,7 @@ class RecentTransactions extends ConsumerWidget {
         ],
       );
     }
+  
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,7 +75,7 @@ class RecentTransactions extends ConsumerWidget {
                     ),
                   ),
                   SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios, size: 12, color: Colors.blue),
+                  Icon(Icons.arrow_forward_ios, size: 12, color: const Color(0xff9747FF)),
                 ],
               ),
             )

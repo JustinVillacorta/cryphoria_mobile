@@ -94,7 +94,6 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
               children: [
                 _buildDetailsTab(),
                 _buildPayrollTab(),
-                _buildDocumentsTab(),
               ],
             ),
           ),
@@ -271,7 +270,6 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
         children: [
           _buildTabItem('Details', 0),
           _buildTabItem('Payroll', 1),
-          _buildTabItem('Documents', 2),
         ],
       ),
     );
@@ -819,57 +817,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     }
   }
 
-  Widget _buildDocumentsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Employee Documents',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildDocumentItem(
-            'Employment Contract',
-            'Uploaded on • 2018-03-10',
-            Icons.description_outlined,
-          ),
-          _buildDocumentItem(
-            'NDA Agreement',
-            'Uploaded on • 2018-03-10',
-            Icons.description_outlined,
-          ),
-          _buildDocumentItem(
-            'Tax Forms',
-            'Uploaded on • 2019-01-15',
-            Icons.description_outlined,
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => _uploadNewDocument(),
-              icon: const Icon(Icons.add),
-              label: const Text('Upload New Document'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF9747FF),
-                side: const BorderSide(color: Color(0xFF9747FF)),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildCard({
     IconData? icon,
@@ -1007,55 +955,6 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     );
   }
 
-  Widget _buildDocumentItem(String title, String subtitle, IconData icon) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: const Color(0xFF9747FF), size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () => _viewDocument(),
-            child: const Text(
-              'View',
-              style: TextStyle(
-                color: Color(0xFF9747FF),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showDeleteDialog() {
     showDialog(
@@ -1113,15 +1012,5 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     // TODO: Implement navigation to full payslip list screen
   }
 
-  void _uploadNewDocument() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Document upload coming soon...')),
-    );
-  }
-
-  void _viewDocument() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Opening document viewer...')),
-    );
-  }
+ 
 }

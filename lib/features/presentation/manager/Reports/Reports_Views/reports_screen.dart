@@ -41,7 +41,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Tab Buttons
+              // Tab Buttons (remain fixed)
               Container(
                 height: 48,
                 decoration: BoxDecoration(
@@ -68,7 +68,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         child: Container(
                           margin: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF8B5CF6) : Colors.transparent,
+                            color: isSelected ? const Color(0x1A9747FF) : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Center(
@@ -76,8 +76,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               tabs[index],
                               style: TextStyle(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: isSelected ? Colors.white : Colors.grey[600],
+                                fontWeight: FontWeight.normal,
+                                color: isSelected ? Color(0xff9747FF) : Colors.grey[600],
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -88,52 +88,57 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   }),
                 ),
               ),
-              const SizedBox(height: 20),
-
-              // Period Buttons
-              Row(
-                children: List.generate(periods.length, (index) {
-                  final isSelected = selectedPeriodIndex == index;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedPeriodIndex = index;
-                        });
-                      },
-                      child: Container(
-                        margin: EdgeInsets.only(right: index < periods.length - 1 ? 8 : 0),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFF8B5CF6) : Colors.white,
-                          borderRadius: BorderRadius.circular(50), // smoother radius
-                          border: Border.all(
-                            color: isSelected ? const Color(0xFF8B5CF6) : Colors.grey[300]!,
-                            width: 1.2, // subtle border
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            periods[index],
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : Colors.grey[700],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-
               const SizedBox(height: 24),
 
-              // Report Cards Grid
+              // Make periods part of the scrollable area by moving them into the SingleChildScrollView below.
               Expanded(
                 child: SingleChildScrollView(
-                  child: _buildSelectedTabContent(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Period Buttons (now scroll with content)
+                      Row(
+                        children: List.generate(periods.length, (index) {
+                          final isSelected = selectedPeriodIndex == index;
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedPeriodIndex = index;
+                                });
+                              },
+                              child: Container(
+                                margin: EdgeInsets.only(right: index < periods.length - 1 ? 8 : 0),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? const Color(0x1A9747FF) : Colors.white,
+                                  borderRadius: BorderRadius.circular(50), // smoother radius
+                                  border: Border.all(
+                                    color: isSelected ? const Color(0x1A9747FF) : Colors.grey[300]!,
+                                    width: 1.2, // subtle border
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    periods[index],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.normal,
+                                      color: isSelected ? const Color(0xff9747FF) : Colors.grey[700],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // The existing report content
+                      _buildSelectedTabContent(),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -276,7 +281,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           subtitle: 'Cash flow has decreased by 18% compared to last quarter.',
           recommendation: 'Review accounts receivable processes and consider implementing stricter collection policies.',
           level: 'high',
-          color: Colors.red[100]!,
+          color: Colors.white!,
           iconColor: Colors.red,
           levelColor: Colors.red,
         ),
@@ -288,7 +293,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           subtitle: 'Operational expenses have increased by 12% while revenue remained flat.',
           recommendation: 'Conduct expense audit and identify areas for potential cost reduction.',
           level: 'medium',
-          color: Colors.orange[100]!,
+          color: Colors.white!,
           iconColor: Colors.orange,
           levelColor: Colors.orange,
         ),
@@ -300,7 +305,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           subtitle: 'Your debt-to-equity ratio is approaching industry warning levels (currently 1.8).',
           recommendation: 'Consider equity financing options instead of taking on additional debt.',
           level: 'low',
-          color: Colors.blue[100]!,
+          color: Colors.white!,
           iconColor: Colors.blue,
           levelColor: Colors.blue,
         ),
@@ -675,281 +680,51 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 color: Colors.black87,
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF8B5CF6),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                '3 alerts',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
+            Text(
+              '3 alerts',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.purple[600],
               ),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        
-        // Risk Alert Items
-        // High Risk - VAT Underpayment
-        Container(
-          padding: const EdgeInsets.all(16),
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFEF2F2),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFFECACA)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'high',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.warning,
-                    color: Color(0xFFDC2626),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  const Flexible(
-                    child: Text(
-                      'Potential VAT Underpayment',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFDC2626),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'System detected a 3% discrepancy between calculated VAT and reported amounts.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.lightbulb_outline,
-                    color: Color(0xFFDC2626),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Recommendation:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFDC2626),
-                    ),
-                  ),
-                ],
-              ),
-              const Text(
-                'Conduct internal audit of VAT calculations before next filing period.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
 
-        // Medium Risk - Late Filing
-        Container(
-          padding: const EdgeInsets.all(16),
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFEF3C7),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFFDE68A)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'medium',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.schedule,
-                    color: Color(0xFFF59E0B),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  const Flexible(
-                    child: Text(
-                      'Late Filing Risk',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFF59E0B),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Two recent tax filings were submitted within 48 hours of deadline.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.lightbulb_outline,
-                    color: Color(0xFFF59E0B),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Recommendation:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFF59E0B),
-                    ),
-                  ),
-                ],
-              ),
-              const Text(
-                'Implement earlier preparation schedules with 10-day buffer before deadlines.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
+        // High Risk - VAT Underpayment (styled like financial/payroll)
+        _buildRiskAlert(
+          title: 'Potential VAT Underpayment',
+          subtitle: 'System detected a 3% discrepancy between calculated VAT and reported amounts.',
+          recommendation: 'Conduct internal audit of VAT calculations before next filing period.',
+          level: 'high',
+          color: Colors.white,
+          iconColor: const Color(0xFFDC2626),
+          levelColor: const Color(0xFFDC2626),
         ),
+        const SizedBox(height: 12),
 
-        // Low Risk - Missing Documentation
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFDDEAFE)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'low',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.description,
-                    color: Color(0xFF3B82F6),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  const Flexible(
-                    child: Text(
-                      'Missing Documentation',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF3B82F6),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Some expense receipts lack proper categorization for tax deduction purposes.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.lightbulb_outline,
-                    color: Color(0xFF3B82F6),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Recommendation:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF3B82F6),
-                    ),
-                  ),
-                ],
-              ),
-              const Text(
-                'Implement standardized receipt management system with required categorization.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
+        // Medium Risk - Late Filing (styled like financial/payroll)
+        _buildRiskAlert(
+          title: 'Late Filing Risk',
+          subtitle: 'Two recent tax filings were submitted within 48 hours of deadline.',
+          recommendation: 'Implement earlier preparation schedules with 10-day buffer before deadlines.',
+          level: 'medium',
+          color: Colors.white,
+          iconColor: const Color(0xFFF59E0B),
+          levelColor: const Color(0xFFF59E0B),
+        ),
+        const SizedBox(height: 12),
+
+        // Low Risk - Missing Documentation (styled like financial/payroll)
+        _buildRiskAlert(
+          title: 'Missing Documentation',
+          subtitle: 'Some expense receipts lack proper categorization for tax deduction purposes.',
+          recommendation: 'Implement standardized receipt management system with required categorization.',
+          level: 'low',
+          color: Colors.white,
+          iconColor: const Color(0xFF3B82F6),
+          levelColor: const Color(0xFF3B82F6),
         ),
       ],
     );
@@ -982,237 +757,37 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Overtime Costs Alert
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.red[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.red[200]!),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.warning, color: Colors.red[600], size: 20),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Overtime Costs Exceeding Budget',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.red[600],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'high',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Overtime expenses are 23% above projected budget for this period.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.lightbulb_outline, color: Colors.green[600], size: 16),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'Recommendation:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Analyze staffing levels and workload distribution to reduce overtime requirements.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
+        // Use the same visual style as the financial Risk Assessment items
+        _buildRiskAlert(
+          title: 'Overtime Costs Exceeding Budget',
+          subtitle: 'Overtime expenses are 23% above projected budget for this period.',
+          recommendation: 'Analyze staffing levels and workload distribution to reduce overtime requirements.',
+          level: 'high',
+          color: Colors.white,
+          iconColor: Colors.red[600],
+          levelColor: Colors.red[600],
         ),
         const SizedBox(height: 12),
 
-        // Inconsistent Deduction Alert
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.orange[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.orange[200]!),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.orange[600], size: 20),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Inconsistent Deduction Patterns',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[600],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'medium',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Unusual patterns detected in employee benefit deductions for 3 employees.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.lightbulb_outline, color: Colors.green[600], size: 16),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'Recommendation:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Verify deduction calculations and ensure compliance with current regulations.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
+        _buildRiskAlert(
+          title: 'Inconsistent Deduction Patterns',
+          subtitle: 'Unusual patterns detected in employee benefit deductions for 3 employees.',
+          recommendation: 'Verify deduction calculations and ensure compliance with current regulations.',
+          level: 'medium',
+          color: Colors.white,
+          iconColor: Colors.orange[600],
+          levelColor: Colors.orange[600],
         ),
         const SizedBox(height: 12),
 
-        // Processing Delays Alert
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.blue[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.blue[200]!),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.schedule, color: Colors.blue[600], size: 20),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Payroll Processing Delays',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[600],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'low',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Average processing time has increased from 2 to 3 days.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.lightbulb_outline, color: Colors.green[600], size: 16),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'Recommendation:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Review payroll workflow and consider automation improvements.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
+        _buildRiskAlert(
+          title: 'Payroll Processing Delays',
+          subtitle: 'Average processing time has increased from 2 to 3 days.',
+          recommendation: 'Review payroll workflow and consider automation improvements.',
+          level: 'low',
+          color: Colors.white,
+          iconColor: Colors.blue[600],
+          levelColor: Colors.blue[600],
         ),
       ],
     );

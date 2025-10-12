@@ -118,9 +118,9 @@ import '../features/domain/usecases/Invoice/get_invoices_by_user_usecase.dart';
 
 final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
-    return 'http://192.168.1.108:8000';
+    return 'http://10.0.2.2:8000';
   }
-  return 'http://192.168.1.108:8000';
+  return 'http://10.0.2.2:8000';
 });
 
 final flutterSecureStorageProvider =

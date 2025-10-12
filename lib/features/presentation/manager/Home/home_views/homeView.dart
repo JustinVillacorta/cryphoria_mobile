@@ -41,6 +41,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final walletState = ref.watch(walletNotifierProvider);
     final walletNotifier = ref.read(walletNotifierProvider.notifier);
     final user = ref.watch(userProvider);
+    final String displayName = (() {
+      final parts = <String>[];
+      if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName!.trim());
+      if ((user?.lastName ?? '').trim().isNotEmpty) parts.add(user!.lastName!.trim());
+      return parts.isNotEmpty ? parts.join(' ') : 'User';
+    })();
 
     return Scaffold(
         backgroundColor: Colors.grey[50],
@@ -67,8 +73,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            '"Hi, ${user?.firstName ?? "User"}"',
-                            style: TextStyle(
+                            'Hi, $displayName',
+                            style: const TextStyle(
                               color: Colors.black,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -114,7 +120,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
             }
             return ListView(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              // Add extra bottom padding (including safe-area inset) so the last items can be fully scrolled into view.
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                MediaQuery.of(context).padding.bottom + 50,
+              ),
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 const WalletCard(),
