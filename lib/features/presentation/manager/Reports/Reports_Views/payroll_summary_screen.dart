@@ -20,9 +20,12 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
   @override
   void initState() {
     super.initState();
-    // Load payroll reports using payslips endpoint
+    // Load payroll reports only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(payrollReportsViewModelProvider.notifier).loadPayrollReports();
+      final state = ref.read(payrollReportsViewModelProvider);
+      if (state.payslipsResponse == null && !state.isLoading) {
+        ref.read(payrollReportsViewModelProvider.notifier).loadPayrollReports();
+      }
     });
   }
 

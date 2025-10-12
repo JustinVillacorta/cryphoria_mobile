@@ -19,9 +19,12 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   @override
   void initState() {
     super.initState();
-    // Load cash flow when screen initializes
+    // Load cash flow only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(cashFlowViewModelProvider.notifier).loadCashFlow();
+      final state = ref.read(cashFlowViewModelProvider);
+      if (state.cashFlow == null && !state.isLoading) {
+        ref.read(cashFlowViewModelProvider.notifier).loadCashFlow();
+      }
     });
   }
 

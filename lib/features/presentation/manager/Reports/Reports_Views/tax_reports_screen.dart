@@ -19,9 +19,12 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
   @override
   void initState() {
     super.initState();
-    // Load tax reports when screen initializes
+    // Load tax reports only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(taxReportsViewModelProvider.notifier).loadTaxReports();
+      final state = ref.read(taxReportsViewModelProvider);
+      if (state.taxReport == null && !state.isLoading) {
+        ref.read(taxReportsViewModelProvider.notifier).loadTaxReports();
+      }
     });
   }
 

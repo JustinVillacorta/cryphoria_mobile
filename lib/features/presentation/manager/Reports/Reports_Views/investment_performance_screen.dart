@@ -19,9 +19,12 @@ class _InvestmentPerformanceScreenState extends ConsumerState<InvestmentPerforma
   @override
   void initState() {
     super.initState();
-    // Load portfolio data when screen initializes
+    // Load portfolio data only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(portfolioViewModelProvider.notifier).loadPortfolioValue();
+      final state = ref.read(portfolioViewModelProvider);
+      if (state.portfolio == null && !state.isLoading) {
+        ref.read(portfolioViewModelProvider.notifier).loadPortfolioValue();
+      }
     });
   }
 

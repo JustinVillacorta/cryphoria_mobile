@@ -22,12 +22,14 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
   void initState() {
     super.initState();
     _employeeViewModel = ref.read(employeeViewModelProvider);
-    // Load manager's team from backend by default
+    // Only load data if not already loaded to prevent unnecessary refetches
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Try to load manager's team first, fallback to sample data if needed
-      _employeeViewModel.getManagerTeam().catchError((_) {
-        _employeeViewModel.loadSampleData();
-      });
+      if (_employeeViewModel.employees.isEmpty && !_employeeViewModel.isLoading) {
+        // Try to load manager's team first, fallback to sample data if needed
+        _employeeViewModel.getManagerTeam().catchError((_) {
+          _employeeViewModel.loadSampleData();
+        });
+      }
     });
   }
 

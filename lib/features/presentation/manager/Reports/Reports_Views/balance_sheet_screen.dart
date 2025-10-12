@@ -22,9 +22,12 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   @override
   void initState() {
     super.initState();
-    // Load balance sheet when screen initializes
+    // Load balance sheet only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(balanceSheetViewModelProvider.notifier).loadBalanceSheet();
+      final state = ref.read(balanceSheetViewModelProvider);
+      if (state.balanceSheet == null && !state.isLoading) {
+        ref.read(balanceSheetViewModelProvider.notifier).loadBalanceSheet();
+      }
     });
   }
 
