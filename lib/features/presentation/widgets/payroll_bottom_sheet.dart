@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../dependency_injection/riverpod_providers.dart';
 import '../../domain/entities/create_payslip_request.dart';
 import '../../domain/entities/employee.dart' as domain_employee;
+import 'payroll_employees_skeleton.dart';
 
 class PayrollBottomSheet extends ConsumerStatefulWidget {
   const PayrollBottomSheet({Key? key}) : super(key: key);
@@ -974,12 +975,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
 
                   // Employee Cards
                   if (isLoadingEmployees)
-                    Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: CircularProgressIndicator(color: Color(0xFF9747FF)),
-                      ),
-                    )
+                    const PayrollEmployeesSkeleton()
                   else if (employeeLoadError != null)
                     Container(
                       padding: EdgeInsets.all(16),
@@ -1060,7 +1056,7 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
                       ),
                     )
                   else
-                    ...employeePayrollList.map((employeePayroll) => employeeCard(employeePayroll)),
+                    ...employeePayrollList.map((employeePayroll) => employeeCard(employeePayroll)).toList(),
 
                   SizedBox(height: 24),
 
