@@ -889,6 +889,301 @@ class PdfGenerationHelper {
     return await _savePdf(pdf, 'payroll_summary');
   }
   
+  static Future<String> generateAuditReportPdf(dynamic auditReport) async {
+    final pdf = pw.Document();
+    
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Header
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(20),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(),
+                ),
+                child: pw.Column(
+                  children: [
+                    pw.Text(
+                      'SMART AUDIT REPORT',
+                      style: pw.TextStyle(
+                        fontSize: 28,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 10),
+                    pw.Text(
+                      'Contract: ${auditReport.contractName}',
+                      style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                    ),
+                    pw.Text(
+                      'File: ${auditReport.fileName}',
+                      style: pw.TextStyle(fontSize: 14),
+                    ),
+                    pw.Text(
+                      'Generated: ${_formatDate(auditReport.timestamp.toIso8601String())}',
+                      style: pw.TextStyle(fontSize: 14),
+                    ),
+                    pw.Text(
+                      'Overall Score: ${auditReport.overallScore.toStringAsFixed(1)}/100',
+                      style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+              
+              pw.SizedBox(height: 20),
+              
+              // Security Analysis Section
+              pw.Text(
+                'Security Analysis',
+                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 10),
+              
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(15),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('Security Score: ${auditReport.securityAnalysis.securityScore.toStringAsFixed(1)}/100'),
+                    pw.Text('Critical Issues: ${auditReport.securityAnalysis.criticalIssues}'),
+                    pw.Text('High Risk Issues: ${auditReport.securityAnalysis.highRiskIssues}'),
+                    pw.Text('Medium Risk Issues: ${auditReport.securityAnalysis.mediumRiskIssues}'),
+                    pw.Text('Low Risk Issues: ${auditReport.securityAnalysis.lowRiskIssues}'),
+                  ],
+                ),
+              ),
+              
+              pw.SizedBox(height: 20),
+              
+              // Vulnerabilities Section
+              if (auditReport.vulnerabilities.isNotEmpty) ...[
+                pw.Text(
+                  'Vulnerabilities (${auditReport.vulnerabilities.length})',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                
+                pw.Table(
+                  border: pw.TableBorder.all(),
+                  columnWidths: {
+                    0: pw.FlexColumnWidth(2),
+                    1: pw.FlexColumnWidth(1),
+                    2: pw.FlexColumnWidth(1),
+                    3: pw.FlexColumnWidth(3),
+                  },
+                  children: [
+                    pw.TableRow(
+                      decoration: pw.BoxDecoration(),
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Title', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Severity', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Category', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Description', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    ...auditReport.vulnerabilities.map((vuln) => pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(vuln.title),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(vuln.severity.toString().split('.').last.toUpperCase()),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(vuln.category),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(vuln.description),
+                        ),
+                      ],
+                    )).toList(),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+              ],
+              
+              // Gas Optimization Section
+              pw.Text(
+                'Gas Optimization',
+                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 10),
+              
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(15),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('Optimization Score: ${auditReport.gasOptimization.optimizationScore.toStringAsFixed(1)}/100'),
+                    pw.SizedBox(height: 10),
+                    if (auditReport.gasOptimization.suggestions.isNotEmpty) ...[
+                      pw.Text('Suggestions:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 5),
+                      ...auditReport.gasOptimization.suggestions.map((suggestion) => pw.Padding(
+                        padding: const pw.EdgeInsets.only(bottom: 5),
+                        child: pw.Text('• ${suggestion.function}: ${suggestion.suggestion} (${suggestion.priority.toString().split('.').last.toUpperCase()})'),
+                      )).toList(),
+                    ],
+                  ],
+                ),
+              ),
+              
+              pw.SizedBox(height: 20),
+              
+              // Code Quality Section
+              pw.Text(
+                'Code Quality',
+                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 10),
+              
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(15),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('Quality Score: ${auditReport.codeQuality.qualityScore.toStringAsFixed(1)}/100'),
+                    pw.Text('Lines of Code: ${auditReport.codeQuality.linesOfCode}'),
+                    pw.Text('Complexity Score: ${auditReport.codeQuality.complexityScore}'),
+                    if (auditReport.codeQuality.issues.isNotEmpty) ...[
+                      pw.SizedBox(height: 10),
+                      pw.Text('Issues:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 5),
+                      ...auditReport.codeQuality.issues.map((issue) => pw.Padding(
+                        padding: const pw.EdgeInsets.only(bottom: 5),
+                        child: pw.Text('• Line ${issue.lineNumber}: ${issue.type} - ${issue.description} (${issue.severity.toString().split('.').last.toUpperCase()})'),
+                      )).toList(),
+                    ],
+                  ],
+                ),
+              ),
+              
+              pw.SizedBox(height: 20),
+              
+              // Recommendations Section
+              if (auditReport.recommendations.isNotEmpty) ...[
+                pw.Text(
+                  'Recommendations (${auditReport.recommendations.length})',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                
+                pw.Table(
+                  border: pw.TableBorder.all(),
+                  columnWidths: {
+                    0: pw.FlexColumnWidth(2),
+                    1: pw.FlexColumnWidth(1),
+                    2: pw.FlexColumnWidth(1),
+                    3: pw.FlexColumnWidth(3),
+                  },
+                  children: [
+                    pw.TableRow(
+                      decoration: pw.BoxDecoration(),
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Title', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Priority', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Category', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Description', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    ...auditReport.recommendations.map((rec) => pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(rec.title),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(rec.priority.toString().split('.').last.toUpperCase()),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(rec.category),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text(rec.description),
+                        ),
+                      ],
+                    )).toList(),
+                  ],
+                ),
+              ],
+              
+              pw.SizedBox(height: 30),
+              
+              // Footer
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(15),
+                decoration: pw.BoxDecoration(),
+                child: pw.Column(
+                  children: [
+                    pw.Text(
+                      'Generated on ${_formatDate(DateTime.now().toIso8601String())}',
+                      style: pw.TextStyle(fontSize: 12),
+                    ),
+                    pw.Text(
+                      'Smart Audit System - Comprehensive Security Analysis',
+                      style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    
+    return await _savePdf(pdf, 'audit_report');
+  }
+  
   static Future<String> _savePdf(pw.Document pdf, String fileName) async {
     final bytes = await pdf.save();
     final directory = await getApplicationDocumentsDirectory();
