@@ -26,10 +26,18 @@ class EmployeeWidgetTree extends ConsumerWidget {
     ];
     
     return PopScope(
-      canPop: false,
+      canPop: false, // Intercept all back button presses
       onPopInvoked: (didPop) {
         if (!didPop) {
-          print('Back button pressed on employee main screen - ignoring');
+          // Check if we're on a detail screen (pushed route)
+          final navigator = Navigator.of(context);
+          if (navigator.canPop()) {
+            // We're on a detail screen, allow back navigation
+            navigator.pop();
+          } else {
+            // We're on main tab, prevent app closure
+            print('Back button pressed on employee main screen - preventing app closure');
+          }
         }
       },
       child: Scaffold(

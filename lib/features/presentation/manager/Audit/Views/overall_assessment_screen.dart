@@ -877,7 +877,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
       
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show success message
@@ -892,8 +892,8 @@ class OverallAssessmentScreen extends ConsumerWidget {
       }
     } catch (e) {
       // Close loading dialog if it's still open
-      if (context.mounted && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (context.mounted && Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
       }
       
       // Show error message

@@ -1040,7 +1040,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show success message
@@ -1056,7 +1056,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     } catch (e) {
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show error message
@@ -1102,7 +1102,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show success message
@@ -1118,7 +1118,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     } catch (e) {
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show error message

@@ -19,12 +19,18 @@ class WidgetTree extends ConsumerWidget {
     final selectedPage = ref.watch(selectedPageProvider);
     
     return PopScope(
-      canPop: false, // Prevent default back button behavior
+      canPop: false, // Intercept all back button presses
       onPopInvoked: (didPop) {
         if (!didPop) {
-          // Handle back button press - you can show a confirmation dialog or just ignore
-          // For now, we'll ignore the back press to prevent accidental app closure
-          print('Back button pressed on main screen - ignoring to prevent app closure');
+          // Check if we're on a detail screen (pushed route)
+          final navigator = Navigator.of(context);
+          if (navigator.canPop()) {
+            // We're on a detail screen, allow back navigation
+            navigator.pop();
+          } else {
+            // We're on main tab, prevent app closure
+            print('Back button pressed on main screen - preventing app closure');
+          }
         }
       },
       child: Scaffold(

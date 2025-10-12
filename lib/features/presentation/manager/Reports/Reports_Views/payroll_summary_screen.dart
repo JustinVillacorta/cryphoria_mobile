@@ -985,7 +985,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
 
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show success message
@@ -1001,7 +1001,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
     } catch (e) {
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show error message
@@ -1047,7 +1047,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
 
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show success message
@@ -1063,7 +1063,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
     } catch (e) {
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show error message

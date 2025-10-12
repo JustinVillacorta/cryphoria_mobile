@@ -412,7 +412,7 @@ class PayslipDetailsView extends ConsumerWidget {
       final pdfPath = await PdfGenerationHelper.generatePayslipPdf(payslipData);
       
       // Close loading dialog
-      Navigator.of(context).pop();
+      Navigator.of(context, rootNavigator: true).pop();
 
       if (pdfPath.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -432,8 +432,8 @@ class PayslipDetailsView extends ConsumerWidget {
       }
     } catch (e) {
       // Close loading dialog if it's still open
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
