@@ -1,5 +1,4 @@
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/notification_view/notification_view.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/salary_transactions_view/salary_transactions_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_payout_info.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_top_bar.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_transaction_header.dart';
@@ -7,6 +6,7 @@ import 'package:cryphoria_mobile/features/presentation/widgets/employee_transact
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_wallet_card.dart';
 import 'package:cryphoria_mobile/features/domain/entities/employee_transaction_status.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -119,11 +119,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                         onNotificationTapped: () => _navigateToNotifications(context),
                       ),
                       SizedBox(height: screenHeight * 0.02),
-                      EmployeeWalletCardWidget(
-                        isTablet: isTablet,
-                        onWhatIsCryptoWallet: () {
-                          debugPrint('What is a crypto wallet tapped');
-                        },
+                      WalletCard(
                       ),
                       SizedBox(height: screenHeight * 0.02),
                       PayoutInfoWidget(
@@ -132,26 +128,8 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                         isTablet: isTablet,
                       ),
                       SizedBox(height: screenHeight * 0.02),
-                      TransactionListHeaderWidget(
-                        onViewAllTapped: () => _navigateToAllTransactions(context),
-                        isTablet: isTablet,
-                      ),
-                      SizedBox(height: screenHeight * 0.016),
-                      if (state.recentTransactions.isEmpty)
-                        _buildEmptyTransactionsState(screenHeight)
-                      else
-                        ListView(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: state.recentTransactions
-                              .map<Widget>(
-                                (dynamic transaction) => TransactionItemWidget(
-                              transaction: Transaction.fromMap(transaction),
-                              isTablet: isTablet,
-                            ),
-                          )
-                              .toList(),
-                        ),
+                      
+                
                     ],
                   ),
                 ),
@@ -162,56 +140,11 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
       ),
     );
   }
-
   void _navigateToNotifications(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => NotificationsScreen(),
-      ),
-    );
-  }
-
-  void _navigateToAllTransactions(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const SalaryTransactionsScreen(),
-      ),
-    );
-  }
-
-  Widget _buildEmptyTransactionsState(double screenHeight) {
-    return Container(
-      height: screenHeight * 0.2,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 48,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'No transactions yet',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Your recent transactions will appear here',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
