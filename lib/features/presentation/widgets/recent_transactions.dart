@@ -1,10 +1,7 @@
-import 'package:cryphoria_mobile/features/presentation/manager/Home/transaction_details/transaction_details.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Transactions/all_transactions_screen.dart';
-
-// ⬇️ Add this import (update the path if different)
 import 'package:cryphoria_mobile/features/presentation/widgets/transaction_details.dart';
 
 class RecentTransactions extends ConsumerWidget {
@@ -130,7 +127,7 @@ class RecentTransactions extends ConsumerWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // Minimal: construct TransactionData from the map with safe fallbacks
+          // Construct TransactionData from the map with all available fields
           final tx = TransactionData(
             title: (transaction['title'] ?? 'Transaction').toString(),
             subtitle: (transaction['subtitle'] ?? '').toString(),
@@ -138,23 +135,25 @@ class RecentTransactions extends ConsumerWidget {
             isIncome: isPositive,
             dateTime: (transaction['time'] ?? 'Today').toString(),
             category: (transaction['category'] ?? (isPositive ? 'Income' : 'Expense')).toString(),
-            paymentMethod: (transaction['paymentMethod'] ?? 'Wallet').toString(),
-            reference: (transaction['reference'] ?? '—').toString(),
             notes: (transaction['notes'] ?? '—').toString(),
             transactionId: (transaction['id'] ?? transaction['transactionId'] ?? 'TX-${DateTime.now().millisecondsSinceEpoch}').toString(),
-            accountType: (transaction['accountType'] ?? (isPositive ? 'Revenue' : 'Expense')).toString(),
-            taxRate: (transaction['taxRate'] ?? '0%').toString(),
-            taxAmount: _deriveTaxFromRate(
-              numericAmount.abs(),
-              (transaction['taxRate'] ?? '0%').toString(),
-              fallback: (transaction['taxAmount'] is num) ? (transaction['taxAmount'] as num).toDouble() : null,
-            ),
+            // Crypto-specific fields
+            transactionHash: transaction['transaction_hash']?.toString(),
+            fromAddress: transaction['from_address']?.toString(),
+            toAddress: transaction['to_address']?.toString(),
+            gasCost: transaction['gas_cost']?.toString(),
+            gasPrice: transaction['gas_price']?.toString(),
+            confirmations: transaction['confirmations'] is int ? transaction['confirmations'] as int : null,
+            status: transaction['status']?.toString(),
+            network: transaction['network']?.toString() ?? 'Ethereum',
+            company: transaction['company']?.toString(),
+            description: transaction['description']?.toString(),
           );
 
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => TransactionDetailsScreen(),
+              builder: (_) => TransactionDetailsWidget(transaction: tx),
             ),
           );
         },
@@ -246,14 +245,4 @@ class RecentTransactions extends ConsumerWidget {
     return double.tryParse(cleaned) ?? 0.0;
   }
 
-  double _deriveTaxFromRate(double base, String rateLike, {double? fallback}) {
-    if (fallback != null) return fallback;
-    final s = rateLike.trim();
-    if (s.endsWith('%')) {
-      final pct = double.tryParse(s.substring(0, s.length - 1)) ?? 0.0;
-      return base * (pct / 100.0);
-    }
-    final rate = double.tryParse(s) ?? 0.0;
-    return base * rate;
-  }
 }
