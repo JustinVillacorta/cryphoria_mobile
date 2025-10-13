@@ -24,13 +24,13 @@ class EthTransactionDataSource {
         if (data is Map && data.containsKey('transactions')) {
           final transactions = data['transactions'] as List;
           final convertedTransactions = transactions
-              .map((tx) => _convertBackendTransactionToDisplay(tx, category))
+              .map((tx) => _convertBackendTransactionToDisplay(tx, category, null))
               .toList();
           
           return convertedTransactions;
         } else if (data is List) {
           final convertedTransactions = data
-              .map((tx) => _convertBackendTransactionToDisplay(tx, category))
+              .map((tx) => _convertBackendTransactionToDisplay(tx, category, null))
               .toList();
           
           return convertedTransactions;
@@ -69,31 +69,50 @@ class EthTransactionDataSource {
   /// Convert backend transaction data to display format
   Map<String, dynamic> _convertBackendTransactionToDisplay(
     Map<String, dynamic> backendTx, 
-    String category
+    String category,
+    String? userWalletAddress
   ) {
-    final isReceived = category == 'RECEIVED';
-    final isTransfer = category == 'TRANSFER';
+    // Use the provided user wallet address to determine if transaction is sent or received
+    final fromAddr = (backendTx['from_address'] ?? '').toString().toLowerCase();
+    final toAddr = (backendTx['to_address'] ?? '').toString().toLowerCase();
+    
+    // Determine if this is a received transaction (user is the receiver)
+    final isReceived = userWalletAddress != null && 
+                      userWalletAddress.isNotEmpty && 
+                      toAddr == userWalletAddress;
+    
+    // Determine if this is a sent transaction (user is the sender)
+    final isSent = userWalletAddress != null && 
+                  userWalletAddress.isNotEmpty && 
+                  fromAddr == userWalletAddress;
     
     String title;
     IconData icon;
     Color color;
     String amountPrefix;
+    String subtitle;
     
     if (isReceived) {
-      title = 'ETH Received';
+      title = 'Received';
       icon = Icons.arrow_downward;
       color = Colors.green;
       amountPrefix = '+';
-    } else if (isTransfer) {
-      title = 'ETH Transfer';
-      icon = Icons.swap_horiz;
-      color = Colors.blue;
-      amountPrefix = '↔';
-    } else {
-      title = 'ETH Sent';
+      // For received transactions, show sender's address
+      subtitle = _formatAddress(backendTx['from_address'] ?? '');
+    } else if (isSent) {
+      title = 'Sent';
       icon = Icons.arrow_upward;
       color = Colors.red;
       amountPrefix = '-';
+      // For sent transactions, show receiver's address
+      subtitle = _formatAddress(backendTx['to_address'] ?? '');
+    } else {
+      // External transaction or unknown direction
+      title = 'Transaction';
+      icon = Icons.swap_horiz;
+      color = Colors.blue;
+      amountPrefix = '';
+      subtitle = backendTx['company'] ?? backendTx['category'] ?? 'External';
     }
 
     // Handle various possible field names from backend
@@ -106,18 +125,10 @@ class EthTransactionDataSource {
                      backendTx['timestamp'] ?? 
                      backendTx['time'] ?? 
                      DateTime.now().toIso8601String();
-                     
-    final fromAddress = backendTx['from_address'] ?? 
-                       backendTx['fromAddress'] ?? 
-                       backendTx['sender'] ?? '';
-                       
-    final toAddress = backendTx['to_address'] ?? 
-                     backendTx['toAddress'] ?? 
-                     backendTx['recipient'] ?? '';
 
     return {
       'title': title,
-      'subtitle': _formatAddress(fromAddress),
+      'subtitle': subtitle,
       'amount': '$amountPrefix$amount ETH',
       'time': _formatTransactionTime(
         DateTime.tryParse(timestamp) ?? DateTime.now()
@@ -125,11 +136,11 @@ class EthTransactionDataSource {
       'icon': icon,
       'color': color,
       'isPositive': isReceived,
-      'type': 'eth_${category.toLowerCase()}',
+      'type': 'eth_${isReceived ? 'received' : isSent ? 'sent' : 'transaction'}',
       'status': backendTx['status'] ?? 'unknown',
       'transaction_hash': backendTx['transaction_hash'] ?? backendTx['hash'] ?? '',
-      'from_address': fromAddress,
-      'to_address': toAddress,
+      'from_address': fromAddr,
+      'to_address': toAddr,
       'from_wallet_name': backendTx['from_wallet_name'] ?? 'Unknown',
       'gas_cost': '${backendTx['gas_cost_eth'] ?? backendTx['gas_cost'] ?? '0'} ETH',
       'confirmations': backendTx['confirmations'] ?? 0,
@@ -137,9 +148,11 @@ class EthTransactionDataSource {
       'company': backendTx['company'] ?? '',
       'category_description': backendTx['category_description'] ?? category,
       'description': backendTx['description'] ?? '',
-      'transaction_category': backendTx['transaction_category'] ?? category,
+      'transaction_category': category,
       'created_at': timestamp, // Keep original timestamp for sorting
       'timestamp': timestamp,  // Backup field for sorting
+      'sender_name': backendTx['sender_name'],
+      'receiver_name': backendTx['receiver_name'],
     };
   }
 
@@ -149,41 +162,51 @@ class EthTransactionDataSource {
     List<Wallet>? userWallets,
   }) async {
     try {
-      print('🚀 Fetching all ETH transactions with category=ALL...');
+      print('🚀 Fetching all ETH transactions from /api/eth/history/...');
       
-      // Get ALL transactions from backend in one call
-      final response = await _dioClient.dio.get('/api/eth/history/category/', queryParameters: {
-        'category': 'ALL',
+      // Get ALL transactions from backend using the correct endpoint
+      final response = await _dioClient.dio.get('/api/eth/history/', queryParameters: {
         'limit': limit,
+        'offset': 0,
       });
 
       if (response.statusCode == 200) {
         final data = response.data;
         List<Map<String, dynamic>> allTransactions = [];
         
-        if (data is Map && data.containsKey('data') && data['data'].containsKey('transactions')) {
+        print('🔍 API Response: ${data.runtimeType}');
+        print('🔍 Response keys: ${data is Map ? data.keys.toList() : 'Not a map'}');
+        
+        if (data is Map && data['success'] == true && data.containsKey('data') && data['data'].containsKey('transactions')) {
           final transactions = data['data']['transactions'] as List;
           print('📦 Retrieved ${transactions.length} total transactions from backend');
+          
+          // Get user's wallet address for transaction categorization
+          final userWalletAddress = userWallets?.isNotEmpty == true ? userWallets!.first.address.toLowerCase() : null;
+          print('🔍 User wallet address: $userWalletAddress');
           
           // Convert all transactions to display format
           for (var tx in transactions) {
             final category = tx['transaction_category'] ?? 'SENT';
-            final convertedTx = _convertBackendTransactionToDisplay(tx, category);
+            final convertedTx = _convertBackendTransactionToDisplay(tx, category, userWalletAddress);
             allTransactions.add(convertedTx);
+            print('🔍 Converted transaction: ${convertedTx['title']} - ${convertedTx['subtitle']} - ${convertedTx['amount']}');
           }
           
-          // Sort by timestamp
+          // Sort by timestamp (most recent first)
           allTransactions.sort((a, b) {
             final aTime = a['created_at'] ?? a['timestamp'] ?? '';
             final bTime = b['created_at'] ?? b['timestamp'] ?? '';
-            return bTime.compareTo(aTime); // Most recent first
+            return bTime.compareTo(aTime);
           });
           
           print('✅ Converted ${allTransactions.length} ETH transactions');
+          print('🔍 First transaction: ${allTransactions.isNotEmpty ? allTransactions.first : 'None'}');
           
           return allTransactions.take(limit).toList();
         } else {
           print('⚠️ Unexpected response format: ${data.runtimeType}');
+          print('⚠️ Response structure: $data');
           return [];
         }
       } else {

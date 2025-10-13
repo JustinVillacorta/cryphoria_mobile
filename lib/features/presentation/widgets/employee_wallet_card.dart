@@ -203,7 +203,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         Row(
           children: [
             Text(
-              'Current Wallet',
+              'Current Balance',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: widget.isTablet ? 16 : screenWidth * 0.035,
@@ -282,7 +282,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         ),
         const SizedBox(height: 4),
         Text(
-          state.wallet!.name,
+          'Metamask',
           style: TextStyle(
             color: Colors.white,
             fontSize: widget.isTablet ? 18 : screenWidth * 0.04,

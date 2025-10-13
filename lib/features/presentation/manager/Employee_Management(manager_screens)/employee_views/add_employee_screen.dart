@@ -431,9 +431,11 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
             );
           }).toList(),
           onChanged: (value) {
-            setState(() {
-              _selectedDepartment = value!;
-            });
+            if (value != null) {
+              setState(() {
+                _selectedDepartment = value;
+              });
+            }
           },
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.business, color: Color(0xFF9747FF)),
@@ -522,7 +524,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
   }
 
   void _submitForm() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() ?? false) {
       final employeeViewModel = ref.read(employeeViewModelProvider.notifier);
       
       try {

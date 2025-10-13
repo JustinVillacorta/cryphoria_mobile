@@ -11,8 +11,8 @@ class DioClient {
     Dio? dio
   }) : dio = dio ??
             Dio(BaseOptions(
-              connectTimeout: const Duration(milliseconds: 50000),
-              receiveTimeout: const Duration(milliseconds: 90000),
+              connectTimeout: const Duration(milliseconds: 500000000),
+              receiveTimeout: const Duration(milliseconds: 900000000),
             )) {
     this.dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
