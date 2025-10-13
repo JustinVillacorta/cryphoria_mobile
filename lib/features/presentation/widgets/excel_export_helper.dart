@@ -31,30 +31,42 @@ class ExcelExportHelper {
       _addSubSectionHeader(sheet, 'Current Assets', 'A$currentRow');
       currentRow += 1;
       
-      double currentAssetsTotal = 0.0;
-      for (var asset in balanceSheet.assets.where((a) => a.isCurrent)) {
-        _addDataRow(sheet, asset.name, asset.amount, 'A$currentRow', 'B$currentRow');
-        currentAssetsTotal += asset.amount;
-        currentRow += 1;
-      }
-      _addTotalRow(sheet, 'Total Current Assets', currentAssetsTotal, 'A$currentRow', 'B$currentRow');
+      // Crypto Holdings
+      _addDataRow(sheet, 'Crypto Holdings', balanceSheet.assets.currentAssets.cryptoHoldings.totalValue, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Cash Equivalents
+      _addDataRow(sheet, 'Cash Equivalents', balanceSheet.assets.currentAssets.cashEquivalents, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Receivables
+      _addDataRow(sheet, 'Receivables', balanceSheet.assets.currentAssets.receivables.toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      _addTotalRow(sheet, 'Total Current Assets', balanceSheet.assets.currentAssets.total, 'A$currentRow', 'B$currentRow');
       currentRow += 2;
       
       // Non-Current Assets
       _addSubSectionHeader(sheet, 'Non-Current Assets', 'A$currentRow');
       currentRow += 1;
       
-      double nonCurrentAssetsTotal = 0.0;
-      for (var asset in balanceSheet.assets.where((a) => !a.isCurrent)) {
-        _addDataRow(sheet, asset.name, asset.amount, 'A$currentRow', 'B$currentRow');
-        nonCurrentAssetsTotal += asset.amount;
-        currentRow += 1;
-      }
-      _addTotalRow(sheet, 'Total Non-Current Assets', nonCurrentAssetsTotal, 'A$currentRow', 'B$currentRow');
+      // Long-term Investments
+      _addDataRow(sheet, 'Long-term Investments', balanceSheet.assets.nonCurrentAssets.longTermInvestments, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Equipment
+      _addDataRow(sheet, 'Equipment', balanceSheet.assets.nonCurrentAssets.equipment, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Other
+      _addDataRow(sheet, 'Other', balanceSheet.assets.nonCurrentAssets.other, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      _addTotalRow(sheet, 'Total Non-Current Assets', balanceSheet.assets.nonCurrentAssets.total, 'A$currentRow', 'B$currentRow');
       currentRow += 2;
       
       // Total Assets
-      _addTotalRow(sheet, 'TOTAL ASSETS', balanceSheet.summary.totalAssets, 'A$currentRow', 'B$currentRow');
+      _addTotalRow(sheet, 'TOTAL ASSETS', balanceSheet.totals.totalAssets, 'A$currentRow', 'B$currentRow');
       currentRow += 3;
       
       // Liabilities Section
@@ -65,45 +77,65 @@ class ExcelExportHelper {
       _addSubSectionHeader(sheet, 'Current Liabilities', 'A$currentRow');
       currentRow += 1;
       
-      double currentLiabilitiesTotal = 0.0;
-      for (var liability in balanceSheet.liabilities.where((l) => l.isCurrent)) {
-        _addDataRow(sheet, liability.name, liability.amount, 'A$currentRow', 'B$currentRow');
-        currentLiabilitiesTotal += liability.amount;
-        currentRow += 1;
-      }
-      _addTotalRow(sheet, 'Total Current Liabilities', currentLiabilitiesTotal, 'A$currentRow', 'B$currentRow');
+      // Accounts Payable
+      _addDataRow(sheet, 'Accounts Payable', balanceSheet.liabilities.currentLiabilities.accountsPayable.toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Accrued Expenses
+      _addDataRow(sheet, 'Accrued Expenses', balanceSheet.liabilities.currentLiabilities.accruedExpenses, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Short-term Debt
+      _addDataRow(sheet, 'Short-term Debt', balanceSheet.liabilities.currentLiabilities.shortTermDebt, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Tax Liabilities
+      _addDataRow(sheet, 'Tax Liabilities', balanceSheet.liabilities.currentLiabilities.taxLiabilities, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      _addTotalRow(sheet, 'Total Current Liabilities', balanceSheet.liabilities.currentLiabilities.total, 'A$currentRow', 'B$currentRow');
       currentRow += 2;
       
       // Long-term Liabilities
       _addSubSectionHeader(sheet, 'Long-term Liabilities', 'A$currentRow');
       currentRow += 1;
       
-      double longTermLiabilitiesTotal = 0.0;
-      for (var liability in balanceSheet.liabilities.where((l) => !l.isCurrent)) {
-        _addDataRow(sheet, liability.name, liability.amount, 'A$currentRow', 'B$currentRow');
-        longTermLiabilitiesTotal += liability.amount;
-        currentRow += 1;
-      }
-      _addTotalRow(sheet, 'Total Long-term Liabilities', longTermLiabilitiesTotal, 'A$currentRow', 'B$currentRow');
+      // Long-term Debt
+      _addDataRow(sheet, 'Long-term Debt', balanceSheet.liabilities.longTermLiabilities.longTermDebt, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Deferred Tax
+      _addDataRow(sheet, 'Deferred Tax', balanceSheet.liabilities.longTermLiabilities.deferredTax, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Other
+      _addDataRow(sheet, 'Other', balanceSheet.liabilities.longTermLiabilities.other, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      _addTotalRow(sheet, 'Total Long-term Liabilities', balanceSheet.liabilities.longTermLiabilities.total, 'A$currentRow', 'B$currentRow');
       currentRow += 2;
       
       // Total Liabilities
-      _addTotalRow(sheet, 'TOTAL LIABILITIES', balanceSheet.summary.totalLiabilities, 'A$currentRow', 'B$currentRow');
+      _addTotalRow(sheet, 'TOTAL LIABILITIES', balanceSheet.totals.totalLiabilities, 'A$currentRow', 'B$currentRow');
       currentRow += 3;
       
       // Equity Section
       _addSectionHeader(sheet, 'EQUITY', 'A$currentRow');
       currentRow += 2;
       
-      for (var equity in balanceSheet.equity) {
-        _addDataRow(sheet, equity.name, equity.amount, 'A$currentRow', 'B$currentRow');
-        currentRow += 1;
-      }
-      _addTotalRow(sheet, 'TOTAL EQUITY', balanceSheet.summary.totalEquity, 'A$currentRow', 'B$currentRow');
+      // Retained Earnings
+      _addDataRow(sheet, 'Retained Earnings', balanceSheet.equity.retainedEarnings.toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      // Unrealized Gains/Losses
+      _addDataRow(sheet, 'Unrealized Gains/Losses', balanceSheet.equity.unrealizedGainsLosses, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      _addTotalRow(sheet, 'TOTAL EQUITY', balanceSheet.totals.totalEquity, 'A$currentRow', 'B$currentRow');
       currentRow += 2;
       
       // Summary
-      _addTotalRow(sheet, 'LIABILITIES + EQUITY', balanceSheet.summary.totalLiabilities + balanceSheet.summary.totalEquity, 'A$currentRow', 'B$currentRow');
+      _addTotalRow(sheet, 'LIABILITIES + EQUITY', balanceSheet.totals.totalLiabilities + balanceSheet.totals.totalEquity, 'A$currentRow', 'B$currentRow');
       
       // Auto-fit columns
       _autoFitColumns(sheet);

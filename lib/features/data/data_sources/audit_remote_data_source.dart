@@ -987,14 +987,15 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         if (responseData['success'] == true && responseData['balance_sheets'] != null) {
           final balanceSheets = List<dynamic>.from(responseData['balance_sheets'] as List);
           if (balanceSheets.isNotEmpty) {
-            return _convertToBalanceSheetModel(Map<String, dynamic>.from(balanceSheets.first as Map));
+            // Use the new model structure directly
+            return BalanceSheetModel.fromJson(Map<String, dynamic>.from(balanceSheets.first as Map));
           } else {
             print("📊 No balance sheets found, returning empty model");
             return _createEmptyBalanceSheetModel();
           }
         } else {
           // If the response is directly the balance sheet data
-          return _convertToBalanceSheetModel(responseData);
+          return BalanceSheetModel.fromJson(responseData);
         }
       } else {
         throw Exception('Failed to get balance sheet: ${response.statusMessage}');
@@ -1005,108 +1006,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     }
   }
 
-  /// Convert API balance sheet data to BalanceSheetModel format
-  BalanceSheetModel _convertToBalanceSheetModel(Map<String, dynamic> apiData) {
-    try {
-      print("🔄 Converting API data to BalanceSheetModel");
-      print("📊 API data keys: ${apiData.keys.toList()}");
-      
-      // Extract data from the actual API response structure with extra safety
-      final assets = _safeConvertMap(apiData['assets']);
-      final liabilities = _safeConvertMap(apiData['liabilities']);
-      final equity = _safeConvertMap(apiData['equity']);
-      final totals = _safeConvertMap(apiData['totals']);
-      final summary = _safeConvertMap(apiData['summary']);
-      final metadata = _safeConvertMap(apiData['metadata']);
-      
-      print("📊 Assets structure: $assets");
-      print("📊 Totals structure: $totals");
-      print("📊 Summary structure: $summary");
-      
-      // Create a comprehensive balance sheet structure
-      final convertedData = {
-        'id': apiData['balance_sheet_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        'report_type': 'Balance Sheet',
-        'report_date': apiData['as_of_date']?.toString() ?? apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
-        'period_start': apiData['as_of_date']?.toString() ?? DateTime.now().toIso8601String(),
-        'period_end': apiData['as_of_date']?.toString() ?? DateTime.now().toIso8601String(),
-        'currency': apiData['currency']?.toString() ?? 'USD',
-        'summary': {
-          'total_assets': _safeToDouble(totals['total_assets']),
-          'total_liabilities': _safeToDouble(totals['total_liabilities']),
-          'total_equity': _safeToDouble(totals['total_equity']),
-          'working_capital': 0.0, // Calculate if needed
-          'current_ratio': 0.0, // Calculate if needed
-          'debt_to_equity_ratio': summary['debt_to_equity_ratio']?.toString() ?? '0.0',
-          'asset_breakdown': _safeConvertMap(summary['asset_composition']),
-          'liability_breakdown': {},
-          'equity_breakdown': {},
-          'financial_position': summary['financial_position']?.toString() ?? 'Unknown',
-          'net_worth': _safeToDouble(summary['net_worth']),
-        },
-        'assets': _convertAssets(assets),
-        'liabilities': _convertLiabilities(liabilities),
-        'equity': _convertEquity(equity),
-        'metadata': {
-          'user_id': apiData['user_id']?.toString(),
-          'generated_at': apiData['generated_at']?.toString(),
-          'transaction_count': metadata['transaction_count']?.toString(),
-          'date_range': _safeConvertMap(metadata['date_range']),
-        },
-        'created_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
-        'generated_at': apiData['generated_at']?.toString(),
-      };
-
-      print("✅ Converted balance sheet data: $convertedData");
-      
-      // Try to create the model with extra safety
-      try {
-        return BalanceSheetModel.fromJson(convertedData);
-      } catch (modelError) {
-        print("❌ Error creating BalanceSheetModel: $modelError");
-        print("📊 Converted data that failed: $convertedData");
-        
-        // Create a minimal valid model as fallback
-        final fallbackData = {
-          'id': apiData['balance_sheet_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-          'report_type': 'Balance Sheet',
-          'report_date': DateTime.now().toIso8601String(),
-          'period_start': DateTime.now().toIso8601String(),
-          'period_end': DateTime.now().toIso8601String(),
-          'currency': 'USD',
-          'summary': {
-            'total_assets': 0.0,
-            'total_liabilities': 0.0,
-            'total_equity': 0.0,
-            'working_capital': 0.0,
-            'current_ratio': 0.0,
-            'debt_to_equity_ratio': '0.0',
-            'asset_breakdown': {},
-            'liability_breakdown': {},
-            'equity_breakdown': {},
-            'financial_position': 'Unknown',
-            'net_worth': 0.0,
-          },
-          'assets': [],
-          'liabilities': [],
-          'equity': [],
-          'metadata': {
-            'user_id': apiData['user_id']?.toString() ?? 'unknown',
-            'generated_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
-            'error': 'Data conversion failed, using fallback',
-          },
-          'created_at': DateTime.now().toIso8601String(),
-          'generated_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
-        };
-        
-        return BalanceSheetModel.fromJson(fallbackData);
-      }
-    } catch (e, stackTrace) {
-      print("❌ Error converting balance sheet data: $e");
-      print("📊 Stack trace: $stackTrace");
-      rethrow;
-    }
-  }
 
   @override
   Future<CashFlowModel> getCashFlow() async {
@@ -1290,36 +1189,74 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     print("📊 Creating empty balance sheet model - no data available");
     
     final emptyData = {
-      'id': 'empty_balance_sheet_${DateTime.now().millisecondsSinceEpoch}',
-      'report_type': 'Balance Sheet',
-      'report_date': DateTime.now().toIso8601String(),
+      '_id': 'empty_balance_sheet_${DateTime.now().millisecondsSinceEpoch}',
+      'balance_sheet_id': 'empty_${DateTime.now().millisecondsSinceEpoch}',
+      'user_id': 'unknown',
+      'as_of_date': DateTime.now().toIso8601String(),
+      'report_type': 'CUSTOM',
       'period_start': DateTime.now().toIso8601String(),
       'period_end': DateTime.now().toIso8601String(),
+      'generated_at': DateTime.now().toIso8601String(),
       'currency': 'USD',
-      'summary': {
+      'assets': {
+        'current_assets': {
+          'crypto_holdings': {'total_value': 0.0},
+          'cash_equivalents': 0.0,
+          'receivables': 0,
+          'total': 0.0
+        },
+        'non_current_assets': {
+          'long_term_investments': 0.0,
+          'equipment': 0.0,
+          'other': 0.0,
+          'total': 0.0
+        },
+        'total': 0.0
+      },
+      'liabilities': {
+        'current_liabilities': {
+          'accounts_payable': 0,
+          'accrued_expenses': 0.0,
+          'short_term_debt': 0.0,
+          'tax_liabilities': 0.0,
+          'total': 0.0
+        },
+        'long_term_liabilities': {
+          'long_term_debt': 0.0,
+          'deferred_tax': 0.0,
+          'other': 0.0,
+          'total': 0.0
+        },
+        'total': 0.0
+      },
+      'equity': {
+        'retained_earnings': 0,
+        'unrealized_gains_losses': 0.0,
+        'total': 0.0
+      },
+      'totals': {
         'total_assets': 0.0,
         'total_liabilities': 0.0,
         'total_equity': 0.0,
-        'working_capital': 0.0,
-        'current_ratio': 0.0,
-        'debt_to_equity_ratio': '0.0',
-        'asset_breakdown': {},
-        'liability_breakdown': {},
-        'equity_breakdown': {},
+        'balance_check': 0.0
+      },
+      'summary': {
         'financial_position': 'No data available',
-        'net_worth': 0.0,
+        'debt_to_equity_ratio': 'Undefined',
+        'asset_composition': {
+          'crypto_percentage': 0,
+          'cash_percentage': 0
+        },
+        'liquidity_ratio': 'Unlimited',
+        'net_worth': 0.0
       },
-      'assets': [],
-      'liabilities': [],
-      'equity': [],
       'metadata': {
-        'user_id': 'unknown',
-        'generated_at': DateTime.now().toIso8601String(),
-        'note': 'No balance sheet data available yet',
-        'empty_data': true,
-      },
-      'created_at': DateTime.now().toIso8601String(),
-      'generated_at': DateTime.now().toIso8601String(),
+        'transaction_count': 0,
+        'date_range': {
+          'earliest_transaction': DateTime.now().toIso8601String(),
+          'latest_transaction': DateTime.now().toIso8601String()
+        }
+      }
     };
     
     return BalanceSheetModel.fromJson(emptyData);
@@ -1436,91 +1373,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   }
 
 
-  /// Convert assets data to list format
-  List<Map<String, dynamic>> _convertAssets(Map<String, dynamic> assets) {
-    final List<Map<String, dynamic>> assetList = [];
-    
-    final currentAssets = _safeConvertMap(assets['current_assets']);
-    final nonCurrentAssets = _safeConvertMap(assets['non_current_assets']);
-    
-    // Add current assets
-    if (currentAssets.isNotEmpty) {
-      assetList.add({
-        'id': 'current_assets',
-        'name': 'Current Assets',
-        'amount': _safeToDouble(currentAssets['total']),
-        'category': 'Current Assets',
-        'subcategory': 'Total',
-        'description': 'Total current assets including cash, receivables, and crypto holdings',
-      });
-    }
-    
-    // Add non-current assets
-    if (nonCurrentAssets.isNotEmpty) {
-      assetList.add({
-        'id': 'non_current_assets',
-        'name': 'Non-Current Assets',
-        'amount': _safeToDouble(nonCurrentAssets['total']),
-        'category': 'Non-Current Assets',
-        'subcategory': 'Total',
-        'description': 'Total non-current assets including equipment and investments',
-      });
-    }
-    
-    return assetList;
-  }
-
-  /// Convert liabilities data to list format
-  List<Map<String, dynamic>> _convertLiabilities(Map<String, dynamic> liabilities) {
-    final List<Map<String, dynamic>> liabilityList = [];
-    
-    final currentLiabilities = _safeConvertMap(liabilities['current_liabilities']);
-    final longTermLiabilities = _safeConvertMap(liabilities['long_term_liabilities']);
-    
-    // Add current liabilities
-    if (currentLiabilities.isNotEmpty) {
-      liabilityList.add({
-        'id': 'current_liabilities',
-        'name': 'Current Liabilities',
-        'amount': _safeToDouble(currentLiabilities['total']),
-        'category': 'Current Liabilities',
-        'subcategory': 'Total',
-        'description': 'Total current liabilities including payables and short-term debt',
-      });
-    }
-    
-    // Add long-term liabilities
-    if (longTermLiabilities.isNotEmpty) {
-      liabilityList.add({
-        'id': 'long_term_liabilities',
-        'name': 'Long-term Liabilities',
-        'amount': _safeToDouble(longTermLiabilities['total']),
-        'category': 'Long-term Liabilities',
-        'subcategory': 'Total',
-        'description': 'Total long-term liabilities including long-term debt',
-      });
-    }
-    
-    return liabilityList;
-  }
-
-  /// Convert equity data to list format
-  List<Map<String, dynamic>> _convertEquity(Map<String, dynamic> equity) {
-    final List<Map<String, dynamic>> equityList = [];
-    
-    if (equity.isNotEmpty) {
-      equityList.add({
-        'id': 'total_equity',
-        'name': 'Total Equity',
-        'amount': _safeToDouble(equity['total']),
-        'category': 'Equity',
-        'subcategory': 'Total',
-        'description': 'Total equity including retained earnings and unrealized gains/losses',
-      });
-    }
-    
-    return equityList;
-  }
 
   /// Convert operating activities to list format
   List<Map<String, dynamic>> _convertOperatingActivities(Map<String, dynamic> operatingData) {

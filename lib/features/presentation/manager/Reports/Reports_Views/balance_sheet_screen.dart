@@ -235,7 +235,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Total Assets',
-                        '\$${state.balanceSheet!.summary.totalAssets.toStringAsFixed(2)}',
+                        '\$${state.balanceSheet!.totals.totalAssets.toStringAsFixed(2)}',
                         const Color(0xFF10B981),
                         Icons.trending_up,
                       ),
@@ -244,7 +244,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Total Liabilities',
-                        '\$${state.balanceSheet!.summary.totalLiabilities.toStringAsFixed(2)}',
+                        '\$${state.balanceSheet!.totals.totalLiabilities.toStringAsFixed(2)}',
                         const Color(0xFFEF4444),
                         Icons.trending_down,
                       ),
@@ -257,7 +257,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Total Equity',
-                        '\$${state.balanceSheet!.summary.totalEquity.toStringAsFixed(2)}',
+                        '\$${state.balanceSheet!.totals.totalEquity.toStringAsFixed(2)}',
                         const Color(0xFF3B82F6),
                         Icons.account_balance_wallet,
                       ),
@@ -876,24 +876,24 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 // Assets Section - using dynamic data from summary
                 _buildCollapsibleSectionHeader(
                   'Assets', 
-                  '\$${balanceSheet.summary.totalAssets.toStringAsFixed(2)}', 
+                  '\$${balanceSheet.totals.totalAssets.toStringAsFixed(2)}', 
                   isAssetsExpanded,
                   () => setState(() => isAssetsExpanded = !isAssetsExpanded),
                 ),
                 if (isAssetsExpanded) ...[
                   _buildSubSection('Current Assets', '(Short-term, highly liquid)'),
-                  ...balanceSheet.assets.where((asset) => asset.isCurrent).map((asset) => 
-                    _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
-                  ).toList(),
-                  _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.where((asset) => asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Crypto Holdings', '\$${balanceSheet.assets.currentAssets.cryptoHoldings.totalValue.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Cash Equivalents', '\$${balanceSheet.assets.currentAssets.cashEquivalents.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Receivables', '\$${balanceSheet.assets.currentAssets.receivables.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.currentAssets.total.toStringAsFixed(2)}'),
                   
                   const SizedBox(height: 16),
                   
                   _buildSubSection('Non-Current Assets', '(Long-term investments)'),
-                  ...balanceSheet.assets.where((asset) => !asset.isCurrent).map((asset) => 
-                    _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
-                  ).toList(),
-                  _buildTotalRow('Total Non-Current Assets', '\$${balanceSheet.assets.where((asset) => !asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Long-term Investments', '\$${balanceSheet.assets.nonCurrentAssets.longTermInvestments.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Equipment', '\$${balanceSheet.assets.nonCurrentAssets.equipment.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Other', '\$${balanceSheet.assets.nonCurrentAssets.other.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Non-Current Assets', '\$${balanceSheet.assets.nonCurrentAssets.total.toStringAsFixed(2)}'),
                 ],
 
                 const SizedBox(height: 20),
@@ -901,24 +901,25 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 // Liabilities Section - using dynamic data from summary
                 _buildCollapsibleSectionHeader(
                   'Liabilities', 
-                  '\$${balanceSheet.summary.totalLiabilities.toStringAsFixed(2)}', 
+                  '\$${balanceSheet.totals.totalLiabilities.toStringAsFixed(2)}', 
                   isLiabilitiesExpanded,
                   () => setState(() => isLiabilitiesExpanded = !isLiabilitiesExpanded),
                 ),
                 if (isLiabilitiesExpanded) ...[
                   _buildSubSection('Current Liabilities', '(Due within one year)'),
-                  ...balanceSheet.liabilities.where((liability) => liability.isCurrent).map((liability) => 
-                    _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
-                  ).toList(),
-                  _buildTotalRow('Total Current Liabilities', '\$${balanceSheet.liabilities.where((liability) => liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Accounts Payable', '\$${balanceSheet.liabilities.currentLiabilities.accountsPayable.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Accrued Expenses', '\$${balanceSheet.liabilities.currentLiabilities.accruedExpenses.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Short-term Debt', '\$${balanceSheet.liabilities.currentLiabilities.shortTermDebt.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Tax Liabilities', '\$${balanceSheet.liabilities.currentLiabilities.taxLiabilities.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Current Liabilities', '\$${balanceSheet.liabilities.currentLiabilities.total.toStringAsFixed(2)}'),
                   
                   const SizedBox(height: 16),
                   
                   _buildSubSection('Long-term Liabilities', '(Due after one year)'),
-                  ...balanceSheet.liabilities.where((liability) => !liability.isCurrent).map((liability) => 
-                    _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
-                  ).toList(),
-                  _buildTotalRow('Total Long-term Liabilities', '\$${balanceSheet.liabilities.where((liability) => !liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Long-term Debt', '\$${balanceSheet.liabilities.longTermLiabilities.longTermDebt.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Deferred Tax', '\$${balanceSheet.liabilities.longTermLiabilities.deferredTax.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Other', '\$${balanceSheet.liabilities.longTermLiabilities.other.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Long-term Liabilities', '\$${balanceSheet.liabilities.longTermLiabilities.total.toStringAsFixed(2)}'),
                 ],
 
                 const SizedBox(height: 20),
@@ -926,14 +927,15 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 // Equity Section - using dynamic data from summary
                 _buildCollapsibleSectionHeader(
                   'Equity', 
-                  '\$${balanceSheet.summary.totalEquity.toStringAsFixed(2)}', 
+                  '\$${balanceSheet.totals.totalEquity.toStringAsFixed(2)}', 
                   isEquityExpanded,
                   () => setState(() => isEquityExpanded = !isEquityExpanded),
                 ),
                 if (isEquityExpanded) ...[
-                  ...balanceSheet.equity.map((equity) => 
-                    _buildBalanceSheetRow(equity.name, '\$${equity.amount.toStringAsFixed(2)}')
-                  ).toList(),
+                  _buildSubSection('Equity', '(Owner\'s equity)'),
+                  _buildBalanceSheetRow('Retained Earnings', '\$${balanceSheet.equity.retainedEarnings.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Unrealized Gains/Losses', '\$${balanceSheet.equity.unrealizedGainsLosses.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Equity', '\$${balanceSheet.equity.total.toStringAsFixed(2)}'),
                 ],
                 const SizedBox(height: 20),
 
@@ -949,15 +951,15 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildSummaryRow('Total Assets', '\$${balanceSheet.summary.totalAssets.toStringAsFixed(2)}'),
+                      _buildSummaryRow('Total Assets', '\$${balanceSheet.totals.totalAssets.toStringAsFixed(2)}'),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Total Liabilities', '\$${balanceSheet.summary.totalLiabilities.toStringAsFixed(2)}'),
+                      _buildSummaryRow('Total Liabilities', '\$${balanceSheet.totals.totalLiabilities.toStringAsFixed(2)}'),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Total Equity', '\$${balanceSheet.summary.totalEquity.toStringAsFixed(2)}'),
+                      _buildSummaryRow('Total Equity', '\$${balanceSheet.totals.totalEquity.toStringAsFixed(2)}'),
                       const SizedBox(height: 12),
                       Container(height: 1, color: Colors.grey[300]),
                       const SizedBox(height: 12),
-                      _buildSummaryRow('Liabilities + Equity', '\$${(balanceSheet.summary.totalLiabilities + balanceSheet.summary.totalEquity).toStringAsFixed(2)}', isTotal: true),
+                      _buildSummaryRow('Liabilities + Equity', '\$${(balanceSheet.totals.totalLiabilities + balanceSheet.totals.totalEquity).toStringAsFixed(2)}', isTotal: true),
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1157,7 +1159,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   // Helper methods for generating dynamic chart data
   List<FlSpot> _getAssetsSpots(BalanceSheet balanceSheet) {
     // Generate 6 data points based on total assets
-    final totalAssets = balanceSheet.summary.totalAssets;
+    final totalAssets = balanceSheet.totals.totalAssets;
     
     // If total assets is zero, return empty data
     if (totalAssets == 0.0) {
@@ -1176,7 +1178,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
   List<FlSpot> _getLiabilitiesSpots(BalanceSheet balanceSheet) {
     // Generate 6 data points based on total liabilities
-    final totalLiabilities = balanceSheet.summary.totalLiabilities;
+    final totalLiabilities = balanceSheet.totals.totalLiabilities;
     
     // If total liabilities is zero, return empty data
     if (totalLiabilities == 0.0) {
@@ -1194,8 +1196,8 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   }
 
   double _getMinY(BalanceSheet balanceSheet) {
-    final totalAssets = balanceSheet.summary.totalAssets;
-    final totalLiabilities = balanceSheet.summary.totalLiabilities;
+    final totalAssets = balanceSheet.totals.totalAssets;
+    final totalLiabilities = balanceSheet.totals.totalLiabilities;
     
     // If both are zero, return 0 for empty chart
     if (totalAssets == 0.0 && totalLiabilities == 0.0) {
@@ -1207,8 +1209,8 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   }
 
   double _getMaxY(BalanceSheet balanceSheet) {
-    final totalAssets = balanceSheet.summary.totalAssets;
-    final totalLiabilities = balanceSheet.summary.totalLiabilities;
+    final totalAssets = balanceSheet.totals.totalAssets;
+    final totalLiabilities = balanceSheet.totals.totalLiabilities;
     
     // If both are zero, return 100 for empty chart
     if (totalAssets == 0.0 && totalLiabilities == 0.0) {
@@ -1338,22 +1340,46 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       // Convert BalanceSheet to report data format for PDF generation
       final reportData = {
         'summary': {
-          'total_assets': balanceSheet.summary.totalAssets,
-          'total_liabilities': balanceSheet.summary.totalLiabilities,
-          'total_equity': balanceSheet.summary.totalEquity,
+          'total_assets': balanceSheet.totals.totalAssets,
+          'total_liabilities': balanceSheet.totals.totalLiabilities,
+          'total_equity': balanceSheet.totals.totalEquity,
         },
-        'assets': balanceSheet.assets.map((asset) => {
-          'name': asset.name,
-          'amount': asset.amount,
-        }).toList(),
-        'liabilities': balanceSheet.liabilities.map((liability) => {
-          'name': liability.name,
-          'amount': liability.amount,
-        }).toList(),
-        'equity': balanceSheet.equity.map((equity) => {
-          'name': equity.name,
-          'amount': equity.amount,
-        }).toList(),
+        'assets': {
+          'current_assets': {
+            'crypto_holdings': balanceSheet.assets.currentAssets.cryptoHoldings.totalValue,
+            'cash_equivalents': balanceSheet.assets.currentAssets.cashEquivalents,
+            'receivables': balanceSheet.assets.currentAssets.receivables.toDouble(),
+            'total': balanceSheet.assets.currentAssets.total,
+          },
+          'non_current_assets': {
+            'long_term_investments': balanceSheet.assets.nonCurrentAssets.longTermInvestments,
+            'equipment': balanceSheet.assets.nonCurrentAssets.equipment,
+            'other': balanceSheet.assets.nonCurrentAssets.other,
+            'total': balanceSheet.assets.nonCurrentAssets.total,
+          },
+          'total': balanceSheet.assets.total,
+        },
+        'liabilities': {
+          'current_liabilities': {
+            'accounts_payable': balanceSheet.liabilities.currentLiabilities.accountsPayable.toDouble(),
+            'accrued_expenses': balanceSheet.liabilities.currentLiabilities.accruedExpenses,
+            'short_term_debt': balanceSheet.liabilities.currentLiabilities.shortTermDebt,
+            'tax_liabilities': balanceSheet.liabilities.currentLiabilities.taxLiabilities,
+            'total': balanceSheet.liabilities.currentLiabilities.total,
+          },
+          'long_term_liabilities': {
+            'long_term_debt': balanceSheet.liabilities.longTermLiabilities.longTermDebt,
+            'deferred_tax': balanceSheet.liabilities.longTermLiabilities.deferredTax,
+            'other': balanceSheet.liabilities.longTermLiabilities.other,
+            'total': balanceSheet.liabilities.longTermLiabilities.total,
+          },
+          'total': balanceSheet.liabilities.total,
+        },
+        'equity': {
+          'retained_earnings': balanceSheet.equity.retainedEarnings.toDouble(),
+          'unrealized_gains_losses': balanceSheet.equity.unrealizedGainsLosses,
+          'total': balanceSheet.equity.total,
+        },
       };
 
       // Generate PDF
