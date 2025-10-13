@@ -24,7 +24,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final walletService = ref.read(walletServiceProvider);
-      if (await walletService.hasStoredWallet()) {
+      final walletState = ref.read(walletNotifierProvider);
+      
+      // Only reconnect if wallet is not already connected (prevents unnecessary refreshes)
+      if (await walletService.hasStoredWallet() && walletState.wallet == null) {
         await ref.read(walletNotifierProvider.notifier).reconnect();
       }
     });

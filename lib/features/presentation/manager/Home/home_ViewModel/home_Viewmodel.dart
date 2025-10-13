@@ -172,25 +172,37 @@ class WalletNotifier extends StateNotifier<WalletState> {
       return;
     }
     
-    debugPrint('🔍 Manager - Refreshing wallet: ${state.wallet!.address}');
+    debugPrint('🔍 Manager - Refreshing wallet balance: ${state.wallet!.address}');
     state = state.copyWith(isLoading: true);
     
     try {
-      // Reconnect to refresh balance and conversion
-      final refreshedWallet = await _walletService.reconnect();
-      if (refreshedWallet != null) {
+      // Only refresh balance without reconnecting (prevents full screen refresh)
+      final refreshedWallet = await _walletService.refreshBalance(state.wallet!);
+      
+      // Check if the notifier is still mounted before updating state
+      if (mounted) {
         state = state.copyWith(wallet: refreshedWallet);
-        debugPrint('🔍 Manager - Refreshed wallet: ${refreshedWallet.toJson()}');
+        debugPrint('🔍 Manager - Refreshed wallet balance: ${refreshedWallet.toJson()}');
+        state = state.copyWith(error: () => null);
       } else {
-        debugPrint('🔍 Manager - No wallet returned from refresh, clearing state');
-        state = state.copyWith(wallet: null);
+        debugPrint('🔍 Manager - Widget disposed, skipping state update');
       }
-      state = state.copyWith(error: () => null);
     } catch (e) {
-      debugPrint('❌ Manager - Refresh wallet error: $e');
-      state = state.copyWith(error: () => e.toString());
+      debugPrint('❌ Manager - Refresh wallet balance error: $e');
+      
+      // Check if the notifier is still mounted before updating state
+      if (mounted) {
+        state = state.copyWith(error: () => e.toString());
+      } else {
+        debugPrint('🔍 Manager - Widget disposed, skipping error state update');
+      }
     } finally {
-      state = state.copyWith(isLoading: false);
+      // Check if the notifier is still mounted before updating loading state
+      if (mounted) {
+        state = state.copyWith(isLoading: false);
+      } else {
+        debugPrint('🔍 Manager - Widget disposed, skipping loading state update');
+      }
     }
   }
 

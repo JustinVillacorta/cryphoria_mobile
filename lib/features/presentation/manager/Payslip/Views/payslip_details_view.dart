@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/entities/payslip.dart';
 import 'package:intl/intl.dart';
+import '../../../widgets/pdf_generation_helper.dart';
 
 class PayslipDetailsView extends ConsumerWidget {
   final Payslip payslip;
@@ -32,12 +33,6 @@ class PayslipDetailsView extends ConsumerWidget {
           IconButton(
             icon: Icon(Icons.picture_as_pdf),
             onPressed: () => _generatePdf(context),
-          ),
-          IconButton(
-            icon: Icon(Icons.payment),
-            onPressed: (payslip.status ?? '') == 'GENERATED'
-                ? () => _processPayment(context)
-                : null,
           ),
         ],
       ),
@@ -399,17 +394,54 @@ class PayslipDetailsView extends ConsumerWidget {
     }
   }
 
-  void _generatePdf(BuildContext context) {
-    // TODO: Implement PDF generation
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('PDF generation coming soon')),
-    );
-  }
+  void _generatePdf(BuildContext context) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
 
-  void _processPayment(BuildContext context) {
-    // TODO: Implement payment processing
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Payment processing coming soon')),
-    );
+      // Convert Payslip to Map for PDF generation
+      final payslipData = payslip.toJson();
+      
+      // Generate PDF using the PDF generation helper
+      final pdfPath = await PdfGenerationHelper.generatePayslipPdf(payslipData);
+      
+      // Close loading dialog
+      Navigator.of(context, rootNavigator: true).pop();
+
+      if (pdfPath.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Payslip PDF generated successfully!\nSaved to: $pdfPath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to generate payslip PDF'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if it's still open
+      if (Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error generating PDF: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

@@ -19,9 +19,12 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
   @override
   void initState() {
     super.initState();
-    // Load tax reports when screen initializes
+    // Load tax reports only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(taxReportsViewModelProvider.notifier).loadTaxReports();
+      final state = ref.read(taxReportsViewModelProvider);
+      if (state.taxReport == null && !state.isLoading) {
+        ref.read(taxReportsViewModelProvider.notifier).loadTaxReports();
+      }
     });
   }
 
@@ -1040,7 +1043,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show success message
@@ -1056,7 +1059,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     } catch (e) {
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show error message
@@ -1102,7 +1105,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show success message
@@ -1118,7 +1121,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     } catch (e) {
       // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
       }
 
       // Show error message

@@ -120,14 +120,17 @@ final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
     return 'http://10.0.2.2:8000';
   }
-  return 'http://10.0.2.2:8000';
+  return 'http://192.168.5.53:8000';
 });
 
 final flutterSecureStorageProvider =
     Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
 
 // for username fetching
-final userProvider = StateProvider<AuthUser?>((ref) => null);
+final userProvider = StateProvider<AuthUser?>((ref) {
+  ref.keepAlive(); // Cache user state to prevent recreation on navigation
+  return null;
+});
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
   return AuthLocalDataSourceImpl(secureStorage: ref.watch(flutterSecureStorageProvider));
@@ -425,6 +428,7 @@ final logoutViewModelProvider =
 
 final homeEmployeeNotifierProvider =
     StateNotifierProvider<HomeEmployeeNotifier, HomeEmployeeState>((ref) {
+  // Home employee provider refreshes to get real-time data
   return HomeEmployeeNotifier(
     walletService: ref.watch(walletServiceProvider),
     transactionsDataSource: ref.watch(fakeTransactionsDataSourceProvider),
@@ -434,6 +438,7 @@ final homeEmployeeNotifierProvider =
 
 final walletNotifierProvider =
     StateNotifierProvider<WalletNotifier, WalletState>((ref) {
+  ref.keepAlive(); // Keep wallet provider alive to prevent recreation
   return WalletNotifier(
     walletService: ref.watch(walletServiceProvider),
     ethTransactionDataSource: ref.watch(ethTransactionDataSourceProvider),
@@ -472,6 +477,7 @@ final auditAnalysisViewModelProvider =
 
 final auditResultsViewModelProvider =
     ChangeNotifierProvider<AuditResultsViewModel>((ref) {
+  ref.keepAlive(); // Cache ViewModel to prevent recreation on navigation
   final viewModel = AuditResultsViewModel(
     getAuditReportUseCase: ref.watch(getAuditReportUseCaseProvider),
   );
@@ -481,6 +487,7 @@ final auditResultsViewModelProvider =
 
 final auditMainViewModelProvider =
     ChangeNotifierProvider<AuditMainViewModel>((ref) {
+  ref.keepAlive(); // Cache ViewModel to prevent recreation on navigation
   final viewModel = AuditMainViewModel();
   ref.onDispose(viewModel.dispose);
   return viewModel;
@@ -488,6 +495,7 @@ final auditMainViewModelProvider =
 
 final employeeViewModelProvider =
     ChangeNotifierProvider<EmployeeViewModel>((ref) {
+  ref.keepAlive(); // Cache ViewModel to prevent recreation on navigation
   final viewModel = EmployeeViewModel(
     getAllEmployeesUseCase: ref.watch(getAllEmployeesUseCaseProvider),
     getManagerTeamUseCase: ref.watch(getManagerTeamUseCaseProvider),
@@ -624,12 +632,14 @@ final getInvoiceByIdUseCaseProvider = Provider<GetInvoiceById>((ref) {  // Renam
 // --- Async providers used by the UI ---
 // Fetch invoices for a given userId
 final invoicesByUserProvider = FutureProvider.family<List<Invoice>, String>((ref, userId) async {
+  ref.keepAlive(); // Cache data to prevent unnecessary refetches on navigation
   final getInvoices = ref.read(getInvoicesByUserUseCaseProvider);
   return await getInvoices(userId);
 });
 
 // Fetch a single invoice by invoiceId
 final invoiceByIdProvider = FutureProvider.family<Invoice, String>((ref, invoiceId) async {
+  ref.keepAlive(); // Cache data to prevent unnecessary refetches on navigation
   final getInvoice = ref.read(getInvoiceByIdUseCaseProvider);  // Now references the correct provider
   return await getInvoice(invoiceId);
 });

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import '../../../../domain/entities/audit_report.dart';
+import '../../../widgets/pdf_generation_helper.dart';
 
 class OverallAssessmentScreen extends ConsumerWidget {
   final String contractName;
@@ -55,11 +56,11 @@ class OverallAssessmentScreen extends ConsumerWidget {
                 ],
               ),
             )
-          : _buildAssessmentContent(context, viewModel.auditReport!),
+          : _buildAssessmentContent(context, viewModel.auditReport!, ref),
     );
   }
 
-  Widget _buildAssessmentContent(BuildContext context, AuditReport auditReport) {
+  Widget _buildAssessmentContent(BuildContext context, AuditReport auditReport, WidgetRef ref) {
     // Calculate assessment data from real audit report
     final criticalVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.critical).length;
     final highVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.high).length;
@@ -207,7 +208,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
                 const SizedBox(height: 32),
                 
                 // Action Buttons
-                _buildActionButtons(context),
+                _buildActionButtons(context, ref),
                 
                 const SizedBox(height: 32),
               ],
@@ -751,7 +752,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
         // Back to Results
@@ -783,7 +784,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () => _showDownloadDialog(context),
+            onPressed: () => _showDownloadDialog(context, ref),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6366F1),
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -844,21 +845,67 @@ class OverallAssessmentScreen extends ConsumerWidget {
     );
   }
 
-  void _showDownloadDialog(BuildContext context) {
+  void _showDownloadDialog(BuildContext context, WidgetRef ref) async {
+    final viewModel = ref.read(auditResultsViewModelProvider);
+    
+    if (viewModel.auditReport == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No audit report available for download'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Show loading dialog
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Download Report'),
-          content: const Text('This feature would download a comprehensive PDF report with all audit findings and recommendations.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
+        return const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+          ),
         );
       },
     );
+
+    try {
+      // Generate PDF
+      final filePath = await PdfGenerationHelper.generateAuditReportPdf(viewModel.auditReport!);
+      
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Audit report PDF generated successfully!\nSaved to: $filePath'),
+            backgroundColor: const Color(0xFF4CAF50),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if it's still open
+      if (context.mounted && Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate PDF: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }

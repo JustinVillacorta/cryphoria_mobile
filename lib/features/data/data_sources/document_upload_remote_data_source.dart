@@ -240,11 +240,18 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         final responseData = response.data;
         
         if (responseData is Map<String, dynamic>) {
+          // Handle response with 'documents' key (the actual API format)
+          if (responseData.containsKey('documents') && responseData['documents'] is List) {
+            final List<dynamic> documentsJson = responseData['documents'];
+            return documentsJson.map((json) => Document.fromJson(json)).toList();
+          }
+          
           // Handle single document response
           if (responseData.containsKey('id')) {
             return [Document.fromJson(responseData)];
           }
-          // Handle list response
+          
+          // Handle list response with 'results' key
           if (responseData.containsKey('results') && responseData['results'] is List) {
             final List<dynamic> documentsJson = responseData['results'];
             return documentsJson.map((json) => Document.fromJson(json)).toList();

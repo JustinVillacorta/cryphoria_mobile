@@ -1,4 +1,4 @@
-import 'package:cryphoria_mobile/features/presentation/onboarding_screen/onboarding_screen.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -47,10 +47,10 @@ class _SplashScreenState extends State<SplashScreen>
     // Start animation
     _controller.forward();
 
-    // Navigate to login screen after delay
+    // Navigate to auth wrapper after delay
     Timer(const Duration(seconds: 4), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => OnboardingScreen()),
+        MaterialPageRoute(builder: (context) => const AuthWrapper()),
       );
     });
   }

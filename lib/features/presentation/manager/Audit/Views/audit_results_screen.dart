@@ -40,9 +40,11 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     // Add listeners
     _resultsViewModel.addListener(_onResultsViewModelChanged);
     
-    // Load audit report if we have an audit ID
+    // Load audit report if we have an audit ID and not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_mainViewModel.currentAuditId != null) {
+      if (_mainViewModel.currentAuditId != null && 
+          _resultsViewModel.auditReport == null && 
+          !_resultsViewModel.isLoading) {
         _resultsViewModel.loadAuditReport(_mainViewModel.currentAuditId!);
       }
     });

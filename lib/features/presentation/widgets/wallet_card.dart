@@ -507,7 +507,14 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
 
                   switch (value) {
                     case 'refresh':
+                      // Check if widget is still mounted before refreshing
+                      if (!mounted) return;
+                      
                       await notifier.refreshWallet();
+                      
+                      // Check again after async operation
+                      if (!mounted) return;
+                      
                       final updated = ref.read(walletNotifierProvider);
                       if (mounted && updated.error != null && updated.error!.isNotEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(

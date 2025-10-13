@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/features/presentation/onboarding_screen/onboarding_screen.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/manager_home_skeleton.dart';
@@ -164,6 +164,6 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
       }
     }
 
-    return const LogIn();
+    return const OnboardingScreen();
   }
 }

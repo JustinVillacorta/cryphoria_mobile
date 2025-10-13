@@ -22,9 +22,12 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   @override
   void initState() {
     super.initState();
-    // Load balance sheet when screen initializes
+    // Load balance sheet only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(balanceSheetViewModelProvider.notifier).loadBalanceSheet();
+      final state = ref.read(balanceSheetViewModelProvider);
+      if (state.balanceSheet == null && !state.isLoading) {
+        ref.read(balanceSheetViewModelProvider.notifier).loadBalanceSheet();
+      }
     });
   }
 
@@ -1156,16 +1159,9 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     // Generate 6 data points based on total assets
     final totalAssets = balanceSheet.summary.totalAssets;
     
-    // If total assets is zero, provide sample data for demonstration
+    // If total assets is zero, return empty data
     if (totalAssets == 0.0) {
-      return [
-        FlSpot(0, 5000),
-        FlSpot(1, 4500),
-        FlSpot(2, 4200),
-        FlSpot(3, 4800),
-        FlSpot(4, 4600),
-        FlSpot(5, 5200),
-      ];
+      return [];
     }
     
     return [
@@ -1182,16 +1178,9 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     // Generate 6 data points based on total liabilities
     final totalLiabilities = balanceSheet.summary.totalLiabilities;
     
-    // If total liabilities is zero, provide sample data for demonstration
+    // If total liabilities is zero, return empty data
     if (totalLiabilities == 0.0) {
-      return [
-        FlSpot(0, 2500),
-        FlSpot(1, 2000),
-        FlSpot(2, 1800),
-        FlSpot(3, 2200),
-        FlSpot(4, 1900),
-        FlSpot(5, 2100),
-      ];
+      return [];
     }
     
     return [
@@ -1208,7 +1197,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     final totalAssets = balanceSheet.summary.totalAssets;
     final totalLiabilities = balanceSheet.summary.totalLiabilities;
     
-    // If both are zero, use sample data range
+    // If both are zero, return 0 for empty chart
     if (totalAssets == 0.0 && totalLiabilities == 0.0) {
       return 0;
     }
@@ -1221,9 +1210,9 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     final totalAssets = balanceSheet.summary.totalAssets;
     final totalLiabilities = balanceSheet.summary.totalLiabilities;
     
-    // If both are zero, use sample data range
+    // If both are zero, return 100 for empty chart
     if (totalAssets == 0.0 && totalLiabilities == 0.0) {
-      return 6000;
+      return 100;
     }
     
     final maxValue = [totalAssets, totalLiabilities].reduce((a, b) => a > b ? a : b);

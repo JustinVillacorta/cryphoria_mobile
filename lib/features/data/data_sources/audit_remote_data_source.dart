@@ -989,7 +989,8 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
           if (balanceSheets.isNotEmpty) {
             return _convertToBalanceSheetModel(Map<String, dynamic>.from(balanceSheets.first as Map));
           } else {
-            throw Exception('No balance sheets found');
+            print("📊 No balance sheets found, returning empty model");
+            return _createEmptyBalanceSheetModel();
           }
         } else {
           // If the response is directly the balance sheet data
@@ -1138,7 +1139,8 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
             final cashFlowData = Map<String, dynamic>.from(cashFlowStatements.first as Map);
             return _convertToCashFlowModel(cashFlowData);
           } else {
-            throw Exception('No cash flow statements found');
+            print("📊 No cash flow statements found, returning empty model");
+            return _createEmptyCashFlowModel();
           }
         } else if (responseData['success'] == true && responseData['balance_sheets'] != null) {
           // Fallback: if it returns balance sheets instead
@@ -1147,7 +1149,8 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
             final balanceSheetData = Map<String, dynamic>.from(balanceSheets.first as Map);
             return _convertToCashFlowModel(balanceSheetData);
           } else {
-            throw Exception('No balance sheets found');
+            print("📊 No balance sheets found in fallback, returning empty cash flow model");
+            return _createEmptyCashFlowModel();
           }
         } else {
           throw Exception('Invalid response format: ${responseData['message'] ?? 'Unknown error'}');
@@ -1280,6 +1283,93 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       print("📊 Stack trace: $stackTrace");
       rethrow;
     }
+  }
+
+  /// Create an empty balance sheet model when no data is available
+  BalanceSheetModel _createEmptyBalanceSheetModel() {
+    print("📊 Creating empty balance sheet model - no data available");
+    
+    final emptyData = {
+      'id': 'empty_balance_sheet_${DateTime.now().millisecondsSinceEpoch}',
+      'report_type': 'Balance Sheet',
+      'report_date': DateTime.now().toIso8601String(),
+      'period_start': DateTime.now().toIso8601String(),
+      'period_end': DateTime.now().toIso8601String(),
+      'currency': 'USD',
+      'summary': {
+        'total_assets': 0.0,
+        'total_liabilities': 0.0,
+        'total_equity': 0.0,
+        'working_capital': 0.0,
+        'current_ratio': 0.0,
+        'debt_to_equity_ratio': '0.0',
+        'asset_breakdown': {},
+        'liability_breakdown': {},
+        'equity_breakdown': {},
+        'financial_position': 'No data available',
+        'net_worth': 0.0,
+      },
+      'assets': [],
+      'liabilities': [],
+      'equity': [],
+      'metadata': {
+        'user_id': 'unknown',
+        'generated_at': DateTime.now().toIso8601String(),
+        'note': 'No balance sheet data available yet',
+        'empty_data': true,
+      },
+      'created_at': DateTime.now().toIso8601String(),
+      'generated_at': DateTime.now().toIso8601String(),
+    };
+    
+    return BalanceSheetModel.fromJson(emptyData);
+  }
+
+  /// Create an empty cash flow model when no data is available
+  CashFlowModel _createEmptyCashFlowModel() {
+    print("📊 Creating empty cash flow model - no data available");
+    
+    final emptyData = {
+      'id': 'empty_cash_flow_${DateTime.now().millisecondsSinceEpoch}',
+      'report_type': 'Cash Flow Statement',
+      'report_date': DateTime.now().toIso8601String(),
+      'period_start': DateTime.now().toIso8601String(),
+      'period_end': DateTime.now().toIso8601String(),
+      'currency': 'USD',
+      'summary': {
+        'net_cash_from_operations': 0.0,
+        'net_cash_from_investing': 0.0,
+        'net_cash_from_financing': 0.0,
+        'net_change_in_cash': 0.0,
+        'beginning_cash': 0.0,
+        'ending_cash': 0.0,
+        'operating_breakdown': {
+          'cash_receipts': 0.0,
+          'cash_payments': 0.0,
+        },
+        'investing_breakdown': {
+          'cash_receipts': 0.0,
+          'cash_payments': 0.0,
+        },
+        'financing_breakdown': {
+          'cash_receipts': 0.0,
+          'cash_payments': 0.0,
+        },
+      },
+      'operating_activities': [],
+      'investing_activities': [],
+      'financing_activities': [],
+      'metadata': {
+        'user_id': 'unknown',
+        'generated_at': DateTime.now().toIso8601String(),
+        'note': 'No cash flow data available yet',
+        'empty_data': true,
+      },
+      'created_at': DateTime.now().toIso8601String(),
+      'generated_at': DateTime.now().toIso8601String(),
+    };
+    
+    return CashFlowModel.fromJson(emptyData);
   }
 
 

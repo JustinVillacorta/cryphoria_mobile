@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/employee_management_skeleton.dart';
 import '../employee_viewmodel/employee_viewmodel.dart';
 import 'add_employee_screen.dart';
 import 'employee_detail_screen.dart';
@@ -21,12 +22,14 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
   void initState() {
     super.initState();
     _employeeViewModel = ref.read(employeeViewModelProvider);
-    // Load manager's team from backend by default
+    // Only load data if not already loaded to prevent unnecessary refetches
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Try to load manager's team first, fallback to sample data if needed
-      _employeeViewModel.getManagerTeam().catchError((_) {
-        _employeeViewModel.loadSampleData();
-      });
+      if (_employeeViewModel.employees.isEmpty && !_employeeViewModel.isLoading) {
+        // Try to load manager's team first, fallback to sample data if needed
+        _employeeViewModel.getManagerTeam().catchError((_) {
+          _employeeViewModel.loadSampleData();
+        });
+      }
     });
   }
 
@@ -74,7 +77,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
         ),
       ),
       body: viewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const EmployeeManagementSkeleton()
           : viewModel.hasEmployees
               ? Column(
                   children: [

@@ -648,6 +648,8 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
         errorMsg = 'Network error: Please check your internet connection';
       } else if (e.toString().contains('Failed to get')) {
         errorMsg = 'API error: ${e.toString().split(': ').last}';
+      } else if (e.toString().contains('No balance sheets found') || e.toString().contains('No cash flow statements found')) {
+        errorMsg = 'No data available for this report yet. Please wait for transactions to be processed.';
       }
       
       ScaffoldMessenger.of(context).showSnackBar(

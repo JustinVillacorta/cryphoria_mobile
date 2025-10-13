@@ -9,46 +9,28 @@ class TransactionDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // ---- Fake transaction data ----
     const transaction = TransactionData(
-      title: 'Client Payment',
-      subtitle: 'Johnson & Co.',
-      amount: 1250.00,
+      title: 'ETH Received',
+      subtitle: '0x1234...5678',
+      amount: 0.5,
       isIncome: true,
       dateTime: 'Today, 10:24 AM',
       category: 'Income',
-      paymentMethod: 'Bank Transfer',
-      reference: 'INV-2025-001',
       notes: 'Payment for website development services.',
       transactionId: 'TX-000001',
-      accountType: 'Revenue',
-      taxRate: '10%',
-      taxAmount: 125.00,
+      transactionHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+      fromAddress: '0x1234567890abcdef1234567890abcdef12345678',
+      toAddress: '0x9876543210fedcba9876543210fedcba98765432',
+      gasCost: '0.001 ETH',
+      gasPrice: '20 Gwei',
+      confirmations: 12,
+      status: 'confirmed',
+      network: 'Ethereum',
+      company: 'Johnson & Co.',
+      description: 'Payment for website development services.',
     );
 
     return TransactionDetailsWidget(
       transaction: transaction,
-      onDelete: () {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete Transaction'),
-            content: const Text('Are you sure you want to delete this transaction?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(const SnackBar(content: Text('Transaction deleted')));
-                },
-                child: const Text('Delete', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
-      },
-      onEdit: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Edit transaction'))),
-      onPrint: () =>
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Printing transaction...'))),
     );
   }
 }
