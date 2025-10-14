@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/data/data_sources/fake_transactions_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/transaction_details.dart';
 
-class AllTransactionsScreen extends StatefulWidget {
+class AllTransactionsScreen extends ConsumerStatefulWidget {
   const AllTransactionsScreen({super.key});
 
   @override
-  State<AllTransactionsScreen> createState() => _AllTransactionsScreenState();
+  ConsumerState<AllTransactionsScreen> createState() => _AllTransactionsScreenState();
 }
 
-class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
-  final FakeTransactionsDataSource _dataSource = FakeTransactionsDataSource();
+class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
+  final ScrollController _scrollController = ScrollController();
   
   // Filter and sort state
   String _selectedTransactionType = 'All';
   String _selectedSortBy = 'Date';
-  final List<String> _transactionTypes = ['All', 'Buy', 'Sell'];
+  final List<String> _transactionTypes = ['All', 'Sent', 'Received'];
   final List<String> _sortOptions = ['Date', 'Value'];
   
   // Search state
@@ -32,27 +34,52 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
         _searchQuery = _searchController.text;
       });
     });
+    
+    // Set up scroll listener for pagination
+    _scrollController.addListener(_onScroll);
+    
+    // Load initial transactions
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final notifier = ref.read(walletNotifierProvider.notifier);
+      notifier.resetAllTransactions();
+      notifier.fetchAllTransactions();
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >= 
+        _scrollController.position.maxScrollExtent * 0.8) {
+      // Load more when scrolled to 80% of the list
+      final notifier = ref.read(walletNotifierProvider.notifier);
+      notifier.loadMoreTransactions();
+    }
+  }
+
   List<Map<String, dynamic>> get _filteredTransactions {
-    List<Map<String, dynamic>> transactions = List.from(_dataSource.getTransactions());
+    final walletState = ref.watch(walletNotifierProvider);
+    List<Map<String, dynamic>> transactions = List.from(walletState.allTransactions);
     
     // Apply transaction type filter
     if (_selectedTransactionType != 'All') {
       transactions = transactions.where((transaction) {
-        if (_selectedTransactionType == 'Buy') {
-          return transaction['title'].toString().toLowerCase().contains('purchase') ||
+        if (_selectedTransactionType == 'Sent') {
+          return transaction['transaction_category'] == 'SENT' ||
+                 transaction['title'].toString().toLowerCase().contains('sent') ||
+                 transaction['title'].toString().toLowerCase().contains('purchase') ||
                  transaction['title'].toString().toLowerCase().contains('buy') ||
                  transaction['title'].toString().toLowerCase().contains('bought') ||
                  transaction['type'] == 'buy';
-        } else if (_selectedTransactionType == 'Sell') {
-          return transaction['title'].toString().toLowerCase().contains('sell') ||
+        } else if (_selectedTransactionType == 'Received') {
+          return transaction['transaction_category'] == 'RECEIVED' ||
+                 transaction['title'].toString().toLowerCase().contains('received') ||
+                 transaction['title'].toString().toLowerCase().contains('sell') ||
                  transaction['title'].toString().toLowerCase().contains('sold') ||
                  transaction['type'] == 'sell';
         }
@@ -64,7 +91,10 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     if (_searchQuery.isNotEmpty) {
       transactions = transactions.where((transaction) {
         return transaction['title'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-               transaction['subtitle'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
+               transaction['subtitle'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               transaction['transaction_hash']?.toString().toLowerCase().contains(_searchQuery.toLowerCase()) == true ||
+               transaction['from_address']?.toString().toLowerCase().contains(_searchQuery.toLowerCase()) == true ||
+               transaction['to_address']?.toString().toLowerCase().contains(_searchQuery.toLowerCase()) == true;
       }).toList();
     }
     
@@ -72,22 +102,34 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     switch (_selectedSortBy) {
       case 'Value':
         transactions.sort((a, b) {
-          double valueA = double.tryParse(a['amount'].toString().replaceAll(RegExp(r'[^\d.-]'), '')) ?? 0;
-          double valueB = double.tryParse(b['amount'].toString().replaceAll(RegExp(r'[^\d.-]'), '')) ?? 0;
+          double valueA = _parseAmount(a['amount']?.toString() ?? '0');
+          double valueB = _parseAmount(b['amount']?.toString() ?? '0');
           return valueB.compareTo(valueA); // Descending order
         });
         break;
       case 'Date':
       default:
-        // Default is already sorted by date (most recent first)
+        // Sort by timestamp (most recent first)
+        transactions.sort((a, b) {
+          final aTime = a['created_at'] ?? a['timestamp'] ?? '';
+          final bTime = b['created_at'] ?? b['timestamp'] ?? '';
+          return bTime.compareTo(aTime);
+        });
         break;
     }
     
     return transactions;
   }
 
+  double _parseAmount(String raw) {
+    if (raw.isEmpty) return 0.0;
+    final cleaned = raw.replaceAll(RegExp(r'[^0-9\.\-]'), '');
+    return double.tryParse(cleaned) ?? 0.0;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final walletState = ref.watch(walletNotifierProvider);
     final filteredTransactions = _filteredTransactions;
     
     return Scaffold(
@@ -337,12 +379,35 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                   
                   // Transactions list or empty state
                   Expanded(
-                    child: filteredTransactions.isEmpty 
-                        ? _buildEmptyState()
-                        : _buildTransactionsList(filteredTransactions),
+                    child: walletState.isLoading && walletState.allTransactions.isEmpty
+                        ? _buildLoadingState()
+                        : filteredTransactions.isEmpty 
+                            ? _buildEmptyState()
+                            : _buildTransactionsList(filteredTransactions, walletState),
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xff9747FF)),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Loading transactions...',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
             ),
           ),
         ],
@@ -388,12 +453,25 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     );
   }
 
-  Widget _buildTransactionsList(List<Map<String, dynamic>> transactions) {
+  Widget _buildTransactionsList(List<Map<String, dynamic>> transactions, walletState) {
     return ListView.separated(
+      controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: transactions.length,
+      itemCount: transactions.length + (walletState.isLoadingMore ? 1 : 0),
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
+        // Show loading indicator at the bottom when loading more
+        if (index == transactions.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xff9747FF)),
+              ),
+            ),
+          );
+        }
+        
         final transaction = transactions[index];
         return _buildTransactionItem(transaction);
       },
@@ -401,175 +479,222 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
   }
 
   Widget _buildTransactionItem(Map<String, dynamic> transaction) {
-    final bool isBuyTransaction = transaction['title'].toString().toLowerCase().contains('bought') ||
+    final bool isSentTransaction = transaction['transaction_category'] == 'SENT' ||
+        transaction['title'].toString().toLowerCase().contains('sent') ||
+        transaction['title'].toString().toLowerCase().contains('bought') ||
         transaction['title'].toString().toLowerCase().contains('purchase') ||
         transaction['title'].toString().toLowerCase().contains('buy') ||
         transaction['type'] == 'buy';
     
-    final bool isSellTransaction = transaction['title'].toString().toLowerCase().contains('sell') ||
+    final bool isReceivedTransaction = transaction['transaction_category'] == 'RECEIVED' ||
+        transaction['title'].toString().toLowerCase().contains('received') ||
+        transaction['title'].toString().toLowerCase().contains('sell') ||
+        transaction['title'].toString().toLowerCase().contains('sold') ||
         transaction['type'] == 'sell';
     
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    // Parse amount for display
+    final String amountText = (transaction['amount'] ?? '').toString();
+    final double numericAmount = _parseAmount(amountText);
+    final bool isPositive = (transaction['isPositive'] as bool?) ?? (numericAmount >= 0);
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Transaction icon with buy/sell indicator
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isBuyTransaction 
-                  ? Colors.green.withOpacity(0.1)
-                  : isSellTransaction
-                    ? Colors.red.withOpacity(0.1)
-                    : transaction['color'].withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+        onTap: () {
+          // Construct TransactionData from the map with all available fields
+          final tx = TransactionData(
+            title: (transaction['title'] ?? 'Transaction').toString(),
+            subtitle: (transaction['subtitle'] ?? '').toString(),
+            amount: numericAmount.abs(),
+            isIncome: isPositive,
+            dateTime: (transaction['time'] ?? transaction['created_at'] ?? 'Today').toString(),
+            category: (transaction['category'] ?? (isPositive ? 'Income' : 'Expense')).toString(),
+            notes: (transaction['notes'] ?? '—').toString(),
+            transactionId: (transaction['id'] ?? transaction['transactionId'] ?? 'TX-${DateTime.now().millisecondsSinceEpoch}').toString(),
+            // Crypto-specific fields
+            transactionHash: transaction['transaction_hash']?.toString(),
+            fromAddress: transaction['from_address']?.toString(),
+            toAddress: transaction['to_address']?.toString(),
+            gasCost: transaction['gas_cost']?.toString(),
+            gasPrice: transaction['gas_price']?.toString(),
+            confirmations: transaction['confirmations'] is int ? transaction['confirmations'] as int : null,
+            status: transaction['status']?.toString(),
+            network: transaction['network']?.toString() ?? 'Ethereum',
+            company: transaction['company']?.toString(),
+            description: transaction['description']?.toString(),
+          );
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TransactionDetailsWidget(transaction: tx),
             ),
-            child: Icon(
-              isBuyTransaction 
-                  ? Icons.trending_up 
-                  : isSellTransaction
-                    ? Icons.trending_down
-                    : transaction['icon'],
-              color: isBuyTransaction 
-                  ? Colors.green
-                  : isSellTransaction
-                    ? Colors.red
-                    : transaction['color'],
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          
-          // Transaction details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: isBuyTransaction 
-                            ? Colors.green 
-                            : isSellTransaction 
-                              ? Colors.red 
-                              : Colors.blue,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        isBuyTransaction 
-                            ? 'Bought' 
-                            : isSellTransaction 
-                              ? 'Sell' 
-                              : transaction['title'],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      transaction['subtitle'],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  transaction['time'],
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Amount and details
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                transaction['amount'],
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: transaction['isPositive'] ? Colors.green : Colors.black,
-                ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.05),
+                spreadRadius: 1,
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-              const SizedBox(height: 4),
-              if (transaction['price'] != null || transaction['fee'] != null) ...[
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (transaction['price'] != null) ...[
-                      Text(
-                        'Price: ',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      Text(
-                        transaction['price'],
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    if (transaction['fee'] != null) ...[
-                      Text(
-                        'Fee: ',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      Text(
-                        transaction['fee'],
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ] else ...[
-                Text(
-                  'Fee: \$0.00',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
             ],
           ),
-        ],
+          child: Row(
+            children: [
+              // Transaction icon with buy/sell indicator
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isSentTransaction 
+                      ? Colors.red.withOpacity(0.1)
+                      : isReceivedTransaction
+                        ? Colors.green.withOpacity(0.1)
+                        : (transaction['color'] as Color?)?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  isSentTransaction 
+                      ? Icons.arrow_upward 
+                      : isReceivedTransaction
+                        ? Icons.arrow_downward
+                        : (transaction['icon'] as IconData?) ?? Icons.swap_horiz_rounded,
+                  color: isSentTransaction 
+                      ? Colors.red
+                      : isReceivedTransaction
+                        ? Colors.green
+                        : (transaction['color'] as Color?) ?? Colors.blue,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              
+              // Transaction details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isSentTransaction 
+                                ? Colors.red 
+                                : isReceivedTransaction 
+                                  ? Colors.green 
+                                  : Colors.blue,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isSentTransaction 
+                                ? 'Sent' 
+                                : isReceivedTransaction 
+                                  ? 'Received' 
+                                  : transaction['title']?.toString() ?? 'Transaction',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          transaction['subtitle']?.toString() ?? '',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      transaction['time']?.toString() ?? transaction['created_at']?.toString() ?? 'Today',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Amount and details
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    transaction['amount']?.toString() ?? '\$0.00',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isPositive ? Colors.green : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  if (transaction['price'] != null || transaction['fee'] != null) ...[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (transaction['price'] != null) ...[
+                          Text(
+                            'Price: ',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          Text(
+                            transaction['price']?.toString() ?? '',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        if (transaction['fee'] != null) ...[
+                          Text(
+                            'Fee: ',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          Text(
+                            transaction['fee']?.toString() ?? '',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ] else ...[
+                    Text(
+                      'Fee: \$0.00',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

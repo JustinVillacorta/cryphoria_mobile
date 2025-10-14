@@ -18,6 +18,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   bool isAssetsExpanded = true;
   bool isLiabilitiesExpanded = true;
   bool isEquityExpanded = true;
+  
+  // Cached chart data to avoid recalculation
+  List<FlSpot>? _cachedAssetsSpots;
+  List<FlSpot>? _cachedLiabilitiesSpots;
+  double? _cachedMinY;
+  double? _cachedMaxY;
+  BalanceSheet? _lastBalanceSheet;
 
   @override
   void initState() {
@@ -179,8 +186,8 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 10,
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -281,8 +288,8 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 10,
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -397,12 +404,11 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   }
 
   Widget _buildChartView(BalanceSheet balanceSheet) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
+    return Column(
         children: [
         // Professional Chart Header
         Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -496,6 +502,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
         // Professional Chart Container
         Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
           height: 350,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -507,12 +514,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
+          child: RepaintBoundary(
             child: LineChart(
               LineChartData(
                 gridData: FlGridData(
@@ -575,18 +583,22 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 2500,
+                      interval: _getYAxisInterval(balanceSheet),
                       getTitlesWidget: (double value, TitleMeta meta) {
-                        return Text(
-                          '${(value / 1000).toInt()}K',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 10,
+                        return SideTitleWidget(
+                          meta: meta,
+                          space: 8,
+                          child: Text(
+                            _formatYAxisLabel(value),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 10,
+                            ),
                           ),
                         );
                       },
-                      reservedSize: 42,
+                      reservedSize: 50,
                     ),
                   ),
                 ),
@@ -640,11 +652,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               ),
             ),
           ),
+          ),
 
           const SizedBox(height: 20),
 
         // Professional Summary Card
         Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -723,8 +737,10 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           const SizedBox(height: 20),
 
           // Action Buttons
-          Row(
-            children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
               Expanded(
                 child: OutlinedButton(
                   onPressed: () {},
@@ -771,13 +787,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
 
           const SizedBox(height: 40),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildTableView(BalanceSheet balanceSheet) {
@@ -1156,17 +1172,44 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     );
   }
 
-  // Helper methods for generating dynamic chart data
+  // Helper methods for Y-axis formatting
+  String _formatYAxisLabel(double value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(1)}M';
+    } else if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(0)}K';
+    } else {
+      return value.toStringAsFixed(0);
+    }
+  }
+
+  double _getYAxisInterval(BalanceSheet balanceSheet) {
+    final maxValue = _getMaxY(balanceSheet);
+    if (maxValue <= 1000) return 100;
+    if (maxValue <= 10000) return 1000;
+    if (maxValue <= 100000) return 10000;
+    if (maxValue <= 1000000) return 100000;
+    return 1000000;
+  }
+
+  // Helper methods for generating dynamic chart data with caching
   List<FlSpot> _getAssetsSpots(BalanceSheet balanceSheet) {
+    // Use cached data if available and balance sheet hasn't changed
+    if (_cachedAssetsSpots != null && _lastBalanceSheet == balanceSheet) {
+      return _cachedAssetsSpots!;
+    }
+    
     // Generate 6 data points based on total assets
     final totalAssets = balanceSheet.totals.totalAssets;
     
     // If total assets is zero, return empty data
     if (totalAssets == 0.0) {
+      _cachedAssetsSpots = [];
+      _lastBalanceSheet = balanceSheet;
       return [];
     }
     
-    return [
+    _cachedAssetsSpots = [
       FlSpot(0, totalAssets * 0.8),
       FlSpot(1, totalAssets * 0.9),
       FlSpot(2, totalAssets * 0.85),
@@ -1174,18 +1217,27 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       FlSpot(4, totalAssets * 0.88),
       FlSpot(5, totalAssets),
     ];
+    _lastBalanceSheet = balanceSheet;
+    return _cachedAssetsSpots!;
   }
 
   List<FlSpot> _getLiabilitiesSpots(BalanceSheet balanceSheet) {
+    // Use cached data if available and balance sheet hasn't changed
+    if (_cachedLiabilitiesSpots != null && _lastBalanceSheet == balanceSheet) {
+      return _cachedLiabilitiesSpots!;
+    }
+    
     // Generate 6 data points based on total liabilities
     final totalLiabilities = balanceSheet.totals.totalLiabilities;
     
     // If total liabilities is zero, return empty data
     if (totalLiabilities == 0.0) {
+      _cachedLiabilitiesSpots = [];
+      _lastBalanceSheet = balanceSheet;
       return [];
     }
     
-    return [
+    _cachedLiabilitiesSpots = [
       FlSpot(0, totalLiabilities * 0.7),
       FlSpot(1, totalLiabilities * 0.8),
       FlSpot(2, totalLiabilities * 0.75),
@@ -1193,32 +1245,52 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       FlSpot(4, totalLiabilities * 0.9),
       FlSpot(5, totalLiabilities),
     ];
+    _lastBalanceSheet = balanceSheet;
+    return _cachedLiabilitiesSpots!;
   }
 
   double _getMinY(BalanceSheet balanceSheet) {
+    // Use cached data if available and balance sheet hasn't changed
+    if (_cachedMinY != null && _lastBalanceSheet == balanceSheet) {
+      return _cachedMinY!;
+    }
+    
     final totalAssets = balanceSheet.totals.totalAssets;
     final totalLiabilities = balanceSheet.totals.totalLiabilities;
     
     // If both are zero, return 0 for empty chart
     if (totalAssets == 0.0 && totalLiabilities == 0.0) {
+      _cachedMinY = 0.0;
+      _lastBalanceSheet = balanceSheet;
       return 0;
     }
     
     final minValue = [totalAssets * 0.7, totalLiabilities * 0.7].reduce((a, b) => a < b ? a : b);
-    return minValue - (minValue * 0.1);
+    _cachedMinY = minValue - (minValue * 0.1);
+    _lastBalanceSheet = balanceSheet;
+    return _cachedMinY!;
   }
 
   double _getMaxY(BalanceSheet balanceSheet) {
+    // Use cached data if available and balance sheet hasn't changed
+    if (_cachedMaxY != null && _lastBalanceSheet == balanceSheet) {
+      return _cachedMaxY!;
+    }
+    
     final totalAssets = balanceSheet.totals.totalAssets;
     final totalLiabilities = balanceSheet.totals.totalLiabilities;
     
     // If both are zero, return 100 for empty chart
     if (totalAssets == 0.0 && totalLiabilities == 0.0) {
+      _cachedMaxY = 100.0;
+      _lastBalanceSheet = balanceSheet;
       return 100;
     }
     
     final maxValue = [totalAssets, totalLiabilities].reduce((a, b) => a > b ? a : b);
-    return maxValue + (maxValue * 0.1);
+    _cachedMaxY = maxValue + (maxValue * 0.1);
+    _lastBalanceSheet = balanceSheet;
+    return _cachedMaxY!;
   }
 
   Widget _buildMetricCard(String title, String value, Color color, IconData icon) {

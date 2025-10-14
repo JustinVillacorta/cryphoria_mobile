@@ -159,6 +159,7 @@ class EthTransactionDataSource {
   /// Get mixed transactions including both sent and received ETH transactions
   Future<List<Map<String, dynamic>>> getMixedTransactions({
     int limit = 10,
+    int offset = 0,
     List<Wallet>? userWallets,
   }) async {
     try {
@@ -167,7 +168,7 @@ class EthTransactionDataSource {
       // Get ALL transactions from backend using the correct endpoint
       final response = await _dioClient.dio.get('/api/eth/history/', queryParameters: {
         'limit': limit,
-        'offset': 0,
+        'offset': offset,
       });
 
       if (response.statusCode == 200) {
@@ -266,8 +267,9 @@ class EthTransactionDataSource {
     required List<Wallet> userWallets,
     List<String>? knownReceivedHashes, // No longer needed but kept for compatibility
     int limit = 10,
+    int offset = 0,
   }) async {
     // Use the new getMixedTransactions method which leverages category endpoints
-    return await getMixedTransactions(limit: limit, userWallets: userWallets);
+    return await getMixedTransactions(limit: limit, offset: offset, userWallets: userWallets);
   }
 }

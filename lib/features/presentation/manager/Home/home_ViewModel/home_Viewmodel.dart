@@ -9,12 +9,22 @@ class WalletState {
   final bool isLoading;
   final String? error;
   final List<Map<String, dynamic>> transactions;
+  
+  // Pagination fields for All Transactions screen
+  final List<Map<String, dynamic>> allTransactions;
+  final bool hasMoreTransactions;
+  final int currentOffset;
+  final bool isLoadingMore;
 
   const WalletState({
     required this.wallet,
     required this.isLoading,
     required this.error,
     required this.transactions,
+    required this.allTransactions,
+    required this.hasMoreTransactions,
+    required this.currentOffset,
+    required this.isLoadingMore,
   });
 
   factory WalletState.initial() => const WalletState(
@@ -22,6 +32,10 @@ class WalletState {
         isLoading: false,
         error: null,
         transactions: [],
+        allTransactions: [],
+        hasMoreTransactions: true,
+        currentOffset: 0,
+        isLoadingMore: false,
       );
 
   WalletState copyWith({
@@ -29,12 +43,20 @@ class WalletState {
     bool? isLoading,
     String? Function()? error, // Use function to allow explicit null
     List<Map<String, dynamic>>? transactions,
+    List<Map<String, dynamic>>? allTransactions,
+    bool? hasMoreTransactions,
+    int? currentOffset,
+    bool? isLoadingMore,
   }) {
     return WalletState(
       wallet: wallet ?? this.wallet,
       isLoading: isLoading ?? this.isLoading,
       error: error != null ? error() : this.error,
       transactions: transactions ?? this.transactions,
+      allTransactions: allTransactions ?? this.allTransactions,
+      hasMoreTransactions: hasMoreTransactions ?? this.hasMoreTransactions,
+      currentOffset: currentOffset ?? this.currentOffset,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
 }
@@ -250,5 +272,68 @@ class WalletNotifier extends StateNotifier<WalletState> {
       print('⚠️ Failed to refresh transactions: $e');
       // Keep existing transactions on error
     }
+  }
+
+  /// Fetches all transactions for the All Transactions screen with pagination
+  Future<void> fetchAllTransactions({int limit = 20, int offset = 0}) async {
+    try {
+      // Get user wallets for received transaction detection
+      List<Wallet> userWallets = [];
+      if (state.wallet != null) {
+        userWallets = [state.wallet!];
+      }
+      
+      final transactions = await _ethTransactionDataSource.getAllTransactions(
+        userWallets: userWallets,
+        knownReceivedHashes: null,
+        limit: limit,
+        offset: offset,
+      );
+      
+      // If this is the first page (offset = 0), replace all transactions
+      // Otherwise, append to existing transactions
+      final updatedTransactions = offset == 0 
+          ? List<Map<String, dynamic>>.unmodifiable(transactions)
+          : List<Map<String, dynamic>>.unmodifiable([...state.allTransactions, ...transactions]);
+      
+      // Check if we have more transactions (if we got less than requested, we're at the end)
+      final hasMore = transactions.length >= limit;
+      
+      state = state.copyWith(
+        allTransactions: updatedTransactions,
+        hasMoreTransactions: hasMore,
+        currentOffset: offset + transactions.length,
+        isLoadingMore: false,
+      );
+    } catch (e) {
+      print('⚠️ Failed to fetch all transactions: $e');
+      state = state.copyWith(
+        isLoadingMore: false,
+        error: () => e.toString(),
+      );
+    }
+  }
+
+  /// Loads more transactions for pagination
+  Future<void> loadMoreTransactions() async {
+    if (state.isLoadingMore || !state.hasMoreTransactions) {
+      return;
+    }
+    
+    state = state.copyWith(isLoadingMore: true);
+    await fetchAllTransactions(
+      limit: 20,
+      offset: state.currentOffset,
+    );
+  }
+
+  /// Resets the all transactions pagination state
+  void resetAllTransactions() {
+    state = state.copyWith(
+      allTransactions: [],
+      hasMoreTransactions: true,
+      currentOffset: 0,
+      isLoadingMore: false,
+    );
   }
 }
