@@ -1,11 +1,8 @@
-import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/currency_preference/currency_preference_view/currency_preference_view.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/edit_profile/edit_profile_view/edit_profile_view.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/help/help_view/help_view.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/security/security_view/security_view.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/wallet/wallet_view/wallet_view.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_view.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/HelpandSupport/help_and_support_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/compliance/compliance_view/compliance_view.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
@@ -196,55 +193,8 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                   children: [
                     SizedBox(height: screenHeight * 0.02), // 2% of screen height
 
-                    _buildMenuItem(
-                      context: context,
-                      icon: Icons.account_balance_wallet_outlined,
-                      title: 'Wallet',
-                      iconColor: const Color(0xFF8B5CF6),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => WalletConnectScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                    
 
-                    SizedBox(height: screenHeight * 0.015), // 1.5% of screen height
-
-                    _buildMenuItem(
-                      context: context,
-                      icon: Icons.assessment_outlined,
-                      title: 'Compliance',
-                      iconColor: const Color(0xFF8B5CF6),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ComplianceScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    SizedBox(height: screenHeight * 0.015),
-
-                    _buildMenuItem(
-                      context: context,
-                      icon: Icons.attach_money_outlined,
-                      title: 'Currency',
-                      subtitle: 'ETH/USD',
-                      iconColor: const Color(0xFF8B5CF6),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CurrencyScreen(),
-                          ),
-                        );
-                      },
-                    ),
 
                     SizedBox(height: screenHeight * 0.015),
 
@@ -257,7 +207,7 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SecurityScreen(),
+                            builder: (context) => const HelpAndSupportView(),
                           ),
                         );
                       },
@@ -274,7 +224,7 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => HelpScreen(),
+                            builder: (context) => const ChangePasswordView(),
                           ),
                         );
                       },
