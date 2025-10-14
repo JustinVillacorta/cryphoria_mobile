@@ -440,7 +440,10 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: category,
-              onChanged: (value) => setState(() => category = value!),
+              onChanged: (value) {
+                print('🔍 Category changed from $category to $value');
+                setState(() => category = value!);
+              },
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -462,6 +465,42 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                 value: cat,
                 child: Text(cat),
               )).toList(),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Description Field
+            const Text(
+              'Description',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (value) {
+                print('🔍 Description changed to: $value');
+                description = value;
+              },
+              decoration: InputDecoration(
+                hintText: 'Enter description (optional)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
+              maxLines: 2,
             ),
             
             const SizedBox(height: 32),
