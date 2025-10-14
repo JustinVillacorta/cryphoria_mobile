@@ -207,7 +207,7 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const HelpAndSupportView(),
+                            builder: (context) => ChangePasswordView(),
                           ),
                         );
                       },
@@ -218,13 +218,13 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                     _buildMenuItem(
                       context: context,
                       icon: Icons.help_outline,
-                      title: 'Help',
+                      title: 'Help and Support',
                       iconColor: const Color(0xFF8B5CF6),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ChangePasswordView(),
+                            builder: (context) => HelpAndSupportView(),
                           ),
                         );
                       },
