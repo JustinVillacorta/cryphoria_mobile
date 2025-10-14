@@ -24,6 +24,7 @@ abstract class AuditRemoteDataSource {
   // Financial Reports
   Future<TaxReportModel> getTaxReports();
   Future<BalanceSheetModel> getBalanceSheet();
+  Future<List<BalanceSheetModel>> getAllBalanceSheets();
   Future<CashFlowModel> getCashFlow();
   Future<PortfolioModel> getPortfolioValue();
   Future<PayslipsResponseModel> getPayslips();
@@ -1002,6 +1003,48 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       }
     } on DioException catch (e) {
       print("❌ Error getting balance sheet: $e");
+      throw Exception('Network error: ${e.message}');
+    }
+  }
+
+  @override
+  Future<List<BalanceSheetModel>> getAllBalanceSheets() async {
+    try {
+      print("📤 Getting all balance sheets from /api/balance-sheet/list/");
+      
+      final response = await dio.get('/api/balance-sheet/list/');
+
+      print("📥 All balance sheets response:");
+      print("📊 Status code: ${response.statusCode}");
+      print("📄 Response data: ${response.data}");
+
+      if (response.statusCode == 200) {
+        // Safely cast the response data
+        final responseData = Map<String, dynamic>.from(response.data as Map);
+        
+        // Handle the actual API response structure
+        if (responseData['success'] == true && responseData['balance_sheets'] != null) {
+          final balanceSheets = List<dynamic>.from(responseData['balance_sheets'] as List);
+          
+          // Convert all balance sheets to models
+          final List<BalanceSheetModel> balanceSheetModels = balanceSheets
+              .map((sheet) => BalanceSheetModel.fromJson(Map<String, dynamic>.from(sheet as Map)))
+              .toList();
+          
+          // Sort by date (oldest first) for proper chronological order
+          balanceSheetModels.sort((a, b) => a.asOfDate.compareTo(b.asOfDate));
+          
+          print("📊 Loaded ${balanceSheetModels.length} balance sheets");
+          return balanceSheetModels;
+        } else {
+          print("📊 No balance sheets found in response");
+          return [];
+        }
+      } else {
+        throw Exception('Failed to get balance sheets: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      print("❌ Error getting all balance sheets: $e");
       throw Exception('Network error: ${e.message}');
     }
   }

@@ -19,21 +19,19 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   bool isLiabilitiesExpanded = true;
   bool isEquityExpanded = true;
   
-  // Cached chart data to avoid recalculation
-  List<FlSpot>? _cachedAssetsSpots;
-  List<FlSpot>? _cachedLiabilitiesSpots;
-  double? _cachedMinY;
-  double? _cachedMaxY;
-  BalanceSheet? _lastBalanceSheet;
+  // Chart state
 
   @override
   void initState() {
     super.initState();
-    // Load balance sheet only if not already loaded
+    // Load both single and all balance sheets
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(balanceSheetViewModelProvider);
       if (state.balanceSheet == null && !state.isLoading) {
         ref.read(balanceSheetViewModelProvider.notifier).loadBalanceSheet();
+      }
+      if (state.balanceSheets == null && !state.isLoading) {
+        ref.read(balanceSheetViewModelProvider.notifier).loadAllBalanceSheets();
       }
     });
   }
@@ -397,13 +395,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           const SizedBox(height: 15),
 
           // Content
-          isChartView ? _buildChartView(state.balanceSheet!) : _buildTableView(state.balanceSheet!),
+          isChartView ? _buildChartView(state) : _buildTableView(state.balanceSheet!),
         ],
       ),
     );
   }
 
-  Widget _buildChartView(BalanceSheet balanceSheet) {
+  Widget _buildChartView(BalanceSheetState balanceSheetState) {
     return Column(
         children: [
         // Professional Chart Header
@@ -549,30 +547,17 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                           fontWeight: FontWeight.w500,
                           fontSize: 12,
                         );
+                        final index = value.toInt();
+                        final balanceSheets = balanceSheetState.balanceSheets ?? [];
                         Widget text;
-                        switch (value.toInt()) {
-                          case 0:
-                            text = const Text('Jan', style: style);
-                            break;
-                          case 1:
-                            text = const Text('Feb', style: style);
-                            break;
-                          case 2:
-                            text = const Text('Mar', style: style);
-                            break;
-                          case 3:
-                            text = const Text('Apr', style: style);
-                            break;
-                          case 4:
-                            text = const Text('May', style: style);
-                            break;
-                          case 5:
-                            text = const Text('Jun', style: style);
-                            break;
-                          default:
-                            text = const Text('', style: style);
-                            break;
+                        
+                        if (index >= 0 && index < balanceSheets.length) {
+                          final date = balanceSheets[index].asOfDate;
+                          text = Text('${date.day}/${date.month}', style: style);
+                        } else {
+                          text = const Text('', style: style);
                         }
+                        
                         return SideTitleWidget(
                           meta: meta,
                           child: text,
@@ -583,7 +568,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: _getYAxisInterval(balanceSheet),
+                      interval: _getYAxisInterval(balanceSheetState.balanceSheets ?? []),
                       getTitlesWidget: (double value, TitleMeta meta) {
                         return SideTitleWidget(
                           meta: meta,
@@ -604,13 +589,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
-                maxX: 5,
-                minY: _getMinY(balanceSheet),
-                maxY: _getMaxY(balanceSheet),
+                maxX: (balanceSheetState.balanceSheets?.length ?? 1) - 1.0,
+                minY: _getMinY(balanceSheetState.balanceSheets ?? []),
+                maxY: _getMaxY(balanceSheetState.balanceSheets ?? []),
                 lineBarsData: [
                   // Blue line (Assets)
                   LineChartBarData(
-                    spots: _getAssetsSpots(balanceSheet),
+                    spots: _getHistoricalAssetsSpots(balanceSheetState.balanceSheets ?? []),
                     isCurved: false,
                     color: Colors.blue,
                     barWidth: 2,
@@ -630,7 +615,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   ),
                   // Green line (Liabilities)
                   LineChartBarData(
-                    spots: _getLiabilitiesSpots(balanceSheet),
+                    spots: _getHistoricalLiabilitiesSpots(balanceSheetState.balanceSheets ?? []),
                     isCurved: false,
                     color: Colors.green,
                     barWidth: 2,
@@ -763,7 +748,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => _downloadPdf(context, balanceSheet),
+                  onPressed: () => _downloadPdf(context, balanceSheetState.balanceSheet!),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -899,6 +884,11 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 if (isAssetsExpanded) ...[
                   _buildSubSection('Current Assets', '(Short-term, highly liquid)'),
                   _buildBalanceSheetRow('Crypto Holdings', '\$${balanceSheet.assets.currentAssets.cryptoHoldings.totalValue.toStringAsFixed(2)}'),
+                  // Detailed Crypto Breakdown
+                  if (balanceSheet.assets.currentAssets.cryptoHoldings.holdings.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _buildCryptoBreakdown(balanceSheet.assets.currentAssets.cryptoHoldings),
+                  ],
                   _buildBalanceSheetRow('Cash Equivalents', '\$${balanceSheet.assets.currentAssets.cashEquivalents.toStringAsFixed(2)}'),
                   _buildBalanceSheetRow('Receivables', '\$${balanceSheet.assets.currentAssets.receivables.toStringAsFixed(2)}'),
                   _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.currentAssets.total.toStringAsFixed(2)}'),
@@ -1183,8 +1173,8 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     }
   }
 
-  double _getYAxisInterval(BalanceSheet balanceSheet) {
-    final maxValue = _getMaxY(balanceSheet);
+  double _getYAxisInterval(List<BalanceSheet> balanceSheets) {
+    final maxValue = _getMaxY(balanceSheets);
     if (maxValue <= 1000) return 100;
     if (maxValue <= 10000) return 1000;
     if (maxValue <= 100000) return 10000;
@@ -1192,105 +1182,59 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     return 1000000;
   }
 
-  // Helper methods for generating dynamic chart data with caching
-  List<FlSpot> _getAssetsSpots(BalanceSheet balanceSheet) {
-    // Use cached data if available and balance sheet hasn't changed
-    if (_cachedAssetsSpots != null && _lastBalanceSheet == balanceSheet) {
-      return _cachedAssetsSpots!;
-    }
+  // Helper methods for generating real historical chart data
+  List<FlSpot> _getHistoricalAssetsSpots(List<BalanceSheet> balanceSheets) {
+    if (balanceSheets.isEmpty) return [];
     
-    // Generate 6 data points based on total assets
-    final totalAssets = balanceSheet.totals.totalAssets;
-    
-    // If total assets is zero, return empty data
-    if (totalAssets == 0.0) {
-      _cachedAssetsSpots = [];
-      _lastBalanceSheet = balanceSheet;
-      return [];
-    }
-    
-    _cachedAssetsSpots = [
-      FlSpot(0, totalAssets * 0.8),
-      FlSpot(1, totalAssets * 0.9),
-      FlSpot(2, totalAssets * 0.85),
-      FlSpot(3, totalAssets * 0.95),
-      FlSpot(4, totalAssets * 0.88),
-      FlSpot(5, totalAssets),
-    ];
-    _lastBalanceSheet = balanceSheet;
-    return _cachedAssetsSpots!;
+    return balanceSheets.asMap().entries.map((entry) {
+      final index = entry.key.toDouble();
+      final balanceSheet = entry.value;
+      return FlSpot(index, balanceSheet.totals.totalAssets);
+    }).toList();
   }
 
-  List<FlSpot> _getLiabilitiesSpots(BalanceSheet balanceSheet) {
-    // Use cached data if available and balance sheet hasn't changed
-    if (_cachedLiabilitiesSpots != null && _lastBalanceSheet == balanceSheet) {
-      return _cachedLiabilitiesSpots!;
-    }
+  List<FlSpot> _getHistoricalLiabilitiesSpots(List<BalanceSheet> balanceSheets) {
+    if (balanceSheets.isEmpty) return [];
     
-    // Generate 6 data points based on total liabilities
-    final totalLiabilities = balanceSheet.totals.totalLiabilities;
-    
-    // If total liabilities is zero, return empty data
-    if (totalLiabilities == 0.0) {
-      _cachedLiabilitiesSpots = [];
-      _lastBalanceSheet = balanceSheet;
-      return [];
-    }
-    
-    _cachedLiabilitiesSpots = [
-      FlSpot(0, totalLiabilities * 0.7),
-      FlSpot(1, totalLiabilities * 0.8),
-      FlSpot(2, totalLiabilities * 0.75),
-      FlSpot(3, totalLiabilities * 0.85),
-      FlSpot(4, totalLiabilities * 0.9),
-      FlSpot(5, totalLiabilities),
-    ];
-    _lastBalanceSheet = balanceSheet;
-    return _cachedLiabilitiesSpots!;
+    return balanceSheets.asMap().entries.map((entry) {
+      final index = entry.key.toDouble();
+      final balanceSheet = entry.value;
+      return FlSpot(index, balanceSheet.totals.totalLiabilities);
+    }).toList();
   }
 
-  double _getMinY(BalanceSheet balanceSheet) {
-    // Use cached data if available and balance sheet hasn't changed
-    if (_cachedMinY != null && _lastBalanceSheet == balanceSheet) {
-      return _cachedMinY!;
+  double _getMinY(List<BalanceSheet> balanceSheets) {
+    if (balanceSheets.isEmpty) return 0.0;
+    
+    double minValue = double.infinity;
+    for (final sheet in balanceSheets) {
+      final assets = sheet.totals.totalAssets;
+      final liabilities = sheet.totals.totalLiabilities;
+      minValue = [minValue, assets, liabilities].reduce((a, b) => a < b ? a : b);
     }
     
-    final totalAssets = balanceSheet.totals.totalAssets;
-    final totalLiabilities = balanceSheet.totals.totalLiabilities;
+    // If all values are zero, return 0
+    if (minValue == double.infinity || minValue == 0.0) return 0.0;
     
-    // If both are zero, return 0 for empty chart
-    if (totalAssets == 0.0 && totalLiabilities == 0.0) {
-      _cachedMinY = 0.0;
-      _lastBalanceSheet = balanceSheet;
-      return 0;
-    }
-    
-    final minValue = [totalAssets * 0.7, totalLiabilities * 0.7].reduce((a, b) => a < b ? a : b);
-    _cachedMinY = minValue - (minValue * 0.1);
-    _lastBalanceSheet = balanceSheet;
-    return _cachedMinY!;
+    // Add some padding below the minimum value
+    return minValue - (minValue * 0.1);
   }
 
-  double _getMaxY(BalanceSheet balanceSheet) {
-    // Use cached data if available and balance sheet hasn't changed
-    if (_cachedMaxY != null && _lastBalanceSheet == balanceSheet) {
-      return _cachedMaxY!;
+  double _getMaxY(List<BalanceSheet> balanceSheets) {
+    if (balanceSheets.isEmpty) return 100.0;
+    
+    double maxValue = 0.0;
+    for (final sheet in balanceSheets) {
+      final assets = sheet.totals.totalAssets;
+      final liabilities = sheet.totals.totalLiabilities;
+      maxValue = [maxValue, assets, liabilities].reduce((a, b) => a > b ? a : b);
     }
     
-    final totalAssets = balanceSheet.totals.totalAssets;
-    final totalLiabilities = balanceSheet.totals.totalLiabilities;
+    // If all values are zero, return 100 for empty chart
+    if (maxValue == 0.0) return 100.0;
     
-    // If both are zero, return 100 for empty chart
-    if (totalAssets == 0.0 && totalLiabilities == 0.0) {
-      _cachedMaxY = 100.0;
-      _lastBalanceSheet = balanceSheet;
-      return 100;
-    }
-    
-    final maxValue = [totalAssets, totalLiabilities].reduce((a, b) => a > b ? a : b);
-    _cachedMaxY = maxValue + (maxValue * 0.1);
-    _lastBalanceSheet = balanceSheet;
-    return _cachedMaxY!;
+    // Add some padding above the maximum value
+    return maxValue + (maxValue * 0.1);
   }
 
   Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
@@ -1347,6 +1291,124 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCryptoBreakdown(CryptoHoldings cryptoHoldings) {
+    return Container(
+      margin: const EdgeInsets.only(left: 20, right: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Crypto Breakdown',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...cryptoHoldings.holdings.entries.map((entry) {
+            final symbol = entry.key;
+            final asset = entry.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        symbol,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        '\$${asset.currentValue.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildCryptoDetail('Balance', '${asset.balance.toStringAsFixed(4)} $symbol'),
+                      ),
+                      Expanded(
+                        child: _buildCryptoDetail('Price', '\$${asset.currentPrice.toStringAsFixed(2)}'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildCryptoDetail('Cost Basis', '\$${asset.costBasis.toStringAsFixed(2)}'),
+                      ),
+                      Expanded(
+                        child: _buildCryptoDetail('Avg Cost', '\$${asset.averageCost.toStringAsFixed(2)}'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildCryptoDetail(
+                          'Unrealized P&L', 
+                          '\$${asset.unrealizedGainLoss.toStringAsFixed(2)}',
+                          color: asset.unrealizedGainLoss >= 0 ? Colors.green : Colors.red,
+                        ),
+                      ),
+                      const Expanded(child: SizedBox()),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCryptoDetail(String label, String value, {Color? color}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 11,
+            color: color ?? Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 

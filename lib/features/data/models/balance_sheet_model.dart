@@ -173,21 +173,71 @@ class CurrentAssetsModel extends CurrentAssets {
   }
 }
 
-class CryptoHoldingsModel extends CryptoHoldings {
-  const CryptoHoldingsModel({
-    required super.totalValue,
+class CryptoAssetModel extends CryptoAsset {
+  const CryptoAssetModel({
+    required super.balance,
+    required super.currentPrice,
+    required super.currentValue,
+    required super.costBasis,
+    required super.averageCost,
+    required super.unrealizedGainLoss,
   });
 
-  factory CryptoHoldingsModel.fromJson(Map<String, dynamic> json) {
-    return CryptoHoldingsModel(
-      totalValue: (json['total_value'] as num?)?.toDouble() ?? 0.0,
+  factory CryptoAssetModel.fromJson(Map<String, dynamic> json) {
+    return CryptoAssetModel(
+      balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
+      currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0.0,
+      currentValue: (json['current_value'] as num?)?.toDouble() ?? 0.0,
+      costBasis: (json['cost_basis'] as num?)?.toDouble() ?? 0.0,
+      averageCost: (json['average_cost'] as num?)?.toDouble() ?? 0.0,
+      unrealizedGainLoss: (json['unrealized_gain_loss'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'total_value': totalValue,
+      'balance': balance,
+      'current_price': currentPrice,
+      'current_value': currentValue,
+      'cost_basis': costBasis,
+      'average_cost': averageCost,
+      'unrealized_gain_loss': unrealizedGainLoss,
     };
+  }
+}
+
+class CryptoHoldingsModel extends CryptoHoldings {
+  const CryptoHoldingsModel({
+    required super.holdings,
+    required super.totalValue,
+  });
+
+  factory CryptoHoldingsModel.fromJson(Map<String, dynamic> json) {
+    final Map<String, CryptoAsset> holdingsMap = {};
+    
+    // Parse individual crypto holdings (e.g., ETH, BTC, etc.)
+    json.forEach((key, value) {
+      if (key != 'total_value' && value is Map<String, dynamic>) {
+        holdingsMap[key] = CryptoAssetModel.fromJson(value);
+      }
+    });
+    
+    return CryptoHoldingsModel(
+      holdings: holdingsMap,
+      totalValue: (json['total_value'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> result = <String, dynamic>{};
+    
+    // Convert holdings to JSON
+    holdings.forEach((key, value) {
+      result[key] = (value as CryptoAssetModel).toJson();
+    });
+    
+    result['total_value'] = totalValue;
+    return result;
   }
 }
 

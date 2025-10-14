@@ -136,23 +136,75 @@ class CurrentAssets {
   }
 }
 
-class CryptoHoldings {
-  final double totalValue;
+class CryptoAsset {
+  final double balance;
+  final double currentPrice;
+  final double currentValue;
+  final double costBasis;
+  final double averageCost;
+  final double unrealizedGainLoss;
 
-  const CryptoHoldings({
-    required this.totalValue,
+  const CryptoAsset({
+    required this.balance,
+    required this.currentPrice,
+    required this.currentValue,
+    required this.costBasis,
+    required this.averageCost,
+    required this.unrealizedGainLoss,
   });
 
-  factory CryptoHoldings.fromJson(Map<String, dynamic> json) {
-    return CryptoHoldings(
-      totalValue: (json['total_value'] as num?)?.toDouble() ?? 0.0,
+  factory CryptoAsset.fromJson(Map<String, dynamic> json) {
+    return CryptoAsset(
+      balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
+      currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0.0,
+      currentValue: (json['current_value'] as num?)?.toDouble() ?? 0.0,
+      costBasis: (json['cost_basis'] as num?)?.toDouble() ?? 0.0,
+      averageCost: (json['average_cost'] as num?)?.toDouble() ?? 0.0,
+      unrealizedGainLoss: (json['unrealized_gain_loss'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'total_value': totalValue,
+      'balance': balance,
+      'current_price': currentPrice,
+      'current_value': currentValue,
+      'cost_basis': costBasis,
+      'average_cost': averageCost,
+      'unrealized_gain_loss': unrealizedGainLoss,
     };
+  }
+}
+
+class CryptoHoldings {
+  final Map<String, CryptoAsset> holdings;
+  final double totalValue;
+
+  const CryptoHoldings({
+    required this.holdings,
+    required this.totalValue,
+  });
+
+  factory CryptoHoldings.fromJson(Map<String, dynamic> json) {
+    final Map<String, CryptoAsset> holdingsMap = {};
+    
+    // Parse individual crypto holdings (e.g., ETH, BTC, etc.)
+    json.forEach((key, value) {
+      if (key != 'total_value' && value is Map<String, dynamic>) {
+        holdingsMap[key] = CryptoAsset.fromJson(value);
+      }
+    });
+    
+    return CryptoHoldings(
+      holdings: holdingsMap,
+      totalValue: (json['total_value'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> result = Map<String, dynamic>.from(holdings);
+    result['total_value'] = totalValue;
+    return result;
   }
 }
 

@@ -9,9 +9,7 @@ class AddEmployeeScreen extends ConsumerStatefulWidget {
   ConsumerState<AddEmployeeScreen> createState() => _AddEmployeeScreenState();
 }
 
-class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
-    with TickerProviderStateMixin {
-  late TabController _tabController;
+class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Form Controllers - only the required fields
@@ -31,22 +29,8 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
     'HR Department'
   ];
 
-  int _currentTabIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        _currentTabIndex = _tabController.index;
-      });
-    });
-  }
-
   @override
   void dispose() {
-    _tabController.dispose();
     _emailController.dispose();
     _fullNameController.dispose();
     _phoneController.dispose();
@@ -62,17 +46,9 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
         children: [
           // Custom Header with gradient
           _buildHeader(),
-          // Tab Navigation
-          _buildTabNavigation(),
-          // Tab Content
+          // Combined Form Content
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildPersonalInfoTab(),
-                _buildEmploymentInfoTab(),
-              ],
-            ),
+            child: _buildCombinedForm(),
           ),
           // Bottom Action Buttons
           _buildBottomActions(),
@@ -148,63 +124,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
     );
   }
 
-  Widget _buildTabNavigation() {
-    return Container(
-      color: Colors.white,
-      child: Row(
-        children: [
-          _buildTabItem('Personal Info', 0),
-          _buildTabItem('Employment', 1),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabItem(String title, int index) {
-    bool isActive = _currentTabIndex == index;
-    bool isCompleted = _currentTabIndex > index;
-    
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _tabController.animateTo(index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: isActive ? const Color(0xFF9747FF) : Colors.transparent,
-                width: 2,
-              ),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isCompleted)
-                const Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                  size: 20,
-                ),
-              if (isCompleted) const SizedBox(width: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isActive ? const Color(0xFF9747FF) : 
-                         isCompleted ? Colors.green : Colors.grey,
-                  fontSize: 16,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPersonalInfoTab() {
+  Widget _buildCombinedForm() {
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -214,7 +134,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
           children: [
             _buildSectionCard(
               icon: Icons.person_outline,
-              title: 'Personal Information',
+              title: 'Employee Information',
               children: [
                 const SizedBox(height: 16),
                 _buildInputField(
@@ -260,6 +180,21 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
                     return null;
                   },
                 ),
+                const SizedBox(height: 20),
+                _buildInputField(
+                  controller: _positionController,
+                  label: 'Job Position',
+                  hint: 'Enter job position',
+                  icon: Icons.work,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Position is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                _buildDropdownField(),
               ],
             ),
           ],
@@ -268,37 +203,6 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
     );
   }
 
-  Widget _buildEmploymentInfoTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionCard(
-            icon: Icons.work_outline,
-            title: 'Employment Information',
-            children: [
-              const SizedBox(height: 16),
-              _buildInputField(
-                controller: _positionController,
-                label: 'Job Position',
-                hint: 'Enter job position',
-                icon: Icons.work,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Position is required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              _buildDropdownField(),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSectionCard({
     required IconData icon,
@@ -554,12 +458,6 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen>
             ),
           );
         }
-      }
-    } else {
-      // If form validation fails and we're on the employment tab, 
-      // go back to personal info tab to show validation errors
-      if (_currentTabIndex == 1) {
-        _tabController.animateTo(0);
       }
     }
   }
