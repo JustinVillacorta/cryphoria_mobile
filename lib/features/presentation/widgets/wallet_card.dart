@@ -339,7 +339,7 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
           children: [
             Expanded(
               child: Text(
-                'Current Wallet',
+                'Current Balance',
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: screenWidth * 0.035,
@@ -490,7 +490,7 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
           children: [
             Expanded(
               child: Text(
-                'Current Wallet',
+                'Current Balance',
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: screenWidth * 0.035,
@@ -577,7 +577,7 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
         ),
         const SizedBox(height: 4),
         Text(
-          state.wallet!.name,
+          'Metamask',
           style: TextStyle(
             color: Colors.white,
             fontSize: screenWidth * 0.04,

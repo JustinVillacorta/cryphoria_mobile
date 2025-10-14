@@ -4,7 +4,6 @@ import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/manager_home_skeleton.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/quick_actions.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/crypto_news_strip.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/recent_transactions.dart';
 
 class HomeView extends ConsumerStatefulWidget {
@@ -46,7 +45,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final user = ref.watch(userProvider);
     final String displayName = (() {
       final parts = <String>[];
-      if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName!.trim());
+      if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName.trim());
       if ((user?.lastName ?? '').trim().isNotEmpty) parts.add(user!.lastName!.trim());
       return parts.isNotEmpty ? parts.join(' ') : 'User';
     })();
@@ -138,8 +137,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     walletNotifier.refreshTransactions();
                   },
                 ),
-                const SizedBox(height: 16),
-                const CryptoNewsSection(),
                 const SizedBox(height: 24),
                 const RecentTransactions(),
                 // RevenueChart removed from home view per request

@@ -66,9 +66,8 @@ class RecentTransactions extends ConsumerWidget {
                   Text(
                     'See All',
                     style: TextStyle(
-                      color: Colors.blue,
+                      color: const Color(0xff9747FF),
                       fontSize: 14,
-                      decoration: TextDecoration.underline,
                     ),
                   ),
                   SizedBox(width: 4),

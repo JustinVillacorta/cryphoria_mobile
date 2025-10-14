@@ -18,15 +18,20 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   bool isAssetsExpanded = true;
   bool isLiabilitiesExpanded = true;
   bool isEquityExpanded = true;
+  
+  // Chart state
 
   @override
   void initState() {
     super.initState();
-    // Load balance sheet only if not already loaded
+    // Load both single and all balance sheets
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(balanceSheetViewModelProvider);
       if (state.balanceSheet == null && !state.isLoading) {
         ref.read(balanceSheetViewModelProvider.notifier).loadBalanceSheet();
+      }
+      if (state.balanceSheets == null && !state.isLoading) {
+        ref.read(balanceSheetViewModelProvider.notifier).loadAllBalanceSheets();
       }
     });
   }
@@ -179,8 +184,8 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 10,
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -235,7 +240,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Total Assets',
-                        '\$${state.balanceSheet!.summary.totalAssets.toStringAsFixed(2)}',
+                        '\$${state.balanceSheet!.totals.totalAssets.toStringAsFixed(2)}',
                         const Color(0xFF10B981),
                         Icons.trending_up,
                       ),
@@ -244,7 +249,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Total Liabilities',
-                        '\$${state.balanceSheet!.summary.totalLiabilities.toStringAsFixed(2)}',
+                        '\$${state.balanceSheet!.totals.totalLiabilities.toStringAsFixed(2)}',
                         const Color(0xFFEF4444),
                         Icons.trending_down,
                       ),
@@ -257,7 +262,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Total Equity',
-                        '\$${state.balanceSheet!.summary.totalEquity.toStringAsFixed(2)}',
+                        '\$${state.balanceSheet!.totals.totalEquity.toStringAsFixed(2)}',
                         const Color(0xFF3B82F6),
                         Icons.account_balance_wallet,
                       ),
@@ -281,8 +286,8 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 10,
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -390,19 +395,18 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           const SizedBox(height: 15),
 
           // Content
-          isChartView ? _buildChartView(state.balanceSheet!) : _buildTableView(state.balanceSheet!),
+          isChartView ? _buildChartView(state) : _buildTableView(state.balanceSheet!),
         ],
       ),
     );
   }
 
-  Widget _buildChartView(BalanceSheet balanceSheet) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
+  Widget _buildChartView(BalanceSheetState balanceSheetState) {
+    return Column(
         children: [
         // Professional Chart Header
         Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -496,6 +500,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
         // Professional Chart Container
         Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
           height: 350,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -507,12 +512,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
+          child: RepaintBoundary(
             child: LineChart(
               LineChartData(
                 gridData: FlGridData(
@@ -541,30 +547,17 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                           fontWeight: FontWeight.w500,
                           fontSize: 12,
                         );
+                        final index = value.toInt();
+                        final balanceSheets = balanceSheetState.balanceSheets ?? [];
                         Widget text;
-                        switch (value.toInt()) {
-                          case 0:
-                            text = const Text('Jan', style: style);
-                            break;
-                          case 1:
-                            text = const Text('Feb', style: style);
-                            break;
-                          case 2:
-                            text = const Text('Mar', style: style);
-                            break;
-                          case 3:
-                            text = const Text('Apr', style: style);
-                            break;
-                          case 4:
-                            text = const Text('May', style: style);
-                            break;
-                          case 5:
-                            text = const Text('Jun', style: style);
-                            break;
-                          default:
-                            text = const Text('', style: style);
-                            break;
+                        
+                        if (index >= 0 && index < balanceSheets.length) {
+                          final date = balanceSheets[index].asOfDate;
+                          text = Text('${date.day}/${date.month}', style: style);
+                        } else {
+                          text = const Text('', style: style);
                         }
+                        
                         return SideTitleWidget(
                           meta: meta,
                           child: text,
@@ -575,30 +568,34 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 2500,
+                      interval: _getYAxisInterval(balanceSheetState.balanceSheets ?? []),
                       getTitlesWidget: (double value, TitleMeta meta) {
-                        return Text(
-                          '${(value / 1000).toInt()}K',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 10,
+                        return SideTitleWidget(
+                          meta: meta,
+                          space: 8,
+                          child: Text(
+                            _formatYAxisLabel(value),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 10,
+                            ),
                           ),
                         );
                       },
-                      reservedSize: 42,
+                      reservedSize: 50,
                     ),
                   ),
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
-                maxX: 5,
-                minY: _getMinY(balanceSheet),
-                maxY: _getMaxY(balanceSheet),
+                maxX: (balanceSheetState.balanceSheets?.length ?? 1) - 1.0,
+                minY: _getMinY(balanceSheetState.balanceSheets ?? []),
+                maxY: _getMaxY(balanceSheetState.balanceSheets ?? []),
                 lineBarsData: [
                   // Blue line (Assets)
                   LineChartBarData(
-                    spots: _getAssetsSpots(balanceSheet),
+                    spots: _getHistoricalAssetsSpots(balanceSheetState.balanceSheets ?? []),
                     isCurved: false,
                     color: Colors.blue,
                     barWidth: 2,
@@ -618,7 +615,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   ),
                   // Green line (Liabilities)
                   LineChartBarData(
-                    spots: _getLiabilitiesSpots(balanceSheet),
+                    spots: _getHistoricalLiabilitiesSpots(balanceSheetState.balanceSheets ?? []),
                     isCurved: false,
                     color: Colors.green,
                     barWidth: 2,
@@ -640,11 +637,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               ),
             ),
           ),
+          ),
 
           const SizedBox(height: 20),
 
         // Professional Summary Card
         Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -723,8 +722,10 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           const SizedBox(height: 20),
 
           // Action Buttons
-          Row(
-            children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
               Expanded(
                 child: OutlinedButton(
                   onPressed: () {},
@@ -747,7 +748,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => _downloadPdf(context, balanceSheet),
+                  onPressed: () => _downloadPdf(context, balanceSheetState.balanceSheet!),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -771,13 +772,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
 
           const SizedBox(height: 40),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildTableView(BalanceSheet balanceSheet) {
@@ -876,24 +877,29 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 // Assets Section - using dynamic data from summary
                 _buildCollapsibleSectionHeader(
                   'Assets', 
-                  '\$${balanceSheet.summary.totalAssets.toStringAsFixed(2)}', 
+                  '\$${balanceSheet.totals.totalAssets.toStringAsFixed(2)}', 
                   isAssetsExpanded,
                   () => setState(() => isAssetsExpanded = !isAssetsExpanded),
                 ),
                 if (isAssetsExpanded) ...[
                   _buildSubSection('Current Assets', '(Short-term, highly liquid)'),
-                  ...balanceSheet.assets.where((asset) => asset.isCurrent).map((asset) => 
-                    _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
-                  ).toList(),
-                  _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.where((asset) => asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Crypto Holdings', '\$${balanceSheet.assets.currentAssets.cryptoHoldings.totalValue.toStringAsFixed(2)}'),
+                  // Detailed Crypto Breakdown
+                  if (balanceSheet.assets.currentAssets.cryptoHoldings.holdings.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _buildCryptoBreakdown(balanceSheet.assets.currentAssets.cryptoHoldings),
+                  ],
+                  _buildBalanceSheetRow('Cash Equivalents', '\$${balanceSheet.assets.currentAssets.cashEquivalents.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Receivables', '\$${balanceSheet.assets.currentAssets.receivables.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.currentAssets.total.toStringAsFixed(2)}'),
                   
                   const SizedBox(height: 16),
                   
                   _buildSubSection('Non-Current Assets', '(Long-term investments)'),
-                  ...balanceSheet.assets.where((asset) => !asset.isCurrent).map((asset) => 
-                    _buildBalanceSheetRow(asset.name, '\$${asset.amount.toStringAsFixed(2)}')
-                  ).toList(),
-                  _buildTotalRow('Total Non-Current Assets', '\$${balanceSheet.assets.where((asset) => !asset.isCurrent).fold(0.0, (sum, asset) => sum + asset.amount).toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Long-term Investments', '\$${balanceSheet.assets.nonCurrentAssets.longTermInvestments.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Equipment', '\$${balanceSheet.assets.nonCurrentAssets.equipment.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Other', '\$${balanceSheet.assets.nonCurrentAssets.other.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Non-Current Assets', '\$${balanceSheet.assets.nonCurrentAssets.total.toStringAsFixed(2)}'),
                 ],
 
                 const SizedBox(height: 20),
@@ -901,24 +907,25 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 // Liabilities Section - using dynamic data from summary
                 _buildCollapsibleSectionHeader(
                   'Liabilities', 
-                  '\$${balanceSheet.summary.totalLiabilities.toStringAsFixed(2)}', 
+                  '\$${balanceSheet.totals.totalLiabilities.toStringAsFixed(2)}', 
                   isLiabilitiesExpanded,
                   () => setState(() => isLiabilitiesExpanded = !isLiabilitiesExpanded),
                 ),
                 if (isLiabilitiesExpanded) ...[
                   _buildSubSection('Current Liabilities', '(Due within one year)'),
-                  ...balanceSheet.liabilities.where((liability) => liability.isCurrent).map((liability) => 
-                    _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
-                  ).toList(),
-                  _buildTotalRow('Total Current Liabilities', '\$${balanceSheet.liabilities.where((liability) => liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Accounts Payable', '\$${balanceSheet.liabilities.currentLiabilities.accountsPayable.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Accrued Expenses', '\$${balanceSheet.liabilities.currentLiabilities.accruedExpenses.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Short-term Debt', '\$${balanceSheet.liabilities.currentLiabilities.shortTermDebt.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Tax Liabilities', '\$${balanceSheet.liabilities.currentLiabilities.taxLiabilities.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Current Liabilities', '\$${balanceSheet.liabilities.currentLiabilities.total.toStringAsFixed(2)}'),
                   
                   const SizedBox(height: 16),
                   
                   _buildSubSection('Long-term Liabilities', '(Due after one year)'),
-                  ...balanceSheet.liabilities.where((liability) => !liability.isCurrent).map((liability) => 
-                    _buildBalanceSheetRow(liability.name, '\$${liability.amount.toStringAsFixed(2)}')
-                  ).toList(),
-                  _buildTotalRow('Total Long-term Liabilities', '\$${balanceSheet.liabilities.where((liability) => !liability.isCurrent).fold(0.0, (sum, liability) => sum + liability.amount).toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Long-term Debt', '\$${balanceSheet.liabilities.longTermLiabilities.longTermDebt.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Deferred Tax', '\$${balanceSheet.liabilities.longTermLiabilities.deferredTax.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Other', '\$${balanceSheet.liabilities.longTermLiabilities.other.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Long-term Liabilities', '\$${balanceSheet.liabilities.longTermLiabilities.total.toStringAsFixed(2)}'),
                 ],
 
                 const SizedBox(height: 20),
@@ -926,14 +933,15 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 // Equity Section - using dynamic data from summary
                 _buildCollapsibleSectionHeader(
                   'Equity', 
-                  '\$${balanceSheet.summary.totalEquity.toStringAsFixed(2)}', 
+                  '\$${balanceSheet.totals.totalEquity.toStringAsFixed(2)}', 
                   isEquityExpanded,
                   () => setState(() => isEquityExpanded = !isEquityExpanded),
                 ),
                 if (isEquityExpanded) ...[
-                  ...balanceSheet.equity.map((equity) => 
-                    _buildBalanceSheetRow(equity.name, '\$${equity.amount.toStringAsFixed(2)}')
-                  ).toList(),
+                  _buildSubSection('Equity', '(Owner\'s equity)'),
+                  _buildBalanceSheetRow('Retained Earnings', '\$${balanceSheet.equity.retainedEarnings.toStringAsFixed(2)}'),
+                  _buildBalanceSheetRow('Unrealized Gains/Losses', '\$${balanceSheet.equity.unrealizedGainsLosses.toStringAsFixed(2)}'),
+                  _buildTotalRow('Total Equity', '\$${balanceSheet.equity.total.toStringAsFixed(2)}'),
                 ],
                 const SizedBox(height: 20),
 
@@ -949,15 +957,15 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildSummaryRow('Total Assets', '\$${balanceSheet.summary.totalAssets.toStringAsFixed(2)}'),
+                      _buildSummaryRow('Total Assets', '\$${balanceSheet.totals.totalAssets.toStringAsFixed(2)}'),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Total Liabilities', '\$${balanceSheet.summary.totalLiabilities.toStringAsFixed(2)}'),
+                      _buildSummaryRow('Total Liabilities', '\$${balanceSheet.totals.totalLiabilities.toStringAsFixed(2)}'),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Total Equity', '\$${balanceSheet.summary.totalEquity.toStringAsFixed(2)}'),
+                      _buildSummaryRow('Total Equity', '\$${balanceSheet.totals.totalEquity.toStringAsFixed(2)}'),
                       const SizedBox(height: 12),
                       Container(height: 1, color: Colors.grey[300]),
                       const SizedBox(height: 12),
-                      _buildSummaryRow('Liabilities + Equity', '\$${(balanceSheet.summary.totalLiabilities + balanceSheet.summary.totalEquity).toStringAsFixed(2)}', isTotal: true),
+                      _buildSummaryRow('Liabilities + Equity', '\$${(balanceSheet.totals.totalLiabilities + balanceSheet.totals.totalEquity).toStringAsFixed(2)}', isTotal: true),
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1154,68 +1162,78 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     );
   }
 
-  // Helper methods for generating dynamic chart data
-  List<FlSpot> _getAssetsSpots(BalanceSheet balanceSheet) {
-    // Generate 6 data points based on total assets
-    final totalAssets = balanceSheet.summary.totalAssets;
-    
-    // If total assets is zero, return empty data
-    if (totalAssets == 0.0) {
-      return [];
+  // Helper methods for Y-axis formatting
+  String _formatYAxisLabel(double value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(1)}M';
+    } else if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(0)}K';
+    } else {
+      return value.toStringAsFixed(0);
     }
-    
-    return [
-      FlSpot(0, totalAssets * 0.8),
-      FlSpot(1, totalAssets * 0.9),
-      FlSpot(2, totalAssets * 0.85),
-      FlSpot(3, totalAssets * 0.95),
-      FlSpot(4, totalAssets * 0.88),
-      FlSpot(5, totalAssets),
-    ];
   }
 
-  List<FlSpot> _getLiabilitiesSpots(BalanceSheet balanceSheet) {
-    // Generate 6 data points based on total liabilities
-    final totalLiabilities = balanceSheet.summary.totalLiabilities;
-    
-    // If total liabilities is zero, return empty data
-    if (totalLiabilities == 0.0) {
-      return [];
-    }
-    
-    return [
-      FlSpot(0, totalLiabilities * 0.7),
-      FlSpot(1, totalLiabilities * 0.8),
-      FlSpot(2, totalLiabilities * 0.75),
-      FlSpot(3, totalLiabilities * 0.85),
-      FlSpot(4, totalLiabilities * 0.9),
-      FlSpot(5, totalLiabilities),
-    ];
+  double _getYAxisInterval(List<BalanceSheet> balanceSheets) {
+    final maxValue = _getMaxY(balanceSheets);
+    if (maxValue <= 1000) return 100;
+    if (maxValue <= 10000) return 1000;
+    if (maxValue <= 100000) return 10000;
+    if (maxValue <= 1000000) return 100000;
+    return 1000000;
   }
 
-  double _getMinY(BalanceSheet balanceSheet) {
-    final totalAssets = balanceSheet.summary.totalAssets;
-    final totalLiabilities = balanceSheet.summary.totalLiabilities;
+  // Helper methods for generating real historical chart data
+  List<FlSpot> _getHistoricalAssetsSpots(List<BalanceSheet> balanceSheets) {
+    if (balanceSheets.isEmpty) return [];
     
-    // If both are zero, return 0 for empty chart
-    if (totalAssets == 0.0 && totalLiabilities == 0.0) {
-      return 0;
+    return balanceSheets.asMap().entries.map((entry) {
+      final index = entry.key.toDouble();
+      final balanceSheet = entry.value;
+      return FlSpot(index, balanceSheet.totals.totalAssets);
+    }).toList();
+  }
+
+  List<FlSpot> _getHistoricalLiabilitiesSpots(List<BalanceSheet> balanceSheets) {
+    if (balanceSheets.isEmpty) return [];
+    
+    return balanceSheets.asMap().entries.map((entry) {
+      final index = entry.key.toDouble();
+      final balanceSheet = entry.value;
+      return FlSpot(index, balanceSheet.totals.totalLiabilities);
+    }).toList();
+  }
+
+  double _getMinY(List<BalanceSheet> balanceSheets) {
+    if (balanceSheets.isEmpty) return 0.0;
+    
+    double minValue = double.infinity;
+    for (final sheet in balanceSheets) {
+      final assets = sheet.totals.totalAssets;
+      final liabilities = sheet.totals.totalLiabilities;
+      minValue = [minValue, assets, liabilities].reduce((a, b) => a < b ? a : b);
     }
     
-    final minValue = [totalAssets * 0.7, totalLiabilities * 0.7].reduce((a, b) => a < b ? a : b);
+    // If all values are zero, return 0
+    if (minValue == double.infinity || minValue == 0.0) return 0.0;
+    
+    // Add some padding below the minimum value
     return minValue - (minValue * 0.1);
   }
 
-  double _getMaxY(BalanceSheet balanceSheet) {
-    final totalAssets = balanceSheet.summary.totalAssets;
-    final totalLiabilities = balanceSheet.summary.totalLiabilities;
+  double _getMaxY(List<BalanceSheet> balanceSheets) {
+    if (balanceSheets.isEmpty) return 100.0;
     
-    // If both are zero, return 100 for empty chart
-    if (totalAssets == 0.0 && totalLiabilities == 0.0) {
-      return 100;
+    double maxValue = 0.0;
+    for (final sheet in balanceSheets) {
+      final assets = sheet.totals.totalAssets;
+      final liabilities = sheet.totals.totalLiabilities;
+      maxValue = [maxValue, assets, liabilities].reduce((a, b) => a > b ? a : b);
     }
     
-    final maxValue = [totalAssets, totalLiabilities].reduce((a, b) => a > b ? a : b);
+    // If all values are zero, return 100 for empty chart
+    if (maxValue == 0.0) return 100.0;
+    
+    // Add some padding above the maximum value
     return maxValue + (maxValue * 0.1);
   }
 
@@ -1273,6 +1291,124 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCryptoBreakdown(CryptoHoldings cryptoHoldings) {
+    return Container(
+      margin: const EdgeInsets.only(left: 20, right: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Crypto Breakdown',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...cryptoHoldings.holdings.entries.map((entry) {
+            final symbol = entry.key;
+            final asset = entry.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        symbol,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        '\$${asset.currentValue.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildCryptoDetail('Balance', '${asset.balance.toStringAsFixed(4)} $symbol'),
+                      ),
+                      Expanded(
+                        child: _buildCryptoDetail('Price', '\$${asset.currentPrice.toStringAsFixed(2)}'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildCryptoDetail('Cost Basis', '\$${asset.costBasis.toStringAsFixed(2)}'),
+                      ),
+                      Expanded(
+                        child: _buildCryptoDetail('Avg Cost', '\$${asset.averageCost.toStringAsFixed(2)}'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildCryptoDetail(
+                          'Unrealized P&L', 
+                          '\$${asset.unrealizedGainLoss.toStringAsFixed(2)}',
+                          color: asset.unrealizedGainLoss >= 0 ? Colors.green : Colors.red,
+                        ),
+                      ),
+                      const Expanded(child: SizedBox()),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCryptoDetail(String label, String value, {Color? color}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 11,
+            color: color ?? Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1338,22 +1474,46 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       // Convert BalanceSheet to report data format for PDF generation
       final reportData = {
         'summary': {
-          'total_assets': balanceSheet.summary.totalAssets,
-          'total_liabilities': balanceSheet.summary.totalLiabilities,
-          'total_equity': balanceSheet.summary.totalEquity,
+          'total_assets': balanceSheet.totals.totalAssets,
+          'total_liabilities': balanceSheet.totals.totalLiabilities,
+          'total_equity': balanceSheet.totals.totalEquity,
         },
-        'assets': balanceSheet.assets.map((asset) => {
-          'name': asset.name,
-          'amount': asset.amount,
-        }).toList(),
-        'liabilities': balanceSheet.liabilities.map((liability) => {
-          'name': liability.name,
-          'amount': liability.amount,
-        }).toList(),
-        'equity': balanceSheet.equity.map((equity) => {
-          'name': equity.name,
-          'amount': equity.amount,
-        }).toList(),
+        'assets': {
+          'current_assets': {
+            'crypto_holdings': balanceSheet.assets.currentAssets.cryptoHoldings.totalValue,
+            'cash_equivalents': balanceSheet.assets.currentAssets.cashEquivalents,
+            'receivables': balanceSheet.assets.currentAssets.receivables.toDouble(),
+            'total': balanceSheet.assets.currentAssets.total,
+          },
+          'non_current_assets': {
+            'long_term_investments': balanceSheet.assets.nonCurrentAssets.longTermInvestments,
+            'equipment': balanceSheet.assets.nonCurrentAssets.equipment,
+            'other': balanceSheet.assets.nonCurrentAssets.other,
+            'total': balanceSheet.assets.nonCurrentAssets.total,
+          },
+          'total': balanceSheet.assets.total,
+        },
+        'liabilities': {
+          'current_liabilities': {
+            'accounts_payable': balanceSheet.liabilities.currentLiabilities.accountsPayable.toDouble(),
+            'accrued_expenses': balanceSheet.liabilities.currentLiabilities.accruedExpenses,
+            'short_term_debt': balanceSheet.liabilities.currentLiabilities.shortTermDebt,
+            'tax_liabilities': balanceSheet.liabilities.currentLiabilities.taxLiabilities,
+            'total': balanceSheet.liabilities.currentLiabilities.total,
+          },
+          'long_term_liabilities': {
+            'long_term_debt': balanceSheet.liabilities.longTermLiabilities.longTermDebt,
+            'deferred_tax': balanceSheet.liabilities.longTermLiabilities.deferredTax,
+            'other': balanceSheet.liabilities.longTermLiabilities.other,
+            'total': balanceSheet.liabilities.longTermLiabilities.total,
+          },
+          'total': balanceSheet.liabilities.total,
+        },
+        'equity': {
+          'retained_earnings': balanceSheet.equity.retainedEarnings.toDouble(),
+          'unrealized_gains_losses': balanceSheet.equity.unrealizedGainsLosses,
+          'total': balanceSheet.equity.total,
+        },
       };
 
       // Generate PDF

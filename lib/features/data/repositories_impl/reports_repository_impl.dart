@@ -65,9 +65,20 @@ class ReportsRepositoryImpl implements ReportsRepository {
   @override
   Future<BalanceSheet> getBalanceSheet() async {
     try {
-      return await auditRemoteDataSource.getBalanceSheet();
+      final balanceSheetModel = await auditRemoteDataSource.getBalanceSheet();
+      return balanceSheetModel.toEntity();
     } catch (e) {
       throw Exception('Failed to get balance sheet: $e');
+    }
+  }
+
+  @override
+  Future<List<BalanceSheet>> getAllBalanceSheets() async {
+    try {
+      final balanceSheetModels = await auditRemoteDataSource.getAllBalanceSheets();
+      return balanceSheetModels.map((model) => model.toEntity()).toList();
+    } catch (e) {
+      throw Exception('Failed to get all balance sheets: $e');
     }
   }
 
@@ -90,19 +101,19 @@ class ReportsRepositoryImpl implements ReportsRepository {
     }
   }
 
-      @override
-      Future<PayslipsResponse> getPayslips() async {
-        try {
-          print("🔄 ReportsRepositoryImpl: Getting payslips from auditRemoteDataSource");
-          final payslipsResponseModel = await auditRemoteDataSource.getPayslips();
-          print("📥 ReportsRepositoryImpl: Received payslips response model with ${payslipsResponseModel.payslips.length} payslips");
-          final entity = payslipsResponseModel.toEntity();
-          print("✅ ReportsRepositoryImpl: Successfully converted to entity");
-          return entity;
-        } catch (e, stackTrace) {
-          print("❌ ReportsRepositoryImpl: Error getting payslips: $e");
-          print("📄 Stack trace: $stackTrace");
-          throw Exception('Failed to get payslips: $e');
-        }
-      }
+  @override
+  Future<PayslipsResponse> getPayslips() async {
+    try {
+      print("🔄 ReportsRepositoryImpl: Getting payslips from auditRemoteDataSource");
+      final payslipsResponseModel = await auditRemoteDataSource.getPayslips();
+      print("📥 ReportsRepositoryImpl: Received payslips response model with ${payslipsResponseModel.payslips.length} payslips");
+      final entity = payslipsResponseModel.toEntity();
+      print("✅ ReportsRepositoryImpl: Successfully converted to entity");
+      return entity;
+    } catch (e, stackTrace) {
+      print("❌ ReportsRepositoryImpl: Error getting payslips: $e");
+      print("📄 Stack trace: $stackTrace");
+      throw Exception('Failed to get payslips: $e');
+    }
+  }
 }

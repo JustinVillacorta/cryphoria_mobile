@@ -5,37 +5,39 @@ import '../../domain/entities/balance_sheet.dart';
 class BalanceSheetModel extends BalanceSheet {
   const BalanceSheetModel({
     required super.id,
+    required super.balanceSheetId,
+    required super.userId,
+    required super.asOfDate,
     required super.reportType,
-    required super.reportDate,
     required super.periodStart,
     required super.periodEnd,
+    required super.generatedAt,
     required super.currency,
-    required super.summary,
     required super.assets,
     required super.liabilities,
     required super.equity,
+    required super.totals,
+    required super.summary,
     required super.metadata,
-    required super.createdAt,
-    super.generatedAt,
   });
 
   factory BalanceSheetModel.fromJson(Map<String, dynamic> json) {
     return BalanceSheetModel(
-      id: json['id']?.toString() ?? '',
-      reportType: json['report_type']?.toString() ?? 'Balance Sheet',
-      reportDate: _safeParseDateTime(json['report_date']),
+      id: json['_id']?.toString() ?? '',
+      balanceSheetId: json['balance_sheet_id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      asOfDate: _safeParseDateTime(json['as_of_date']),
+      reportType: json['report_type']?.toString() ?? 'CUSTOM',
       periodStart: _safeParseDateTime(json['period_start']),
       periodEnd: _safeParseDateTime(json['period_end']),
+      generatedAt: _safeParseDateTime(json['generated_at']),
       currency: json['currency']?.toString() ?? 'USD',
+      assets: BalanceSheetAssetsModel.fromJson(_safeConvertMap(json['assets'])),
+      liabilities: BalanceSheetLiabilitiesModel.fromJson(_safeConvertMap(json['liabilities'])),
+      equity: BalanceSheetEquityModel.fromJson(_safeConvertMap(json['equity'])),
+      totals: BalanceSheetTotalsModel.fromJson(_safeConvertMap(json['totals'])),
       summary: BalanceSheetSummaryModel.fromJson(_safeConvertMap(json['summary'])),
-      assets: _safeConvertAssetList(json['assets']),
-      liabilities: _safeConvertLiabilityList(json['liabilities']),
-      equity: _safeConvertEquityList(json['equity']),
-      metadata: _safeConvertMap(json['metadata']),
-      createdAt: _safeParseDateTime(json['created_at']),
-      generatedAt: json['generated_at'] != null 
-          ? _safeParseDateTime(json['generated_at']) 
-          : null,
+      metadata: BalanceSheetMetadataModel.fromJson(_safeConvertMap(json['metadata'])),
     );
   }
 
@@ -55,148 +57,346 @@ class BalanceSheetModel extends BalanceSheet {
   static Map<String, dynamic> _safeConvertMap(dynamic value) {
     if (value == null) return <String, dynamic>{};
     if (value is Map<String, dynamic>) return value;
-    if (value is Map) return Map<String, dynamic>.from(value);
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
     return <String, dynamic>{};
-  }
-
-  static List<AssetModel> _safeConvertAssetList(dynamic value) {
-    if (value == null) return <AssetModel>[];
-    if (value is List) {
-      return value.map((item) {
-        try {
-          return AssetModel.fromJson(_safeConvertMap(item));
-        } catch (e) {
-          return AssetModel(
-            id: 'unknown',
-            name: 'Unknown Asset',
-            amount: 0.0,
-            category: 'Unknown',
-            subCategory: 'Unknown',
-            description: 'Error loading asset',
-            isCurrent: false,
-            metadata: {},
-          );
-        }
-      }).toList();
-    }
-    return <AssetModel>[];
-  }
-
-  static List<LiabilityModel> _safeConvertLiabilityList(dynamic value) {
-    if (value == null) return <LiabilityModel>[];
-    if (value is List) {
-      return value.map((item) {
-        try {
-          return LiabilityModel.fromJson(_safeConvertMap(item));
-        } catch (e) {
-          return LiabilityModel(
-            id: 'unknown',
-            name: 'Unknown Liability',
-            amount: 0.0,
-            category: 'Unknown',
-            subCategory: 'Unknown',
-            description: 'Error loading liability',
-            isCurrent: false,
-            metadata: {},
-          );
-        }
-      }).toList();
-    }
-    return <LiabilityModel>[];
-  }
-
-  static List<EquityModel> _safeConvertEquityList(dynamic value) {
-    if (value == null) return <EquityModel>[];
-    if (value is List) {
-      return value.map((item) {
-        try {
-          return EquityModel.fromJson(_safeConvertMap(item));
-        } catch (e) {
-          return EquityModel(
-            id: 'unknown',
-            name: 'Unknown Equity',
-            amount: 0.0,
-            category: 'Unknown',
-            subCategory: 'Unknown',
-            description: 'Error loading equity',
-            metadata: {},
-          );
-        }
-      }).toList();
-    }
-    return <EquityModel>[];
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      '_id': id,
+      'balance_sheet_id': balanceSheetId,
+      'user_id': userId,
+      'as_of_date': asOfDate.toIso8601String(),
       'report_type': reportType,
-      'report_date': reportDate.toIso8601String(),
       'period_start': periodStart.toIso8601String(),
       'period_end': periodEnd.toIso8601String(),
+      'generated_at': generatedAt.toIso8601String(),
       'currency': currency,
+      'assets': (assets as BalanceSheetAssetsModel).toJson(),
+      'liabilities': (liabilities as BalanceSheetLiabilitiesModel).toJson(),
+      'equity': (equity as BalanceSheetEquityModel).toJson(),
+      'totals': (totals as BalanceSheetTotalsModel).toJson(),
       'summary': (summary as BalanceSheetSummaryModel).toJson(),
-      'assets': assets.map((a) => (a as AssetModel).toJson()).toList(),
-      'liabilities': liabilities.map((l) => (l as LiabilityModel).toJson()).toList(),
-      'equity': equity.map((e) => (e as EquityModel).toJson()).toList(),
-      'metadata': metadata,
-      'created_at': createdAt.toIso8601String(),
-      'generated_at': generatedAt?.toIso8601String(),
+      'metadata': (metadata as BalanceSheetMetadataModel).toJson(),
+    };
+  }
+
+  BalanceSheet toEntity() {
+    return BalanceSheet(
+      id: id,
+      balanceSheetId: balanceSheetId,
+      userId: userId,
+      asOfDate: asOfDate,
+      reportType: reportType,
+      periodStart: periodStart,
+      periodEnd: periodEnd,
+      generatedAt: generatedAt,
+      currency: currency,
+      assets: assets,
+      liabilities: liabilities,
+      equity: equity,
+      totals: totals,
+      summary: summary,
+      metadata: metadata,
+    );
+  }
+}
+
+class BalanceSheetAssetsModel extends BalanceSheetAssets {
+  const BalanceSheetAssetsModel({
+    required super.currentAssets,
+    required super.nonCurrentAssets,
+    required super.total,
+  });
+
+  factory BalanceSheetAssetsModel.fromJson(Map<String, dynamic> json) {
+    return BalanceSheetAssetsModel(
+      currentAssets: CurrentAssetsModel.fromJson(_safeConvertMap(json['current_assets'])),
+      nonCurrentAssets: NonCurrentAssetsModel.fromJson(_safeConvertMap(json['non_current_assets'])),
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  static Map<String, dynamic> _safeConvertMap(dynamic value) {
+    if (value == null) return <String, dynamic>{};
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+    return <String, dynamic>{};
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'current_assets': (currentAssets as CurrentAssetsModel).toJson(),
+      'non_current_assets': (nonCurrentAssets as NonCurrentAssetsModel).toJson(),
+      'total': total,
     };
   }
 }
 
-class BalanceSheetSummaryModel extends BalanceSheetSummary {
-  const BalanceSheetSummaryModel({
-    required super.totalAssets,
-    required super.totalLiabilities,
-    required super.totalEquity,
-    required super.workingCapital,
-    required super.currentRatio,
-    required super.debtToEquityRatio,
-    required super.assetBreakdown,
-    required super.liabilityBreakdown,
-    required super.equityBreakdown,
+class CurrentAssetsModel extends CurrentAssets {
+  const CurrentAssetsModel({
+    required super.cryptoHoldings,
+    required super.cashEquivalents,
+    required super.receivables,
+    required super.total,
   });
 
-  factory BalanceSheetSummaryModel.fromJson(Map<String, dynamic> json) {
-    return BalanceSheetSummaryModel(
-      totalAssets: _safeToDouble(json['total_assets']),
-      totalLiabilities: _safeToDouble(json['total_liabilities']),
-      totalEquity: _safeToDouble(json['total_equity']),
-      workingCapital: _safeToDouble(json['working_capital']),
-      currentRatio: _safeToDouble(json['current_ratio']),
-      debtToEquityRatio: _safeToDouble(json['debt_to_equity_ratio']),
-      assetBreakdown: _safeConvertToDoubleMap(json['asset_breakdown']),
-      liabilityBreakdown: _safeConvertToDoubleMap(json['liability_breakdown']),
-      equityBreakdown: _safeConvertToDoubleMap(json['equity_breakdown']),
+  factory CurrentAssetsModel.fromJson(Map<String, dynamic> json) {
+    return CurrentAssetsModel(
+      cryptoHoldings: CryptoHoldingsModel.fromJson(_safeConvertMap(json['crypto_holdings'])),
+      cashEquivalents: (json['cash_equivalents'] as num?)?.toDouble() ?? 0.0,
+      receivables: (json['receivables'] as num?)?.toInt() ?? 0,
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
-  static double _safeToDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) {
-      if (value.toLowerCase() == 'undefined' || value.toLowerCase() == 'null') {
-        return 0.0;
-      }
-      final parsed = double.tryParse(value);
-      return parsed ?? 0.0;
+  static Map<String, dynamic> _safeConvertMap(dynamic value) {
+    if (value == null) return <String, dynamic>{};
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
     }
-    return 0.0;
+    return <String, dynamic>{};
   }
 
-  static Map<String, double> _safeConvertToDoubleMap(dynamic value) {
-    if (value == null) return <String, double>{};
-    if (value is Map<String, dynamic>) {
-      final Map<String, double> result = {};
-      value.forEach((key, val) {
-        result[key] = _safeToDouble(val);
-      });
-      return result;
+  Map<String, dynamic> toJson() {
+    return {
+      'crypto_holdings': (cryptoHoldings as CryptoHoldingsModel).toJson(),
+      'cash_equivalents': cashEquivalents,
+      'receivables': receivables,
+      'total': total,
+    };
+  }
+}
+
+class CryptoAssetModel extends CryptoAsset {
+  const CryptoAssetModel({
+    required super.balance,
+    required super.currentPrice,
+    required super.currentValue,
+    required super.costBasis,
+    required super.averageCost,
+    required super.unrealizedGainLoss,
+  });
+
+  factory CryptoAssetModel.fromJson(Map<String, dynamic> json) {
+    return CryptoAssetModel(
+      balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
+      currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0.0,
+      currentValue: (json['current_value'] as num?)?.toDouble() ?? 0.0,
+      costBasis: (json['cost_basis'] as num?)?.toDouble() ?? 0.0,
+      averageCost: (json['average_cost'] as num?)?.toDouble() ?? 0.0,
+      unrealizedGainLoss: (json['unrealized_gain_loss'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'balance': balance,
+      'current_price': currentPrice,
+      'current_value': currentValue,
+      'cost_basis': costBasis,
+      'average_cost': averageCost,
+      'unrealized_gain_loss': unrealizedGainLoss,
+    };
+  }
+}
+
+class CryptoHoldingsModel extends CryptoHoldings {
+  const CryptoHoldingsModel({
+    required super.holdings,
+    required super.totalValue,
+  });
+
+  factory CryptoHoldingsModel.fromJson(Map<String, dynamic> json) {
+    final Map<String, CryptoAsset> holdingsMap = {};
+    
+    // Parse individual crypto holdings (e.g., ETH, BTC, etc.)
+    json.forEach((key, value) {
+      if (key != 'total_value' && value is Map<String, dynamic>) {
+        holdingsMap[key] = CryptoAssetModel.fromJson(value);
+      }
+    });
+    
+    return CryptoHoldingsModel(
+      holdings: holdingsMap,
+      totalValue: (json['total_value'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> result = <String, dynamic>{};
+    
+    // Convert holdings to JSON
+    holdings.forEach((key, value) {
+      result[key] = (value as CryptoAssetModel).toJson();
+    });
+    
+    result['total_value'] = totalValue;
+    return result;
+  }
+}
+
+class NonCurrentAssetsModel extends NonCurrentAssets {
+  const NonCurrentAssetsModel({
+    required super.longTermInvestments,
+    required super.equipment,
+    required super.other,
+    required super.total,
+  });
+
+  factory NonCurrentAssetsModel.fromJson(Map<String, dynamic> json) {
+    return NonCurrentAssetsModel(
+      longTermInvestments: (json['long_term_investments'] as num?)?.toDouble() ?? 0.0,
+      equipment: (json['equipment'] as num?)?.toDouble() ?? 0.0,
+      other: (json['other'] as num?)?.toDouble() ?? 0.0,
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'long_term_investments': longTermInvestments,
+      'equipment': equipment,
+      'other': other,
+      'total': total,
+    };
+  }
+}
+
+class BalanceSheetLiabilitiesModel extends BalanceSheetLiabilities {
+  const BalanceSheetLiabilitiesModel({
+    required super.currentLiabilities,
+    required super.longTermLiabilities,
+    required super.total,
+  });
+
+  factory BalanceSheetLiabilitiesModel.fromJson(Map<String, dynamic> json) {
+    return BalanceSheetLiabilitiesModel(
+      currentLiabilities: CurrentLiabilitiesModel.fromJson(_safeConvertMap(json['current_liabilities'])),
+      longTermLiabilities: LongTermLiabilitiesModel.fromJson(_safeConvertMap(json['long_term_liabilities'])),
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  static Map<String, dynamic> _safeConvertMap(dynamic value) {
+    if (value == null) return <String, dynamic>{};
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
     }
-    return <String, double>{};
+    return <String, dynamic>{};
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'current_liabilities': (currentLiabilities as CurrentLiabilitiesModel).toJson(),
+      'long_term_liabilities': (longTermLiabilities as LongTermLiabilitiesModel).toJson(),
+      'total': total,
+    };
+  }
+}
+
+class CurrentLiabilitiesModel extends CurrentLiabilities {
+  const CurrentLiabilitiesModel({
+    required super.accountsPayable,
+    required super.accruedExpenses,
+    required super.shortTermDebt,
+    required super.taxLiabilities,
+    required super.total,
+  });
+
+  factory CurrentLiabilitiesModel.fromJson(Map<String, dynamic> json) {
+    return CurrentLiabilitiesModel(
+      accountsPayable: (json['accounts_payable'] as num?)?.toInt() ?? 0,
+      accruedExpenses: (json['accrued_expenses'] as num?)?.toDouble() ?? 0.0,
+      shortTermDebt: (json['short_term_debt'] as num?)?.toDouble() ?? 0.0,
+      taxLiabilities: (json['tax_liabilities'] as num?)?.toDouble() ?? 0.0,
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'accounts_payable': accountsPayable,
+      'accrued_expenses': accruedExpenses,
+      'short_term_debt': shortTermDebt,
+      'tax_liabilities': taxLiabilities,
+      'total': total,
+    };
+  }
+}
+
+class LongTermLiabilitiesModel extends LongTermLiabilities {
+  const LongTermLiabilitiesModel({
+    required super.longTermDebt,
+    required super.deferredTax,
+    required super.other,
+    required super.total,
+  });
+
+  factory LongTermLiabilitiesModel.fromJson(Map<String, dynamic> json) {
+    return LongTermLiabilitiesModel(
+      longTermDebt: (json['long_term_debt'] as num?)?.toDouble() ?? 0.0,
+      deferredTax: (json['deferred_tax'] as num?)?.toDouble() ?? 0.0,
+      other: (json['other'] as num?)?.toDouble() ?? 0.0,
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'long_term_debt': longTermDebt,
+      'deferred_tax': deferredTax,
+      'other': other,
+      'total': total,
+    };
+  }
+}
+
+class BalanceSheetEquityModel extends BalanceSheetEquity {
+  const BalanceSheetEquityModel({
+    required super.retainedEarnings,
+    required super.unrealizedGainsLosses,
+    required super.total,
+  });
+
+  factory BalanceSheetEquityModel.fromJson(Map<String, dynamic> json) {
+    return BalanceSheetEquityModel(
+      retainedEarnings: (json['retained_earnings'] as num?)?.toInt() ?? 0,
+      unrealizedGainsLosses: (json['unrealized_gains_losses'] as num?)?.toDouble() ?? 0.0,
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'retained_earnings': retainedEarnings,
+      'unrealized_gains_losses': unrealizedGainsLosses,
+      'total': total,
+    };
+  }
+}
+
+class BalanceSheetTotalsModel extends BalanceSheetTotals {
+  const BalanceSheetTotalsModel({
+    required super.totalAssets,
+    required super.totalLiabilities,
+    required super.totalEquity,
+    required super.balanceCheck,
+  });
+
+  factory BalanceSheetTotalsModel.fromJson(Map<String, dynamic> json) {
+    return BalanceSheetTotalsModel(
+      totalAssets: (json['total_assets'] as num?)?.toDouble() ?? 0.0,
+      totalLiabilities: (json['total_liabilities'] as num?)?.toDouble() ?? 0.0,
+      totalEquity: (json['total_equity'] as num?)?.toDouble() ?? 0.0,
+      balanceCheck: (json['balance_check'] as num?)?.toDouble() ?? 0.0,
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -204,126 +404,131 @@ class BalanceSheetSummaryModel extends BalanceSheetSummary {
       'total_assets': totalAssets,
       'total_liabilities': totalLiabilities,
       'total_equity': totalEquity,
-      'working_capital': workingCapital,
-      'current_ratio': currentRatio,
+      'balance_check': balanceCheck,
+    };
+  }
+}
+
+class BalanceSheetSummaryModel extends BalanceSheetSummary {
+  const BalanceSheetSummaryModel({
+    required super.financialPosition,
+    required super.debtToEquityRatio,
+    required super.assetComposition,
+    required super.liquidityRatio,
+    required super.netWorth,
+  });
+
+  factory BalanceSheetSummaryModel.fromJson(Map<String, dynamic> json) {
+    return BalanceSheetSummaryModel(
+      financialPosition: json['financial_position']?.toString() ?? 'Unknown',
+      debtToEquityRatio: json['debt_to_equity_ratio']?.toString() ?? 'Undefined',
+      assetComposition: AssetCompositionModel.fromJson(_safeConvertMap(json['asset_composition'])),
+      liquidityRatio: json['liquidity_ratio']?.toString() ?? 'Unlimited',
+      netWorth: (json['net_worth'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  static Map<String, dynamic> _safeConvertMap(dynamic value) {
+    if (value == null) return <String, dynamic>{};
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+    return <String, dynamic>{};
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'financial_position': financialPosition,
       'debt_to_equity_ratio': debtToEquityRatio,
-      'asset_breakdown': assetBreakdown,
-      'liability_breakdown': liabilityBreakdown,
-      'equity_breakdown': equityBreakdown,
+      'asset_composition': (assetComposition as AssetCompositionModel).toJson(),
+      'liquidity_ratio': liquidityRatio,
+      'net_worth': netWorth,
     };
   }
 }
 
-class AssetModel extends Asset {
-  const AssetModel({
-    required super.id,
-    required super.name,
-    required super.category,
-    required super.subCategory,
-    required super.amount,
-    required super.description,
-    required super.isCurrent,
-    required super.metadata,
+class AssetCompositionModel extends AssetComposition {
+  const AssetCompositionModel({
+    required super.cryptoPercentage,
+    required super.cashPercentage,
   });
 
-  factory AssetModel.fromJson(Map<String, dynamic> json) {
-    return AssetModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      category: json['category'] as String,
-      subCategory: json['sub_category'] as String,
-      amount: (json['amount'] as num).toDouble(),
-      description: json['description'] as String? ?? '',
-      isCurrent: json['is_current'] as bool? ?? false,
-      metadata: json['metadata'] as Map<String, dynamic>? ?? {},
+  factory AssetCompositionModel.fromJson(Map<String, dynamic> json) {
+    return AssetCompositionModel(
+      cryptoPercentage: (json['crypto_percentage'] as num?)?.toInt() ?? 0,
+      cashPercentage: (json['cash_percentage'] as num?)?.toInt() ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'name': name,
-      'category': category,
-      'sub_category': subCategory,
-      'amount': amount,
-      'description': description,
-      'is_current': isCurrent,
-      'metadata': metadata,
+      'crypto_percentage': cryptoPercentage,
+      'cash_percentage': cashPercentage,
     };
   }
 }
 
-class LiabilityModel extends Liability {
-  const LiabilityModel({
-    required super.id,
-    required super.name,
-    required super.category,
-    required super.subCategory,
-    required super.amount,
-    required super.description,
-    required super.isCurrent,
-    required super.metadata,
+class BalanceSheetMetadataModel extends BalanceSheetMetadata {
+  const BalanceSheetMetadataModel({
+    required super.transactionCount,
+    required super.dateRange,
   });
 
-  factory LiabilityModel.fromJson(Map<String, dynamic> json) {
-    return LiabilityModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      category: json['category'] as String,
-      subCategory: json['sub_category'] as String,
-      amount: (json['amount'] as num).toDouble(),
-      description: json['description'] as String? ?? '',
-      isCurrent: json['is_current'] as bool? ?? false,
-      metadata: json['metadata'] as Map<String, dynamic>? ?? {},
+  factory BalanceSheetMetadataModel.fromJson(Map<String, dynamic> json) {
+    return BalanceSheetMetadataModel(
+      transactionCount: (json['transaction_count'] as num?)?.toInt() ?? 0,
+      dateRange: DateRangeModel.fromJson(_safeConvertMap(json['date_range'])),
     );
+  }
+
+  static Map<String, dynamic> _safeConvertMap(dynamic value) {
+    if (value == null) return <String, dynamic>{};
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+    return <String, dynamic>{};
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'name': name,
-      'category': category,
-      'sub_category': subCategory,
-      'amount': amount,
-      'description': description,
-      'is_current': isCurrent,
-      'metadata': metadata,
+      'transaction_count': transactionCount,
+      'date_range': (dateRange as DateRangeModel).toJson(),
     };
   }
 }
 
-class EquityModel extends Equity {
-  const EquityModel({
-    required super.id,
-    required super.name,
-    required super.category,
-    required super.subCategory,
-    required super.amount,
-    required super.description,
-    required super.metadata,
+class DateRangeModel extends DateRange {
+  const DateRangeModel({
+    required super.earliestTransaction,
+    required super.latestTransaction,
   });
 
-  factory EquityModel.fromJson(Map<String, dynamic> json) {
-    return EquityModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      category: json['category'] as String,
-      subCategory: json['sub_category'] as String,
-      amount: (json['amount'] as num).toDouble(),
-      description: json['description'] as String? ?? '',
-      metadata: json['metadata'] as Map<String, dynamic>? ?? {},
+  factory DateRangeModel.fromJson(Map<String, dynamic> json) {
+    return DateRangeModel(
+      earliestTransaction: _safeParseDateTime(json['earliest_transaction']),
+      latestTransaction: _safeParseDateTime(json['latest_transaction']),
     );
+  }
+
+  static DateTime _safeParseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'name': name,
-      'category': category,
-      'sub_category': subCategory,
-      'amount': amount,
-      'description': description,
-      'metadata': metadata,
+      'earliest_transaction': earliestTransaction.toIso8601String(),
+      'latest_transaction': latestTransaction.toIso8601String(),
     };
   }
 }

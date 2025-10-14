@@ -8,12 +8,14 @@ import '../../../../domain/repositories/reports_repository.dart';
 class BalanceSheetState {
   final bool isLoading;
   final BalanceSheet? balanceSheet;
+  final List<BalanceSheet>? balanceSheets;
   final String? error;
   final bool hasData;
 
   BalanceSheetState({
     this.isLoading = false,
     this.balanceSheet,
+    this.balanceSheets,
     this.error,
     this.hasData = false,
   });
@@ -21,12 +23,14 @@ class BalanceSheetState {
   BalanceSheetState copyWith({
     bool? isLoading,
     BalanceSheet? balanceSheet,
+    List<BalanceSheet>? balanceSheets,
     String? error,
     bool? hasData,
   }) {
     return BalanceSheetState(
       isLoading: isLoading ?? this.isLoading,
       balanceSheet: balanceSheet ?? this.balanceSheet,
+      balanceSheets: balanceSheets ?? this.balanceSheets,
       error: error ?? this.error,
       hasData: hasData ?? this.hasData,
     );
@@ -59,8 +63,29 @@ class BalanceSheetViewModel extends StateNotifier<BalanceSheetState> {
     }
   }
 
+  Future<void> loadAllBalanceSheets() async {
+    state = state.copyWith(isLoading: true, error: null);
+    
+    try {
+      final balanceSheets = await _reportsRepository.getAllBalanceSheets();
+      state = state.copyWith(
+        isLoading: false,
+        balanceSheets: balanceSheets,
+        hasData: true,
+        error: null,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        hasData: false,
+      );
+    }
+  }
+
   void refresh() {
     loadBalanceSheet();
+    loadAllBalanceSheets();
   }
 
   void clearError() {

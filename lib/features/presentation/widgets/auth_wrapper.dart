@@ -81,6 +81,8 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
             _cachedAuthUser = authUser;
             _isLoading = false;
           });
+          // Update the global userProvider with the loaded user data
+          ref.read(userProvider.notifier).state = authUser;
           print('🟢 AuthWrapper: User authenticated successfully - '
               '${authUser.firstName}');
         } else {
@@ -92,6 +94,8 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
             _cachedAuthUser = null;
             _isLoading = false;
           });
+          // Clear the global userProvider
+          ref.read(userProvider.notifier).state = null;
         }
       } else {
         setState(() {
@@ -99,6 +103,8 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
           _cachedAuthUser = null;
           _isLoading = false;
         });
+        // Clear the global userProvider
+        ref.read(userProvider.notifier).state = null;
         print('🔴 AuthWrapper: No valid auth data found');
       }
     } catch (e) {
@@ -114,6 +120,8 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
         _cachedAuthUser = null;
         _isLoading = false;
       });
+      // Clear the global userProvider
+      ref.read(userProvider.notifier).state = null;
     }
 
     print('🏁 AuthWrapper: Authentication check completed - '
