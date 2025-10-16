@@ -108,7 +108,7 @@ class TermsAndConditionsContent extends StatelessWidget {
           sectionTitle('Contact Us'),
           paragraph(
             'For questions or concerns about these Terms and Conditions, please '
-            'contact us at: [email/contact info]',
+            'contact us at: jerickogarcia0@gmail.com',
           ),
         ],
       ),
