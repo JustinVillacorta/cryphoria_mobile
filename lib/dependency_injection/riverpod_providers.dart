@@ -41,6 +41,7 @@ import '../features/domain/usecases/DocumentUpload/upload_business_documents_use
 import '../features/domain/repositories/document_upload_repository.dart';
 import '../features/domain/usecases/EmployeeHome/employee_home_usecase.dart';
 import '../features/domain/usecases/Employee_management/add_employee_to_team_usecase.dart';
+import '../features/domain/usecases/Employee_management/remove_employee_from_team_usecase.dart';
 import '../features/domain/usecases/Employee_management/create_payslip_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_all_employees_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_manager_team_usecase.dart';
@@ -333,6 +334,11 @@ final addEmployeeToTeamUseCaseProvider =
   return AddEmployeeToTeamUseCase(repository: ref.watch(employeeRepositoryProvider));
 });
 
+final removeEmployeeFromTeamUseCaseProvider =
+    Provider<RemoveEmployeeFromTeamUseCase>((ref) {
+  return RemoveEmployeeFromTeamUseCase(repository: ref.watch(employeeRepositoryProvider));
+});
+
 final createPayslipUseCaseProvider = Provider<CreatePayslipUseCase>((ref) {
   return CreatePayslipUseCase(repository: ref.watch(employeeRepositoryProvider));
 });
@@ -500,6 +506,7 @@ final employeeViewModelProvider =
     getAllEmployeesUseCase: ref.watch(getAllEmployeesUseCaseProvider),
     getManagerTeamUseCase: ref.watch(getManagerTeamUseCaseProvider),
     addEmployeeToTeamUseCase: ref.watch(addEmployeeToTeamUseCaseProvider),
+    removeEmployeeFromTeamUseCase: ref.watch(removeEmployeeFromTeamUseCaseProvider),
   );
   ref.onDispose(viewModel.dispose);
   return viewModel;

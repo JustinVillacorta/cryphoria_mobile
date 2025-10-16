@@ -151,4 +151,13 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
       return null;
     }
   }
+
+  @override
+  Future<void> removeEmployeeFromTeam(String email) async {
+    try {
+      await remoteDataSource.removeEmployeeFromTeam(email);
+    } catch (e) {
+      throw Exception('Failed to remove employee from team: $e');
+    }
+  }
 }

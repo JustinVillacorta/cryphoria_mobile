@@ -3,11 +3,13 @@ import '../../../../domain/entities/employee.dart';
 import '../../../../domain/usecases/Employee_management/get_all_employees_usecase.dart';
 import '../../../../domain/usecases/Employee_management/get_manager_team_usecase.dart';
 import '../../../../domain/usecases/Employee_management/add_employee_to_team_usecase.dart';
+import '../../../../domain/usecases/Employee_management/remove_employee_from_team_usecase.dart';
 
 class EmployeeViewModel extends ChangeNotifier {
   final GetAllEmployeesUseCase? _getAllEmployeesUseCase;
   final GetManagerTeamUseCase? _getManagerTeamUseCase;
   final AddEmployeeToTeamUseCase? _addEmployeeToTeamUseCase;
+  final RemoveEmployeeFromTeamUseCase? _removeEmployeeFromTeamUseCase;
   
   List<Employee> _employees = [];
   List<Employee> _filteredEmployees = [];
@@ -27,9 +29,11 @@ class EmployeeViewModel extends ChangeNotifier {
     GetAllEmployeesUseCase? getAllEmployeesUseCase,
     GetManagerTeamUseCase? getManagerTeamUseCase,
     AddEmployeeToTeamUseCase? addEmployeeToTeamUseCase,
+    RemoveEmployeeFromTeamUseCase? removeEmployeeFromTeamUseCase,
   }) : _getAllEmployeesUseCase = getAllEmployeesUseCase,
        _getManagerTeamUseCase = getManagerTeamUseCase,
-       _addEmployeeToTeamUseCase = addEmployeeToTeamUseCase {
+       _addEmployeeToTeamUseCase = addEmployeeToTeamUseCase,
+       _removeEmployeeFromTeamUseCase = removeEmployeeFromTeamUseCase {
     // Comment this out to show empty state initially
     // _loadInitialData();
   }
@@ -233,6 +237,36 @@ class EmployeeViewModel extends ChangeNotifier {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Removes employee from team
+  Future<void> removeEmployeeFromTeam(String email) async {
+    if (_removeEmployeeFromTeamUseCase == null) {
+      throw Exception('Remove employee from team functionality not available');
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Call the API to remove employee
+      await _removeEmployeeFromTeamUseCase.execute(email);
+      
+      // Remove the employee from the local list immediately
+      _employees.removeWhere((employee) => employee.email == email);
+      
+      // Update filtered list directly
+      _filteredEmployees = List.from(_employees);
+      
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
     }
   }
 

@@ -443,3 +443,34 @@ class AddEmployeeToTeamRequest {
     };
   }
 }
+
+class RemoveEmployeeFromTeamRequest {
+  final String email;
+
+  RemoveEmployeeFromTeamRequest({
+    required this.email,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+    };
+  }
+}
+
+class RemoveEmployeeFromTeamResponse {
+  final bool success;
+  final String message;
+
+  RemoveEmployeeFromTeamResponse({
+    required this.success,
+    required this.message,
+  });
+
+  factory RemoveEmployeeFromTeamResponse.fromJson(Map<String, dynamic> json) {
+    return RemoveEmployeeFromTeamResponse(
+      success: json['success'] as bool? ?? false,
+      message: json['message'] as String? ?? '',
+    );
+  }
+}

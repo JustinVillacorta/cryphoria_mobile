@@ -960,28 +960,60 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Employee'),
-          content: Text('Are you sure you want to delete ${widget.employee.displayName}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Employee deleted successfully'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
+        var isDeleting = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Remove Employee'),
+              content: Text('Are you sure you want to remove ${widget.employee.displayName} from the team?'),
+              actions: [
+                TextButton(
+                  onPressed: isDeleting ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: isDeleting
+                      ? null
+                      : () async {
+                          setState(() => isDeleting = true);
+
+                          try {
+                            // Get the EmployeeViewModel from the provider
+                            final employeeViewModel = ref.read(employeeViewModelProvider.notifier);
+                            await employeeViewModel.removeEmployeeFromTeam(widget.employee.email);
+                            
+                            // Close dialog first
+                            Navigator.pop(context);
+                            
+                            // Small delay to ensure first navigation completes
+                            await Future.delayed(const Duration(milliseconds: 100));
+                            
+                            // Navigate back to employee list
+                            Navigator.pop(context);
+                          } catch (e) {
+                            // Close dialog first
+                            Navigator.pop(context);
+                            
+                            // Show error message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to remove employee: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                  child: isDeleting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Remove', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            );
+          },
         );
       },
     );

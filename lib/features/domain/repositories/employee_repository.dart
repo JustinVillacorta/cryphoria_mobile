@@ -48,4 +48,7 @@ abstract class EmployeeRepository {
   
   /// Get specific employee wallet address
   Future<String?> getEmployeeWalletAddress(String userId);
+  
+  /// Remove employee from team
+  Future<void> removeEmployeeFromTeam(String email);
 }

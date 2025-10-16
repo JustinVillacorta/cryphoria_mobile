@@ -24,6 +24,9 @@ abstract class EmployeeRemoteDataSource {
   Future<Map<String, dynamic>> getWalletData(String employeeId);
   Future<Map<String, dynamic>> getPayoutInfo(String employeeId);
   Future<List<Map<String, dynamic>>> getRecentTransactions(String employeeId, {int limit = 5});
+  
+  // Remove employee from team
+  Future<void> removeEmployeeFromTeam(String email);
 }
 
 class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
@@ -62,15 +65,26 @@ class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
       
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data['employees'] != null) {
-          // Backend already filters for manager's team
-          return (data['employees'] as List)
-              .map((json) => Employee.fromJson(json))
+        if (data is Map<String, dynamic>) {
+          if (data['employees'] != null && data['employees'] is List) {
+            // Backend already filters for manager's team
+            return (data['employees'] as List)
+                .map((json) => Employee.fromJson(json as Map<String, dynamic>))
+                .toList();
+          } else {
+            // Return empty list if no employees found
+            return [];
+          }
+        } else if (data is List) {
+          // Handle case where response is directly a list
+          return data
+              .map((json) => Employee.fromJson(json as Map<String, dynamic>))
               .toList();
         }
       }
       
-      throw Exception('Failed to load team employees: ${response.statusMessage}');
+      // Return empty list instead of throwing error for 200 responses
+      return [];
     } catch (e) {
       if (e is DioException) {
         throw Exception('Network error: ${e.message}');
@@ -558,6 +572,25 @@ class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
         'status': 'Pending',
       },
     ];
+  }
+
+  @override
+  Future<void> removeEmployeeFromTeam(String email) async {
+    try {
+      final response = await dio.post(
+        '/api/auth/employees/remove-from-team/',
+        data: {'email': email},
+      );
+      
+      if (response.statusCode != 200) {
+        throw Exception('Failed to remove employee from team: ${response.statusMessage}');
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
   }
 
 }
