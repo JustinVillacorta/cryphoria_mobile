@@ -7,6 +7,7 @@ abstract class SmartInvestRemoteDataSource {
   Future<SmartInvestResponse> sendInvestment(SmartInvestRequest request);
   Future<AddressBookUpsertResponse> upsertAddressBookEntry(AddressBookUpsertRequest request);
   Future<AddressBookListResponse> getAddressBookList();
+  Future<AddressBookDeleteResponse> deleteAddressBookEntry(String address);
 }
 
 class SmartInvestRemoteDataSourceImpl implements SmartInvestRemoteDataSource {
@@ -59,6 +60,26 @@ class SmartInvestRemoteDataSourceImpl implements SmartInvestRemoteDataSource {
       final body = e.response?.data;
       final status = e.response?.statusCode;
       throw Exception('Failed to get address book list: $status $body');
+    }
+  }
+
+  @override
+  Future<AddressBookDeleteResponse> deleteAddressBookEntry(String address) async {
+    try {
+      final response = await dio.delete(
+        '/api/address-book/delete/',
+        data: {'address': address},
+      );
+      
+      if (response.data['success'] == true) {
+        return AddressBookDeleteResponse.fromJson(response.data);
+      } else {
+        throw Exception('Failed to delete address book entry: ${response.data['error'] ?? 'Unknown error'}');
+      }
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      final status = e.response?.statusCode;
+      throw Exception('Failed to delete address book entry: $status $body');
     }
   }
 }

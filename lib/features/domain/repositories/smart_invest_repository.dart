@@ -11,4 +11,7 @@ abstract class SmartInvestRepository {
   
   /// Get list of address book entries
   Future<AddressBookListResponse> getAddressBookList();
+  
+  /// Delete address book entry
+  Future<AddressBookDeleteResponse> deleteAddressBookEntry(String address);
 }

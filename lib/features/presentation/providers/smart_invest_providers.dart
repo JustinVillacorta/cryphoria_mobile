@@ -7,6 +7,7 @@ import '../../data/services/smart_invest_service.dart';
 import '../../domain/usecases/smart_invest/send_investment_usecase.dart';
 import '../../domain/usecases/smart_invest/upsert_address_book_usecase.dart';
 import '../../domain/usecases/smart_invest/get_address_book_list_usecase.dart';
+import '../../domain/usecases/smart_invest/delete_address_book_usecase.dart';
 import '../../domain/entities/smart_invest.dart';
 import '../../../dependency_injection/riverpod_providers.dart';
 
@@ -46,6 +47,11 @@ final upsertAddressBookUseCaseProvider = Provider<UpsertAddressBookUseCase>((ref
 final getAddressBookListUseCaseProvider = Provider<GetAddressBookListUseCase>((ref) {
   final repository = ref.watch(smartInvestRepositoryProvider);
   return GetAddressBookListUseCase(repository: repository);
+});
+
+final deleteAddressBookUseCaseProvider = Provider<DeleteAddressBookUseCase>((ref) {
+  final repository = ref.watch(smartInvestRepositoryProvider);
+  return DeleteAddressBookUseCase(repository: repository);
 });
 
 // State Providers
@@ -89,11 +95,13 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
   final SmartInvestService smartInvestService;
   final UpsertAddressBookUseCase upsertAddressBookUseCase;
   final GetAddressBookListUseCase getAddressBookListUseCase;
+  final DeleteAddressBookUseCase deleteAddressBookUseCase;
 
   SmartInvestNotifier({
     required this.smartInvestService,
     required this.upsertAddressBookUseCase,
     required this.getAddressBookListUseCase,
+    required this.deleteAddressBookUseCase,
   }) : super(SmartInvestState());
 
   Future<SmartInvestResponse?> sendInvestment(SmartInvestRequest request) async {
@@ -161,6 +169,16 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
     }
   }
 
+  Future<void> deleteAddressBookEntry(String address) async {
+    try {
+      await deleteAddressBookUseCase.execute(address);
+      // Refresh address book list after deletion
+      await getAddressBookList();
+    } catch (e) {
+      state = state.copyWith(addressBookError: e.toString());
+    }
+  }
+
   void clearError() {
     state = state.copyWith(error: null);
   }
@@ -174,10 +192,12 @@ final smartInvestNotifierProvider = StateNotifierProvider<SmartInvestNotifier, S
   final smartInvestService = ref.watch(smartInvestServiceProvider);
   final upsertAddressBookUseCase = ref.watch(upsertAddressBookUseCaseProvider);
   final getAddressBookListUseCase = ref.watch(getAddressBookListUseCaseProvider);
+  final deleteAddressBookUseCase = ref.watch(deleteAddressBookUseCaseProvider);
   
   return SmartInvestNotifier(
     smartInvestService: smartInvestService,
     upsertAddressBookUseCase: upsertAddressBookUseCase,
     getAddressBookListUseCase: getAddressBookListUseCase,
+    deleteAddressBookUseCase: deleteAddressBookUseCase,
   );
 });

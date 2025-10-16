@@ -247,3 +247,34 @@ class AddressBookListResponse {
     );
   }
 }
+
+class AddressBookDeleteRequest {
+  final String address;
+
+  AddressBookDeleteRequest({
+    required this.address,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'address': address,
+    };
+  }
+}
+
+class AddressBookDeleteResponse {
+  final bool success;
+  final String message;
+
+  AddressBookDeleteResponse({
+    required this.success,
+    required this.message,
+  });
+
+  factory AddressBookDeleteResponse.fromJson(Map<String, dynamic> json) {
+    return AddressBookDeleteResponse(
+      success: json['success'] as bool? ?? false,
+      message: json['message'] as String? ?? '',
+    );
+  }
+}

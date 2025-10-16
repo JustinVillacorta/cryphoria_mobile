@@ -35,4 +35,13 @@ class SmartInvestRepositoryImpl implements SmartInvestRepository {
       throw Exception('Failed to get address book list: $e');
     }
   }
+
+  @override
+  Future<AddressBookDeleteResponse> deleteAddressBookEntry(String address) async {
+    try {
+      return await remoteDataSource.deleteAddressBookEntry(address);
+    } catch (e) {
+      throw Exception('Failed to delete address book entry: $e');
+    }
+  }
 }

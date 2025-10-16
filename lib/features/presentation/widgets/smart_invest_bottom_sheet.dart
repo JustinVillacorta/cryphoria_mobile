@@ -712,33 +712,27 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                           setState(() => isDeleting = true);
                           Navigator.of(dialogContext).pop();
 
-                          final notifier = ref.read(smartInvestNotifierProvider.notifier);
                           try {
-                            // Try calling a delete method on the notifier if it exists.
-                            // We use dynamic to avoid compile-time error if the provider doesn't expose it.
-                            await (notifier as dynamic).deleteAddressBookEntry?.call(entry['id']);
-                            // If the above method doesn't exist it will be null and skip to success below.
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Entry deleted'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          } on NoSuchMethodError {
-                            // Fallback message when API/notifier doesn't support deletion.
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Delete functionality not yet implemented in API'),
-                                backgroundColor: Colors.orange,
-                              ),
-                            );
+                            await ref.read(smartInvestNotifierProvider.notifier).deleteAddressBookEntry(entry['walletAddress']);
+                            // Use the original context instead of the dialog context
+                            if (mounted) {
+                              ScaffoldMessenger.of(this.context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Entry deleted successfully'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Failed to delete entry: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                            // Use the original context instead of the dialog context
+                            if (mounted) {
+                              ScaffoldMessenger.of(this.context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to delete entry: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         },
                   child: isDeleting
