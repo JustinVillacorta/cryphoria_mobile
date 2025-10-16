@@ -117,10 +117,9 @@ import '../features/domain/usecases/Invoice/get_invoices_by_user_usecase.dart';
 
 
 final baseUrlProvider = Provider<String>((ref) {
-  if (Platform.isAndroid) {
-    return 'http://192.168.0.36:3000';
-  }
-  return 'http://192.168.0.36:3000';
+  if (Platform.isAndroid) return 'http://10.0.2.2:8000';
+  if (Platform.isIOS) return 'http://127.0.0.1:8000';
+  return 'http://127.0.0.1:8000'; // real device: use machine LAN IP e.g. http://192.168.x.y:8000
 });
 
 final flutterSecureStorageProvider =
@@ -138,17 +137,12 @@ final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
 
 final dioClientProvider = Provider<DioClient>((ref) {
   final baseUrl = ref.watch(baseUrlProvider);
-  final dio = Dio()
-    ..options = BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: const Duration(milliseconds: 10000),
-      receiveTimeout: const Duration(milliseconds: 90000),
-    );
-
-  return DioClient(
-    dio: dio,
-    localDataSource: ref.watch(authLocalDataSourceProvider),
-  );
+  final dio = Dio(BaseOptions(
+    baseUrl: baseUrl,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 60),
+  ));
+  return DioClient(dio: dio, localDataSource: ref.watch(authLocalDataSourceProvider));
 });
 
 // -----------------------------------------------------------------------------
