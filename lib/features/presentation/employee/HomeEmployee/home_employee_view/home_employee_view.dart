@@ -115,7 +115,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: screenWidth * 0.05,
-                    vertical: screenHeight * 0.025,
+                    vertical: screenHeight * 0.015,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,13 +126,12 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                       ),
                       SizedBox(height: screenHeight * 0.02),
                       WalletCard(),
-                      SizedBox(height: screenHeight * 0.02),
                       PayoutInfoWidget(
                         nextPayoutDate: state.nextPayoutDate,
                         frequency: state.payoutFrequency,
                         isTablet: isTablet,
                       ),
-                      SizedBox(height: screenHeight * 0.02),
+                      SizedBox(height: screenHeight * 0.01),
                       
                       // Recent Payslips Section
                       Row(
@@ -164,9 +163,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                             ),
                           ),
                         ],
-                      ),
-                      SizedBox(height: screenHeight * 0.015),
-                      
+                      ),                      
                       // Display recent payslips
                       payrollDetailsAsync.when(
                         data: (payrollDetails) {
@@ -176,7 +173,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                             return Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: screenWidth * 0.04,
-                                vertical: screenHeight * 0.06,
+                                vertical: screenHeight * 0.02,
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.white,

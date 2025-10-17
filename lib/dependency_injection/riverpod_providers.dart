@@ -4,6 +4,8 @@ import 'package:cryphoria_mobile/features/data/data_sources/invoice_remote_data_
 import 'package:cryphoria_mobile/features/data/repositories_impl/invoice_repository_impl.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/ChangePassword/change_password_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -119,9 +121,9 @@ import '../features/domain/usecases/Invoice/get_invoices_by_user_usecase.dart';
 
 final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
-    return 'http://10.0.2.2:8000';
+    return 'http://192.168.1.108:8000';
   }
-  return 'http://192.168.5.52:8000';
+  return 'http://192.168.1.108:8000';
 });
 
 final flutterSecureStorageProvider =
@@ -649,4 +651,18 @@ final invoiceByIdProvider = FutureProvider.family<Invoice, String>((ref, invoice
   ref.keepAlive(); // Cache data to prevent unnecessary refetches on navigation
   final getInvoice = ref.read(getInvoiceByIdUseCaseProvider);  // Now references the correct provider
   return await getInvoice(invoiceId);
+});
+
+
+final managerChangePasswordVmProvider = StateNotifierProvider<
+    ManagerChangePasswordViewModel, AsyncValue<void>>((ref) {
+  // Ensures an AuthRepository is available via authRepositoryProvider
+  ref.read(authRepositoryProvider);
+  return ManagerChangePasswordViewModel(ref);
+});
+
+final employeeChangePasswordVmProvider = StateNotifierProvider<
+    EmployeeChangePasswordViewModel, AsyncValue<void>>((ref) {
+  ref.read(authRepositoryProvider);
+  return EmployeeChangePasswordViewModel(ref);
 });

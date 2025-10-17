@@ -1,17 +1,52 @@
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Forgot_Password/Views/forgot_password_request_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 
-class ChangePasswordView extends StatefulWidget {
+class ChangePasswordView extends ConsumerStatefulWidget {
   const ChangePasswordView({super.key});
 
   @override
-  State<ChangePasswordView> createState() => _ChangePasswordViewState();
+  ConsumerState<ChangePasswordView> createState() => _ChangePasswordViewState();
 }
 
-class _ChangePasswordViewState extends State<ChangePasswordView> {
+class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  bool _loadingShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to VM state to drive UI dialogs
+    ref.listen<AsyncValue<void>>(managerChangePasswordVmProvider,
+        (previous, next) async {
+      next.when(
+        data: (_) async {
+          _hideLoading();
+          await _showMessageDialog(
+            title: 'Success',
+            message: 'Password updated successfully.',
+          );
+          _currentPasswordController.clear();
+          _newPasswordController.clear();
+          _confirmPasswordController.clear();
+        },
+        loading: () {
+          _showLoading();
+        },
+        error: (err, _) async {
+          _hideLoading();
+          await _showMessageDialog(
+            title: 'Error',
+            message: err.toString(),
+          );
+        },
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -59,6 +94,11 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
           
             const SizedBox(height: 20),
             _PasswordField(
+              controller: _currentPasswordController,
+              label: 'Current Password',
+            ),
+            const SizedBox(height: 20),
+            _PasswordField(
               controller: _newPasswordController,
               label: 'New Password',
             ),
@@ -87,9 +127,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement update password logic.
-                    },
+                    onPressed: _onUpdatePasswordPressed,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xff9747FF),
                       foregroundColor: Colors.white,
@@ -194,5 +232,113 @@ class _PasswordFieldState extends State<_PasswordField> {
         ],
       ],
     );
+  }
+}
+
+extension on _ChangePasswordViewState {
+  Future<void> _onUpdatePasswordPressed() async {
+    final current = _currentPasswordController.text.trim();
+    final newPw = _newPasswordController.text.trim();
+    final confirm = _confirmPasswordController.text.trim();
+
+    // Basic validation
+    if (current.isEmpty || newPw.isEmpty || confirm.isEmpty) {
+      await _showMessageDialog(
+        title: 'Missing Information',
+        message: 'Please fill in all fields.',
+      );
+      return;
+    }
+    if (newPw != confirm) {
+      await _showMessageDialog(
+        title: 'Passwords Do Not Match',
+        message: 'Please make sure both new passwords match.',
+      );
+      return;
+    }
+    if (newPw.length < 8) {
+      await _showMessageDialog(
+        title: 'Weak Password',
+        message: 'New password must be at least 8 characters.',
+      );
+      return;
+    }
+
+    final confirmed = await _showConfirmDialog(
+      title: 'Confirm Change',
+      message: 'Are you sure you want to update your password?',
+      confirmText: 'Update',
+    );
+    if (confirmed != true) return;
+
+    // Trigger VM call; UI reacts via ref.listen above
+    await ref.read(managerChangePasswordVmProvider.notifier).changePassword(
+          currentPassword: current,
+          newPassword: newPw,
+          confirmPassword: confirm,
+        );
+  }
+
+  Future<bool?> _showConfirmDialog({
+    required String title,
+    required String message,
+    String cancelText = 'Cancel',
+    String confirmText = 'OK',
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(cancelText),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(confirmText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showMessageDialog({
+    required String title,
+    required String message,
+    String buttonText = 'OK',
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(buttonText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLoading() {
+    if (_loadingShown) return;
+    _loadingShown = true;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  void _hideLoading() {
+    if (!_loadingShown) return;
+    _loadingShown = false;
+    Navigator.of(context, rootNavigator: true).pop();
   }
 }

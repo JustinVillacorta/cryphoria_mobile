@@ -22,4 +22,10 @@ abstract class AuthRepository {
   Future<void> cacheAuthUser(AuthUser user);
   Future<AuthUser?> getCachedAuthUser();
   Future<void> clearCache();
+
+  Future<void> changePassword({
+  required String currentPassword,
+  required String newPassword,
+});
+
 }

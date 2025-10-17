@@ -192,10 +192,6 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                 child: Column(
                   children: [
                     SizedBox(height: screenHeight * 0.02), // 2% of screen height
-
-                    
-
-
                     SizedBox(height: screenHeight * 0.015),
 
                     _buildMenuItem(
@@ -319,7 +315,13 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'John Doe',
+                  (() {
+                    final user = ref.watch(userProvider);
+                    final parts = <String>[];
+                    if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName.trim());
+                    if ((user?.lastName ?? '').trim().isNotEmpty) parts.add(user!.lastName!.trim());
+                    return parts.isNotEmpty ? parts.join(' ') : 'User';
+                  })(),
                   style: TextStyle(
                     fontSize: screenWidth * 0.045, // 4.5% of screen width
                     fontWeight: FontWeight.w600,

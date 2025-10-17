@@ -42,14 +42,14 @@ class HomeEmployeeState {
         errorMessage: '',
         isInitialized: false,
         employeeId: '',
-        employeeName: 'Anna',
+        employeeName: '',
         employeeAvatar: '',
-        nextPayoutDate: 'June 30, 2023',
-        payoutFrequency: 'Monthly',
+        nextPayoutDate: '',
+        payoutFrequency: '',
         recentTransactions: [],
         wallet: null,
         transactions: [],
-        selectedCurrency: 'PHP',
+        selectedCurrency: '',
       );
 
   bool get isLoaded => isInitialized && !isLoading && !hasError;
@@ -151,74 +151,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     }
   }
 
-  Future<void> _loadEmployeeData(String employeeId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    switch (employeeId) {
-      case 'anna_001':
-        state = state.copyWith(
-          employeeName: 'Anna Smith',
-          hasError: false,
-          errorMessage: () => '',
-        );
-        break;
-      case 'john_002':
-        state = state.copyWith(
-          employeeName: 'John Doe',
-          hasError: false,
-          errorMessage: () => '',
-        );
-        break;
-      case 'sarah_003':
-        state = state.copyWith(
-          employeeName: 'Sarah Johnson',
-          hasError: false,
-          errorMessage: () => '',
-        );
-        break;
-      default:
-        state = state.copyWith(
-          employeeName: 'Anna',
-          hasError: false,
-          errorMessage: () => '',
-        );
-    }
-    state = state.copyWith(employeeAvatar: '');
-  }
-
-  Future<void> _loadPayoutInfo(String employeeId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    final now = DateTime.now();
-    final nextPayout = DateTime(now.year, now.month + 1, 30);
-    state = state.copyWith(
-      nextPayoutDate: _formatDate(nextPayout),
-      payoutFrequency: 'Monthly',
-      hasError: false,
-      errorMessage: () => '',
-    );
-  }
-
-  Future<void> _loadRecentTransactions(String employeeId) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final fallbackTransactions = [
-      {
-        'id': '0xABC...123',
-        'date': 'May 31, 2023',
-        'amount': '0.45 ETH',
-        'usdAmount': '\$820.90 USD',
-        'status': 'Paid',
-        'statusColor': Colors.green,
-        'statusIcon': Icons.check_circle,
-        'rawDate': DateTime(2023, 5, 31),
-        'rawAmount': 0.45,
-        'rawUsdAmount': 820.90,
-      },
-    ];
-    state = state.copyWith(
-      recentTransactions: List.unmodifiable(fallbackTransactions),
-      hasError: false,
-      errorMessage: () => '',
-    );
-  }
+  // Removed fake data loading methods as we now use real data from getDashboardData
 
   Future<void> _loadInitialWalletData() async {
     try {
@@ -335,9 +268,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     try {
       await _fetchTransactions();
       await refreshWallet();
-      await _loadEmployeeData(state.employeeId);
-      await _loadPayoutInfo(state.employeeId);
-      await _loadRecentTransactions(state.employeeId);
+      await getDashboardData(state.employeeId);
     } catch (e) {
       state = state.copyWith(
         hasError: true,

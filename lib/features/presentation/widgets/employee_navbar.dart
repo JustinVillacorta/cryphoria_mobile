@@ -23,21 +23,24 @@ class EmployeeNavBar extends StatelessWidget {
           child: Container(
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.12), // Darker with higher opacity
+              color: Colors.white.withOpacity(0.1), // Match navbar_widget background
               borderRadius: BorderRadius.circular(30.0),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3), // Slightly more visible border
+                color: Colors.white.withOpacity(0.3),
                 width: 1.0,
               ),
               boxShadow: [
+                // main subtle shadow
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 25,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 6),
                 ),
+                // faint top highlight for glass effect
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.1),
-                  blurRadius: 5,
+                  color: Colors.white.withOpacity(0.4),
+                  blurRadius: 4,
                   offset: const Offset(0, -1),
                 ),
               ],
@@ -58,9 +61,13 @@ class EmployeeNavBar extends StatelessWidget {
 
   Widget _buildNavItem(IconData icon, int index) {
     return IconButton(
-      icon: Icon(icon),
-      color: currentIndex == index ? Colors.white : Colors.grey,
+      icon: Icon(
+        icon,
+        size: 22.0,
+      ),
+      color: currentIndex == index ? Color(0xFF9747FF) : Colors.grey,
       onPressed: () => onTap(index),
+      padding: const EdgeInsets.all(8.0),
     );
   }
 }
