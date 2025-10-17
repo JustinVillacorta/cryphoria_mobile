@@ -20,6 +20,12 @@ import '../features/data/data_sources/fake_transactions_data.dart';
 import '../features/data/data_sources/reports_remote_data_source.dart';
 import '../features/data/data_sources/walletRemoteDataSource.dart';
 import '../features/data/data_sources/document_upload_remote_data_source.dart';
+import '../features/data/data_sources/support_remote_data_source.dart';
+import '../features/data/repositories_impl/support_repository_impl.dart';
+import '../features/domain/repositories/support_repository.dart';
+import '../features/domain/usecases/Support/submit_support_ticket_usecase.dart';
+import '../features/domain/usecases/Support/get_support_messages_usecase.dart';
+import '../features/presentation/manager/UserProfile/HelpandSupport/support_viewmodel.dart';
 import '../features/data/notifiers/audit_notifier.dart';
 import '../features/data/repositories_impl/AuthRepositoryImpl.dart';
 import '../features/data/repositories_impl/audit_repository_impl.dart';
@@ -665,4 +671,43 @@ final employeeChangePasswordVmProvider = StateNotifierProvider<
     EmployeeChangePasswordViewModel, AsyncValue<void>>((ref) {
   ref.read(authRepositoryProvider);
   return EmployeeChangePasswordViewModel(ref);
+});
+
+// -----------------------------------------------------------------------------
+// Support Providers
+// -----------------------------------------------------------------------------
+
+// Data Sources
+final supportRemoteDataSourceProvider = Provider<SupportRemoteDataSource>((ref) {
+  return SupportRemoteDataSourceImpl(dio: ref.watch(dioClientProvider).dio);
+});
+
+// Repository
+final supportRepositoryProvider = Provider<SupportRepository>((ref) {
+  return SupportRepositoryImpl(
+    remoteDataSource: ref.watch(supportRemoteDataSourceProvider),
+  );
+});
+
+// Use Cases
+final submitSupportTicketUseCaseProvider = Provider<SubmitSupportTicketUseCase>((ref) {
+  return SubmitSupportTicketUseCase(
+    repository: ref.watch(supportRepositoryProvider),
+  );
+});
+
+final getSupportMessagesUseCaseProvider = Provider<GetSupportMessagesUseCase>((ref) {
+  return GetSupportMessagesUseCase(
+    repository: ref.watch(supportRepositoryProvider),
+  );
+});
+
+// ViewModel
+final supportViewModelProvider = ChangeNotifierProvider<SupportViewModel>((ref) {
+  final viewModel = SupportViewModel(
+    submitSupportTicketUseCase: ref.watch(submitSupportTicketUseCaseProvider),
+    getSupportMessagesUseCase: ref.watch(getSupportMessagesUseCaseProvider),
+  );
+  ref.onDispose(viewModel.dispose);
+  return viewModel;
 });

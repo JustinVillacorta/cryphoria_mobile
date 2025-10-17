@@ -230,7 +230,7 @@ class EthPaymentService {
       'title': 'ETH Received',
       'subtitle': _formatAddress(tx.fromAddress),
       'amount': '+${tx.amountEth} ETH',
-      'time': _formatTransactionTime(DateTime.now()), // TODO: Get actual transaction timestamp from backend
+      'time': _formatTransactionTime(DateTime.now()), // Would use actual timestamp from tx
       'icon': Icons.arrow_downward,
       'color': Colors.green,
       'isPositive': true,
