@@ -25,7 +25,10 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
   @override
   void initState() {
     super.initState();
-    _loadAuthUser();
+    // Load user data after the widget is fully initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAuthUser();
+    });
   }
 
   Future<void> _loadAuthUser() async {

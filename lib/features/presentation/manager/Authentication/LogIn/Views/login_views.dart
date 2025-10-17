@@ -221,10 +221,7 @@ class _LogInState extends ConsumerState<LogIn> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => RegisterView(
-                                            noAccountEmail: _emailController.text.trim(),
-                                            prefillEmail: true,
-                                          ),
+                                          builder: (_) => const RegisterView(),
                                         ),
                                       );
                                     },
@@ -270,10 +267,7 @@ class _LogInState extends ConsumerState<LogIn> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => RegisterView(
-                                              noAccountEmail: _noAccountEmail,
-                                              prefillEmail: true,
-                                            ),
+                                            builder: (_) => const RegisterView(),
                                           ),
                                         );
                                       },

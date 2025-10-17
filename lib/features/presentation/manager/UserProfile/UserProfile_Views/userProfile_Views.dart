@@ -22,11 +22,14 @@ class _userProfileState extends ConsumerState<userProfile> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    // Load user data after the widget is fully initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserData();
+    });
   }
 
   Future<void> _loadUserData() async {
-    final user = ref.watch(userProvider);
+    final user = ref.read(userProvider);
     String displayName = (() {
       final parts = <String>[];
       if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName.trim());
@@ -36,7 +39,7 @@ class _userProfileState extends ConsumerState<userProfile> {
     final authDataSource = ref.read(authLocalDataSourceProvider);
     final authUser = await authDataSource.getAuthUser();
 
-    if (authUser != null) {
+    if (authUser != null && mounted) {
       setState(() {
         _username = displayName;
         _email = authUser.email;
