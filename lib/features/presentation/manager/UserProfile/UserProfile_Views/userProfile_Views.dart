@@ -241,7 +241,9 @@ class _userProfileState extends ConsumerState<userProfile> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ChangePasswordView(),
+                            builder: (context) => ChangePasswordView(
+                              provider: managerChangePasswordVmProvider,
+                            ),
                           ),
                         );
                       },

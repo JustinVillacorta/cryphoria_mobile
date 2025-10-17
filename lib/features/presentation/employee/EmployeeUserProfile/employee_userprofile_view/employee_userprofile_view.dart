@@ -203,7 +203,9 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ChangePasswordView(),
+                            builder: (context) => ChangePasswordView(
+                              provider: employeeChangePasswordVmProvider,
+                            ),
                           ),
                         );
                       },

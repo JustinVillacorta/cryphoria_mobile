@@ -18,6 +18,12 @@ abstract class AuthRemoteDataSource {
   // Basic authentication
   Future<bool> logout();
   Future<bool> validateSession();
+  
+  // Change password
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -356,6 +362,62 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
                      e.response?.data['detail']?.toString() ?? 
                      'Failed to resend password reset';
       throw ServerException(message);
+    }
+  }
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    print('🔐 [CHANGE_PASSWORD] Starting password change request');
+    print('🔐 [CHANGE_PASSWORD] Endpoint: $baseUrl/api/auth/change-password/');
+    
+    try {
+      final data = {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      };
+      
+      print('🔐 [CHANGE_PASSWORD] Request data: $data');
+      print('🔐 [CHANGE_PASSWORD] Making POST request...');
+      
+      final response = await dio.post(
+        '$baseUrl/api/auth/change-password/',
+        data: data,
+      );
+      
+      print('🔐 [CHANGE_PASSWORD] ✅ Response received');
+      print('🔐 [CHANGE_PASSWORD] Status code: ${response.statusCode}');
+      print('🔐 [CHANGE_PASSWORD] Response headers: ${response.headers}');
+      print('🔐 [CHANGE_PASSWORD] Response data: ${response.data}');
+
+      if (response.statusCode != 200) {
+        print('🔐 [CHANGE_PASSWORD] ❌ Non-200 status code: ${response.statusCode}');
+        throw ServerException(
+          response.data['error']?.toString() ?? 
+          response.data['detail']?.toString() ?? 
+          'Password change failed with status ${response.statusCode}'
+        );
+      }
+      
+      print('🔐 [CHANGE_PASSWORD] ✅ Password change successful!');
+    } on DioException catch (e) {
+      print('🔐 [CHANGE_PASSWORD] ❌ DioException occurred');
+      print('🔐 [CHANGE_PASSWORD] Error type: ${e.type}');
+      print('🔐 [CHANGE_PASSWORD] Error message: ${e.message}');
+      print('🔐 [CHANGE_PASSWORD] Response status: ${e.response?.statusCode}');
+      print('🔐 [CHANGE_PASSWORD] Response data: ${e.response?.data}');
+      
+      final message = e.response?.data['error']?.toString() ?? 
+                     e.response?.data['detail']?.toString() ?? 
+                     'Password change failed';
+      print('🔐 [CHANGE_PASSWORD] Throwing ServerException: $message');
+      throw ServerException(message);
+    } catch (e) {
+      print('🔐 [CHANGE_PASSWORD] ❌ Unexpected error: $e');
+      print('🔐 [CHANGE_PASSWORD] Error type: ${e.runtimeType}');
+      throw ServerException('Unexpected error during password change: ${e.toString()}');
     }
   }
 }

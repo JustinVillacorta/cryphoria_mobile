@@ -1,6 +1,4 @@
 
-import 'package:dio/dio.dart';
-
 import 'package:cryphoria_mobile/features/data/data_sources/AuthLocalDataSource.dart';
 import 'package:cryphoria_mobile/features/data/data_sources/AuthRemoteDataSource.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
@@ -11,7 +9,6 @@ import '../../domain/entities/login_response.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
   final AuthLocalDataSource localDataSource;
-  final Dio _dio = Dio();
 
   AuthRepositoryImpl(this.remoteDataSource, this.localDataSource);
 
@@ -83,47 +80,18 @@ class AuthRepositoryImpl implements AuthRepository {
     await localDataSource.clearAuthData();
   }
   @override
-Future<void> changePassword({
-  required String currentPassword,
-  required String newPassword,
-}) async {
-  try {
-    final response = await _dio.post(
-      '/api/change_password/',
-      data: <String, dynamic>{
-        // Common DRF expectations; uses current/new naming
-        'current_password': currentPassword,
-        'new_password': newPassword,
-      },
-      options: Options(
-        headers: {
-          // If your client already injects this, you can remove this header.
-          'Content-Type': 'application/json',
-        },
-      ),
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    print('🔐 [AUTH_REPO] Change password request received');
+    print('🔐 [AUTH_REPO] Delegating to remote data source...');
+    
+    await remoteDataSource.changePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
     );
-
-    // Accept 200 or 204 as success; adjust if your API differs
-    final code = response.statusCode ?? 0;
-    if (code < 200 || code >= 300) {
-      throw Exception('Failed to change password (${response.statusCode}).');
-    }
-  } on DioException catch (e) {
-    // Extract DRF error details if present
-    final data = e.response?.data;
-    String message = 'Failed to change password';
-    if (data is Map) {
-      if (data['error'] is String) {
-        message = data['error'] as String; // e.g. "Invalid JSON format"
-      } else if (data['detail'] is String) {
-        message = data['detail'] as String;
-      }
-    }
-    // Fall back to Dio message if nothing else
-    message = message.isNotEmpty ? message : (e.message ?? message);
-    throw Exception(message);
-  } catch (e) {
-    throw Exception(e.toString());
+    
+    print('🔐 [AUTH_REPO] ✅ Password change completed successfully');
   }
-}
 }

@@ -21,7 +21,14 @@ class EthTransactionDataSource {
       if (response.statusCode == 200) {
         final data = response.data;
         
-        if (data is Map && data.containsKey('transactions')) {
+        if (data is Map && data['success'] == true && data.containsKey('data') && data['data'].containsKey('transactions')) {
+          final transactions = data['data']['transactions'] as List;
+          final convertedTransactions = transactions
+              .map((tx) => _convertBackendTransactionToDisplay(tx, category, null))
+              .toList();
+          
+          return convertedTransactions;
+        } else if (data is Map && data.containsKey('transactions')) {
           final transactions = data['transactions'] as List;
           final convertedTransactions = transactions
               .map((tx) => _convertBackendTransactionToDisplay(tx, category, null))
@@ -115,13 +122,14 @@ class EthTransactionDataSource {
       subtitle = backendTx['company'] ?? backendTx['category'] ?? 'External';
     }
 
-    // Handle various possible field names from backend
-    final amount = backendTx['amount_eth'] ?? 
-                   backendTx['amount'] ?? 
+    // Handle various possible field names from backend - prioritize correct field names
+    final amount = backendTx['amount'] ?? 
+                   backendTx['amount_eth'] ?? 
                    backendTx['value'] ?? 
                    '0';
     
-    final timestamp = backendTx['created_at'] ?? 
+    final timestamp = backendTx['transaction_date'] ?? 
+                     backendTx['created_at'] ?? 
                      backendTx['timestamp'] ?? 
                      backendTx['time'] ?? 
                      DateTime.now().toIso8601String();
@@ -142,7 +150,7 @@ class EthTransactionDataSource {
       'from_address': fromAddr,
       'to_address': toAddr,
       'from_wallet_name': backendTx['from_wallet_name'] ?? 'Unknown',
-      'gas_cost': '${backendTx['gas_cost_eth'] ?? backendTx['gas_cost'] ?? '0'} ETH',
+      'gas_cost': '${backendTx['gas_fee'] ?? backendTx['gas_cost_eth'] ?? backendTx['gas_cost'] ?? '0'} ETH',
       'confirmations': backendTx['confirmations'] ?? 0,
       'network': backendTx['network'] ?? 'ethereum',
       'company': backendTx['company'] ?? '',

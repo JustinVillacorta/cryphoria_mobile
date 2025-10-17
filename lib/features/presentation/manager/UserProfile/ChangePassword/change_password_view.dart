@@ -1,10 +1,13 @@
-import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Forgot_Password/Views/forgot_password_request_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 
 class ChangePasswordView extends ConsumerStatefulWidget {
-  const ChangePasswordView({super.key});
+  final StateNotifierProvider provider;
+  
+  const ChangePasswordView({
+    super.key,
+    required this.provider,
+  });
 
   @override
   ConsumerState<ChangePasswordView> createState() => _ChangePasswordViewState();
@@ -20,32 +23,6 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
   @override
   void initState() {
     super.initState();
-    // Listen to VM state to drive UI dialogs
-    ref.listen<AsyncValue<void>>(managerChangePasswordVmProvider,
-        (previous, next) async {
-      next.when(
-        data: (_) async {
-          _hideLoading();
-          await _showMessageDialog(
-            title: 'Success',
-            message: 'Password updated successfully.',
-          );
-          _currentPasswordController.clear();
-          _newPasswordController.clear();
-          _confirmPasswordController.clear();
-        },
-        loading: () {
-          _showLoading();
-        },
-        error: (err, _) async {
-          _hideLoading();
-          await _showMessageDialog(
-            title: 'Error',
-            message: err.toString(),
-          );
-        },
-      );
-    });
   }
 
   @override
@@ -58,6 +35,39 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to VM state to drive UI dialogs
+    ref.listen<AsyncValue<void>>(widget.provider as ProviderListenable<AsyncValue<void>>,
+        (previous, next) async {
+      print('🔐 [UI_LISTENER] State changed from ${previous?.whenOrNull(data: (_) => 'data', loading: () => 'loading', error: (_, __) => 'error')} to ${next.whenOrNull(data: (_) => 'data', loading: () => 'loading', error: (_, __) => 'error')}');
+      
+      next.when(
+        data: (_) async {
+          print('🔐 [UI_LISTENER] ✅ Success state received');
+          _hideLoading();
+          await _showMessageDialog(
+            title: 'Success',
+            message: 'Password updated successfully.',
+          );
+          _currentPasswordController.clear();
+          _newPasswordController.clear();
+          _confirmPasswordController.clear();
+          print('🔐 [UI_LISTENER] Form cleared and success dialog shown');
+        },
+        loading: () {
+          print('🔐 [UI_LISTENER] Loading state received');
+          _showLoading();
+        },
+        error: (err, _) async {
+          print('🔐 [UI_LISTENER] ❌ Error state received: $err');
+          _hideLoading();
+          await _showMessageDialog(
+            title: 'Error',
+            message: err.toString(),
+          );
+        },
+      );
+    });
+
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
@@ -156,12 +166,10 @@ class _PasswordField extends StatefulWidget {
   const _PasswordField({
     required this.controller,
     required this.label,
-    this.helper,
   });
 
   final TextEditingController controller;
   final String label;
-  final Widget? helper;
 
   @override
   State<_PasswordField> createState() => _PasswordFieldState();
@@ -205,31 +213,17 @@ class _PasswordFieldState extends State<_PasswordField> {
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: Color(0xFF6F4CF5), width: 1.2),
             ),
-            suffixIcon: widget.helper == null
-                ? IconButton(
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                    icon: Icon(
-                      _obscure
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: const Color(0xFF8A94A6),
-                    ),
-                  )
-                : IconButton(
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                    icon: Icon(
-                      _obscure
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: const Color(0xFF8A94A6),
-                    ),
-                  ),
+            suffixIcon: IconButton(
+              onPressed: () => setState(() => _obscure = !_obscure),
+              icon: Icon(
+                _obscure
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                color: const Color(0xFF8A94A6),
+              ),
+            ),
           ),
         ),
-        if (widget.helper != null) ...[
-          const SizedBox(height: 8),
-          widget.helper!,
-        ],
       ],
     );
   }
@@ -237,12 +231,17 @@ class _PasswordFieldState extends State<_PasswordField> {
 
 extension on _ChangePasswordViewState {
   Future<void> _onUpdatePasswordPressed() async {
+    print('🔐 [UI] Change password button pressed');
+    
     final current = _currentPasswordController.text.trim();
     final newPw = _newPasswordController.text.trim();
     final confirm = _confirmPasswordController.text.trim();
 
+    print('🔐 [UI] Form data - Current: ${current.length} chars, New: ${newPw.length} chars, Confirm: ${confirm.length} chars');
+
     // Basic validation
     if (current.isEmpty || newPw.isEmpty || confirm.isEmpty) {
+      print('🔐 [UI] ❌ Validation failed: Missing fields');
       await _showMessageDialog(
         title: 'Missing Information',
         message: 'Please fill in all fields.',
@@ -250,6 +249,7 @@ extension on _ChangePasswordViewState {
       return;
     }
     if (newPw != confirm) {
+      print('🔐 [UI] ❌ Validation failed: Passwords do not match');
       await _showMessageDialog(
         title: 'Passwords Do Not Match',
         message: 'Please make sure both new passwords match.',
@@ -257,6 +257,7 @@ extension on _ChangePasswordViewState {
       return;
     }
     if (newPw.length < 8) {
+      print('🔐 [UI] ❌ Validation failed: Password too short');
       await _showMessageDialog(
         title: 'Weak Password',
         message: 'New password must be at least 8 characters.',
@@ -264,15 +265,21 @@ extension on _ChangePasswordViewState {
       return;
     }
 
+    print('🔐 [UI] ✅ UI validation passed, showing confirmation dialog');
     final confirmed = await _showConfirmDialog(
       title: 'Confirm Change',
       message: 'Are you sure you want to update your password?',
       confirmText: 'Update',
     );
-    if (confirmed != true) return;
+    
+    if (confirmed != true) {
+      print('🔐 [UI] User cancelled password change');
+      return;
+    }
 
+    print('🔐 [UI] User confirmed, calling viewmodel...');
     // Trigger VM call; UI reacts via ref.listen above
-    await ref.read(managerChangePasswordVmProvider.notifier).changePassword(
+    await (ref.read(widget.provider.notifier) as dynamic).changePassword(
           currentPassword: current,
           newPassword: newPw,
           confirmPassword: confirm,
