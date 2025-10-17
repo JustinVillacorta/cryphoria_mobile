@@ -22,7 +22,7 @@ class EmployeeWidgetTree extends ConsumerWidget {
     final employeePages = [
       HomeEmployeeScreen(employeeId: employeeId),
       PayslipScreen(),
-      EmployeeUserProfileScreen(),
+      EmployeeUserProfile(),
     ];
     
     return PopScope(

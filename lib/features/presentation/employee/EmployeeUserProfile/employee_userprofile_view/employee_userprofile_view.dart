@@ -1,65 +1,65 @@
+import 'dart:ui';
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/edit_profile/edit_profile_view/edit_profile_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/HelpandSupport/help_and_support_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
-import 'package:cryphoria_mobile/shared/widgets/profile_header.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 
-
-class EmployeeUserProfileScreen extends ConsumerStatefulWidget {
-  const EmployeeUserProfileScreen({Key? key}) : super(key: key);
+class EmployeeUserProfile extends ConsumerStatefulWidget {
+  const EmployeeUserProfile({super.key});
 
   @override
-  ConsumerState<EmployeeUserProfileScreen> createState() =>
-      _EmployeeUserProfileScreenState();
+  ConsumerState<EmployeeUserProfile> createState() => _EmployeeUserProfileState();
 }
 
-class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileScreen> {
-
-  String _username = 'User';
-  String _email = '';
+class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
+  String? _username;
+  String? _email;
 
   @override
   void initState() {
     super.initState();
     // Load user data after the widget is fully initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadAuthUser();
+      _loadUserData();
     });
   }
 
-  Future<void> _loadAuthUser() async {
-    try {
-      final authDataSource = ref.read(authLocalDataSourceProvider);
-      final authUser = await authDataSource.getAuthUser();
-      final user = ref.read(userProvider);
-      final displayName = _buildDisplayName(user?.firstName, user?.lastName);
-      if (mounted) {
-        setState(() {
-          _username = displayName;
-          _email = authUser?.email ?? '';
-        });
-      }
-    } catch (_) {
-      // ignore load errors silently for header
+  Future<void> _loadUserData() async {
+    final user = ref.read(userProvider);
+    String displayName = (() {
+      final parts = <String>[];
+      if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName.trim());
+      if ((user?.lastName ?? '').trim().isNotEmpty) parts.add(user!.lastName!.trim());
+      return parts.isNotEmpty ? parts.join(' ') : 'User';
+    })();
+    final authDataSource = ref.read(authLocalDataSourceProvider);
+    final authUser = await authDataSource.getAuthUser();
+
+    if (authUser != null && mounted) {
+      setState(() {
+        _username = displayName;
+        _email = authUser.email;
+      });
     }
   }
 
   Future<void> _logout() async {
     final logoutViewModel = ref.read(logoutViewModelProvider);
+    
     try {
       // Show confirmation dialog
       final shouldLogout = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: Colors.white,
-          title: const Text('Logout', style: TextStyle(color: Colors.black87)),
+          backgroundColor: Colors.grey[900],
+          title: const Text('Logout', style: TextStyle(color: Colors.white)),
           content: const Text(
             'Are you sure you want to logout?',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
@@ -88,10 +88,10 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
 
         // Use simple logout
         final success = await logoutViewModel.logout();
-        
+
         // Close loading dialog
         if (mounted) Navigator.of(context).pop();
-        
+
         if (success) {
           // Check if widget is still mounted before modifying providers and navigating
           if (mounted) {
@@ -107,12 +107,10 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
             );
           }
         } else {
+          // Show error message only if mounted
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Logout failed: ${logoutViewModel.error ?? "Unknown error"}'),
-                backgroundColor: Colors.red,
-              ),
+              SnackBar(content: Text(logoutViewModel.error ?? 'Logout failed')),
             );
           }
         }
@@ -120,7 +118,7 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
     } catch (e) {
       // Close loading dialog if open
       if (mounted) Navigator.of(context).pop();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -176,35 +174,41 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
 
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final paddingValue = screenWidth * 0.05;
-
-    final user = ref.watch(userProvider);
-    final displayName = _buildDisplayName(user?.firstName, user?.lastName);
+    final paddingValue = screenWidth * 0.05; // 5% of screen width for padding
+    final headerHeight = screenHeight * 0.22; // 22% of screen height for gradient header
 
     return Scaffold(
       body: Column(
         children: [
-          // Unified Profile Header (matches manager style)
-          ProfileHeader(
-            
-            title: displayName,
-            subtitle: _email.isNotEmpty ? _email : null,
-            onEdit: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditProfileScreen(),
+          // Gradient Header Section
+          Container(
+            height: headerHeight,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF8B5CF6), // Purple top
+                  Color(0xFF7C3AED), // Slightly darker purple
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: paddingValue),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // Profile Card
+                    _buildProfileCard(context, screenWidth, screenHeight),
+                  ],
                 ),
-              );
-            },
-            gradientStart: const Color(0xFF8B5CF6),
-            gradientEnd: const Color(0xFF7C3AED),
-            ringColor: const Color(0xFF8B5CF6),
-            height: screenHeight * 0.26,
-            avatarRadius: 44,
+              ),
+            ),
           ),
 
-          // Content Section
+          // White Content Section
           Expanded(
             child: Container(
               width: double.infinity,
@@ -215,20 +219,23 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                 padding: EdgeInsets.all(paddingValue),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.02),
+                    SizedBox(height: screenHeight * 0.02), // 2% of screen height
+
                     SizedBox(height: screenHeight * 0.015),
 
+                    // Privacy Settings
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.security_outlined,
+                      icon: Icons.privacy_tip_outlined,
                       title: 'Security',
+                      subtitle: 'Change your password and secure your account',
                       iconColor: const Color(0xFF8B5CF6),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ChangePasswordView(
-                              provider: employeeChangePasswordVmProvider,
+                              provider: managerChangePasswordVmProvider,
                             ),
                           ),
                         );
@@ -237,16 +244,18 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
 
                     SizedBox(height: screenHeight * 0.015),
 
+                    // Security Settings
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.help_outline,
+                      icon: Icons.security_outlined,
                       title: 'Help and Support',
+                      subtitle: 'Account security settings',
                       iconColor: const Color(0xFF8B5CF6),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => HelpAndSupportView(),
+                            builder: (context) => const HelpAndSupportView(),
                           ),
                         );
                       },
@@ -265,7 +274,7 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                         child: Text(
                           'Sign Out',
                           style: TextStyle(
-                            fontSize: screenWidth * 0.04,
+                            fontSize: screenWidth * 0.04, // 4% of screen width
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -281,11 +290,111 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
     );
   }
 
-  String _buildDisplayName(String? first, String? last) {
-    final parts = <String>[];
-    if ((first ?? '').trim().isNotEmpty) parts.add(first!.trim());
-    if ((last ?? '').trim().isNotEmpty) parts.add(last!.trim());
-    return parts.isNotEmpty ? parts.join(' ') : 'User';
+  Widget _buildProfileCard(BuildContext context, double screenWidth, double screenHeight) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(screenWidth * 0.02),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          // Profile Image with Status Indicator
+          Stack(
+            children: [
+              Container(
+                width: screenWidth * 0.20, // 20% of screen width
+                height: screenWidth * 0.20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF9747FF),
+                ),
+                child: Center(
+                  child: Text(
+                    _username?.substring(0, 1).toUpperCase() ?? 'U',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenWidth * 0.08,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              // Online Status Indicator
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: screenWidth * 0.04,
+                  height: screenWidth * 0.04,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(width: screenWidth * 0.04), // 4% of screen width
+
+          // Profile Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _username ?? 'Loading...',
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.045, // 4.5% of screen width
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.005), // 0.5% of screen height
+                Text(
+                  _email ?? '',
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.035, // 3.5% of screen width
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Edit Icon
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditProfileScreen(),
+                ),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.all(screenWidth * 0.02),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: screenWidth * 0.04,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildMenuItem({
@@ -294,13 +403,13 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
     required String title,
     String? subtitle,
     required Color iconColor,
-    required VoidCallback onTap, // Added onTap parameter
+    required VoidCallback onTap,
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return GestureDetector(
-      onTap: onTap, // Made the entire container tappable
+      onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.all(screenWidth * 0.04), // 4% of screen width

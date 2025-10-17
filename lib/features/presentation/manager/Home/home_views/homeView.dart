@@ -43,6 +43,19 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final walletState = ref.watch(walletNotifierProvider);
     final walletNotifier = ref.read(walletNotifierProvider.notifier);
     final user = ref.watch(userProvider);
+    final width = MediaQuery.of(context).size.width;
+    final bool isTablet = width >= 600 && width < 1024;
+    final bool isDesktop = width >= 1024;
+    final double appBarHeight = isDesktop ? 96 : (isTablet ? 88 : 72);
+    final double headerHPad = isDesktop ? 28 : (isTablet ? 24 : 20);
+    final double headerVPad = isDesktop ? 14 : (isTablet ? 12 : 10);
+    final double avatarRadius = isDesktop ? 24 : (isTablet ? 22 : 20);
+    final double titleFont = isDesktop ? 18 : (isTablet ? 17 : 16);
+    final double subtitleFont = isDesktop ? 15 : (isTablet ? 14 : 13);
+    final double listHPad = isDesktop ? 32 : (isTablet ? 24 : 16);
+    final double listTPad = isDesktop ? 24 : 16;
+    final double sectionGap = isDesktop ? 28 : 24;
+    final double contentMaxWidth = isDesktop ? 1200 : (isTablet ? 900 : double.infinity);
     String displayName = (() {
       final parts = <String>[];
       if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName.trim());
@@ -53,18 +66,18 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(80),
+          preferredSize: Size.fromHeight(appBarHeight),
           child: AppBar(
             backgroundColor: Colors.grey[50],
             elevation: 0,
             automaticallyImplyLeading: false,
             flexibleSpace: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: EdgeInsets.symmetric(horizontal: headerHPad, vertical: headerVPad),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 20,
+                      radius: avatarRadius,
                       backgroundColor: Colors.grey[300],
                       child: const Icon(Icons.person, color: Colors.grey),
                     ),
@@ -76,9 +89,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         children: [
                           Text(
                             'Hi, $displayName',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.black,
-                              fontSize: 16,
+                              fontSize: titleFont,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -87,7 +100,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                             'How are you today?',
                             style: TextStyle(
                               color: Colors.grey,
-                              fontSize: 14,
+                              fontSize: subtitleFont,
                             ),
                           ),
                         ],
@@ -116,26 +129,78 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 walletNotifier.clearError();
               });
             }
+            final bottomInset = MediaQuery.of(context).padding.bottom + 50;
+            final isWide = isTablet || isDesktop;
+            if (!isWide) {
+              // Mobile: vertical stack
+              return ListView(
+                controller: _scrollController,
+                padding: EdgeInsets.fromLTRB(
+                  listHPad,
+                  listTPad,
+                  listHPad,
+                  bottomInset,
+                ),
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  const WalletCard(),
+                  QuickActions(
+                    onPaymentSuccess: () {
+                      walletNotifier.refreshTransactions();
+                    },
+                  ),
+                  SizedBox(height: sectionGap),
+                  const RecentTransactions(),
+                ],
+              );
+            }
+
+            // Tablet/Desktop: wider layout
+            final double maxW = contentMaxWidth;
+            final double gap = 16;
+            final double leftW = (maxW - gap) * 0.62;
+            final double rightW = (maxW - gap) * 0.38;
+
             return ListView(
               controller: _scrollController,
-              // Add extra bottom padding (including safe-area inset) so the last items can be fully scrolled into view.
               padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                MediaQuery.of(context).padding.bottom + 50,
+                listHPad,
+                listTPad,
+                listHPad,
+                bottomInset,
               ),
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                const WalletCard(),
-                QuickActions(
-                  onPaymentSuccess: () {
-                    walletNotifier.refreshTransactions();
-                  },
+                Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxW),
+                    child: Wrap(
+                      spacing: gap,
+                      runSpacing: gap,
+                      children: [
+                        SizedBox(
+                          width: leftW,
+                          child: const WalletCard(),
+                        ),
+                        SizedBox(
+                          width: rightW,
+                          child: QuickActions(
+                            onPaymentSuccess: () {
+                              walletNotifier.refreshTransactions();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 24),
-                const RecentTransactions(),
-                // RevenueChart removed from home view per request
+                SizedBox(height: sectionGap),
+                Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxW),
+                    child: const RecentTransactions(),
+                  ),
+                ),
               ],
             );
           },
