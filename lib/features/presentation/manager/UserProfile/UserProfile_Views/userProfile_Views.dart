@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/edit_profile/edit_profile_view/edit_profile_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ComplianceView/compliance_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/HelpandSupport/help_and_support_view.dart';
@@ -353,11 +354,6 @@ class _userProfileState extends ConsumerState<userProfile> {
                       width: 2,
                     ),
                   ),
-                  child: Icon(
-                    Icons.verified,
-                    color: Colors.white,
-                    size: screenWidth * 0.025,
-                  ),
                 ),
               ),
             ],
@@ -394,9 +390,11 @@ class _userProfileState extends ConsumerState<userProfile> {
           // Edit Icon
           GestureDetector(
             onTap: () {
-              // TODO: Implement edit profile
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit profile coming soon')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditProfileScreen(),
+                ),
               );
             },
             child: Container(
