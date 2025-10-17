@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
@@ -7,6 +8,7 @@ import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Re
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Forgot_Password/Views/forgot_password_request_view.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
+import 'package:cryphoria_mobile/shared/validation/validators.dart';
 
 class LogIn extends ConsumerStatefulWidget {
   const LogIn({super.key});
@@ -16,8 +18,13 @@ class LogIn extends ConsumerStatefulWidget {
 }
 
 class _LogInState extends ConsumerState<LogIn> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  bool _submitted = false;
+  String _email = '';
+  String? _noAccountEmail; // shows inline banner when no account exists
 
   LoginViewModel get _viewModel => ref.read(loginViewModelProvider);
 
@@ -47,19 +54,52 @@ class _LogInState extends ConsumerState<LogIn> {
         );
       }
     } else if (viewModel.error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(viewModel.error!)));
+      final err = viewModel.error!;
+      if (_isNoAccountError(err)) {
+        final email = _emailController.text.trim();
+        if (!mounted) return;
+        setState(() {
+          _noAccountEmail = email.isNotEmpty ? email : null;
+        });
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+      }
     }
   }
 
+  bool _isNoAccountError(String error) {
+    final s = error.toLowerCase();
+    return s.contains('user not found') ||
+        s.contains('no user') ||
+        s.contains('no account') ||
+        s.contains('account not found') ||
+        s.contains('not registered') ||
+        s.contains('email not found') ||
+        s.contains("doesn't exist") ||
+        s.contains('does not exist') ||
+        s.contains('unregistered') ||
+        s.contains('unknown user') ||
+        s.contains('email not registered') ||
+        s.contains('record not found');
+  }
+
   void _login() {
-    if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
-      _viewModel.login(
-        _emailController.text,
-        _passwordController.text,
+    setState(() => _submitted = true);
+    final form = _formKey.currentState;
+    if (form == null || !form.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fix the highlighted fields'),
+          backgroundColor: Colors.red,
+        ),
       );
+      return;
     }
+    _viewModel.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
   }
 
   @override
@@ -118,22 +158,148 @@ class _LogInState extends ConsumerState<LogIn> {
 
   Widget _buildLoginForm(BuildContext context) {
     final viewModel = ref.watch(loginViewModelProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isWide = screenWidth > 800;
+    final double horizontalPadding = isWide ? 48.0 : 32.0;
+    final double formMaxWidth = screenWidth > 1200 ? 520.0 : (isWide ? 460.0 : 400.0);
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.all(horizontalPadding),
       child: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Title
-                const Text(
-                  'Welcome Back!',
-                  style: TextStyle(
-                    fontSize: 28,
+            constraints: BoxConstraints(maxWidth: formMaxWidth),
+            child: Form(
+              key: _formKey,
+              autovalidateMode: _submitted
+                  ? AutovalidateMode.onUserInteraction
+                  : AutovalidateMode.disabled,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                if (((viewModel.error ?? '').isNotEmpty) && (
+                      (viewModel.error!.toLowerCase().contains('user not found')) ||
+                      (viewModel.error!.toLowerCase().contains('no user')) ||
+                      (viewModel.error!.toLowerCase().contains('no account')) ||
+                      (viewModel.error!.toLowerCase().contains('account not found')) ||
+                      (viewModel.error!.toLowerCase().contains('not registered')) ||
+                      (viewModel.error!.toLowerCase().contains('email not found')) ||
+                      (viewModel.error!.toLowerCase().contains("doesn't exist")) ||
+                      (viewModel.error!.toLowerCase().contains('does not exist')) ||
+                      (viewModel.error!.toLowerCase().contains('unregistered')) ||
+                      (viewModel.error!.toLowerCase().contains('unknown user')) ||
+                      (viewModel.error!.toLowerCase().contains('email not registered')) ||
+                      (viewModel.error!.toLowerCase().contains('record not found'))
+                    )) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.info_outline, color: Colors.orange),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'No account exists for \'' + _emailController.text.trim() + '\'.',
+                                style: TextStyle(color: Colors.orange.shade800, fontSize: 13),
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => RegisterView(
+                                            noAccountEmail: _emailController.text.trim(),
+                                            prefillEmail: true,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: const Text('Create Account'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                  if (_noAccountEmail != null && (_noAccountEmail!.trim().isNotEmpty)) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.info_outline, color: Colors.orange),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'No account exists for ${_noAccountEmail}.',
+                                  style: TextStyle(color: Colors.orange.shade800, fontSize: 13),
+                                ),
+                                const SizedBox(height: 6),
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => RegisterView(
+                                              noAccountEmail: _noAccountEmail,
+                                              prefillEmail: true,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text('Create Account'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        setState(() => _noAccountEmail = null);
+                                      },
+                                      child: const Text('Dismiss'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  // Title
+                  const Text(
+                    'Welcome Back!',
+                    style: TextStyle(
+                      fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
@@ -157,6 +323,15 @@ class _LogInState extends ConsumerState<LogIn> {
                   controller: _emailController,
                   label: 'Email',
                   icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: AppValidators.validateEmail,
+                  inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
+                  onChanged: (v) => setState(() => _email = (v ?? '').trim()),
+                  suffixIcon: (_submitted && _email.isNotEmpty)
+                      ? (AppValidators.validateEmail(_email) == null
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : const Icon(Icons.error_outline, color: Colors.red))
+                      : null,
                 ),
                 const SizedBox(height: 20),
 
@@ -166,6 +341,11 @@ class _LogInState extends ConsumerState<LogIn> {
                   label: 'Password',
                   icon: Icons.lock_outline,
                   isPassword: true,
+                  validator: (v) {
+                    final value = (v ?? '').trim();
+                    if (value.isEmpty) return 'Password is required';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -278,7 +458,7 @@ class _LogInState extends ConsumerState<LogIn> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildTextField({
@@ -286,10 +466,19 @@ class _LogInState extends ConsumerState<LogIn> {
     required String label,
     required IconData icon,
     bool isPassword = false,
+    String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
+    TextInputType? keyboardType,
+    void Function(String?)? onChanged,
+    Widget? suffixIcon,
   }) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: isPassword,
+      validator: validator,
+      inputFormatters: inputFormatters,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(
@@ -297,6 +486,7 @@ class _LogInState extends ConsumerState<LogIn> {
           color: Colors.black54,
           size: 20,
         ),
+        suffixIcon: suffixIcon,
         labelStyle: const TextStyle(
           color: Colors.black54,
           fontSize: 14,
@@ -315,6 +505,7 @@ class _LogInState extends ConsumerState<LogIn> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
         ),
+        errorMaxLines: 2,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       style: const TextStyle(

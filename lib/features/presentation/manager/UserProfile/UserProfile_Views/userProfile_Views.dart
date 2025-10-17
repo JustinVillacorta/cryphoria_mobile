@@ -26,12 +26,19 @@ class _userProfileState extends ConsumerState<userProfile> {
   }
 
   Future<void> _loadUserData() async {
+    final user = ref.watch(userProvider);
+    String displayName = (() {
+      final parts = <String>[];
+      if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName.trim());
+      if ((user?.lastName ?? '').trim().isNotEmpty) parts.add(user!.lastName!.trim());
+      return parts.isNotEmpty ? parts.join(' ') : 'User';
+    })();
     final authDataSource = ref.read(authLocalDataSourceProvider);
     final authUser = await authDataSource.getAuthUser();
 
     if (authUser != null) {
       setState(() {
-        _username = authUser.firstName;
+        _username = displayName;
         _email = authUser.email;
       });
     }
