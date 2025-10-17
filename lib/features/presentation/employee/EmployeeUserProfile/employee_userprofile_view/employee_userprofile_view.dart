@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
+import 'package:cryphoria_mobile/shared/widgets/profile_header.dart';
 
 
 class EmployeeUserProfileScreen extends ConsumerStatefulWidget {
@@ -18,6 +19,32 @@ class EmployeeUserProfileScreen extends ConsumerStatefulWidget {
 
 class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileScreen> {
 
+  String _username = 'User';
+  String _email = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAuthUser();
+  }
+
+  Future<void> _loadAuthUser() async {
+    try {
+      final authDataSource = ref.read(authLocalDataSourceProvider);
+      final authUser = await authDataSource.getAuthUser();
+      final user = ref.read(userProvider);
+      final displayName = _buildDisplayName(user?.firstName, user?.lastName);
+      if (mounted) {
+        setState(() {
+          _username = displayName;
+          _email = authUser?.email ?? '';
+        });
+      }
+    } catch (_) {
+      // ignore load errors silently for header
+    }
+  }
+
   Future<void> _logout() async {
     final logoutViewModel = ref.read(logoutViewModelProvider);
     try {
@@ -25,11 +52,11 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
       final shouldLogout = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: const Text('Logout', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.white,
+          title: const Text('Logout', style: TextStyle(color: Colors.black87)),
           content: const Text(
             'Are you sure you want to logout?',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: Colors.grey),
           ),
           actions: [
             TextButton(
@@ -146,41 +173,35 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
 
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final paddingValue = screenWidth * 0.05; // 5% of screen width for padding
-    final headerHeight = screenHeight * 0.22; // 25% of screen height for gradient header
+    final paddingValue = screenWidth * 0.05;
+
+    final user = ref.watch(userProvider);
+    final displayName = _buildDisplayName(user?.firstName, user?.lastName);
 
     return Scaffold(
       body: Column(
         children: [
-          // Gradient Header Section
-          Container(
-            height: headerHeight,
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF8B5CF6), // Purple top
-                  Color(0xFF7C3AED), // Slightly darker purple
-                ],
-              ),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: paddingValue),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end, // Changed from center to end
-                  children: [
-                    // Profile Card
-                    _buildProfileCard(context, screenWidth, screenHeight),
-                  ],
+          // Unified Profile Header (matches manager style)
+          ProfileHeader(
+            
+            title: displayName,
+            subtitle: _email.isNotEmpty ? _email : null,
+            onEdit: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditProfileScreen(),
                 ),
-              ),
-            ),
+              );
+            },
+            gradientStart: const Color(0xFF8B5CF6),
+            gradientEnd: const Color(0xFF7C3AED),
+            ringColor: const Color(0xFF8B5CF6),
+            height: screenHeight * 0.26,
+            avatarRadius: 44,
           ),
 
-          // White Content Section
+          // Content Section
           Expanded(
             child: Container(
               width: double.infinity,
@@ -191,7 +212,7 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                 padding: EdgeInsets.all(paddingValue),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.02), // 2% of screen height
+                    SizedBox(height: screenHeight * 0.02),
                     SizedBox(height: screenHeight * 0.015),
 
                     _buildMenuItem(
@@ -228,7 +249,6 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                       },
                     ),
 
-
                     // Sign Out Button
                     Container(
                       width: double.infinity,
@@ -242,7 +262,7 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
                         child: Text(
                           'Sign Out',
                           style: TextStyle(
-                            fontSize: screenWidth * 0.04, // 4% of screen width
+                            fontSize: screenWidth * 0.04,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -258,118 +278,11 @@ class _EmployeeUserProfileScreenState extends ConsumerState<EmployeeUserProfileS
     );
   }
 
-  Widget _buildProfileCard(BuildContext context, double screenWidth, double screenHeight) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(screenWidth * 0.02),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          // Profile Image with Status Indicator
-          Stack(
-            children: [
-              Container(
-                width: screenWidth * 0.20, // 15% of screen width
-                height: screenWidth * 0.20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: const DecorationImage(
-                    image: NetworkImage(
-                      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-                    ),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              // Online Status Indicator
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: screenWidth * 0.04,
-                  height: screenWidth * 0.04,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 2,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.verified,
-                    color: Colors.white,
-                    size: screenWidth * 0.025,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(width: screenWidth * 0.04), // 4% of screen width
-
-          // Profile Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  (() {
-                    final user = ref.watch(userProvider);
-                    final parts = <String>[];
-                    if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName.trim());
-                    if ((user?.lastName ?? '').trim().isNotEmpty) parts.add(user!.lastName!.trim());
-                    return parts.isNotEmpty ? parts.join(' ') : 'User';
-                  })(),
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.045, // 4.5% of screen width
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: screenHeight * 0.005), // 0.5% of screen height
-                Text(
-                  'Financial Manager',
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.035, // 3.5% of screen width
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Edit Icon
-          // Edit Icon
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditProfileScreen(),
-                ),
-              );
-            },
-            child: Container(
-              padding: EdgeInsets.all(screenWidth * 0.02),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.edit_outlined,
-                color: Colors.white,
-                size: screenWidth * 0.04,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  String _buildDisplayName(String? first, String? last) {
+    final parts = <String>[];
+    if ((first ?? '').trim().isNotEmpty) parts.add(first!.trim());
+    if ((last ?? '').trim().isNotEmpty) parts.add(last!.trim());
+    return parts.isNotEmpty ? parts.join(' ') : 'User';
   }
 
   Widget _buildMenuItem({

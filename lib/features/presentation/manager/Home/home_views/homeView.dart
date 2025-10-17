@@ -43,7 +43,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final walletState = ref.watch(walletNotifierProvider);
     final walletNotifier = ref.read(walletNotifierProvider.notifier);
     final user = ref.watch(userProvider);
-    final String displayName = (() {
+    String displayName = (() {
       final parts = <String>[];
       if ((user?.firstName ?? '').trim().isNotEmpty) parts.add(user!.firstName.trim());
       if ((user?.lastName ?? '').trim().isNotEmpty) parts.add(user!.lastName!.trim());
@@ -92,10 +92,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           ),
                         ],
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined, color: Colors.black),
-                      onPressed: () {},
                     ),
                     IconButton(
                       icon: const Icon(Icons.refresh, color: Colors.black),

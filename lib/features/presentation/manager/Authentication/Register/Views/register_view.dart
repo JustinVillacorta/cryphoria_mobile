@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/gestures.dart';
 
@@ -7,6 +8,8 @@ import 'package:cryphoria_mobile/features/presentation/widgets/terms_and_conditi
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/role_selector.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/OTP_Verification/Views/otp_verification_view.dart';
+import 'package:cryphoria_mobile/shared/validation/validators.dart';
+import 'package:cryphoria_mobile/shared/widgets/password_strength_bar.dart';
 
 class RegisterView extends ConsumerStatefulWidget {
   const RegisterView({super.key});
@@ -16,6 +19,7 @@ class RegisterView extends ConsumerStatefulWidget {
 }
 
 class _RegisterViewState extends ConsumerState<RegisterView> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -23,6 +27,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _securityAnswerController = TextEditingController();
+  String _password = '';
   
   // Role selection state
   String _selectedRole = 'Employee'; // Default to Employee
@@ -130,10 +135,13 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                 // Title
                 const Text(
                   'Create Account',
@@ -180,6 +188,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   controller: _firstNameController,
                   label: 'First Name',
                   icon: Icons.person_outline,
+                  validator: (v) => AppValidators.validateName(v, min: 2, max: 50),
+                  inputFormatters: AppValidators.nameInputFormatters,
+                  onChanged: (_) {},
                 ),
                 const SizedBox(height: 20),
 
@@ -188,6 +199,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   controller: _lastNameController,
                   label: 'Last Name',
                   icon: Icons.person_outline,
+                  validator: (v) => AppValidators.validateName(v, min: 2, max: 50),
+                  inputFormatters: AppValidators.nameInputFormatters,
+                  onChanged: (_) {},
                 ),
                 const SizedBox(height: 20),
 
@@ -196,6 +210,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   controller: _usernameController,
                   label: 'Username',
                   icon: Icons.account_circle_outlined,
+                  validator: (v) => AppValidators.validateUsername(v, min: 3, max: 20),
+                  inputFormatters: AppValidators.usernameInputFormatters,
+                  onChanged: (_) {},
                 ),
                 const SizedBox(height: 20),
 
@@ -204,6 +221,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   controller: _emailController,
                   label: 'Email',
                   icon: Icons.email_outlined,
+                  validator: AppValidators.validateEmail,
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) {},
                 ),
                 const SizedBox(height: 20),
 
@@ -213,7 +233,10 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   label: 'Password',
                   icon: Icons.lock_outline,
                   isPassword: true,
+                  validator: (v) => AppValidators.validatePassword(v, min: AppValidators.defaultPasswordMin, max: AppValidators.defaultPasswordMax),
+                  onChanged: (v) => setState(() => _password = v ?? ''),
                 ),
+                PasswordStrengthBar(password: _password),
                 const SizedBox(height: 20),
 
                 // Confirm Password field
@@ -222,6 +245,8 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   label: 'Confirm Password',
                   icon: Icons.lock_outline,
                   isPassword: true,
+                  validator: (v) => AppValidators.validateConfirmPassword(v, _passwordController.text),
+                  onChanged: (_) {},
                 ),
                 const SizedBox(height: 20),
 
@@ -230,6 +255,8 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   controller: _securityAnswerController,
                   label: 'Security Answer (e.g., My favorite pet is Max)',
                   icon: Icons.security_outlined,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Security answer is required' : null,
+                  onChanged: (_) {},
                 ),
                 const SizedBox(height: 24),
 
@@ -365,7 +392,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildRoleCard({
@@ -421,10 +448,18 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     required String label,
     required IconData icon,
     bool isPassword = false,
+    String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
+    TextInputType? keyboardType,
+    void Function(String?)? onChanged,
   }) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: isPassword,
+      validator: validator,
+      inputFormatters: inputFormatters,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(
@@ -450,6 +485,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
         ),
+        errorMaxLines: 2,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       style: const TextStyle(
@@ -460,71 +496,62 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   }
 
   void _register() async {
-    if (_firstNameController.text.isNotEmpty && 
-        _lastNameController.text.isNotEmpty &&
-        _usernameController.text.isNotEmpty && 
-        _emailController.text.isNotEmpty && 
-        _passwordController.text.isNotEmpty &&
-        _confirmPasswordController.text.isNotEmpty &&
-        _securityAnswerController.text.isNotEmpty) {
-      
-      // Check if passwords match
-      if (_passwordController.text != _confirmPasswordController.text) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Passwords do not match'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      final viewModel = ref.read(registerViewModelProvider);
-
-      await viewModel.register(
-        _usernameController.text,
-        _passwordController.text,
-        _confirmPasswordController.text,
-        _emailController.text,
-        _firstNameController.text,
-        _lastNameController.text,
-        _securityAnswerController.text,
-        _selectedRole,
-      );
-      
-      // Check if registration was successful and redirect to login
-      if (!mounted) return;
-      
-      if (viewModel.error == null && viewModel.registerResponse != null) {
-        // Registration successful - redirect to OTP verification screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful! Please verify your email.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OTPVerificationView(
-              email: _emailController.text,
-            ),
-          ),
-        );
-      } else if (viewModel.error != null) {
-        // Show error message - this is already handled by the UI
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(viewModel.error!),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } else {
+    if (!_agreed) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill in all fields'),
+          content: Text('Please accept the Terms and Privacy Policy'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final form = _formKey.currentState;
+    if (form == null || !form.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fix the highlighted fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final viewModel = ref.read(registerViewModelProvider);
+
+    await viewModel.register(
+      _usernameController.text.trim(),
+      _passwordController.text,
+      _confirmPasswordController.text,
+      _emailController.text.trim(),
+      _firstNameController.text.trim(),
+      _lastNameController.text.trim(),
+      _securityAnswerController.text.trim(),
+      _selectedRole,
+    );
+
+    if (!mounted) return;
+
+    if (viewModel.error == null && viewModel.registerResponse != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registration successful! Please verify your email.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OTPVerificationView(
+            email: _emailController.text.trim(),
+          ),
+        ),
+      );
+    } else if (viewModel.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(viewModel.error!),
           backgroundColor: Colors.red,
         ),
       );

@@ -44,10 +44,6 @@ class EmployeeTobBarWidget extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined, color: Colors.black),
-          onPressed: onNotificationTapped,
-        ),
       ],
     );
   }
