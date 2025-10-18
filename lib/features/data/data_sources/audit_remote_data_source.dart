@@ -22,7 +22,7 @@ abstract class AuditRemoteDataSource {
   Future<bool> validateContractCode(String sourceCode);
   
   // Financial Reports
-  Future<TaxReportModel> getTaxReports();
+  Future<List<TaxReportModel>> getTaxReports();
   Future<BalanceSheetModel> getBalanceSheet();
   Future<List<BalanceSheetModel>> getAllBalanceSheets();
   Future<CashFlowModel> getCashFlow();
@@ -750,20 +750,32 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   // Financial Reports Implementation
 
   @override
-  Future<TaxReportModel> getTaxReports() async {
+  Future<List<TaxReportModel>> getTaxReports() async {
     try {
-      print("📤 Getting tax reports from /api/tax-reports/");
+      print("📤 Getting tax reports from /api/financial/tax-report/list/");
       
-      final response = await dio.get('/api/tax-reports/');
+      final response = await dio.get('/api/financial/tax-report/list/');
 
       print("📥 Tax reports response:");
       print("📊 Status code: ${response.statusCode}");
       print("📄 Response data: ${response.data}");
+      print("📄 Response data type: ${response.data.runtimeType}");
 
       if (response.statusCode == 200) {
         // Check if response data is null or empty
         if (response.data == null) {
+          print("❌ Response data is null");
           throw Exception('Empty response from tax reports endpoint');
+        }
+        
+        // Log the actual structure
+        if (response.data is Map) {
+          final data = response.data as Map;
+          print("🔍 Response keys: ${data.keys.toList()}");
+          print("🔍 Success field: ${data['success']} (${data['success'].runtimeType})");
+          print("🔍 Count field: ${data['count']} (${data['count'].runtimeType})");
+          print("🔍 Results field: ${data['results']} (${data['results'].runtimeType})");
+          print("🔍 Tax reports field: ${data['tax_reports']} (${data['tax_reports'].runtimeType})");
         }
         
         // Safely cast the response data with error handling
@@ -780,158 +792,64 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         print("📊 Tax reports response structure: ${responseData.keys.toList()}");
         print("📊 Tax reports success: ${responseData['success']}");
         
-        // Handle the actual API response structure - Tax Reports endpoint returns cash_flow_statements
-        if (responseData['success'] == true && responseData['cash_flow_statements'] != null) {
-          final cashFlowStatements = List<dynamic>.from(responseData['cash_flow_statements'] as List);
-          if (cashFlowStatements.isNotEmpty) {
-            return _convertToTaxReportModel(Map<String, dynamic>.from(cashFlowStatements.first as Map));
+        // Handle multiple possible response formats
+        if (responseData['success'] == true) {
+          // Try different possible field names for the tax reports array
+          List<dynamic> taxReports = [];
+          
+          if (responseData['tax_reports'] != null) {
+            taxReports = List<dynamic>.from(responseData['tax_reports'] as List);
+            print("📊 Found ${taxReports.length} tax reports in 'tax_reports' field");
+          } else if (responseData['results'] != null) {
+            taxReports = List<dynamic>.from(responseData['results'] as List);
+            print("📊 Found ${taxReports.length} tax reports in 'results' field");
+          } else if (responseData['data'] != null) {
+            taxReports = List<dynamic>.from(responseData['data'] as List);
+            print("📊 Found ${taxReports.length} tax reports in 'data' field");
           } else {
-            throw Exception('No cash flow statements found in tax reports response');
+            print("⚠️ No tax reports array found in response");
+            print("📊 Available fields: ${responseData.keys.toList()}");
+            return []; // Return empty list if no reports
           }
-        } else if (responseData['success'] == true && responseData['tax_reports'] != null) {
-          // Handle if it actually returns tax reports
-          final taxReports = List<dynamic>.from(responseData['tax_reports'] as List);
+          
           if (taxReports.isNotEmpty) {
-            return _convertToTaxReportModel(Map<String, dynamic>.from(taxReports.first as Map));
+            return taxReports.map((reportData) {
+              try {
+                print("🔄 Parsing tax report: ${reportData.runtimeType}");
+                return TaxReportModel.fromJson(Map<String, dynamic>.from(reportData as Map));
+              } catch (e) {
+                print("❌ Error parsing tax report: $e");
+                print("📊 Report data: $reportData");
+                // Return a basic report if parsing fails
+                return _createEmptyTaxReport();
+              }
+            }).toList();
           } else {
-            throw Exception('No tax reports found');
+            print("📊 Tax reports array is empty");
+            return []; // Return empty list if no reports
           }
         } else if (responseData['success'] == true && responseData.isEmpty) {
-          // Handle empty response - create a basic tax report
-          print("⚠️ Empty tax reports response, creating basic tax report");
-          return _createEmptyTaxReport();
+          // Handle empty response - return empty list
+          print("⚠️ Empty tax reports response, returning empty list");
+          return [];
         } else {
-          // If the response is directly the tax report data
-          return _convertToTaxReportModel(responseData);
+          print("❌ Invalid response format - success is not true");
+          print("📊 Response keys: ${responseData.keys.toList()}");
+          throw Exception('Invalid response format: (success=${responseData['success']}, keys=${responseData.keys})');
         }
       } else {
         throw Exception('Failed to get tax reports: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Error getting tax reports: $e");
+      print("❌ DioException getting tax reports: $e");
+      print("📊 DioException type: ${e.type}");
+      print("📊 DioException message: ${e.message}");
+      print("📊 DioException response: ${e.response?.data}");
       throw Exception('Network error: ${e.message}');
-    }
-  }
-
-  /// Convert API tax report data to TaxReportModel format
-  TaxReportModel _convertToTaxReportModel(Map<String, dynamic> apiData) {
-    try {
-      print("🔄 Converting API data to TaxReportModel");
-      print("📊 API data keys: ${apiData.keys.toList()}");
-      
-      // Note: The API is returning cash flow data instead of tax report data
-      // We'll create a basic tax report structure from the available data
-      final operatingActivities = _safeConvertMap(apiData['operating_activities']);
-      final investingActivities = _safeConvertMap(apiData['investing_activities']);
-      final financingActivities = _safeConvertMap(apiData['financing_activities']);
-      final cashSummary = _safeConvertMap(apiData['cash_summary']);
-      final analysis = _safeConvertMap(apiData['analysis']);
-      final metadata = _safeConvertMap(apiData['metadata']);
-
-      print("📊 Operating activities: $operatingActivities");
-      print("📊 Cash summary: $cashSummary");
-      print("📊 Analysis: $analysis");
-
-      // Safely extract nested data
-      final cashReceipts = _safeConvertMap(operatingActivities['cash_receipts']);
-      final cashPayments = _safeConvertMap(operatingActivities['cash_payments']);
-      
-      // Calculate tax-related values safely
-      final totalIncome = _safeToDouble(cashReceipts['total']);
-      final totalDeductions = _safeToDouble(cashPayments['total']);
-      final taxPayments = _safeToDouble(cashPayments['tax_payments']);
-      final taxableIncome = totalIncome - totalDeductions;
-
-      print("📊 Calculated values - Income: $totalIncome, Deductions: $totalDeductions, Tax: $taxPayments");
-
-      // Create categories safely
-      List<Map<String, dynamic>> categories;
-      try {
-        print("🔄 Creating tax categories...");
-        categories = _convertTaxCategories(operatingActivities, investingActivities, financingActivities);
-        print("✅ Created ${categories.length} tax categories");
-      } catch (e) {
-        print("❌ Error creating tax categories: $e");
-        categories = []; // Fallback to empty list
-      }
-
-      // Create a basic tax report structure from cash flow data
-      final convertedData = {
-        'id': apiData['cash_flow_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        'report_type': 'Tax Report',
-        'report_date': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
-        'period_start': apiData['period_start']?.toString() ?? DateTime.now().toIso8601String(),
-        'period_end': apiData['period_end']?.toString() ?? DateTime.now().toIso8601String(),
-        'currency': apiData['currency']?.toString() ?? 'USD',
-        'summary': {
-          'total_income': totalIncome,
-          'total_deductions': totalDeductions,
-          'taxable_income': taxableIncome,
-          'total_tax_owed': taxPayments,
-          'total_tax_paid': taxPayments,
-          'net_tax_owed': 0.0, // Calculate if needed
-          'tax_breakdown': {},
-          'income_breakdown': cashReceipts,
-          'deduction_breakdown': cashPayments,
-        },
-        'categories': categories,
-        'transactions': [],
-        'metadata': {
-          'user_id': apiData['user_id']?.toString(),
-          'generated_at': apiData['generated_at']?.toString(),
-          'transaction_count': metadata['transaction_count']?.toString(),
-          'payroll_entries': metadata['payroll_entries']?.toString(),
-          'note': 'Tax report generated from cash flow data',
-        },
-        'created_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
-        'generated_at': apiData['generated_at']?.toString(),
-      };
-
-      print("✅ Converted tax report data: $convertedData");
-      
-      // Try to create the model with extra safety
-      try {
-        return TaxReportModel.fromJson(convertedData);
-      } catch (modelError) {
-        print("❌ Error creating TaxReportModel: $modelError");
-        print("📊 Converted data that failed: $convertedData");
-        
-        // Create a minimal valid model as fallback
-        final fallbackData = {
-          'id': apiData['cash_flow_id'] ?? apiData['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-          'report_type': 'Tax Report',
-          'report_date': DateTime.now().toIso8601String(),
-          'period_start': DateTime.now().toIso8601String(),
-          'period_end': DateTime.now().toIso8601String(),
-          'currency': 'USD',
-          'summary': {
-            'total_income': 0.0,
-            'total_deductions': 0.0,
-            'taxable_income': 0.0,
-            'total_tax_owed': 0.0,
-            'total_tax_paid': 0.0,
-            'net_tax_owed': 0.0,
-            'tax_breakdown': {},
-            'income_breakdown': {},
-            'deduction_breakdown': {},
-          },
-          'categories': [],
-          'transactions': [],
-          'metadata': {
-            'user_id': apiData['user_id']?.toString() ?? 'unknown',
-            'generated_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
-            'error': 'Data conversion failed, using fallback',
-          },
-          'created_at': DateTime.now().toIso8601String(),
-          'generated_at': apiData['generated_at']?.toString() ?? DateTime.now().toIso8601String(),
-        };
-        
-        return TaxReportModel.fromJson(fallbackData);
-      }
     } catch (e, stackTrace) {
-      print("❌ Error converting tax report data: $e");
-      print("📊 Stack trace: $stackTrace");
-      rethrow;
+      print("❌ General error getting tax reports: $e");
+      print("📄 Stack trace: $stackTrace");
+      throw Exception('Failed to get tax reports: $e');
     }
   }
 
@@ -1516,57 +1434,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     } catch (e) {
       print("❌ Error converting financing activities: $e");
       return [];
-    }
-  }
-
-  /// Convert tax categories from cash flow data
-  List<Map<String, dynamic>> _convertTaxCategories(
-    Map<String, dynamic> operating,
-    Map<String, dynamic> investing,
-    Map<String, dynamic> financing,
-  ) {
-    try {
-      final List<Map<String, dynamic>> categories = [];
-      
-      print("🔄 Converting tax categories from operating: ${operating.keys.toList()}");
-      
-      // Add operating income categories
-      final cashReceipts = _safeConvertMap(operating['cash_receipts']);
-      if (cashReceipts.isNotEmpty) {
-        final incomeAmount = _safeToDouble(cashReceipts['total']);
-        if (incomeAmount > 0) {
-          categories.add({
-            'id': 'operating_income',
-            'name': 'Operating Income',
-            'description': 'Total operating income from business activities',
-            'amount': incomeAmount,
-            'type': 'income',
-            'subCategories': [],
-          });
-        }
-      }
-      
-      // Add operating expense categories
-      final cashPayments = _safeConvertMap(operating['cash_payments']);
-      if (cashPayments.isNotEmpty) {
-        final expenseAmount = _safeToDouble(cashPayments['total']);
-        if (expenseAmount > 0) {
-          categories.add({
-            'id': 'operating_expenses',
-            'name': 'Operating Expenses',
-            'description': 'Total operating expenses including payroll and supplies',
-            'amount': expenseAmount,
-            'type': 'expense',
-            'subCategories': [],
-          });
-        }
-      }
-      
-      print("✅ Created ${categories.length} tax categories");
-      return categories;
-    } catch (e) {
-      print("❌ Error in _convertTaxCategories: $e");
-      return []; // Return empty list on error
     }
   }
 

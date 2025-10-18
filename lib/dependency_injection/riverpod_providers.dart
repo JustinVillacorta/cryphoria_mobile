@@ -114,6 +114,8 @@ import '../features/data/data_sources/employee_remote_data_source.dart'
 import '../features/domain/repositories/invoice_repository.dart';
 import '../features/domain/usecases/Invoice/get_invoice_by_id_usecase.dart';
 import '../features/domain/usecases/Invoice/get_invoices_by_user_usecase.dart';
+import '../features/domain/usecases/Profile/get_profile_usecase.dart';
+import '../features/domain/usecases/Profile/update_profile_usecase.dart';
 
 
 
@@ -127,9 +129,9 @@ import '../features/domain/usecases/Invoice/get_invoices_by_user_usecase.dart';
 
 final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
-    return 'http://192.168.1.108:8000';
+    return 'http://10.250.148.205:8000';
   }
-  return 'http://192.168.1.108:8000';
+  return 'http://10.250.148.205:8000';
 });
 
 final flutterSecureStorageProvider =
@@ -269,6 +271,15 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     ref.watch(authRemoteDataSourceProvider),
     ref.watch(authLocalDataSourceProvider),
   );
+});
+
+// Profile use cases
+final getProfileUseCaseProvider = Provider<GetProfile>((ref) {
+  return GetProfile(ref.watch(authRepositoryProvider));
+});
+
+final updateProfileUseCaseProvider = Provider<UpdateProfile>((ref) {
+  return UpdateProfile(ref.watch(authRepositoryProvider));
 });
 
 final employeeRepositoryProvider = Provider<EmployeeRepository>((ref) {

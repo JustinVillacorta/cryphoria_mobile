@@ -28,4 +28,17 @@ abstract class AuthRepository {
   required String newPassword,
 });
 
+Future<AuthUser> updateProfile({
+  required String firstName,
+  required String lastName,
+  required String phoneNumber,
+  required String company,
+  required String department,
+  required String securityQuestion,
+  required String securityAnswer,
+});
+
+// Profile management
+Future<Map<String, dynamic>> getProfile();
+
 }

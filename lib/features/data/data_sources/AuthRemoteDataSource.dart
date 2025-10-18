@@ -1,5 +1,6 @@
 import 'package:cryphoria_mobile/core/error/exceptions.dart';
 import 'package:cryphoria_mobile/features/domain/entities/login_response.dart';
+import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:dio/dio.dart';
 
 abstract class AuthRemoteDataSource {
@@ -24,6 +25,20 @@ abstract class AuthRemoteDataSource {
     required String currentPassword,
     required String newPassword,
   });
+
+  // Profile update
+  Future<AuthUser> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String phoneNumber,
+    required String company,
+    required String department,
+    required String securityQuestion,
+    required String securityAnswer,
+  });
+  
+  // Profile management
+  Future<Map<String, dynamic>> getProfile();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -418,6 +433,114 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       print('🔐 [CHANGE_PASSWORD] ❌ Unexpected error: $e');
       print('🔐 [CHANGE_PASSWORD] Error type: ${e.runtimeType}');
       throw ServerException('Unexpected error during password change: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<AuthUser> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String phoneNumber,
+    required String company,
+    required String department,
+    required String securityQuestion,
+    required String securityAnswer,
+  }) async {
+    print('👤 [UPDATE_PROFILE] Starting profile update request');
+    print('👤 [UPDATE_PROFILE] Endpoint: $baseUrl/api/auth/profile-mongodb/');
+    
+    try {
+      final data = {
+        'first_name': firstName,
+        'last_name': lastName,
+        'phone_number': phoneNumber,
+        'company': company,
+        'department': department,
+        'security_question': securityQuestion,
+        'security_answer': securityAnswer,
+      };
+      
+      print('👤 [UPDATE_PROFILE] Request data: $data');
+      print('👤 [UPDATE_PROFILE] Making PUT request...');
+      
+      final response = await dio.put(
+        '$baseUrl/api/auth/profile-mongodb/',
+        data: data,
+      );
+      
+      print('👤 [UPDATE_PROFILE] ✅ Response received');
+      print('👤 [UPDATE_PROFILE] Status code: ${response.statusCode}');
+      print('👤 [UPDATE_PROFILE] Response headers: ${response.headers}');
+      print('👤 [UPDATE_PROFILE] Response data: ${response.data}');
+
+      if (response.statusCode != 200) {
+        print('👤 [UPDATE_PROFILE] ❌ Non-200 status code: ${response.statusCode}');
+        throw ServerException(
+          response.data['error']?.toString() ?? 
+          response.data['detail']?.toString() ?? 
+          'Profile update failed with status ${response.statusCode}'
+        );
+      }
+      
+      // Parse the updated user data from response
+      final responseData = response.data;
+      if (responseData is Map<String, dynamic>) {
+        final updatedUser = AuthUser.fromJson(responseData);
+        print('👤 [UPDATE_PROFILE] ✅ Profile update successful!');
+        return updatedUser;
+      } else {
+        throw ServerException('Invalid response format from profile update');
+      }
+    } on DioException catch (e) {
+      print('👤 [UPDATE_PROFILE] ❌ DioException occurred');
+      print('👤 [UPDATE_PROFILE] Error type: ${e.type}');
+      print('👤 [UPDATE_PROFILE] Error message: ${e.message}');
+      print('👤 [UPDATE_PROFILE] Response status: ${e.response?.statusCode}');
+      print('👤 [UPDATE_PROFILE] Response data: ${e.response?.data}');
+      
+      final message = e.response?.data['error']?.toString() ?? 
+                     e.response?.data['detail']?.toString() ?? 
+                     'Profile update failed';
+      print('👤 [UPDATE_PROFILE] Throwing ServerException: $message');
+      throw ServerException(message);
+    } catch (e) {
+      print('👤 [UPDATE_PROFILE] ❌ Unexpected error: $e');
+      print('👤 [UPDATE_PROFILE] Error type: ${e.runtimeType}');
+      throw ServerException('Unexpected error during profile update: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getProfile() async {
+    try {
+      print('👤 [GET_PROFILE] Fetching user profile...');
+      print('👤 [GET_PROFILE] Endpoint: $baseUrl/api/auth/profile-mongodb/');
+      
+      final response = await dio.get('$baseUrl/api/auth/profile-mongodb/');
+      
+      print('👤 [GET_PROFILE] ✅ Response received');
+      print('👤 [GET_PROFILE] Status code: ${response.statusCode}');
+      print('👤 [GET_PROFILE] Response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+      
+      throw ServerException('Failed to fetch profile with status ${response.statusCode}');
+    } on DioException catch (e) {
+      print('👤 [GET_PROFILE] ❌ DioException occurred');
+      print('👤 [GET_PROFILE] Error type: ${e.type}');
+      print('👤 [GET_PROFILE] Error message: ${e.message}');
+      print('👤 [GET_PROFILE] Response status: ${e.response?.statusCode}');
+      print('👤 [GET_PROFILE] Response data: ${e.response?.data}');
+      
+      final message = e.response?.data['error']?.toString() ?? 
+                     e.response?.data['detail']?.toString() ?? 
+                     'Failed to fetch profile';
+      throw ServerException(message);
+    } catch (e) {
+      print('👤 [GET_PROFILE] ❌ Unexpected error: $e');
+      throw ServerException('Unexpected error during profile fetch: ${e.toString()}');
     }
   }
 }

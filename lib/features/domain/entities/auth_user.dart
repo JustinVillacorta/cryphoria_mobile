@@ -7,6 +7,11 @@ class AuthUser {
   final String token;
   final bool approved;
   final bool isActive;
+  final String? phoneNumber;
+  final String? company;
+  final String? department;
+  final String? securityQuestion;
+  final String? securityAnswer;
 
   AuthUser({
     required this.userId,
@@ -17,6 +22,11 @@ class AuthUser {
     required this.token,
     required this.approved,
     required this.isActive,
+    this.phoneNumber,
+    this.company,
+    this.department,
+    this.securityQuestion,
+    this.securityAnswer,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -29,6 +39,11 @@ class AuthUser {
       token: json['token']?.toString() ?? '',
       approved: json['is_verified'] as bool? ?? json['approved'] as bool? ?? true,
       isActive: json['is_active'] as bool? ?? true,
+      phoneNumber: json['phone_number']?.toString(),
+      company: json['company']?.toString(),
+      department: json['department']?.toString(),
+      securityQuestion: json['security_question']?.toString(),
+      securityAnswer: json['security_answer']?.toString(),
     );
   }
 
@@ -42,6 +57,11 @@ class AuthUser {
       'token': token,
       'approved': approved,
       'is_active': isActive,
+      'phone_number': phoneNumber,
+      'company': company,
+      'department': department,
+      'security_question': securityQuestion,
+      'security_answer': securityAnswer,
     };
   }
 }

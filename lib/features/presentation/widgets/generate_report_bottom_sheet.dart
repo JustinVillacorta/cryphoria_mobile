@@ -585,7 +585,17 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
       // Handle the 3 financial report types with direct API calls
       if (selectedReportType == 'Tax Reports') {
         print("📤 Fetching Tax Reports...");
-        final taxReport = await reportsRepository.getTaxReports();
+        final taxReports = await reportsRepository.getTaxReports();
+        // Use the most recent report or first available report
+        final taxReport = taxReports.isNotEmpty 
+            ? taxReports.reduce((a, b) => 
+                (a.generatedAt ?? a.createdAt).isAfter(b.generatedAt ?? b.createdAt) ? a : b)
+            : null;
+        
+        if (taxReport == null) {
+          throw Exception('No tax reports available');
+        }
+        
         data = taxReport.toJson();
         reportId = 'tax_report_${DateTime.now().millisecondsSinceEpoch}';
         print("✅ Tax Reports fetched successfully");

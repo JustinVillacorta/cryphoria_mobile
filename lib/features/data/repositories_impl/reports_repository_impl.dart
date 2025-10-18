@@ -54,10 +54,20 @@ class ReportsRepositoryImpl implements ReportsRepository {
   // Financial Reports Implementation
 
   @override
-  Future<TaxReport> getTaxReports() async {
+  Future<List<TaxReport>> getTaxReports() async {
     try {
-      return await auditRemoteDataSource.getTaxReports();
-    } catch (e) {
+      print("🔄 ReportsRepositoryImpl: Getting tax reports from auditRemoteDataSource");
+      final taxReportModels = await auditRemoteDataSource.getTaxReports();
+      print("📥 ReportsRepositoryImpl: Received ${taxReportModels.length} tax report models");
+      
+      // TaxReportModel extends TaxReport, so no conversion needed
+      final taxReports = taxReportModels.cast<TaxReport>();
+      print("✅ ReportsRepositoryImpl: Successfully cast ${taxReports.length} tax reports to entities");
+      
+      return taxReports;
+    } catch (e, stackTrace) {
+      print("❌ ReportsRepositoryImpl: Error getting tax reports: $e");
+      print("📄 Stack trace: $stackTrace");
       throw Exception('Failed to get tax reports: $e');
     }
   }

@@ -440,7 +440,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
 
           // Chart Container
           Container(
-            height: 300,
+            height: 320,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -515,21 +515,22 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 2500,
+                      interval: _getYAxisInterval(cashFlow),
                       getTitlesWidget: (double value, TitleMeta meta) {
-                        if (value == 0) {
-                          return const Text('0', style: TextStyle(color: Colors.grey, fontSize: 10));
-                        }
-                        return Text(
-                          '${(value / 1000).toInt()}K',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 10,
+                        return SideTitleWidget(
+                          meta: meta,
+                          space: 8,
+                          child: Text(
+                            _formatYAxisLabel(value),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 9,
+                            ),
                           ),
                         );
                       },
-                      reservedSize: 42,
+                      reservedSize: 50,
                     ),
                   ),
                 ),
@@ -822,21 +823,27 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const Spacer(),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: color,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              amount,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -849,20 +856,26 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
       child: Row(
         children: [
-          Text(
-            item,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
+          Expanded(
+            child: Text(
+              item,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[700],
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const Spacer(),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: 14,
-              color: color,
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              amount,
+              style: TextStyle(
+                fontSize: 14,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -880,21 +893,28 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       ),
       child: Row(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
             ),
           ),
-          const Spacer(),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: color,
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 1,
+            child: Text(
+              amount,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+              textAlign: TextAlign.end,
             ),
           ),
         ],
@@ -905,21 +925,28 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   Widget _buildSummaryRow(String label, String amount, Color color, {bool isTotal = false}) {
     return Row(
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isTotal ? 16 : 14,
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
-            color: Colors.black87,
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: isTotal ? 16 : 14,
+              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
+              color: Colors.black87,
+            ),
           ),
         ),
-        const Spacer(),
-        Text(
-          amount,
-          style: TextStyle(
-            fontSize: isTotal ? 16 : 14,
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
-            color: color,
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 1,
+          child: Text(
+            amount,
+            style: TextStyle(
+              fontSize: isTotal ? 14 : 12,
+              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
+              color: color,
+            ),
+            textAlign: TextAlign.end,
           ),
         ),
       ],
@@ -933,12 +960,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     
     print("📊 Operating Cash Flow: $operatingCashFlow");
     
-    // If operating cash flow is zero, return empty data
-    if (operatingCashFlow == 0.0) {
-      print("📊 Operating Cash Flow Spots (Empty): No data available");
-      return [];
-    }
-    
+    // Always return data points, even if zero, to maintain chart structure
     final spots = [
       FlSpot(0, operatingCashFlow * 0.8),
       FlSpot(1, operatingCashFlow * 0.9),
@@ -947,7 +969,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       FlSpot(4, operatingCashFlow * 0.88),
       FlSpot(5, operatingCashFlow),
     ];
-    print("📊 Operating Cash Flow Spots (Real): $spots");
+    print("📊 Operating Cash Flow Spots: $spots");
     return spots;
   }
 
@@ -957,12 +979,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     
     print("📊 Investing Cash Flow: $investingCashFlow");
     
-    // If investing cash flow is zero, return empty data
-    if (investingCashFlow == 0.0) {
-      print("📊 Investing Cash Flow Spots (Empty): No data available");
-      return [];
-    }
-    
+    // Always return data points, even if zero, to maintain chart structure
     final spots = [
       FlSpot(0, investingCashFlow * 0.5),
       FlSpot(1, investingCashFlow * 0.7),
@@ -971,7 +988,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       FlSpot(4, investingCashFlow * 0.9),
       FlSpot(5, investingCashFlow),
     ];
-    print("📊 Investing Cash Flow Spots (Real): $spots");
+    print("📊 Investing Cash Flow Spots: $spots");
     return spots;
   }
 
@@ -979,15 +996,12 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final operatingCashFlow = cashFlow.summary.netCashFromOperations;
     final investingCashFlow = cashFlow.summary.netCashFromInvesting;
     
-    // If both are zero, return 0 for empty chart
-    if (operatingCashFlow == 0.0 && investingCashFlow == 0.0) {
-      print("📊 Y-Axis Min (Empty): 0");
-      return 0;
-    }
-    
+    // Get the minimum value from both cash flows
     final minValue = [operatingCashFlow * 0.5, investingCashFlow * 0.5].reduce((a, b) => a < b ? a : b);
-    final result = minValue - (minValue.abs() * 0.1);
-    print("📊 Y-Axis Min (Real): $result");
+    
+    // Ensure minimum is never negative for better chart display
+    final result = minValue < 0 ? minValue - (minValue.abs() * 0.1) : 0.0;
+    print("📊 Y-Axis Min: $result");
     return result;
   }
 
@@ -995,16 +1009,35 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final operatingCashFlow = cashFlow.summary.netCashFromOperations;
     final investingCashFlow = cashFlow.summary.netCashFromInvesting;
     
-    // If both are zero, return 100 for empty chart
-    if (operatingCashFlow == 0.0 && investingCashFlow == 0.0) {
-      print("📊 Y-Axis Max (Empty): 100");
-      return 100;
+    // Get the maximum value from both cash flows
+    final maxValue = [operatingCashFlow, investingCashFlow].reduce((a, b) => a > b ? a : b);
+    
+    // If max is zero, provide a default range for better chart display
+    if (maxValue == 0.0) {
+      print("📊 Y-Axis Max (Default): 10000");
+      return 10000.0;
     }
     
-    final maxValue = [operatingCashFlow, investingCashFlow].reduce((a, b) => a > b ? a : b);
+    // Add some padding above the maximum value
     final result = maxValue + (maxValue.abs() * 0.1);
     print("📊 Y-Axis Max (Real): $result");
     return result;
+  }
+
+  double _getYAxisInterval(CashFlow cashFlow) {
+    final maxValue = _getMaxY(cashFlow);
+    if (maxValue <= 1000) return 100;
+    if (maxValue <= 10000) return 1000;
+    if (maxValue <= 100000) return 10000;
+    if (maxValue <= 1000000) return 100000;
+    return 1000000;
+  }
+
+  String _formatYAxisLabel(double value) {
+    if (value == 0) return '0';
+    if (value < 1000) return value.toStringAsFixed(0);
+    if (value < 1000000) return '${(value / 1000).toStringAsFixed(0)}K';
+    return '${(value / 1000000).toStringAsFixed(1)}M';
   }
 
   Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
@@ -1041,11 +1074,13 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: FontWeight.w500,
                       color: Colors.grey[600],
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
+                    textAlign: TextAlign.left,
                   ),
                 ),
               ],
@@ -1058,7 +1093,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                 fontWeight: FontWeight.w700,
                 color: color,
               ),
-              overflow: TextOverflow.ellipsis,
+              overflow: TextOverflow.visible,
             ),
           ],
         ),

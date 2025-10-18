@@ -27,7 +27,7 @@ abstract class ReportsRepository {
   Future<bool> deleteReport(String reportId);
 
   /// Financial Reports
-  Future<TaxReport> getTaxReports();
+  Future<List<TaxReport>> getTaxReports();
   Future<BalanceSheet> getBalanceSheet();
   Future<List<BalanceSheet>> getAllBalanceSheets();
   Future<CashFlow> getCashFlow();
