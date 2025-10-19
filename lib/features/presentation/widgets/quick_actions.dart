@@ -108,7 +108,7 @@ class _QuickActionsState extends ConsumerState<QuickActions> with SingleTickerPr
               ? Padding(
             padding: const EdgeInsets.symmetric(horizontal: 0.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       _buildQuickActionItem(
                         Icons.bar_chart,

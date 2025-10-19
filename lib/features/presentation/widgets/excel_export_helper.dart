@@ -202,7 +202,7 @@ class ExcelExportHelper {
     }
   }
 
-  static Future<String> exportIncomeStatementToExcel(Portfolio portfolio) async {
+  static Future<String> exportIncomeStatementToExcel(Map<String, Map<String, Object>> incomeStatementData) async {
     try {
       var excel = Excel.createExcel();
       var sheet = excel['Income Statement'];
@@ -217,17 +217,44 @@ class ExcelExportHelper {
       // Revenue Section
       _addSectionHeader(sheet, 'REVENUE', 'A$currentRow');
       currentRow += 2;
-      _addDataRow(sheet, 'Total Revenue', portfolio.totalValue.abs(), 'A$currentRow', 'B$currentRow');
-      currentRow += 3;
+      
+      final summaryData = incomeStatementData['Summary'] as Map<String, Object>;
+      final revenueData = incomeStatementData['Revenue Detail'] as Map<String, Object>;
+      final expenseData = incomeStatementData['Expense Detail'] as Map<String, Object>;
+      
+      _addDataRow(sheet, 'Total Revenue', (summaryData['Total Revenue'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Trading Revenue', (revenueData['Trading Revenue'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Payroll Income', (revenueData['Payroll Income'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Other Income', (revenueData['Other Income'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 2;
       
       // Expenses Section
       _addSectionHeader(sheet, 'EXPENSES', 'A$currentRow');
       currentRow += 2;
-      _addDataRow(sheet, 'Total Expenses', 0.0, 'A$currentRow', 'B$currentRow');
-      currentRow += 3;
       
-      // Net Income
-      _addTotalRow(sheet, 'NET INCOME', portfolio.totalValue.abs(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Total Expenses', (summaryData['Total Expenses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Transaction Fees', (expenseData['Transaction Fees'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Trading Losses', (expenseData['Trading Losses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Operational Expenses', (expenseData['Operational Expenses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Tax Expenses', (expenseData['Tax Expenses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 2;
+      
+      // Profitability Section
+      _addSectionHeader(sheet, 'PROFITABILITY', 'A$currentRow');
+      currentRow += 2;
+      
+      _addDataRow(sheet, 'Gross Profit', (summaryData['Gross Profit'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Net Income', (summaryData['Net Income'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addTextRow(sheet, 'Profitability Status', summaryData['Profitability Status'].toString(), 'A$currentRow', 'B$currentRow');
       
       _autoFitColumns(sheet);
       
@@ -418,6 +445,21 @@ class ExcelExportHelper {
     amountCellData.value = DoubleCellValue(amount);
     amountCellData.cellStyle = CellStyle(
       bold: true,
+      horizontalAlign: HorizontalAlign.Right,
+    );
+  }
+
+  static void _addTextRow(Sheet sheet, String label, String value, String labelCell, String valueCell) {
+    var labelCellData = sheet.cell(CellIndex.indexByString(labelCell));
+    labelCellData.value = TextCellValue(label);
+    labelCellData.cellStyle = CellStyle(
+      fontSize: 11,
+    );
+    
+    var valueCellData = sheet.cell(CellIndex.indexByString(valueCell));
+    valueCellData.value = TextCellValue(value);
+    valueCellData.cellStyle = CellStyle(
+      fontSize: 11,
       horizontalAlign: HorizontalAlign.Right,
     );
   }

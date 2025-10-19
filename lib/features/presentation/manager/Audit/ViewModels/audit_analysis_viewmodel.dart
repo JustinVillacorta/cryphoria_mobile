@@ -93,33 +93,44 @@ class AuditAnalysisViewModel extends ChangeNotifier {
     int maxAttempts = 30,
     Duration pollInterval = const Duration(seconds: 1),
   }) async {
-    if (_currentAuditId == null) return false;
+    if (_currentAuditId == null) {
+      print("❌ AuditAnalysisViewModel: No audit ID available for polling");
+      return false;
+    }
 
+    print("🔄 AuditAnalysisViewModel: Starting polling for audit ID: $_currentAuditId");
     int attempts = 0;
     
     while (attempts < maxAttempts) {
       try {
+        print("📊 Polling attempt ${attempts + 1}/$maxAttempts");
         final status = await checkStatus();
+        print("📈 Current status: $status");
         
         if (status == AuditStatus.completed) {
+          print("✅ AuditAnalysisViewModel: Audit completed successfully!");
           _analysisProgress = 1.0;
           _currentStepIndex = _analysisSteps.length - 1;
           notifyListeners();
           return true;
         } else if (status == AuditStatus.failed) {
+          print("❌ AuditAnalysisViewModel: Audit failed");
           _setError('Analysis failed');
           return false;
         }
         
         attempts++;
+        print("⏳ Waiting ${pollInterval.inSeconds} seconds before next attempt...");
         await Future.delayed(pollInterval);
       } catch (e) {
+        print("❌ AuditAnalysisViewModel: Error during polling attempt $attempts - $e");
         _setError('Error during polling: ${e.toString()}');
         return false;
       }
     }
     
-    _setError('Analysis timeout');
+    print("⏰ AuditAnalysisViewModel: Polling timeout after $maxAttempts attempts");
+    _setError('Analysis timeout - please try again');
     return false;
   }
 

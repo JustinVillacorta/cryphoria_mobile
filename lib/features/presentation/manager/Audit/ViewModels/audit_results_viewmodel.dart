@@ -56,17 +56,26 @@ class AuditResultsViewModel extends ChangeNotifier {
 
   // Load audit report
   Future<void> loadAuditReport(String auditId) async {
+    print("🔄 AuditResultsViewModel: Starting to load audit report for ID: $auditId");
     _setLoading(true);
     _clearError();
 
     try {
+      print("📤 AuditResultsViewModel: Calling getAuditReportUseCase...");
       _auditReport = await getAuditReportUseCase.execute(auditId);
+      print("✅ AuditResultsViewModel: Successfully received audit report");
+      print("📊 Audit report details - ID: ${_auditReport?.id}, Score: ${_auditReport?.overallScore}");
+      
       _filteredVulnerabilities = List.from(_auditReport!.vulnerabilities);
+      print("🔍 Filtered vulnerabilities count: ${_filteredVulnerabilities.length}");
+      
       notifyListeners();
     } catch (e) {
+      print("❌ AuditResultsViewModel: Error loading audit report - $e");
       _setError('Failed to load audit report: ${e.toString()}');
     } finally {
       _setLoading(false);
+      print("🏁 AuditResultsViewModel: Finished loading audit report");
     }
   }
 

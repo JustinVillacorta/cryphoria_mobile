@@ -6,6 +6,7 @@ import '../models/balance_sheet_model.dart';
 import '../models/cash_flow_model.dart';
 import '../models/portfolio_model.dart';
 import '../models/payslip_model.dart';
+import '../models/income_statement_model.dart';
 import '../../domain/entities/audit_report.dart';
 import '../../domain/entities/smart_contract.dart';
 
@@ -28,6 +29,7 @@ abstract class AuditRemoteDataSource {
   Future<CashFlowModel> getCashFlow();
   Future<PortfolioModel> getPortfolioValue();
   Future<PayslipsResponseModel> getPayslips();
+  Future<IncomeStatementsResponseModel> getIncomeStatements();
 }
 
 class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
@@ -129,17 +131,29 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         'audit_id': auditId,
       });
 
-      print("📥 Audit report response: ${response.data}");
+      print("📥 Audit report response status: ${response.statusCode}");
+      print("📥 Audit report response data: ${response.data}");
 
       if (response.statusCode == 200) {
+        if (response.data == null) {
+          throw Exception('Empty response from server');
+        }
+        
         // Convert backend response format to expected AuditReportModel format
-        return _convertBackendResponseToAuditReport(response.data);
+        final auditReport = _convertBackendResponseToAuditReport(response.data);
+        print("✅ Successfully converted audit report");
+        return auditReport;
       } else {
         throw Exception('Failed to get audit report: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Error getting audit report: $e");
+      print("❌ DioException getting audit report: $e");
+      print("❌ Response data: ${e.response?.data}");
+      print("❌ Response status: ${e.response?.statusCode}");
       throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      print("❌ General error getting audit report: $e");
+      throw Exception('Unexpected error: ${e.toString()}');
     }
   }
 
@@ -1521,4 +1535,62 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
           throw Exception('Failed to get payslips: $e');
         }
       }
+
+  @override
+  Future<IncomeStatementsResponseModel> getIncomeStatements() async {
+    try {
+      print("📤 Getting income statements from /api/financial/income-statement/list/");
+      
+      final response = await dio.get('/api/financial/income-statement/list/');
+
+      print("📥 Income statements response:");
+      print("📊 Status code: ${response.statusCode}");
+      print("📄 Response data: ${response.data}");
+      print("📄 Response data type: ${response.data.runtimeType}");
+
+      if (response.statusCode == 200) {
+        // Handle both array response and wrapped response
+        if (response.data is List) {
+          // Direct array response
+          final incomeStatements = response.data as List;
+          print("📋 Found ${incomeStatements.length} income statements");
+          
+          return IncomeStatementsResponseModel(
+            success: true,
+            incomeStatements: incomeStatements
+                .map((item) => IncomeStatementModel.fromJson(item as Map<String, dynamic>))
+                .toList(),
+          );
+        } else if (response.data is Map<String, dynamic>) {
+          // Wrapped response
+          final responseData = response.data as Map<String, dynamic>;
+          
+          if (responseData['success'] == true) {
+            final incomeStatements = responseData['income_statements'] as List? ?? [];
+            print("📋 Found ${incomeStatements.length} income statements");
+            
+            return IncomeStatementsResponseModel(
+              success: true,
+              incomeStatements: incomeStatements
+                  .map((item) => IncomeStatementModel.fromJson(item as Map<String, dynamic>))
+                  .toList(),
+            );
+          } else {
+            throw Exception('Failed to get income statements: ${responseData['message'] ?? 'Unknown error'}');
+          }
+        } else {
+          throw Exception('Invalid response format');
+        }
+      } else {
+        throw Exception('Failed to get income statements: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      print("❌ DioException getting income statements: $e");
+      throw Exception('Network error: ${e.message}');
+    } catch (e, stackTrace) {
+      print("❌ General error getting income statements: $e");
+      print("📄 Stack trace: $stackTrace");
+      throw Exception('Failed to get income statements: $e');
+    }
+  }
 }

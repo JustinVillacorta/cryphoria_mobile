@@ -98,6 +98,7 @@ import '../features/presentation/manager/Audit/ViewModels/audit_main_viewmodel.d
 import '../features/presentation/manager/Audit/ViewModels/audit_results_viewmodel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
+import '../features/presentation/manager/Reports/Reports_ViewModel/income_statement_viewmodel.dart';
 import '../features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
 import '../features/presentation/manager/Authentication/OTP_Verification/ViewModel/otp_verification_view_model.dart';
 import '../features/presentation/manager/Authentication/Forgot_Password/ViewModel/forgot_password_request_view_model.dart';
@@ -131,7 +132,7 @@ final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
     return 'http://10.250.148.205:8000';
   }
-  return 'http://10.250.148.205:8000';
+  return 'http://192.168.5.53:8000';
 });
 
 final flutterSecureStorageProvider =
@@ -297,6 +298,10 @@ final reportsRepositoryProvider = Provider<ReportsRepository>((ref) {
     remoteDataSource: ref.watch(reportsRemoteDataSourceProvider),
     auditRemoteDataSource: ref.watch(auditRemoteDataSourceProvider),
   );
+});
+
+final incomeStatementViewModelProvider = StateNotifierProvider<IncomeStatementViewModel, IncomeStatementState>((ref) {
+  return IncomeStatementViewModel(ref.watch(reportsRepositoryProvider));
 });
 
 // -----------------------------------------------------------------------------

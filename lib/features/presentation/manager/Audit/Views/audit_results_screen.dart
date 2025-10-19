@@ -59,17 +59,25 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
 
   void _onResultsViewModelChanged() {
     if (_resultsViewModel.error != null) {
+      print("❌ AuditResultsScreen: Error in results viewmodel - ${_resultsViewModel.error}");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_resultsViewModel.error!),
+          content: Text('Error loading audit results: ${_resultsViewModel.error}'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
         ),
       );
     }
     
     // Update main ViewModel if we got a report
     if (_resultsViewModel.auditReport != null) {
+      print("✅ AuditResultsScreen: Successfully loaded audit report");
       _mainViewModel.setCurrentAuditReport(_resultsViewModel.auditReport!);
+    }
+    
+    // Debug loading state
+    if (_resultsViewModel.isLoading) {
+      print("🔄 AuditResultsScreen: Loading audit report...");
     }
   }
 
@@ -197,12 +205,45 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'The audit report is not available yet. Please try again later.',
+              'The audit report is not available yet. This might be because:\n• The audit is still processing\n• There was an error generating the report\n• The audit ID is invalid',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 16,
               ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                print("🔄 Retrying to load audit report...");
+                if (_mainViewModel.currentAuditId != null) {
+                  print("📊 Current audit ID: ${_mainViewModel.currentAuditId}");
+                  _resultsViewModel.loadAuditReport(_mainViewModel.currentAuditId!);
+                } else {
+                  print("❌ No audit ID available in main viewmodel");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No audit ID available. Please restart the audit process.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF9747FF),
+              ),
+              child: const Text(
+                'Retry Loading Report',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Audit ID: ${_mainViewModel.currentAuditId ?? 'Not available'}',
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 12,
+              ),
             ),
           ],
         ),
