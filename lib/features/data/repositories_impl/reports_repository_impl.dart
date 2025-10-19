@@ -5,6 +5,7 @@ import '../../domain/entities/cash_flow.dart';
 import '../../domain/entities/portfolio.dart';
 import '../../domain/entities/payslip.dart';
 import '../../domain/entities/income_statement.dart';
+import '../../domain/entities/investment_report.dart';
 import '../data_sources/reports_remote_data_source.dart';
 import '../data_sources/audit_remote_data_source.dart';
 
@@ -144,6 +145,25 @@ class ReportsRepositoryImpl implements ReportsRepository {
       print("❌ ReportsRepositoryImpl: Error getting income statements: $e");
       print("📄 Stack trace: $stackTrace");
       throw Exception('Failed to get income statements: $e');
+    }
+  }
+
+  @override
+  Future<List<InvestmentReport>> getInvestmentReports() async {
+    try {
+      print("🔄 ReportsRepositoryImpl: Getting investment reports from auditRemoteDataSource");
+      final responseModel = await auditRemoteDataSource.getInvestmentReports();
+      print("📥 ReportsRepositoryImpl: Received ${responseModel.investmentReports.length} investment report models");
+      
+      // Convert models to entities
+      final investmentReports = responseModel.investmentReports.cast<InvestmentReport>();
+      print("✅ ReportsRepositoryImpl: Successfully converted ${investmentReports.length} investment reports to entities");
+      
+      return investmentReports;
+    } catch (e, stackTrace) {
+      print("❌ ReportsRepositoryImpl: Error getting investment reports: $e");
+      print("📄 Stack trace: $stackTrace");
+      throw Exception('Failed to get investment reports: $e');
     }
   }
 }

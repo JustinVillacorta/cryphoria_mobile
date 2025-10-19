@@ -99,6 +99,7 @@ import '../features/presentation/manager/Audit/ViewModels/audit_results_viewmode
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import '../features/presentation/manager/Reports/Reports_ViewModel/income_statement_viewmodel.dart';
+import '../features/presentation/manager/Reports/Reports_ViewModel/investment_report_viewmodel.dart';
 import '../features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
 import '../features/presentation/manager/Authentication/OTP_Verification/ViewModel/otp_verification_view_model.dart';
 import '../features/presentation/manager/Authentication/Forgot_Password/ViewModel/forgot_password_request_view_model.dart';
@@ -302,6 +303,10 @@ final reportsRepositoryProvider = Provider<ReportsRepository>((ref) {
 
 final incomeStatementViewModelProvider = StateNotifierProvider<IncomeStatementViewModel, IncomeStatementState>((ref) {
   return IncomeStatementViewModel(ref.watch(reportsRepositoryProvider));
+});
+
+final investmentReportViewModelProvider = StateNotifierProvider<InvestmentReportViewModel, InvestmentReportState>((ref) {
+  return InvestmentReportViewModel(ref.watch(reportsRepositoryProvider));
 });
 
 // -----------------------------------------------------------------------------

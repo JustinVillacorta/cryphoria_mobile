@@ -7,6 +7,7 @@ import '../models/cash_flow_model.dart';
 import '../models/portfolio_model.dart';
 import '../models/payslip_model.dart';
 import '../models/income_statement_model.dart';
+import '../models/investment_report_model.dart';
 import '../../domain/entities/audit_report.dart';
 import '../../domain/entities/smart_contract.dart';
 
@@ -30,6 +31,7 @@ abstract class AuditRemoteDataSource {
   Future<PortfolioModel> getPortfolioValue();
   Future<PayslipsResponseModel> getPayslips();
   Future<IncomeStatementsResponseModel> getIncomeStatements();
+  Future<InvestmentReportsResponseModel> getInvestmentReports();
 }
 
 class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
@@ -1591,6 +1593,64 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       print("❌ General error getting income statements: $e");
       print("📄 Stack trace: $stackTrace");
       throw Exception('Failed to get income statements: $e');
+    }
+  }
+
+  @override
+  Future<InvestmentReportsResponseModel> getInvestmentReports() async {
+    try {
+      print("📤 Getting investment reports from /api/financial/investment-report/list/");
+      
+      final response = await dio.get('/api/financial/investment-report/list/');
+
+      print("📥 Investment reports response:");
+      print("📊 Status code: ${response.statusCode}");
+      print("📄 Response data: ${response.data}");
+      print("📄 Response data type: ${response.data.runtimeType}");
+
+      if (response.statusCode == 200) {
+        // Handle both array response and wrapped response
+        if (response.data is List) {
+          // Direct array response
+          final investmentReports = response.data as List;
+          print("📋 Found ${investmentReports.length} investment reports");
+          
+          return InvestmentReportsResponseModel(
+            success: true,
+            investmentReports: investmentReports
+                .map((item) => InvestmentReportModel.fromJson(item as Map<String, dynamic>))
+                .toList(),
+          );
+        } else if (response.data is Map<String, dynamic>) {
+          // Wrapped response
+          final responseData = response.data as Map<String, dynamic>;
+          
+          if (responseData['success'] == true) {
+            final investmentReports = responseData['investment_reports'] as List? ?? [];
+            print("📋 Found ${investmentReports.length} investment reports");
+            
+            return InvestmentReportsResponseModel(
+              success: true,
+              investmentReports: investmentReports
+                  .map((item) => InvestmentReportModel.fromJson(item as Map<String, dynamic>))
+                  .toList(),
+            );
+          } else {
+            throw Exception('Failed to get investment reports: ${responseData['message'] ?? 'Unknown error'}');
+          }
+        } else {
+          throw Exception('Invalid response format');
+        }
+      } else {
+        throw Exception('Failed to get investment reports: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      print("❌ DioException getting investment reports: $e");
+      throw Exception('Network error: ${e.message}');
+    } catch (e, stackTrace) {
+      print("❌ General error getting investment reports: $e");
+      print("📄 Stack trace: $stackTrace");
+      throw Exception('Failed to get investment reports: $e');
     }
   }
 }

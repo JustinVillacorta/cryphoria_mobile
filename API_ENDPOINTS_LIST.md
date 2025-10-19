@@ -144,6 +144,7 @@ GET    /api/balance-sheet/list/            # Get balance sheets (lines 907, 945)
 GET    /api/cash-flow/list/                # Get cash flow statements (line 988)
 GET    /api/portfolio/value/               # Get portfolio value (line 1457)
 GET    /api/financial/income-statement/list/  # Get income statements (line 1544)
+GET    /api/financial/investment-report/list/  # Get investment reports (line 1604)
 ```
 
 ---
@@ -194,12 +195,12 @@ GET    /api/support/messages/              # Get support messages (line 132)
 ---
 
 ## Summary Statistics
-- **Total Endpoints**: 97
+- **Total Endpoints**: 98
 - **Authentication**: 12 endpoints
 - **Employee Management**: 7 endpoints
 - **Wallet & Blockchain**: 9 endpoints
 - **Payroll & Payslips**: 24 endpoints
-- **Financial Reports & Analysis**: 17 endpoints
+- **Financial Reports & Analysis**: 18 endpoints
 - **AI Audit**: 9 endpoints
 - **Reports Generation**: 7 endpoints
 - **Invoices**: 1 endpoint
