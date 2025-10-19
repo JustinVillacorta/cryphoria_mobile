@@ -1,9 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'dart:async';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
-import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
-import 'dart:async';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -13,10 +12,6 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  late VideoPlayerController _videoController;
-  bool _isVideoInitialized = false;
-  String? _errorMessage;
-  // Words to cycle through with fade animation
   final List<String> _words = ['Growth', 'Insights', 'Simplicity'];
   int _wordIndex = 0;
   Timer? _wordTimer;
@@ -24,8 +19,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeVideo();
-    // Start cycling headline words
+
+    // Cycle through words every 3 seconds
     _wordTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!mounted) return;
       setState(() {
@@ -34,97 +29,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
-  void _initializeVideo() {
-    // Load video from assets
-    _videoController = VideoPlayerController.asset('assets/video/intro.mp4')
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isVideoInitialized = true;
-          });
-          _videoController.play();
-          _videoController.setLooping(true);
-          _videoController.setVolume(0.5); // Set volume to 50%
-        }
-      }).catchError((error) {
-        if (mounted) {
-          setState(() {
-            _errorMessage = 'Error loading video: $error';
-          });
-        }
-        print('Error initializing video: $error');
-      });
-  }
-
   @override
   void dispose() {
-    _videoController.dispose();
     _wordTimer?.cancel();
     super.dispose();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white, // white background
       body: Stack(
         children: [
-          // Full screen video background
-          Positioned.fill(
-            child: _isVideoInitialized
-                ? FittedBox(
-              fit: BoxFit.cover,
+          /// Adjusted Lottie Animation
+          Positioned(
+            top: 10, // moves it closer to the top
+            left: 0,
+            right: 0,
+            child: Center(
               child: SizedBox(
-                width: _videoController.value.size.width,
-                height: _videoController.value.size.height,
-                child: VideoPlayer(_videoController),
-              ),
-            )
-                : _errorMessage != null
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 60),
-                  SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      _errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            )
-                : Center(
-              child: CircularProgressIndicator(
-                color: const Color(0xFF8E24AA),
-              ),
-            ),
-          ),
-
-          // Dark gradient overlay for text readability
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.7),
-                  ],
-                  stops: const [0.5, 1.0],
+                width: 300, // adjust size here (try 250–350)
+                height: 300,
+                child: Lottie.asset(
+                  'assets/lottie/onboarding.json',
+                  fit: BoxFit.contain,
+                  repeat: true,
                 ),
               ),
             ),
           ),
 
-          // Content overlay
+          /// Foreground content
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -132,6 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  /// Headline Texts
                   Container(
                     alignment: Alignment.centerLeft,
                     child: Column(
@@ -143,15 +79,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.black,
                             height: 1.3,
-                            shadows: [
-                              Shadow(
-                                offset: Offset(0, 2),
-                                blurRadius: 8,
-                                color: Colors.black45,
-                              ),
-                            ],
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -164,56 +93,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Colors.black,
                                 height: 1.3,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(0, 2),
-                                    blurRadius: 8,
-                                    color: Colors.black45,
-                                  ),
-                                ],
                               ),
                             ),
                             const SizedBox(width: 6),
-                            // Animated word
+
+                            /// Animated Word
                             AnimatedSwitcher(
                               duration: const Duration(milliseconds: 700),
                               switchInCurve: Curves.easeIn,
                               switchOutCurve: Curves.easeOut,
-                              layoutBuilder: (currentChild, previousChildren) {
-                                // Overlap children so fade is smooth
-                                return Stack(
-                                  alignment: Alignment.centerLeft,
-                                  children: [
-                                    ...previousChildren,
-                                    if (currentChild != null) currentChild,
-                                  ],
-                                );
-                              },
                               transitionBuilder: (child, animation) {
                                 return FadeTransition(
                                   opacity: animation,
-                                  child: Align(alignment: Alignment.centerLeft, child: child),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: child,
+                                  ),
                                 );
                               },
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  _words[_wordIndex],
-                                  key: ValueKey<int>(_wordIndex),
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF9747FF),
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 8,
-                                        color: Colors.black45,
-                                      ),
-                                    ],
-                                  ),
+                              child: Text(
+                                _words[_wordIndex],
+                                key: ValueKey<int>(_wordIndex),
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF9747FF),
                                 ),
                               ),
                             ),
@@ -225,26 +131,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Subtext
+                  /// Subtext
                   Text(
                     'Designed to simplify accounting \nand accelerate crypto-native growth.',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey[300],
+                      color: Colors.grey[700],
                       height: 1.5,
-                      shadows: const [
-                        Shadow(
-                          offset: Offset(0, 1),
-                          blurRadius: 4,
-                          color: Colors.black45,
-                        ),
-                      ],
                     ),
                   ),
 
                   const SizedBox(height: 32),
 
-                  // Get Started Button at the bottom
+                  /// Get Started Button
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -262,7 +161,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 2,
-                        shadowColor: const Color(0xFF9747FF).withOpacity(0.5),
                       ),
                       child: const Text(
                         'Get Started',
@@ -274,24 +172,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 16),
 
-                  // Already have an account text
+                  /// Login Link
                   Center(
                     child: GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const LogIn(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const LogIn()),
                         );
                       },
                       child: RichText(
                         text: TextSpan(
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[400],
+                            color: Colors.grey[700],
                           ),
                           children: const [
                             TextSpan(text: 'Already have an account? '),
@@ -307,7 +204,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 60)
+                  const SizedBox(height: 60),
                 ],
               ),
             ),
