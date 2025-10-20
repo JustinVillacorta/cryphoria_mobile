@@ -106,7 +106,7 @@ class _QuickActionsState extends ConsumerState<QuickActions> with SingleTickerPr
           curve: Curves.easeInOut,
           child: _expanded
               ? Padding(
-                  padding: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 0.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [

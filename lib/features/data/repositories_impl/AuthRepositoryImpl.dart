@@ -94,4 +94,39 @@ class AuthRepositoryImpl implements AuthRepository {
     
     print('🔐 [AUTH_REPO] ✅ Password change completed successfully');
   }
+
+  @override
+  Future<AuthUser> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String phoneNumber,
+    required String company,
+    required String department,
+    required String securityQuestion,
+    required String securityAnswer,
+  }) async {
+    print('👤 [AUTH_REPO] Profile update request received');
+    print('👤 [AUTH_REPO] Delegating to remote data source...');
+    
+    final updatedUser = await remoteDataSource.updateProfile(
+      firstName: firstName,
+      lastName: lastName,
+      phoneNumber: phoneNumber,
+      company: company,
+      department: department,
+      securityQuestion: securityQuestion,
+      securityAnswer: securityAnswer,
+    );
+    
+    // Cache the updated user data
+    await localDataSource.cacheAuthUser(updatedUser);
+    
+    print('👤 [AUTH_REPO] ✅ Profile update completed successfully');
+    return updatedUser;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getProfile() async {
+    return await remoteDataSource.getProfile();
+  }
 }

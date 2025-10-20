@@ -389,13 +389,30 @@ class _userProfileState extends ConsumerState<userProfile> {
 
           // Edit Icon
           GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditProfileScreen(),
-                ),
-              );
+            onTap: () async {
+              final authDataSource = ref.read(authLocalDataSourceProvider);
+              final authUser = await authDataSource.getAuthUser();
+              
+              if (authUser != null) {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditProfileScreen(currentUser: authUser),
+                  ),
+                );
+                
+                // If profile was updated, refresh the user data
+                if (result != null) {
+                  _loadUserData();
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('User data not found. Please log in again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             },
             child: Container(
               padding: EdgeInsets.all(screenWidth * 0.02),

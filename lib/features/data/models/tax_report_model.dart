@@ -16,6 +16,15 @@ class TaxReportModel extends TaxReport {
     required super.metadata,
     required super.createdAt,
     super.generatedAt,
+    super.llmAnalysis,
+    super.reportId,
+    super.status,
+    super.totalGains,
+    super.totalLosses,
+    super.netPnl,
+    super.totalIncome,
+    super.totalExpenses,
+    super.taxDeductionSummary,
   });
 
   factory TaxReportModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +43,15 @@ class TaxReportModel extends TaxReport {
       generatedAt: json['generated_at'] != null 
           ? _safeParseDateTime(json['generated_at']) 
           : null,
+      llmAnalysis: json['llm_analysis']?.toString(),
+      reportId: json['report_id']?.toString(),
+      status: json['status']?.toString(),
+      totalGains: json['total_gains'] != null ? _safeToDouble(json['total_gains']) : null,
+      totalLosses: json['total_losses'] != null ? _safeToDouble(json['total_losses']) : null,
+      netPnl: json['net_pnl'] != null ? _safeToDouble(json['net_pnl']) : null,
+      totalIncome: json['total_income'] != null ? _safeToDouble(json['total_income']) : null,
+      totalExpenses: json['total_expenses'] != null ? _safeToDouble(json['total_expenses']) : null,
+      taxDeductionSummary: _safeConvertMap(json['tax_deduction_summary']),
     );
   }
 
@@ -48,6 +66,20 @@ class TaxReportModel extends TaxReport {
       }
     }
     return DateTime.now();
+  }
+
+  static double _safeToDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      if (value.toLowerCase() == 'undefined' || value.toLowerCase() == 'null') {
+        return 0.0;
+      }
+      final parsed = double.tryParse(value);
+      return parsed ?? 0.0;
+    }
+    return 0.0;
   }
 
   static Map<String, dynamic> _safeConvertMap(dynamic value) {
@@ -115,6 +147,15 @@ class TaxReportModel extends TaxReport {
       'metadata': metadata,
       'created_at': createdAt.toIso8601String(),
       'generated_at': generatedAt?.toIso8601String(),
+      'llm_analysis': llmAnalysis,
+      'report_id': reportId,
+      'status': status,
+      'total_gains': totalGains,
+      'total_losses': totalLosses,
+      'net_pnl': netPnl,
+      'total_income': totalIncome,
+      'total_expenses': totalExpenses,
+      'tax_deduction_summary': taxDeductionSummary,
     };
   }
 }

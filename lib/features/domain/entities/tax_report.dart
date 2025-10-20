@@ -13,6 +13,15 @@ class TaxReport {
   final Map<String, dynamic> metadata;
   final DateTime createdAt;
   final DateTime? generatedAt;
+  final String? llmAnalysis;
+  final String? reportId;
+  final String? status;
+  final double? totalGains;
+  final double? totalLosses;
+  final double? netPnl;
+  final double? totalIncome;
+  final double? totalExpenses;
+  final Map<String, dynamic>? taxDeductionSummary;
 
   const TaxReport({
     required this.id,
@@ -27,6 +36,15 @@ class TaxReport {
     required this.metadata,
     required this.createdAt,
     this.generatedAt,
+    this.llmAnalysis,
+    this.reportId,
+    this.status,
+    this.totalGains,
+    this.totalLosses,
+    this.netPnl,
+    this.totalIncome,
+    this.totalExpenses,
+    this.taxDeductionSummary,
   });
 
   factory TaxReport.fromJson(Map<String, dynamic> json) {
@@ -49,6 +67,15 @@ class TaxReport {
       generatedAt: json['generated_at'] != null 
           ? DateTime.parse(json['generated_at'] as String) 
           : null,
+      llmAnalysis: json['llm_analysis'] as String?,
+      reportId: json['report_id'] as String?,
+      status: json['status'] as String?,
+      totalGains: json['total_gains'] != null ? (json['total_gains'] as num).toDouble() : null,
+      totalLosses: json['total_losses'] != null ? (json['total_losses'] as num).toDouble() : null,
+      netPnl: json['net_pnl'] != null ? (json['net_pnl'] as num).toDouble() : null,
+      totalIncome: json['total_income'] != null ? (json['total_income'] as num).toDouble() : null,
+      totalExpenses: json['total_expenses'] != null ? (json['total_expenses'] as num).toDouble() : null,
+      taxDeductionSummary: json['tax_deduction_summary'] as Map<String, dynamic>?,
     );
   }
 
@@ -66,6 +93,15 @@ class TaxReport {
       'metadata': metadata,
       'created_at': createdAt.toIso8601String(),
       'generated_at': generatedAt?.toIso8601String(),
+      'llm_analysis': llmAnalysis,
+      'report_id': reportId,
+      'status': status,
+      'total_gains': totalGains,
+      'total_losses': totalLosses,
+      'net_pnl': netPnl,
+      'total_income': totalIncome,
+      'total_expenses': totalExpenses,
+      'tax_deduction_summary': taxDeductionSummary,
     };
   }
 }

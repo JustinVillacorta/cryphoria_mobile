@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../Reports_ViewModel/portfolio_view_model.dart';
-import '../../../../domain/entities/portfolio.dart';
+import '../Reports_ViewModel/income_statement_viewmodel.dart';
+import '../../../../domain/entities/income_statement.dart';
+import '../../../../../dependency_injection/riverpod_providers.dart';
 import '../../../widgets/excel_export_helper.dart';
 import '../../../widgets/pdf_generation_helper.dart';
 
@@ -19,18 +20,18 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
   @override
   void initState() {
     super.initState();
-    // Load portfolio data only if not already loaded
+    // Load income statement data only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final state = ref.read(portfolioViewModelProvider);
-      if (state.portfolio == null && !state.isLoading) {
-        ref.read(portfolioViewModelProvider.notifier).loadPortfolioValue();
+      final state = ref.read(incomeStatementViewModelProvider);
+      if (!state.hasData && !state.isLoading) {
+        ref.read(incomeStatementViewModelProvider.notifier).loadIncomeStatements();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final portfolioState = ref.watch(portfolioViewModelProvider);
+    final incomeStatementState = ref.watch(incomeStatementViewModelProvider);
     
     return Scaffold(
       backgroundColor: Colors.white,
@@ -50,18 +51,18 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
           ),
         ),
         actions: [
-          if (portfolioState.hasData)
+          if (incomeStatementState.hasData)
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.black87),
-              onPressed: () => ref.read(portfolioViewModelProvider.notifier).refresh(),
+              onPressed: () => ref.read(incomeStatementViewModelProvider.notifier).refresh(),
             ),
         ],
       ),
-      body: _buildBody(portfolioState),
+      body: _buildBody(incomeStatementState),
     );
   }
 
-  Widget _buildBody(PortfolioState state) {
+  Widget _buildBody(IncomeStatementState state) {
     if (state.isLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -70,7 +71,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
       );
     }
 
-    if (state.error != null) {
+    if (state.hasError) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -82,7 +83,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Error loading portfolio data',
+              'Error loading income statement data',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -100,34 +101,29 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => ref.read(portfolioViewModelProvider.notifier).refresh(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8B5CF6),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text(
-                'Retry',
-                style: TextStyle(color: Colors.white),
-              ),
+              onPressed: () {
+                ref.read(incomeStatementViewModelProvider.notifier).loadIncomeStatements();
+              },
+              child: const Text('Retry'),
             ),
           ],
         ),
       );
     }
 
-    if (!state.hasData || state.portfolio == null) {
+    if (!state.hasData) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.account_balance_wallet,
+              Icons.assessment_outlined,
               size: 64,
-              color: Colors.grey[300],
+              color: Colors.grey[400],
             ),
             const SizedBox(height: 16),
             Text(
-              'No portfolio data available',
+              'No Income Statement Data',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -136,7 +132,8 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Generate portfolio data to view income statement',
+              'Income statement data will appear here once available',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -144,15 +141,10 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => ref.read(portfolioViewModelProvider.notifier).refresh(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8B5CF6),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text(
-                'Refresh',
-                style: TextStyle(color: Colors.white),
-              ),
+              onPressed: () {
+                ref.read(incomeStatementViewModelProvider.notifier).loadIncomeStatements();
+              },
+              child: const Text('Refresh'),
             ),
           ],
         ),
@@ -160,973 +152,435 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        children: [
-          // Header container
-          Container(
-            margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey[200]!, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6).withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.bar_chart,
-                        color: Color(0xFF3B82F6),
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Income Statement',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Revenue and expenses as of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetricCard(
-                        'Revenue',
-                        '\$${state.portfolio!.totalValue.abs().toStringAsFixed(2)}',
-                        const Color(0xFF10B981),
-                        Icons.trending_up,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildMetricCard(
-                        'Expenses',
-                        '\$0.00',
-                        const Color(0xFFEF4444),
-                        Icons.trending_down,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetricCard(
-                        'Net Income',
-                        '\$${state.portfolio!.totalValue.abs().toStringAsFixed(2)}',
-                        const Color(0xFF3B82F6),
-                        Icons.account_balance_wallet,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // View toggle (unchanged layout but kept inside scroll)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey[200]!, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => isChartView = true),
-                    child: Container(
-                      margin: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        gradient: isChartView
-                            ? const LinearGradient(
-                                colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              )
-                            : null,
-                        color: isChartView ? null : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: isChartView
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFF3B82F6).withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.bar_chart,
-                              size: 18,
-                              color: isChartView ? Colors.white : Colors.grey[600],
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Chart View',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: isChartView ? Colors.white : Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => isChartView = false),
-                    child: Container(
-                      margin: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        gradient: !isChartView
-                            ? const LinearGradient(
-                                colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              )
-                            : null,
-                        color: !isChartView ? null : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: !isChartView
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFF3B82F6).withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.table_chart,
-                              size: 18,
-                              color: !isChartView ? Colors.white : Colors.grey[600],
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Table View',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: !isChartView ? Colors.white : Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 15),
-
-          // Content (chart or table)
-          isChartView ? _buildChartView(state.portfolio!) : _buildTableView(state.portfolio!),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChartView(Portfolio portfolio) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: [
-          // Filter and Report Type
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Daily Report',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(Icons.filter_list, size: 16, color: Colors.purple[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Filter',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.purple[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Chart Container
-          Container(
-            height: 300,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 2500,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey[200]!,
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        const style = TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                        );
-                        Widget text;
-                        switch (value.toInt()) {
-                          case 0:
-                            text = const Text('Jan', style: style);
-                            break;
-                          case 1:
-                            text = const Text('Feb', style: style);
-                            break;
-                          case 2:
-                            text = const Text('Mar', style: style);
-                            break;
-                          case 3:
-                            text = const Text('Apr', style: style);
-                            break;
-                          case 4:
-                            text = const Text('May', style: style);
-                            break;
-                          case 5:
-                            text = const Text('Jun', style: style);
-                            break;
-                          default:
-                            text = const Text('', style: style);
-                            break;
-                        }
-                        return SideTitleWidget(
-                          meta: meta,
-                          child: text,
-                        );
-                      },
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 2500,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        return Text(
-                          '${(value / 1000).toInt()}K',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 10,
-                          ),
-                        );
-                      },
-                      reservedSize: 42,
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: 5,
-                minY: _getMinY(portfolio),
-                maxY: _getMaxY(portfolio),
-                lineBarsData: [
-                  // Blue line (Portfolio Value)
-                  LineChartBarData(
-                    spots: _getPortfolioValueSpots(portfolio),
-                    isCurved: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.blue.withOpacity(0.8),
-                        Colors.blue.withOpacity(0.8),
-                      ],
-                    ),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: Colors.blue,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                  // Green line (Individual Holdings)
-                  LineChartBarData(
-                    spots: _getHoldingsSpots(portfolio),
-                    isCurved: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.green.withOpacity(0.8),
-                        Colors.green.withOpacity(0.8),
-                      ],
-                    ),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: Colors.green,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Summary Card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF8B5CF6).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.2)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Summary',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.purple[700],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Your financial performance shows a 15% increase in revenue compared to the previous period, with expenses growing at a slower rate of 8%.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _downloadPdf(context, portfolio),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: const Color(0xFF8B5CF6)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Close',
-                    style: TextStyle(
-                      color: Color(0xFF8B5CF6),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _downloadPdf(context, portfolio),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.download, size: 16, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        'Download Report',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 40),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTableView(Portfolio portfolio) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: [
-          // Header with Export
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.bar_chart, size: 16, color: Colors.blue[600]),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Income Statement',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => _exportToExcel(context, portfolio),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.download, size: 14, color: Color(0xFF8B5CF6)),
-                      SizedBox(width: 6),
-                      Text(
-                        'Export to Excel',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF8B5CF6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          // Date
-          Row(
-            children: [
-              Text(
-                'As of monthly',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Income Statement Table
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Table Header
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Color(0xFFF3F4F6)),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.description,
-                            color: Colors.blue[600],
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Income Statement',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.file_download,
-                            color: Colors.green[600],
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Export to Excel',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.green[600],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Date
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'As of monthly',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Income Statement Content
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      // Revenue Section
-                      _buildIncomeStatementRow(
-                        'REVENUE',
-                        '\$${portfolio.totalValue.abs().toStringAsFixed(2)}',
-                        isHeader: true,
-                        backgroundColor: Colors.green[50],
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Expenses Section
-                      _buildIncomeStatementRow(
-                        'EXPENSES',
-                        '\$0.00',
-                        isHeader: true,
-                        backgroundColor: Colors.red[50],
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Net Income Section
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(12),
-                            bottomRight: Radius.circular(12),
-                          ),
-                        ),
-                        child: _buildIncomeStatementRow(
-                          'NET INCOME',
-                          '\$${portfolio.totalValue.abs().toStringAsFixed(2)}',
-                          isHeader: true,
-                          backgroundColor: Colors.blue[50],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _downloadPdf(context, portfolio),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey[400]!),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Close',
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _downloadPdf(context, portfolio),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.download, size: 16, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        'Download Report',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 40),
-        ],
-      ),
-    );
-  }
-
-
-
-  Widget _buildIncomeStatementRow(
-    String item, 
-    String amount, {
-    bool isHeader = false,
-    bool isSubItem = false,
-    Color? backgroundColor,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isSubItem ? 40 : 20,
-        vertical: isHeader ? 16 : 8,
-      ),
-      decoration: backgroundColor != null 
-        ? BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(8),
-          )
-        : null,
-      child: Row(
-        children: [
-          Text(
-            item,
-            style: TextStyle(
-              fontSize: isHeader ? 16 : 14,
-              fontWeight: isHeader ? FontWeight.bold : FontWeight.w500,
-              color: isHeader ? Colors.black87 : Colors.grey[700],
-            ),
-          ),
-          const Spacer(),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: isHeader ? 16 : 14,
-              fontWeight: isHeader ? FontWeight.bold : FontWeight.w500,
-              color: isHeader ? Colors.black87 : Colors.grey[700],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  List<FlSpot> _getPortfolioValueSpots(Portfolio portfolio) {
-    // Generate dynamic chart data based on portfolio value
-    final totalValue = portfolio.totalValue.abs();
-    
-    // If total value is zero, provide sample data for demonstration
-    if (totalValue == 0.0) {
-      return [
-        FlSpot(0, 50000),
-        FlSpot(1, 45000),
-        FlSpot(2, 55000),
-        FlSpot(3, 40000),
-        FlSpot(4, 60000),
-        FlSpot(5, 52000),
-      ];
-    }
-    
-    return [
-      FlSpot(0, totalValue * 0.8),
-      FlSpot(1, totalValue * 0.7),
-      FlSpot(2, totalValue * 0.9),
-      FlSpot(3, totalValue * 0.6),
-      FlSpot(4, totalValue * 1.0),
-      FlSpot(5, totalValue * 0.85),
-    ];
-  }
-
-  List<FlSpot> _getHoldingsSpots(Portfolio portfolio) {
-    // Generate dynamic chart data based on individual holdings
-    if (portfolio.breakdown.isNotEmpty) {
-      final avgHoldingValue = portfolio.breakdown.fold(0.0, (sum, holding) => sum + holding.value.abs()) / portfolio.breakdown.length;
-      return [
-        FlSpot(0, avgHoldingValue * 0.8),
-        FlSpot(1, avgHoldingValue * 0.7),
-        FlSpot(2, avgHoldingValue * 0.9),
-        FlSpot(3, avgHoldingValue * 0.6),
-        FlSpot(4, avgHoldingValue * 0.95),
-        FlSpot(5, avgHoldingValue * 0.85),
-      ];
-    }
-    
-    // If no holdings, provide sample data for demonstration
-    return [
-      FlSpot(0, 10000),
-      FlSpot(1, 8000),
-      FlSpot(2, 12000),
-      FlSpot(3, 7000),
-      FlSpot(4, 15000),
-      FlSpot(5, 11000),
-    ];
-  }
-
-  double _getMinY(Portfolio portfolio) {
-    final totalValue = portfolio.totalValue.abs();
-    final avgHoldingValue = portfolio.breakdown.isNotEmpty 
-        ? portfolio.breakdown.fold(0.0, (sum, holding) => sum + holding.value.abs()) / portfolio.breakdown.length
-        : 0.0;
-    final minValue = [totalValue * 0.5, avgHoldingValue * 0.5].reduce((a, b) => a < b ? a : b);
-    return minValue - (minValue * 0.1);
-  }
-
-  double _getMaxY(Portfolio portfolio) {
-    final totalValue = portfolio.totalValue.abs();
-    final avgHoldingValue = portfolio.breakdown.isNotEmpty 
-        ? portfolio.breakdown.fold(0.0, (sum, holding) => sum + holding.value.abs()) / portfolio.breakdown.length
-        : 0.0;
-    final maxValue = [totalValue, avgHoldingValue].reduce((a, b) => a > b ? a : b);
-    return maxValue + (maxValue * 0.1);
-  }
-
-  Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
-    return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 0.8,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                color: color,
-                size: 16,
+          // Period Selector
+          _buildPeriodSelector(state),
+          const SizedBox(height: 20),
+          
+          // Summary Cards
+          _buildSummaryCards(state.selectedIncomeStatement!),
+          const SizedBox(height: 20),
+          
+          // View Toggle
+          _buildViewToggle(),
+          const SizedBox(height: 20),
+          
+          // Content (Charts or Table)
+          if (isChartView)
+            _buildChartView(state.selectedIncomeStatement!)
+          else
+            _buildTableView(state.selectedIncomeStatement!),
+          
+          const SizedBox(height: 20),
+          
+          // Metadata
+          _buildMetadata(state.selectedIncomeStatement!),
+          
+          const SizedBox(height: 20),
+          
+          // Export Buttons
+          _buildExportButtons(state.selectedIncomeStatement!),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodSelector(IncomeStatementState state) {
+    if (state.incomeStatements == null || state.incomeStatements!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select Period',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
+            ),
+            const SizedBox(height: 8),
+            DropdownButton<IncomeStatement>(
+              value: state.selectedIncomeStatement,
+              isExpanded: true,
+              items: state.incomeStatements!.map((statement) {
+                final startDate = statement.periodStart;
+                final endDate = statement.periodEnd;
+                final periodText = '${startDate.day}/${startDate.month}/${startDate.year} - ${endDate.day}/${endDate.month}/${endDate.year}';
+                
+                return DropdownMenuItem<IncomeStatement>(
+                  value: statement,
+                  child: Text(periodText),
+                );
+              }).toList(),
+              onChanged: (IncomeStatement? newValue) {
+                if (newValue != null) {
+                  ref.read(incomeStatementViewModelProvider.notifier).selectIncomeStatement(newValue);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCards(IncomeStatement incomeStatement) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
+                'Revenue',
+                '\$${incomeStatement.revenue.totalRevenue.toStringAsFixed(2)}',
+                const Color(0xFF4CAF50),
+                Icons.trending_up,
+                [
+                  'Trading: \$${incomeStatement.revenue.tradingRevenue.toStringAsFixed(2)}',
+                  'Payroll: \$${incomeStatement.revenue.payrollIncome.toStringAsFixed(2)}',
+                  'Other: \$${incomeStatement.revenue.otherIncome.toStringAsFixed(2)}',
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard(
+                'Expenses',
+                '\$${incomeStatement.expenses.totalExpenses.toStringAsFixed(2)}',
+                const Color(0xFFF44336),
+                Icons.trending_down,
+                [
+                  'Fees: \$${incomeStatement.expenses.transactionFees.toStringAsFixed(2)}',
+                  'Losses: \$${incomeStatement.expenses.tradingLosses.toStringAsFixed(2)}',
+                  'Operational: \$${incomeStatement.expenses.operationalExpenses.toStringAsFixed(2)}',
+                  'Tax: \$${incomeStatement.expenses.taxExpenses.toStringAsFixed(2)}',
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
+                'Gross Profit',
+                '\$${incomeStatement.grossProfit.grossProfit.toStringAsFixed(2)}',
+                const Color(0xFF2196F3),
+                Icons.account_balance_wallet,
+                [
+                  'Margin: ${incomeStatement.grossProfit.grossProfitMargin.toStringAsFixed(1)}%',
+                  'COGS: \$${incomeStatement.grossProfit.costOfGoodsSold.toStringAsFixed(2)}',
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard(
+                'Net Income',
+                '\$${incomeStatement.netIncome.netIncome.toStringAsFixed(2)}',
+                incomeStatement.netIncome.isProfitable ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
+                incomeStatement.netIncome.isProfitable ? Icons.check_circle : Icons.warning,
+                [
+                  'Margin: ${incomeStatement.netIncome.netProfitMargin.toStringAsFixed(1)}%',
+                  'Status: ${incomeStatement.summary.profitabilityStatus}',
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(String title, String amount, Color color, IconData icon, List<String> details) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 8),
+                Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: const TextStyle(
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey[600],
+                    color: Colors.grey,
                   ),
-                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...details.map((detail) => Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                detail,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildViewToggle() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: isChartView ? null : () => setState(() => isChartView = true),
+                icon: const Icon(Icons.bar_chart),
+                label: const Text('Charts'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isChartView ? const Color(0xFF8B5CF6) : Colors.grey[300],
+                  foregroundColor: isChartView ? Colors.white : Colors.grey[600],
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: isChartView ? () => setState(() => isChartView = false) : null,
+                icon: const Icon(Icons.table_chart),
+                label: const Text('Table'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: !isChartView ? const Color(0xFF8B5CF6) : Colors.grey[300],
+                  foregroundColor: !isChartView ? Colors.white : Colors.grey[600],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChartView(IncomeStatement incomeStatement) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Financial Overview',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 200,
+              child: BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: [
+                    incomeStatement.revenue.totalRevenue,
+                    incomeStatement.expenses.totalExpenses,
+                    incomeStatement.grossProfit.grossProfit,
+                    incomeStatement.netIncome.netIncome,
+                  ].reduce((a, b) => a > b ? a : b) * 1.2,
+                  barTouchData: BarTouchData(enabled: false),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          const titles = ['Revenue', 'Expenses', 'Gross Profit', 'Net Income'];
+                          return Text(
+                            titles[value.toInt()],
+                            style: const TextStyle(fontSize: 10),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          return Text(
+                            '\$${value.toStringAsFixed(0)}',
+                            style: const TextStyle(fontSize: 10),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  barGroups: [
+                    BarChartGroupData(
+                      x: 0,
+                      barRods: [
+                        BarChartRodData(
+                          toY: incomeStatement.revenue.totalRevenue,
+                          color: const Color(0xFF4CAF50),
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    BarChartGroupData(
+                      x: 1,
+                      barRods: [
+                        BarChartRodData(
+                          toY: incomeStatement.expenses.totalExpenses,
+                          color: const Color(0xFFF44336),
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    BarChartGroupData(
+                      x: 2,
+                      barRods: [
+                        BarChartRodData(
+                          toY: incomeStatement.grossProfit.grossProfit,
+                          color: const Color(0xFF2196F3),
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    BarChartGroupData(
+                      x: 3,
+                      barRods: [
+                        BarChartRodData(
+                          toY: incomeStatement.netIncome.netIncome,
+                          color: incomeStatement.netIncome.isProfitable ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableView(IncomeStatement incomeStatement) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Income Statement Details',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Revenue Section
+            _buildTableSection('Revenue', [
+              _buildTableRow('Total Revenue', incomeStatement.revenue.totalRevenue),
+              _buildTableRow('Trading Revenue', incomeStatement.revenue.tradingRevenue),
+              _buildTableRow('Payroll Income', incomeStatement.revenue.payrollIncome),
+              _buildTableRow('Other Income', incomeStatement.revenue.otherIncome),
+            ], const Color(0xFF4CAF50)),
+            
+            const SizedBox(height: 16),
+            
+            // Expenses Section
+            _buildTableSection('Expenses', [
+              _buildTableRow('Total Expenses', incomeStatement.expenses.totalExpenses),
+              _buildTableRow('Transaction Fees', incomeStatement.expenses.transactionFees),
+              _buildTableRow('Trading Losses', incomeStatement.expenses.tradingLosses),
+              _buildTableRow('Operational Expenses', incomeStatement.expenses.operationalExpenses),
+              _buildTableRow('Tax Expenses', incomeStatement.expenses.taxExpenses),
+            ], const Color(0xFFF44336)),
+            
+            const SizedBox(height: 16),
+            
+            // Profitability Section
+            _buildTableSection('Profitability', [
+              _buildTableRow('Gross Profit', incomeStatement.grossProfit.grossProfit),
+              _buildTableRow('Gross Profit Margin', incomeStatement.grossProfit.grossProfitMargin, isPercentage: true),
+              _buildTableRow('Net Income', incomeStatement.netIncome.netIncome),
+              _buildTableRow('Net Profit Margin', incomeStatement.netIncome.netProfitMargin, isPercentage: true),
+            ], const Color(0xFF2196F3)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableSection(String title, List<Widget> rows, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...rows,
+      ],
+    );
+  }
+
+  Widget _buildTableRow(String label, double amount, {bool isPercentage = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14),
+          ),
+          Text(
+            isPercentage ? '${amount.toStringAsFixed(1)}%' : '\$${amount.toStringAsFixed(2)}',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1134,55 +588,90 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
     );
   }
 
-  Future<void> _exportToExcel(BuildContext context, Portfolio portfolio) async {
-    try {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
+  Widget _buildMetadata(IncomeStatement incomeStatement) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Report Information',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildMetadataRow('Period', '${incomeStatement.periodStart.day}/${incomeStatement.periodStart.month}/${incomeStatement.periodStart.year} - ${incomeStatement.periodEnd.day}/${incomeStatement.periodEnd.month}/${incomeStatement.periodEnd.year}'),
+            _buildMetadataRow('Currency', incomeStatement.currency),
+            _buildMetadataRow('Generated', '${incomeStatement.generatedAt.day}/${incomeStatement.generatedAt.month}/${incomeStatement.generatedAt.year}'),
+            _buildMetadataRow('Transactions Processed', incomeStatement.metadata.transactionCount.toString()),
+            _buildMetadataRow('Payroll Entries', incomeStatement.metadata.payrollCount.toString()),
+            _buildMetadataRow('Period Length', '${incomeStatement.metadata.periodLengthDays} days'),
+            _buildMetadataRow('Primary Revenue Source', incomeStatement.summary.primaryRevenueSource),
+          ],
         ),
-      );
-
-      // Generate Excel file
-      final filePath = await ExcelExportHelper.exportIncomeStatementToExcel(portfolio);
-
-      // Close loading dialog
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
-
-      // Show success message
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Excel file saved to: $filePath'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      // Close loading dialog
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
-
-      // Show error message
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to generate Excel file: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
+      ),
+    );
   }
 
-  Future<void> _downloadPdf(BuildContext context, Portfolio portfolio) async {
+  Widget _buildMetadataRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExportButtons(IncomeStatement incomeStatement) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () => _downloadPdf(context, incomeStatement),
+            icon: const Icon(Icons.picture_as_pdf),
+            label: const Text('Export PDF'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5CF6),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () => _downloadExcel(context, incomeStatement),
+            icon: const Icon(Icons.table_chart),
+            label: const Text('Export Excel'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _downloadPdf(BuildContext context, IncomeStatement incomeStatement) async {
     try {
       // Show loading dialog
       showDialog(
@@ -1193,17 +682,35 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
         ),
       );
 
-      // Convert Portfolio to report data format for PDF generation
+      // Convert IncomeStatement to report data format for PDF generation
       final reportData = {
         'summary': {
-          'total_revenue': portfolio.totalValue.abs(),
-          'total_expenses': 0.0, // Not available in Portfolio entity
-          'net_income': portfolio.totalValue.abs(),
+          'total_revenue': incomeStatement.revenue.totalRevenue,
+          'total_expenses': incomeStatement.expenses.totalExpenses,
+          'net_income': incomeStatement.netIncome.netIncome,
+          'gross_profit': incomeStatement.grossProfit.grossProfit,
+          'profitability_status': incomeStatement.summary.profitabilityStatus,
         },
-        'revenue': portfolio.breakdown.map((holding) => {
-          'name': '${holding.cryptocurrency} Holdings',
-          'amount': holding.value.abs(),
-        }).toList(),
+        'revenue': {
+          'trading_revenue': incomeStatement.revenue.tradingRevenue,
+          'payroll_income': incomeStatement.revenue.payrollIncome,
+          'other_income': incomeStatement.revenue.otherIncome,
+        },
+        'expenses': {
+          'transaction_fees': incomeStatement.expenses.transactionFees,
+          'trading_losses': incomeStatement.expenses.tradingLosses,
+          'operational_expenses': incomeStatement.expenses.operationalExpenses,
+          'tax_expenses': incomeStatement.expenses.taxExpenses,
+        },
+        'period': {
+          'start': incomeStatement.periodStart.toIso8601String(),
+          'end': incomeStatement.periodEnd.toIso8601String(),
+        },
+        'metadata': {
+          'transaction_count': incomeStatement.metadata.transactionCount,
+          'payroll_count': incomeStatement.metadata.payrollCount,
+          'period_length_days': incomeStatement.metadata.periodLengthDays,
+        },
       };
 
       // Generate PDF
@@ -1235,6 +742,76 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to generate PDF: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadExcel(BuildContext context, IncomeStatement incomeStatement) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Convert IncomeStatement to Excel format
+      final excelData = {
+        'Summary': {
+          'Total Revenue': incomeStatement.revenue.totalRevenue,
+          'Total Expenses': incomeStatement.expenses.totalExpenses,
+          'Gross Profit': incomeStatement.grossProfit.grossProfit,
+          'Net Income': incomeStatement.netIncome.netIncome,
+          'Profitability Status': incomeStatement.summary.profitabilityStatus,
+        },
+        'Revenue Detail': {
+          'Trading Revenue': incomeStatement.revenue.tradingRevenue,
+          'Payroll Income': incomeStatement.revenue.payrollIncome,
+          'Other Income': incomeStatement.revenue.otherIncome,
+        },
+        'Expense Detail': {
+          'Transaction Fees': incomeStatement.expenses.transactionFees,
+          'Trading Losses': incomeStatement.expenses.tradingLosses,
+          'Operational Expenses': incomeStatement.expenses.operationalExpenses,
+          'Tax Expenses': incomeStatement.expenses.taxExpenses,
+        },
+      };
+
+      // Generate Excel
+      final filePath = await ExcelExportHelper.exportIncomeStatementToExcel(excelData);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Excel saved to: $filePath'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate Excel: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),

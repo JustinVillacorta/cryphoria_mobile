@@ -501,7 +501,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
         // Professional Chart Container
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
-          height: 350,
+          height: 380,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -578,12 +578,12 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                             style: const TextStyle(
                               color: Colors.grey,
                               fontWeight: FontWeight.w500,
-                              fontSize: 10,
+                              fontSize: 9,
                             ),
                           ),
                         );
                       },
-                      reservedSize: 50,
+                      reservedSize: 55,
                     ),
                   ),
                 ),
@@ -1179,7 +1179,8 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     if (maxValue <= 10000) return 1000;
     if (maxValue <= 100000) return 10000;
     if (maxValue <= 1000000) return 100000;
-    return 1000000;
+    if (maxValue <= 10000000) return 1000000;
+    return 10000000;
   }
 
   // Helper methods for generating real historical chart data
@@ -1216,12 +1217,12 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     // If all values are zero, return 0
     if (minValue == double.infinity || minValue == 0.0) return 0.0;
     
-    // Add some padding below the minimum value
-    return minValue - (minValue * 0.1);
+    // Ensure minimum is never negative for better chart display
+    return minValue < 0 ? minValue - (minValue.abs() * 0.1) : 0.0;
   }
 
   double _getMaxY(List<BalanceSheet> balanceSheets) {
-    if (balanceSheets.isEmpty) return 100.0;
+    if (balanceSheets.isEmpty) return 10000.0;
     
     double maxValue = 0.0;
     for (final sheet in balanceSheets) {
@@ -1230,8 +1231,8 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       maxValue = [maxValue, assets, liabilities].reduce((a, b) => a > b ? a : b);
     }
     
-    // If all values are zero, return 100 for empty chart
-    if (maxValue == 0.0) return 100.0;
+    // If all values are zero, return default range for better chart display
+    if (maxValue == 0.0) return 10000.0;
     
     // Add some padding above the maximum value
     return maxValue + (maxValue * 0.1);

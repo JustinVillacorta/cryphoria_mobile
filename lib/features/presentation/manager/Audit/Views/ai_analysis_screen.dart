@@ -91,6 +91,16 @@ class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
         ),
       );
     }
+    
+    // Auto-navigate when status becomes completed
+    if (_analysisViewModel.currentStatus == AuditStatus.completed && mounted) {
+      print("✅ Status changed to completed, navigating immediately...");
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (mounted) {
+          await _navigateToResults();
+        }
+      });
+    }
   }
 
   Future<void> _startAnalysis() async {
@@ -181,11 +191,61 @@ class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
     }
   }
 
+  Future<void> _navigateToResults() async {
+    if (!mounted) return;
+    
+    print("🚀 AiAnalysisScreen._navigateToResults: Starting navigation...");
+    
+    // Update main ViewModel with audit ID
+    if (_analysisViewModel.currentAuditId != null) {
+      _mainViewModel.setCurrentAuditId(_analysisViewModel.currentAuditId!);
+      print("📊 Updated main ViewModel with audit ID: ${_analysisViewModel.currentAuditId}");
+    }
+    
+    // Ensure progress animation is at 100%
+    await _progressController.animateTo(1.0, duration: const Duration(milliseconds: 300));
+    setState(() {
+      _currentStep = _analysisSteps.length - 1;
+    });
+    
+    // Wait a bit for visual feedback
+    await Future.delayed(const Duration(milliseconds: 800));
+    
+    print("🚀 AiAnalysisScreen._navigateToResults: Attempting navigation...");
+    
+    // Navigate to results
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AuditResultsScreen(
+            contractName: widget.contractName,
+            fileName: widget.fileName,
+            auditId: _analysisViewModel.currentAuditId,
+          ),
+        ),
+      );
+    }
+    
+    print("✅ AiAnalysisScreen._navigateToResults: Navigation completed successfully");
+  }
+
   Future<void> _pollForAuditCompletion() async {
     print("🔄 AiAnalysisScreen._pollForAuditCompletion: Starting polling");
     print("📊 Polling for audit ID: ${_analysisViewModel.currentAuditId}");
     
     try {
+      // First, check if the audit is already completed
+      print("🔍 Checking current status before polling...");
+      final currentStatus = await _analysisViewModel.checkStatus();
+      print("📈 Current status: $currentStatus");
+      
+      if (currentStatus == AuditStatus.completed) {
+        print("✅ Audit is already completed! Navigating immediately...");
+        await _navigateToResults();
+        return;
+      }
+      
       // Use ViewModel's polling method
       final success = await _analysisViewModel.pollForCompletion(
         maxAttempts: 30,
@@ -194,38 +254,7 @@ class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
       
       if (success && mounted) {
         print("✅ AiAnalysisScreen._pollForAuditCompletion: Audit completed! Navigating to results...");
-        
-        // Update main ViewModel with audit ID
-        if (_analysisViewModel.currentAuditId != null) {
-          _mainViewModel.setCurrentAuditId(_analysisViewModel.currentAuditId!);
-        }
-        
-        // Ensure progress animation is at 100%
-        await _progressController.animateTo(1.0, duration: const Duration(milliseconds: 300));
-        setState(() {
-          _currentStep = _analysisSteps.length - 1;
-        });
-        
-        // Wait a bit for visual feedback
-        await Future.delayed(const Duration(milliseconds: 800));
-        
-        print("🚀 AiAnalysisScreen._pollForAuditCompletion: Attempting navigation...");
-        
-        // Navigate to results
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AuditResultsScreen(
-                contractName: widget.contractName,
-                fileName: widget.fileName,
-                auditId: _analysisViewModel.currentAuditId,
-              ),
-            ),
-          );
-        }
-        
-        print("✅ AiAnalysisScreen._pollForAuditCompletion: Navigation completed successfully");
+        await _navigateToResults();
       } else if (mounted) {
         throw Exception('Analysis timed out or failed');
       }
@@ -316,7 +345,7 @@ class _AiAnalysisScreenState extends ConsumerState<AiAnalysisScreen>
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Color(0xFFE1BFFF)!,
+                                  color: const Color(0xFFE1BFFF),
                                   width: 3,
                                 ),
                               ),

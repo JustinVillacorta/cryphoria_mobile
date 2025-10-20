@@ -4,7 +4,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import '../../domain/entities/balance_sheet.dart';
 import '../../domain/entities/cash_flow.dart';
-import '../../domain/entities/portfolio.dart';
 import '../../domain/entities/payslip.dart';
 
 class ExcelExportHelper {
@@ -202,7 +201,7 @@ class ExcelExportHelper {
     }
   }
 
-  static Future<String> exportIncomeStatementToExcel(Portfolio portfolio) async {
+  static Future<String> exportIncomeStatementToExcel(Map<String, Map<String, Object>> incomeStatementData) async {
     try {
       var excel = Excel.createExcel();
       var sheet = excel['Income Statement'];
@@ -217,17 +216,44 @@ class ExcelExportHelper {
       // Revenue Section
       _addSectionHeader(sheet, 'REVENUE', 'A$currentRow');
       currentRow += 2;
-      _addDataRow(sheet, 'Total Revenue', portfolio.totalValue.abs(), 'A$currentRow', 'B$currentRow');
-      currentRow += 3;
+      
+      final summaryData = incomeStatementData['Summary'] as Map<String, Object>;
+      final revenueData = incomeStatementData['Revenue Detail'] as Map<String, Object>;
+      final expenseData = incomeStatementData['Expense Detail'] as Map<String, Object>;
+      
+      _addDataRow(sheet, 'Total Revenue', (summaryData['Total Revenue'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Trading Revenue', (revenueData['Trading Revenue'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Payroll Income', (revenueData['Payroll Income'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Other Income', (revenueData['Other Income'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 2;
       
       // Expenses Section
       _addSectionHeader(sheet, 'EXPENSES', 'A$currentRow');
       currentRow += 2;
-      _addDataRow(sheet, 'Total Expenses', 0.0, 'A$currentRow', 'B$currentRow');
-      currentRow += 3;
       
-      // Net Income
-      _addTotalRow(sheet, 'NET INCOME', portfolio.totalValue.abs(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Total Expenses', (summaryData['Total Expenses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Transaction Fees', (expenseData['Transaction Fees'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Trading Losses', (expenseData['Trading Losses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Operational Expenses', (expenseData['Operational Expenses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Tax Expenses', (expenseData['Tax Expenses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 2;
+      
+      // Profitability Section
+      _addSectionHeader(sheet, 'PROFITABILITY', 'A$currentRow');
+      currentRow += 2;
+      
+      _addDataRow(sheet, 'Gross Profit', (summaryData['Gross Profit'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Net Income', (summaryData['Net Income'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addTextRow(sheet, 'Profitability Status', summaryData['Profitability Status'].toString(), 'A$currentRow', 'B$currentRow');
       
       _autoFitColumns(sheet);
       
@@ -237,38 +263,105 @@ class ExcelExportHelper {
     }
   }
 
-  static Future<String> exportInvestmentPerformanceToExcel(Portfolio portfolio) async {
+  static Future<String> exportInvestmentPerformanceToExcel(Map<String, Map<String, Object>> investmentData) async {
     try {
       var excel = Excel.createExcel();
       var sheet = excel['Investment Performance'];
       
       excel.delete('Sheet1');
       
-      _addHeader(sheet, 'INVESTMENT PERFORMANCE', 'A1');
-      _addSubHeader(sheet, 'As of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}', 'A2');
+      _addHeader(sheet, 'INVESTMENT PERFORMANCE REPORT', 'A1');
+      _addSubHeader(sheet, 'For the period ending ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}', 'A2');
       
       int currentRow = 4;
       
-      // Portfolio Summary
-      _addDataRow(sheet, 'Total Portfolio Value', portfolio.totalValue.abs(), 'A$currentRow', 'B$currentRow');
-      currentRow += 1;
-      _addDataRow(sheet, 'Total Cost Basis', portfolio.totalValue.abs(), 'A$currentRow', 'B$currentRow');
-      currentRow += 1;
-      _addDataRow(sheet, 'Unrealized Gain/Loss', 0.0, 'A$currentRow', 'B$currentRow');
-      currentRow += 1;
-      _addDataRow(sheet, 'Cash Balance', 0.0, 'A$currentRow', 'B$currentRow');
-      currentRow += 3;
+      // Summary Section
+      _addSectionHeader(sheet, 'SUMMARY', 'A$currentRow');
+      currentRow += 2;
       
-      // Holdings Breakdown
-      if (portfolio.breakdown.isNotEmpty) {
-        _addSectionHeader(sheet, 'HOLDINGS BREAKDOWN', 'A$currentRow');
-        currentRow += 2;
-        
-        for (var holding in portfolio.breakdown) {
-          _addDataRow(sheet, holding.cryptocurrency, holding.value.abs(), 'A$currentRow', 'B$currentRow');
-          currentRow += 1;
-        }
-      }
+      final summaryData = investmentData['Summary'] as Map<String, Object>;
+      
+      _addDataRow(sheet, 'Total Portfolio Value', (summaryData['Total Portfolio Value'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Period Gains', (summaryData['Period Gains'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Period Losses', (summaryData['Period Losses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Net Performance', (summaryData['Net Performance'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Performance %', (summaryData['Performance %'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'ROI %', (summaryData['ROI %'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addTextRow(sheet, 'Risk Level', summaryData['Risk Level'].toString(), 'A$currentRow', 'B$currentRow');
+      currentRow += 2;
+      
+      // Portfolio Performance Section
+      _addSectionHeader(sheet, 'PORTFOLIO PERFORMANCE', 'A$currentRow');
+      currentRow += 2;
+      
+      final performanceData = investmentData['Portfolio Performance'] as Map<String, Object>;
+      
+      _addDataRow(sheet, 'Total Portfolio Value', (performanceData['Total Portfolio Value'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Period Gains', (performanceData['Period Gains'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Period Losses', (performanceData['Period Losses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Net Performance', (performanceData['Net Performance'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Performance %', (performanceData['Performance %'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addTextRow(sheet, 'Best Performing Asset', performanceData['Best Performing Asset'].toString(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addTextRow(sheet, 'Worst Performing Asset', performanceData['Worst Performing Asset'].toString(), 'A$currentRow', 'B$currentRow');
+      currentRow += 2;
+      
+      // Asset Allocation Section
+      _addSectionHeader(sheet, 'ASSET ALLOCATION', 'A$currentRow');
+      currentRow += 2;
+      
+      final allocationData = investmentData['Asset Allocation'] as Map<String, Object>;
+      
+      _addDataRow(sheet, 'Total Value', (allocationData['Total Value'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Diversification Score', (allocationData['Diversification Score'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Number of Assets', (allocationData['Number of Assets'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 2;
+      
+      // ROI Analysis Section
+      _addSectionHeader(sheet, 'ROI ANALYSIS', 'A$currentRow');
+      currentRow += 2;
+      
+      final roiData = investmentData['ROI Analysis'] as Map<String, Object>;
+      
+      _addDataRow(sheet, 'Total Invested', (roiData['Total Invested'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Current Value', (roiData['Current Value'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Total Returns', (roiData['Total Returns'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'ROI %', (roiData['ROI %'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Annualized ROI', (roiData['Annualized ROI'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 2;
+      
+      // Risk Metrics Section
+      _addSectionHeader(sheet, 'RISK METRICS', 'A$currentRow');
+      currentRow += 2;
+      
+      final riskData = investmentData['Risk Metrics'] as Map<String, Object>;
+      
+      _addTextRow(sheet, 'Risk Level', riskData['Risk Level'].toString(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Volatility Score', (riskData['Volatility Score'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Concentration Risk', (riskData['Concentration Risk'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Liquidity Risk', (riskData['Liquidity Risk'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow++;
+      _addDataRow(sheet, 'Transaction Frequency', (riskData['Transaction Frequency'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
       
       _autoFitColumns(sheet);
       
@@ -418,6 +511,21 @@ class ExcelExportHelper {
     amountCellData.value = DoubleCellValue(amount);
     amountCellData.cellStyle = CellStyle(
       bold: true,
+      horizontalAlign: HorizontalAlign.Right,
+    );
+  }
+
+  static void _addTextRow(Sheet sheet, String label, String value, String labelCell, String valueCell) {
+    var labelCellData = sheet.cell(CellIndex.indexByString(labelCell));
+    labelCellData.value = TextCellValue(label);
+    labelCellData.cellStyle = CellStyle(
+      fontSize: 11,
+    );
+    
+    var valueCellData = sheet.cell(CellIndex.indexByString(valueCell));
+    valueCellData.value = TextCellValue(value);
+    valueCellData.cellStyle = CellStyle(
+      fontSize: 11,
       horizontalAlign: HorizontalAlign.Right,
     );
   }

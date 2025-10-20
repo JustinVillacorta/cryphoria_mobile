@@ -22,7 +22,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     // Load tax reports only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(taxReportsViewModelProvider);
-      if (state.taxReport == null && !state.isLoading) {
+      if (state.taxReports.isEmpty && !state.isLoading) {
         ref.read(taxReportsViewModelProvider.notifier).loadTaxReports();
       }
     });
@@ -115,7 +115,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
       );
     }
 
-    if (!state.hasData || state.taxReport == null) {
+    if (!state.hasData || state.selectedReport == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -203,7 +203,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Tax Report - ${state.taxReport!.reportType}',
+                              'Tax Report',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
@@ -212,7 +212,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Generated: ${_formatDate(state.taxReport!.reportDate.toString())}',
+                              'Generated: ${_formatDate(state.selectedReport!.reportDate.toString())}',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[600],
@@ -220,7 +220,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                               ),
                             ),
                             Text(
-                              'Period: ${_formatDate(state.taxReport!.periodStart.toString())} - ${_formatDate(state.taxReport!.periodEnd.toString())}',
+                              'Period: ${_formatDate(state.selectedReport!.periodStart.toString())} - ${_formatDate(state.selectedReport!.periodEnd.toString())}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[500],
@@ -237,7 +237,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                       Expanded(
                         child: _buildMetricCard(
                           'Total Income',
-                          '\$${state.taxReport!.summary.totalIncome.toStringAsFixed(2)}',
+                          '\$${state.selectedReport!.summary.totalIncome.toStringAsFixed(2)}',
                           const Color(0xFF10B981),
                           Icons.trending_up,
                         ),
@@ -246,7 +246,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                       Expanded(
                         child: _buildMetricCard(
                           'Total Deductions',
-                          '\$${state.taxReport!.summary.totalDeductions.toStringAsFixed(2)}',
+                          '\$${state.selectedReport!.summary.totalDeductions.toStringAsFixed(2)}',
                           const Color(0xFF3B82F6),
                           Icons.remove_circle_outline,
                         ),
@@ -259,12 +259,85 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                       Expanded(
                         child: _buildMetricCard(
                           'Tax Owed',
-                          '\$${state.taxReport!.summary.totalTaxOwed.toStringAsFixed(2)}',
+                          '\$${state.selectedReport!.summary.totalTaxOwed.toStringAsFixed(2)}',
                           const Color(0xFFEF4444),
                           Icons.account_balance,
                         ),
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Filter Dropdown Section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[200]!, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.filter_list,
+                        color: Colors.grey[600],
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Filter Reports',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: state.selectedReportType ?? 'ALL',
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'ALL', child: Text('All Reports')),
+                      DropdownMenuItem(value: 'DAILY', child: Text('Daily')),
+                      DropdownMenuItem(value: 'WEEKLY', child: Text('Weekly')),
+                      DropdownMenuItem(value: 'MONTHLY', child: Text('Monthly')),
+                      DropdownMenuItem(value: 'QUARTERLY', child: Text('Quarterly')),
+                      DropdownMenuItem(value: 'YEARLY', child: Text('Yearly')),
+                    ],
+                    onChanged: (String? value) {
+                      ref.read(taxReportsViewModelProvider.notifier).selectReportType(value);
+                    },
                   ),
                 ],
               ),
@@ -329,7 +402,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
             const SizedBox(height: 20),
 
             // Content Section
-            if (isChartView) _buildChartView(state.taxReport!) else _buildTableView(state.taxReport!),
+            if (isChartView) _buildChartView(state.selectedReport!) else _buildTableView(state.selectedReport!, state),
 
             const SizedBox(height: 20),
 
@@ -358,7 +431,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => _downloadPdf(context, state.taxReport!),
+                    onPressed: () => _downloadPdf(context, state.selectedReport!),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF8B5CF6),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -618,10 +691,10 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                 color: const Color(0xFF8B5CF6).withOpacity(0.2),
               ),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Summary',
                   style: TextStyle(
                     fontSize: 14,
@@ -629,10 +702,10 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                     color: Color(0xFF8B5CF6),
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
-                  'Your tax compliance shows a 98% accuracy rate this period, with outstanding tax obligations of \$400. Consider scheduling quarterly payments to optimize cash flow.',
-                  style: TextStyle(
+                  taxReport.llmAnalysis ?? 'No analysis available for this report.',
+                  style: const TextStyle(
                     fontSize: 12,
                     color: Colors.black87,
                     height: 1.4,
@@ -646,7 +719,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     );
   }
 
-  Widget _buildTableView(TaxReport taxReport) {
+  Widget _buildTableView(TaxReport taxReport, TaxReportsState state) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -683,7 +756,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                     ),
                     const SizedBox(width: 8),
                     const Text(
-                      'VAT Report',
+                      'Tax Report',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,

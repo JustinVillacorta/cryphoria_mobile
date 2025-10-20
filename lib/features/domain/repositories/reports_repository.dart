@@ -3,6 +3,8 @@ import '../entities/balance_sheet.dart';
 import '../entities/cash_flow.dart';
 import '../entities/portfolio.dart';
 import '../entities/payslip.dart';
+import '../entities/income_statement.dart';
+import '../entities/investment_report.dart';
 
 abstract class ReportsRepository {
   /// Generate a report with specified parameters
@@ -27,12 +29,14 @@ abstract class ReportsRepository {
   Future<bool> deleteReport(String reportId);
 
   /// Financial Reports
-  Future<TaxReport> getTaxReports();
+  Future<List<TaxReport>> getTaxReports();
   Future<BalanceSheet> getBalanceSheet();
   Future<List<BalanceSheet>> getAllBalanceSheets();
   Future<CashFlow> getCashFlow();
   Future<Portfolio> getPortfolioValue();
   Future<PayslipsResponse> getPayslips();
+  Future<List<IncomeStatement>> getIncomeStatements();
+  Future<List<InvestmentReport>> getInvestmentReports();
 }
 
 // Request model for report generation

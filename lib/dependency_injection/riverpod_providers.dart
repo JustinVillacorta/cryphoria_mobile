@@ -20,6 +20,12 @@ import '../features/data/data_sources/fake_transactions_data.dart';
 import '../features/data/data_sources/reports_remote_data_source.dart';
 import '../features/data/data_sources/walletRemoteDataSource.dart';
 import '../features/data/data_sources/document_upload_remote_data_source.dart';
+import '../features/data/data_sources/support_remote_data_source.dart';
+import '../features/data/repositories_impl/support_repository_impl.dart';
+import '../features/domain/repositories/support_repository.dart';
+import '../features/domain/usecases/Support/submit_support_ticket_usecase.dart';
+import '../features/domain/usecases/Support/get_support_messages_usecase.dart';
+import '../features/presentation/manager/UserProfile/HelpandSupport/support_viewmodel.dart';
 import '../features/data/notifiers/audit_notifier.dart';
 import '../features/data/repositories_impl/AuthRepositoryImpl.dart';
 import '../features/data/repositories_impl/audit_repository_impl.dart';
@@ -92,6 +98,8 @@ import '../features/presentation/manager/Audit/ViewModels/audit_main_viewmodel.d
 import '../features/presentation/manager/Audit/ViewModels/audit_results_viewmodel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
+import '../features/presentation/manager/Reports/Reports_ViewModel/income_statement_viewmodel.dart';
+import '../features/presentation/manager/Reports/Reports_ViewModel/investment_report_viewmodel.dart';
 import '../features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
 import '../features/presentation/manager/Authentication/OTP_Verification/ViewModel/otp_verification_view_model.dart';
 import '../features/presentation/manager/Authentication/Forgot_Password/ViewModel/forgot_password_request_view_model.dart';
@@ -108,6 +116,8 @@ import '../features/data/data_sources/employee_remote_data_source.dart'
 import '../features/domain/repositories/invoice_repository.dart';
 import '../features/domain/usecases/Invoice/get_invoice_by_id_usecase.dart';
 import '../features/domain/usecases/Invoice/get_invoices_by_user_usecase.dart';
+import '../features/domain/usecases/Profile/get_profile_usecase.dart';
+import '../features/domain/usecases/Profile/update_profile_usecase.dart';
 
 
 
@@ -121,9 +131,9 @@ import '../features/domain/usecases/Invoice/get_invoices_by_user_usecase.dart';
 
 final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
-    return 'http://192.168.1.108:8000';
+    return 'http://10.250.148.205:8000';
   }
-  return 'http://192.168.1.108:8000';
+  return 'http://192.168.5.53:8000';
 });
 
 final flutterSecureStorageProvider =
@@ -265,6 +275,15 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   );
 });
 
+// Profile use cases
+final getProfileUseCaseProvider = Provider<GetProfile>((ref) {
+  return GetProfile(ref.watch(authRepositoryProvider));
+});
+
+final updateProfileUseCaseProvider = Provider<UpdateProfile>((ref) {
+  return UpdateProfile(ref.watch(authRepositoryProvider));
+});
+
 final employeeRepositoryProvider = Provider<EmployeeRepository>((ref) {
   return EmployeeRepositoryImpl(
     remoteDataSource: ref.watch(managerEmployeeRemoteDataSourceProvider),
@@ -280,6 +299,14 @@ final reportsRepositoryProvider = Provider<ReportsRepository>((ref) {
     remoteDataSource: ref.watch(reportsRemoteDataSourceProvider),
     auditRemoteDataSource: ref.watch(auditRemoteDataSourceProvider),
   );
+});
+
+final incomeStatementViewModelProvider = StateNotifierProvider<IncomeStatementViewModel, IncomeStatementState>((ref) {
+  return IncomeStatementViewModel(ref.watch(reportsRepositoryProvider));
+});
+
+final investmentReportViewModelProvider = StateNotifierProvider<InvestmentReportViewModel, InvestmentReportState>((ref) {
+  return InvestmentReportViewModel(ref.watch(reportsRepositoryProvider));
 });
 
 // -----------------------------------------------------------------------------
@@ -665,4 +692,43 @@ final employeeChangePasswordVmProvider = StateNotifierProvider<
     EmployeeChangePasswordViewModel, AsyncValue<void>>((ref) {
   ref.read(authRepositoryProvider);
   return EmployeeChangePasswordViewModel(ref);
+});
+
+// -----------------------------------------------------------------------------
+// Support Providers
+// -----------------------------------------------------------------------------
+
+// Data Sources
+final supportRemoteDataSourceProvider = Provider<SupportRemoteDataSource>((ref) {
+  return SupportRemoteDataSourceImpl(dio: ref.watch(dioClientProvider).dio);
+});
+
+// Repository
+final supportRepositoryProvider = Provider<SupportRepository>((ref) {
+  return SupportRepositoryImpl(
+    remoteDataSource: ref.watch(supportRemoteDataSourceProvider),
+  );
+});
+
+// Use Cases
+final submitSupportTicketUseCaseProvider = Provider<SubmitSupportTicketUseCase>((ref) {
+  return SubmitSupportTicketUseCase(
+    repository: ref.watch(supportRepositoryProvider),
+  );
+});
+
+final getSupportMessagesUseCaseProvider = Provider<GetSupportMessagesUseCase>((ref) {
+  return GetSupportMessagesUseCase(
+    repository: ref.watch(supportRepositoryProvider),
+  );
+});
+
+// ViewModel
+final supportViewModelProvider = ChangeNotifierProvider<SupportViewModel>((ref) {
+  final viewModel = SupportViewModel(
+    submitSupportTicketUseCase: ref.watch(submitSupportTicketUseCaseProvider),
+    getSupportMessagesUseCase: ref.watch(getSupportMessagesUseCaseProvider),
+  );
+  ref.onDispose(viewModel.dispose);
+  return viewModel;
 });

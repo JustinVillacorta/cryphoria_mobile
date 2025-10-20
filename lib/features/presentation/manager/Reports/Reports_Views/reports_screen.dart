@@ -14,9 +14,6 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  int selectedPeriodIndex = 0;
-
-  final List<String> periods = ['Daily', 'Weekly', 'Monthly', 'Quarterly'];
 
   @override
   Widget build(BuildContext context) {
@@ -36,45 +33,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   fontWeight: FontWeight.w700,
                   color: Colors.black87,
                 ),
-              ),
-              const SizedBox(height: 24),
-
-              // Period Buttons
-              Row(
-                children: List.generate(periods.length, (index) {
-                  final isSelected = selectedPeriodIndex == index;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedPeriodIndex = index;
-                        });
-                      },
-                      child: Container(
-                        margin: EdgeInsets.only(right: index < periods.length - 1 ? 8 : 0),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isSelected ? const Color(0x1A9747FF) : Colors.white,
-                          borderRadius: BorderRadius.circular(50),
-                          border: Border.all(
-                            color: isSelected ? const Color(0x1A9747FF) : Colors.grey[300]!,
-                            width: 1.2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            periods[index],
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.normal,
-                              color: isSelected ? const Color(0xff9747FF) : Colors.grey[700],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
               ),
               const SizedBox(height: 24),
 
@@ -150,7 +108,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               builder: (context) => const PayrollSummaryScreen(),
             ),
           );
-        } else if (title == 'VAT Report') {
+        } else if (title == 'Tax Report') {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -413,7 +371,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'VAT Report',
+                        'Tax Report',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
