@@ -87,12 +87,6 @@ class ReportsViewModel extends ChangeNotifier {
         color: const Color(0xFF8B5CF6),
         icon: Icons.trending_up,
       ),
-      ReportCard(
-        title: 'Investment Performance',
-        subtitle: 'Last updated: Today',
-        color: const Color(0xFFF97316),
-        icon: Icons.show_chart,
-      ),
     ];
   }
 
