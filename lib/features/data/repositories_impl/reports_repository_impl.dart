@@ -74,16 +74,6 @@ class ReportsRepositoryImpl implements ReportsRepository {
   }
 
   @override
-  Future<BalanceSheet> getBalanceSheet() async {
-    try {
-      final balanceSheetModel = await auditRemoteDataSource.getBalanceSheet();
-      return balanceSheetModel.toEntity();
-    } catch (e) {
-      throw Exception('Failed to get balance sheet: $e');
-    }
-  }
-
-  @override
   Future<List<BalanceSheet>> getAllBalanceSheets() async {
     try {
       final balanceSheetModels = await auditRemoteDataSource.getAllBalanceSheets();

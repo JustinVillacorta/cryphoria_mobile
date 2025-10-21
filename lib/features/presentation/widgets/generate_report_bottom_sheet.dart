@@ -602,7 +602,13 @@ class _GenerateReportBottomSheetState extends ConsumerState<GenerateReportBottom
         print("✅ Tax Reports fetched successfully");
       } else if (selectedReportType == 'Balance Sheet') {
         print("📤 Fetching Balance Sheet...");
-        final balanceSheet = await reportsRepository.getBalanceSheet();
+        final balanceSheets = await reportsRepository.getAllBalanceSheets();
+        if (balanceSheets.isEmpty) {
+          throw Exception('No balance sheets available');
+        }
+        // Use the most recent balance sheet
+        final balanceSheet = balanceSheets.reduce((a, b) => 
+          a.generatedAt.isAfter(b.generatedAt) ? a : b);
         data = balanceSheet.toJson();
         reportId = 'balance_sheet_${DateTime.now().millisecondsSinceEpoch}';
         print("✅ Balance Sheet fetched successfully");

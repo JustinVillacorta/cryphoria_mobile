@@ -29,7 +29,6 @@ abstract class ReportsRepository {
 
   /// Financial Reports
   Future<List<TaxReport>> getTaxReports();
-  Future<BalanceSheet> getBalanceSheet();
   Future<List<BalanceSheet>> getAllBalanceSheets();
   Future<CashFlowListResponse> getCashFlow();
   Future<Portfolio> getPortfolioValue();

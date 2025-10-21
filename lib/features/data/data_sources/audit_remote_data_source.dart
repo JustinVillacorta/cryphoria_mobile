@@ -25,7 +25,6 @@ abstract class AuditRemoteDataSource {
   
   // Financial Reports
   Future<List<TaxReportModel>> getTaxReports();
-  Future<BalanceSheetModel> getBalanceSheet();
   Future<List<BalanceSheetModel>> getAllBalanceSheets();
   Future<CashFlowListResponseModel> getCashFlow();
   Future<PortfolioModel> getPortfolioValue();
@@ -355,28 +354,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   }
 
   @override
-  Future<BalanceSheetModel> getBalanceSheet() async {
-    try {
-      print("📤 Getting balance sheet from /api/balance-sheet/latest/");
-      
-      final response = await dio.get('/api/balance-sheet/latest/');
-
-      print("📥 Balance sheet response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-
-      if (response.statusCode == 200) {
-        return BalanceSheetModel.fromJson(response.data as Map<String, dynamic>);
-      } else {
-        throw Exception('Failed to get balance sheet: ${response.statusMessage}');
-      }
-    } on DioException catch (e) {
-      print("❌ Error getting balance sheet: $e");
-      throw Exception('Network error: ${e.message}');
-    }
-  }
-
-  @override
   Future<List<BalanceSheetModel>> getAllBalanceSheets() async {
     try {
       print("📤 Getting all balance sheets from /api/balance-sheet/list/");
@@ -388,7 +365,8 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
-        final List<dynamic> balanceSheets = response.data as List<dynamic>;
+        final responseData = response.data as Map<String, dynamic>;
+        final List<dynamic> balanceSheets = responseData['balance_sheets'] as List<dynamic>;
         return balanceSheets.map((sheet) => BalanceSheetModel.fromJson(sheet as Map<String, dynamic>)).toList();
       } else {
         throw Exception('Failed to get balance sheets: ${response.statusMessage}');

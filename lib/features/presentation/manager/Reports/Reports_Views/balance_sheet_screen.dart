@@ -7,6 +7,7 @@ import '../../../../domain/entities/balance_sheet.dart';
 import '../../../widgets/excel_export_helper.dart';
 import '../../../widgets/pdf_generation_helper.dart';
 import '../../../widgets/download_report_bottom_sheet.dart';
+import '../../../widgets/report_period_selector.dart';
 
 class BalanceSheetScreen extends ConsumerStatefulWidget {
   const BalanceSheetScreen({super.key});
@@ -26,12 +27,9 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   @override
   void initState() {
     super.initState();
-    // Load both single and all balance sheets
+    // Load balance sheet list only
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(balanceSheetViewModelProvider);
-      if (state.balanceSheet == null && !state.isLoading) {
-        ref.read(balanceSheetViewModelProvider.notifier).loadBalanceSheet();
-      }
       if (state.balanceSheets == null && !state.isLoading) {
         ref.read(balanceSheetViewModelProvider.notifier).loadAllBalanceSheets();
       }
@@ -125,7 +123,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       );
     }
 
-    if (!state.hasData || state.balanceSheet == null) {
+    if (!state.hasData || state.selectedBalanceSheet == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -173,6 +171,10 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       padding: const EdgeInsets.only(top: 8),
       child: Column(
         children: [
+          // Period Selector
+          if (state.balanceSheets != null && state.balanceSheets!.length > 1)
+            _buildPeriodSelector(state),
+          
           // Professional Header (white, subtle border)
           Container(
             margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
@@ -242,7 +244,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Total Assets',
-                        '\$${state.balanceSheet!.totals.totalAssets.toStringAsFixed(2)}',
+                        '\$${state.selectedBalanceSheet!.totals.totalAssets.toStringAsFixed(2)}',
                         const Color(0xFF10B981),
                         Icons.trending_up,
                       ),
@@ -251,7 +253,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Total Liabilities',
-                        '\$${state.balanceSheet!.totals.totalLiabilities.toStringAsFixed(2)}',
+                        '\$${state.selectedBalanceSheet!.totals.totalLiabilities.toStringAsFixed(2)}',
                         const Color(0xFFEF4444),
                         Icons.trending_down,
                       ),
@@ -264,7 +266,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Total Equity',
-                        '\$${state.balanceSheet!.totals.totalEquity.toStringAsFixed(2)}',
+                        '\$${state.selectedBalanceSheet!.totals.totalEquity.toStringAsFixed(2)}',
                         const Color(0xFF3B82F6),
                         Icons.account_balance_wallet,
                       ),
@@ -397,7 +399,66 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           const SizedBox(height: 15),
 
           // Content
-          isChartView ? _buildChartView(state) : _buildTableView(state.balanceSheet!),
+          isChartView ? _buildChartView(state) : _buildTableView(state.selectedBalanceSheet!),
+          
+          const SizedBox(height: 20),
+          
+          // Download Report Button (visible in both views)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.grey[400]!),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Close',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _showDownloadOptions(context, state.selectedBalanceSheet!),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.download, size: 16, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text(
+                          'Download Report',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 40),
         ],
       ),
     );
@@ -406,98 +467,6 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   Widget _buildChartView(BalanceSheetState balanceSheetState) {
     return Column(
         children: [
-        // Professional Chart Header
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.grey[200]!,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.trending_up,
-                      color: Color(0xFF8B5CF6),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Financial Performance Trend',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Assets vs Liabilities over time',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.calendar_today, size: 14, color: Colors.purple[600]),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Monthly',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.purple[600],
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
         const SizedBox(height: 20),
 
         // Professional Chart Container
@@ -521,12 +490,77 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
             ],
           ),
           child: RepaintBoundary(
-            child: LineChart(
-              LineChartData(
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: _getMaxValue(balanceSheetState.selectedBalanceSheet!),
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      return BarTooltipItem(
+                        '${rod.toY.toStringAsFixed(0)}\n${_getTooltipText(group.x.toDouble(), rodIndex)}',
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (double value, TitleMeta meta) {
+                        const style = TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        );
+                        switch (value.toInt()) {
+                          case 0:
+                            return const Text('Assets', style: style);
+                          case 1:
+                            return const Text('Liabilities + Equity', style: style);
+                          default:
+                            return const Text('');
+                        }
+                      },
+                      reservedSize: 30,
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      interval: _getMaxValue(balanceSheetState.selectedBalanceSheet!) > 0 ? _getMaxValue(balanceSheetState.selectedBalanceSheet!) / 5 : 1000,
+                      getTitlesWidget: (double value, TitleMeta meta) {
+                        return Text(
+                          '\$${(value / 1000).toStringAsFixed(0)}K',
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                barGroups: _getBarGroups(balanceSheetState.selectedBalanceSheet!),
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 2500,
+                  horizontalInterval: _getMaxValue(balanceSheetState.selectedBalanceSheet!) > 0 ? _getMaxValue(balanceSheetState.selectedBalanceSheet!) / 5 : 1000,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: Colors.grey[200]!,
@@ -534,254 +568,14 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     );
                   },
                 ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        const style = TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                        );
-                        final index = value.toInt();
-                        final balanceSheets = balanceSheetState.balanceSheets ?? [];
-                        Widget text;
-                        
-                        if (index >= 0 && index < balanceSheets.length) {
-                          final date = balanceSheets[index].asOfDate;
-                          text = Text('${date.day}/${date.month}', style: style);
-                        } else {
-                          text = const Text('', style: style);
-                        }
-                        
-                        return SideTitleWidget(
-                          meta: meta,
-                          child: text,
-                        );
-                      },
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: _getYAxisInterval(balanceSheetState.balanceSheets ?? []),
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        return SideTitleWidget(
-                          meta: meta,
-                          space: 8,
-                          child: Text(
-                            _formatYAxisLabel(value),
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 9,
-                            ),
-                          ),
-                        );
-                      },
-                      reservedSize: 55,
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: (balanceSheetState.balanceSheets?.length ?? 1) - 1.0,
-                minY: _getMinY(balanceSheetState.balanceSheets ?? []),
-                maxY: _getMaxY(balanceSheetState.balanceSheets ?? []),
-                lineBarsData: [
-                  // Blue line (Assets)
-                  LineChartBarData(
-                    spots: _getHistoricalAssetsSpots(balanceSheetState.balanceSheets ?? []),
-                    isCurved: false,
-                    color: Colors.blue,
-                    barWidth: 2,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 3,
-                          color: Colors.blue,
-                          strokeWidth: 1,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                  // Green line (Liabilities)
-                  LineChartBarData(
-                    spots: _getHistoricalLiabilitiesSpots(balanceSheetState.balanceSheets ?? []),
-                    isCurved: false,
-                    color: Colors.green,
-                    barWidth: 2,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 3,
-                          color: Colors.green,
-                          strokeWidth: 1,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                ],
               ),
             ),
           ),
           ),
 
-          const SizedBox(height: 20),
-
-        // Professional Summary Card
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF8B5CF6).withOpacity(0.05),
-                const Color(0xFF3B82F6).withOpacity(0.05),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFF8B5CF6).withOpacity(0.2),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.insights,
-                      color: Color(0xFF8B5CF6),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Financial Insights',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey[200]!,
-                    width: 1,
-                  ),
-                ),
-                child: const Text(
-                  'Your balance sheet shows a healthy financial position with assets exceeding liabilities, indicating strong financial stability and growth potential.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                    height: 1.6,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-          const SizedBox(height: 20),
-
-          // Action Buttons
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey[400]!),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Close',
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _showDownloadOptions(context, balanceSheetState.balanceSheet!),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.download, size: 16, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        'Download Report',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 40),
         ],
       );
-  }
+    }
 
   Widget _buildTableView(BalanceSheet balanceSheet) {
     return SingleChildScrollView(
@@ -815,32 +609,6 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 ),
               ),
               const Spacer(),
-              GestureDetector(
-                onTap: () => _exportToExcel(context, balanceSheet),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.green[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green[200]!),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.download, size: 14, color: Colors.green[600]),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Export to Excel',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.green[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
 
@@ -968,30 +736,6 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                       Container(height: 1, color: Colors.grey[300]),
                       const SizedBox(height: 12),
                       _buildSummaryRow('Liabilities + Equity', '\$${(balanceSheet.totals.totalLiabilities + balanceSheet.totals.totalEquity).toStringAsFixed(2)}', isTotal: true),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green[200]!),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check_circle, size: 16, color: Colors.green[600]),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Balance Sheet is balanced',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.green[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -1165,80 +909,6 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   }
 
   // Helper methods for Y-axis formatting
-  String _formatYAxisLabel(double value) {
-    if (value >= 1000000) {
-      return '${(value / 1000000).toStringAsFixed(1)}M';
-    } else if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(0)}K';
-    } else {
-      return value.toStringAsFixed(0);
-    }
-  }
-
-  double _getYAxisInterval(List<BalanceSheet> balanceSheets) {
-    final maxValue = _getMaxY(balanceSheets);
-    if (maxValue <= 1000) return 100;
-    if (maxValue <= 10000) return 1000;
-    if (maxValue <= 100000) return 10000;
-    if (maxValue <= 1000000) return 100000;
-    if (maxValue <= 10000000) return 1000000;
-    return 10000000;
-  }
-
-  // Helper methods for generating real historical chart data
-  List<FlSpot> _getHistoricalAssetsSpots(List<BalanceSheet> balanceSheets) {
-    if (balanceSheets.isEmpty) return [];
-    
-    return balanceSheets.asMap().entries.map((entry) {
-      final index = entry.key.toDouble();
-      final balanceSheet = entry.value;
-      return FlSpot(index, balanceSheet.totals.totalAssets);
-    }).toList();
-  }
-
-  List<FlSpot> _getHistoricalLiabilitiesSpots(List<BalanceSheet> balanceSheets) {
-    if (balanceSheets.isEmpty) return [];
-    
-    return balanceSheets.asMap().entries.map((entry) {
-      final index = entry.key.toDouble();
-      final balanceSheet = entry.value;
-      return FlSpot(index, balanceSheet.totals.totalLiabilities);
-    }).toList();
-  }
-
-  double _getMinY(List<BalanceSheet> balanceSheets) {
-    if (balanceSheets.isEmpty) return 0.0;
-    
-    double minValue = double.infinity;
-    for (final sheet in balanceSheets) {
-      final assets = sheet.totals.totalAssets;
-      final liabilities = sheet.totals.totalLiabilities;
-      minValue = [minValue, assets, liabilities].reduce((a, b) => a < b ? a : b);
-    }
-    
-    // If all values are zero, return 0
-    if (minValue == double.infinity || minValue == 0.0) return 0.0;
-    
-    // Ensure minimum is never negative for better chart display
-    return minValue < 0 ? minValue - (minValue.abs() * 0.1) : 0.0;
-  }
-
-  double _getMaxY(List<BalanceSheet> balanceSheets) {
-    if (balanceSheets.isEmpty) return 10000.0;
-    
-    double maxValue = 0.0;
-    for (final sheet in balanceSheets) {
-      final assets = sheet.totals.totalAssets;
-      final liabilities = sheet.totals.totalLiabilities;
-      maxValue = [maxValue, assets, liabilities].reduce((a, b) => a > b ? a : b);
-    }
-    
-    // If all values are zero, return default range for better chart display
-    if (maxValue == 0.0) return 10000.0;
-    
-    // Add some padding above the maximum value
-    return maxValue + (maxValue * 0.1);
-  }
 
   Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
     return Container(
@@ -1593,6 +1263,85 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           ),
         );
       }
+    }
+  }
+
+  Widget _buildPeriodSelector(BalanceSheetState state) {
+    if (state.balanceSheets == null || state.balanceSheets!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return ReportPeriodSelector<BalanceSheet>(
+      items: state.balanceSheets!,
+      selectedItem: state.selectedBalanceSheet!,
+      formatPeriod: (balanceSheet) {
+        final start = balanceSheet.periodStart;
+        final end = balanceSheet.periodEnd;
+        return '${start.day}/${start.month}/${start.year} - ${end.day}/${end.month}/${end.year}';
+      },
+      onPeriodChanged: (balanceSheet) {
+        ref.read(balanceSheetViewModelProvider.notifier).selectBalanceSheet(balanceSheet);
+      },
+    );
+  }
+
+  double _getMaxValue(BalanceSheet balanceSheet) {
+    final assets = balanceSheet.totals.totalAssets.abs();
+    final liabilities = balanceSheet.totals.totalLiabilities.abs();
+    final equity = balanceSheet.totals.totalEquity.abs();
+    final maxValue = (assets > liabilities + equity ? assets : liabilities + equity) * 1.1;
+    
+    // Ensure we never return 0 to prevent chart interval issues
+    if (maxValue == 0) {
+      return 10000; // Default range for empty data
+    }
+    
+    return maxValue;
+  }
+
+  List<BarChartGroupData> _getBarGroups(BalanceSheet balanceSheet) {
+    return [
+      // Assets Bar
+      BarChartGroupData(
+        x: 0,
+        barRods: [
+          BarChartRodData(
+            toY: balanceSheet.totals.totalAssets.abs(),
+            color: const Color(0xFF10B981), // Green for assets
+            width: 40,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ],
+      ),
+      // Liabilities + Equity Bar
+      BarChartGroupData(
+        x: 1,
+        barRods: [
+          BarChartRodData(
+            toY: (balanceSheet.totals.totalLiabilities + balanceSheet.totals.totalEquity).abs(),
+            color: const Color(0xFFEF4444), // Red for liabilities + equity
+            width: 40,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  String _getTooltipText(double x, int rodIndex) {
+    switch (x.toInt()) {
+      case 0:
+        return 'Total Assets';
+      case 1:
+        return 'Liabilities + Equity';
+      default:
+        return '';
     }
   }
 }

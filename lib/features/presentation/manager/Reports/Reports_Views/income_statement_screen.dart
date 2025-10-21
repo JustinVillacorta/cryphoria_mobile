@@ -555,13 +555,23 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                   child: BarChart(
                     BarChartData(
                       alignment: BarChartAlignment.spaceAround,
-                      maxY: [
-                        incomeStatement.revenue.totalRevenue,
-                        incomeStatement.expenses.totalExpenses,
-                        incomeStatement.grossProfit.grossProfit,
-                        incomeStatement.netIncome.netIncome.abs(),
-                      ].reduce((a, b) => a > b ? a : b) * 1.2,
-                      barTouchData: BarTouchData(enabled: false),
+                      maxY: _getWaterfallMaxY(incomeStatement),
+                      minY: _getWaterfallMinY(incomeStatement),
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            return BarTooltipItem(
+                              '${rod.toY.toStringAsFixed(0)}\n${_getWaterfallTooltipText(group.x.toDouble())}',
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                       titlesData: FlTitlesData(
                         show: true,
                         rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -569,11 +579,19 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
+                            reservedSize: 40,
                             getTitlesWidget: (double value, TitleMeta meta) {
-                              const titles = ['Revenue', 'Expenses', 'Gross Profit', 'Net Income'];
-                              return Text(
-                                titles[value.toInt()],
-                                style: const TextStyle(fontSize: 10),
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  _getWaterfallLabel(value.toInt()),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black87,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                               );
                             },
                           ),
@@ -581,58 +599,34 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
+                            reservedSize: 50,
+                            interval: _getWaterfallMaxY(incomeStatement) / 5,
                             getTitlesWidget: (double value, TitleMeta meta) {
                               return Text(
-                                '\$${value.toStringAsFixed(0)}',
-                                style: const TextStyle(fontSize: 10),
+                                '\$${(value / 1000).toStringAsFixed(0)}K',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87,
+                                ),
                               );
                             },
                           ),
                         ),
                       ),
                       borderData: FlBorderData(show: false),
-                      barGroups: [
-                        BarChartGroupData(
-                          x: 0,
-                          barRods: [
-                            BarChartRodData(
-                              toY: incomeStatement.revenue.totalRevenue,
-                              color: const Color(0xFF4CAF50),
-                              width: 20,
-                            ),
-                          ],
-                        ),
-                        BarChartGroupData(
-                          x: 1,
-                          barRods: [
-                            BarChartRodData(
-                              toY: incomeStatement.expenses.totalExpenses,
-                              color: const Color(0xFFF44336),
-                              width: 20,
-                            ),
-                          ],
-                        ),
-                        BarChartGroupData(
-                          x: 2,
-                          barRods: [
-                            BarChartRodData(
-                              toY: incomeStatement.grossProfit.grossProfit,
-                              color: const Color(0xFF2196F3),
-                              width: 20,
-                            ),
-                          ],
-                        ),
-                        BarChartGroupData(
-                          x: 3,
-                          barRods: [
-                            BarChartRodData(
-                              toY: incomeStatement.netIncome.netIncome.abs(),
-                              color: incomeStatement.netIncome.isProfitable ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
-                              width: 20,
-                            ),
-                          ],
-                        ),
-                      ],
+                      barGroups: _getWaterfallBarGroups(incomeStatement),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: _getWaterfallMaxY(incomeStatement) / 5,
+                        getDrawingHorizontalLine: (value) {
+                          return FlLine(
+                            color: Colors.grey[200]!,
+                            strokeWidth: 1,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -1088,5 +1082,91 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
         );
       }
     }
+  }
+
+  // Waterfall Chart Helper Methods
+  double _getWaterfallMaxY(IncomeStatement incomeStatement) {
+    final maxValue = [
+      incomeStatement.revenue.totalRevenue,
+      incomeStatement.grossProfit.grossProfit,
+      incomeStatement.netIncome.netIncome.abs(),
+    ].reduce((a, b) => a > b ? a : b);
+    return maxValue * 1.2;
+  }
+
+  double _getWaterfallMinY(IncomeStatement incomeStatement) {
+    // For waterfall, we need negative space for expenses
+    final minValue = incomeStatement.expenses.totalExpenses;
+    return -minValue * 1.2;
+  }
+
+  List<BarChartGroupData> _getWaterfallBarGroups(IncomeStatement incomeStatement) {
+    return [
+      // 1. Total Revenue (Starting point)
+      BarChartGroupData(
+        x: 0,
+        barRods: [
+          BarChartRodData(
+            fromY: 0,
+            toY: incomeStatement.revenue.totalRevenue,
+            color: const Color(0xFF10B981), // Green
+            width: 40,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ],
+      ),
+      // 2. Total Expenses (negative bar)
+      BarChartGroupData(
+        x: 1,
+        barRods: [
+          BarChartRodData(
+            fromY: -incomeStatement.expenses.totalExpenses,
+            toY: 0,
+            color: const Color(0xFFEF4444), // Red
+            width: 40,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(4),
+              bottomRight: Radius.circular(4),
+            ),
+          ),
+        ],
+      ),
+      // 3. Net Income (Final result)
+      BarChartGroupData(
+        x: 2,
+        barRods: [
+          BarChartRodData(
+            fromY: incomeStatement.netIncome.netIncome < 0 ? incomeStatement.netIncome.netIncome : 0,
+            toY: incomeStatement.netIncome.netIncome > 0 ? incomeStatement.netIncome.netIncome : 0,
+            color: incomeStatement.netIncome.isProfitable 
+              ? const Color(0xFF059669) 
+              : const Color(0xFFDC2626),
+            width: 45,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  String _getWaterfallLabel(int index) {
+    const labels = [
+      'Total\nRevenue',
+      'Total\nExpenses',
+      'Net\nIncome',
+    ];
+    return labels[index];
+  }
+
+  String _getWaterfallTooltipText(double x) {
+    const tooltips = [
+      'Total Revenue',
+      'Total Expenses',
+      'Net Income',
+    ];
+    return tooltips[x.toInt()];
   }
 }

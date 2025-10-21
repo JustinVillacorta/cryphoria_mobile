@@ -460,18 +460,55 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                 ),
               ],
             ),
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 1000, // Reduced interval for better visibility
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey[200]!,
-                      strokeWidth: 1,
-                    );
-                  },
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: _getWaterfallMaxY(cashFlow),
+                minY: _getWaterfallMinY(cashFlow),
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      // Use only fields present in API response
+                      String tooltipText;
+                      double tooltipValue;
+                      
+                      switch (group.x.toInt()) {
+                        case 0: // Beginning Cash
+                          tooltipText = 'Beginning Cash';
+                          tooltipValue = cashFlow.cashSummary.beginningCash;
+                          break;
+                        case 1: // Operating Activities
+                          tooltipText = 'Operating Activities';
+                          tooltipValue = cashFlow.cashSummary.netCashFromOperations;
+                          break;
+                        case 2: // Investing Activities
+                          tooltipText = 'Investing Activities';
+                          tooltipValue = cashFlow.cashSummary.netCashFromInvesting;
+                          break;
+                        case 3: // Financing Activities
+                          tooltipText = 'Financing Activities';
+                          tooltipValue = cashFlow.cashSummary.netCashFromFinancing;
+                          break;
+                        case 4: // Ending Cash
+                          tooltipText = 'Ending Cash';
+                          tooltipValue = cashFlow.cashSummary.endingCash;
+                          break;
+                        default:
+                          tooltipText = 'Unknown';
+                          tooltipValue = rod.toY;
+                      }
+                      
+                      return BarTooltipItem(
+                        '$tooltipText\n\$${tooltipValue.toStringAsFixed(0)}',
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 titlesData: FlTitlesData(
                   show: true,
@@ -480,41 +517,19 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
+                      reservedSize: 40,
                       getTitlesWidget: (double value, TitleMeta meta) {
-                        const style = TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                        );
-                        Widget text;
-                        switch (value.toInt()) {
-                          case 0:
-                            text = const Text('Jan', style: style);
-                            break;
-                          case 1:
-                            text = const Text('Feb', style: style);
-                            break;
-                          case 2:
-                            text = const Text('Mar', style: style);
-                            break;
-                          case 3:
-                            text = const Text('Apr', style: style);
-                            break;
-                          case 4:
-                            text = const Text('May', style: style);
-                            break;
-                          case 5:
-                            text = const Text('Jun', style: style);
-                            break;
-                          default:
-                            text = const Text('', style: style);
-                            break;
-                        }
-                        return SideTitleWidget(
-                          meta: meta,
-                          child: text,
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            _getWaterfallLabel(value.toInt()),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         );
                       },
                     ),
@@ -522,78 +537,34 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: _getYAxisInterval(cashFlow),
+                      reservedSize: 50,
+                      interval: _getWaterfallMaxY(cashFlow) > 0 ? _getWaterfallMaxY(cashFlow) / 5 : 1000,
                       getTitlesWidget: (double value, TitleMeta meta) {
-                        return SideTitleWidget(
-                          meta: meta,
-                          space: 8,
-                          child: Text(
-                            _formatYAxisLabel(value),
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 9,
-                            ),
+                        return Text(
+                          '\$${(value / 1000).toStringAsFixed(0)}K',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
                           ),
                         );
                       },
-                      reservedSize: 50,
                     ),
                   ),
                 ),
-                borderData: FlBorderData(
+                borderData: FlBorderData(show: false),
+                barGroups: _getWaterfallBarGroups(cashFlow),
+                gridData: FlGridData(
                   show: true,
-                  border: Border.all(
-                    color: Colors.grey[300]!,
-                    width: 1,
-                  ),
+                  drawVerticalLine: false,
+                  horizontalInterval: _getWaterfallMaxY(cashFlow) > 0 ? _getWaterfallMaxY(cashFlow) / 5 : 1000,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Colors.grey[200]!,
+                      strokeWidth: 1,
+                    );
+                  },
                 ),
-                minX: 0,
-                maxX: 5,
-                minY: _getMinY(cashFlow),
-                maxY: _getMaxY(cashFlow),
-                lineBarsData: [
-                  // Blue line (Operating Cash Flow)
-                  LineChartBarData(
-                    spots: _getOperatingCashFlowSpots(cashFlow),
-                    isCurved: false,
-                    color: Colors.blue,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: Colors.blue,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                  // Green line (Investing Cash Flow)
-                  LineChartBarData(
-                    spots: _getInvestingCashFlowSpots(cashFlow),
-                    isCurved: false,
-                    color: Colors.green,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: Colors.green,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                ],
               ),
             ),
           ),
@@ -724,38 +695,34 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
             ),
             child: Column(
               children: [
-                // Operating Activities Section - using dynamic data from summary
-                _buildSectionHeader('Operating Activities', '\$${cashFlow.cashSummary.netCashFromOperations.toStringAsFixed(2)}', Colors.green[600]!),
+                // Operating Activities Section - using only cash_summary data
+                _buildSectionHeader('Operating Activities', '\$${cashFlow.cashSummary.netCashFromOperations.toStringAsFixed(2)}', 
+                  cashFlow.cashSummary.netCashFromOperations >= 0 ? Colors.green[600]! : Colors.red[600]!),
                 const SizedBox(height: 8),
-                _buildCashFlowRow('Cash Receipts', '\$${cashFlow.operatingActivities.cashReceipts.total.toStringAsFixed(2)}', Colors.green[600]!),
-                _buildCashFlowRow('Cash Payments', '\$${cashFlow.operatingActivities.cashPayments.total.toStringAsFixed(2)}', Colors.red[600]!),
-                _buildTotalRow('Net Cash from Operating Activities', '\$${cashFlow.cashSummary.netCashFromOperations.toStringAsFixed(2)}', Colors.green[600]!),
+                _buildTotalRow('Net Cash from Operating Activities', '\$${cashFlow.cashSummary.netCashFromOperations.toStringAsFixed(2)}', 
+                  cashFlow.cashSummary.netCashFromOperations >= 0 ? Colors.green[600]! : Colors.red[600]!),
 
                 const SizedBox(height: 20),
 
-                // Investing Activities Section - using dynamic data from summary
+                // Investing Activities Section - using only cash_summary data
                 _buildSectionHeader('Investing Activities', '\$${cashFlow.cashSummary.netCashFromInvesting.toStringAsFixed(2)}', 
                   cashFlow.cashSummary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
                 const SizedBox(height: 8),
-                _buildCashFlowRow('Cash Receipts', '\$${cashFlow.investingActivities.cashReceipts.total.toStringAsFixed(2)}', Colors.green[600]!),
-                _buildCashFlowRow('Cash Payments', '\$${cashFlow.investingActivities.cashPayments.total.toStringAsFixed(2)}', Colors.red[600]!),
                 _buildTotalRow('Net Cash from Investing Activities', '\$${cashFlow.cashSummary.netCashFromInvesting.toStringAsFixed(2)}', 
                   cashFlow.cashSummary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
 
                 const SizedBox(height: 20),
 
-                // Financing Activities Section - using dynamic data from summary
+                // Financing Activities Section - using only cash_summary data
                 _buildSectionHeader('Financing Activities', '\$${cashFlow.cashSummary.netCashFromFinancing.toStringAsFixed(2)}', 
                   cashFlow.cashSummary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
                 const SizedBox(height: 8),
-                _buildCashFlowRow('Cash Receipts', '\$${cashFlow.financingActivities.cashReceipts.total.toStringAsFixed(2)}', Colors.green[600]!),
-                _buildCashFlowRow('Cash Payments', '\$${cashFlow.financingActivities.cashPayments.total.toStringAsFixed(2)}', Colors.red[600]!),
                 _buildTotalRow('Net Cash from Financing Activities', '\$${cashFlow.cashSummary.netCashFromFinancing.toStringAsFixed(2)}', 
                   cashFlow.cashSummary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
 
                 const SizedBox(height: 20),
 
-                // Summary Section
+                // Summary Section - using only cash_summary data
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -767,6 +734,8 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                   ),
                   child: Column(
                     children: [
+                      _buildSummaryRow('Beginning Cash', '\$${cashFlow.cashSummary.beginningCash.toStringAsFixed(2)}', Colors.blue[600]!),
+                      const SizedBox(height: 8),
                       _buildSummaryRow('Net Cash from Operating Activities', '\$${cashFlow.cashSummary.netCashFromOperations.toStringAsFixed(2)}', 
                         cashFlow.cashSummary.netCashFromOperations >= 0 ? Colors.green[600]! : Colors.red[600]!),
                       const SizedBox(height: 8),
@@ -780,6 +749,8 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                       const SizedBox(height: 12),
                       _buildSummaryRow('Net Change in Cash', '\$${cashFlow.cashSummary.netChangeInCash.toStringAsFixed(2)}', 
                         cashFlow.cashSummary.netChangeInCash >= 0 ? Colors.green[600]! : Colors.red[600]!, isTotal: true),
+                      const SizedBox(height: 8),
+                      _buildSummaryRow('Ending Cash', '\$${cashFlow.cashSummary.endingCash.toStringAsFixed(2)}', Colors.blue[600]!, isTotal: true),
                     ],
                   ),
                 ),
@@ -817,38 +788,6 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: color,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCashFlowRow(String item, String amount, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              item,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[700],
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              amount,
-              style: TextStyle(
-                fontSize: 14,
-                color: color,
-                fontWeight: FontWeight.w500,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -928,91 +867,30 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     );
   }
 
-  // Helper methods for generating dynamic chart data
-  List<FlSpot> _getOperatingCashFlowSpots(CashFlow cashFlow) {
-    // Generate 6 data points based on operating cash flow
-    final operatingCashFlow = cashFlow.cashSummary.netCashFromOperations;
+  // Waterfall Chart Helper Methods - Using Real Data Only
+  double _getWaterfallMaxY(CashFlow cashFlow) {
+    // Use only fields present in API response
+    final maxValue = [
+      cashFlow.cashSummary.beginningCash,
+      cashFlow.cashSummary.endingCash,
+    ].reduce((a, b) => a > b ? a : b);
     
-    print("📊 Operating Cash Flow: $operatingCashFlow");
-    
-    // Always return data points, even if zero, to maintain chart structure
-    final spots = [
-      FlSpot(0, operatingCashFlow * 0.8),
-      FlSpot(1, operatingCashFlow * 0.9),
-      FlSpot(2, operatingCashFlow * 0.85),
-      FlSpot(3, operatingCashFlow * 0.95),
-      FlSpot(4, operatingCashFlow * 0.88),
-      FlSpot(5, operatingCashFlow),
-    ];
-    print("📊 Operating Cash Flow Spots: $spots");
-    return spots;
-  }
-
-  List<FlSpot> _getInvestingCashFlowSpots(CashFlow cashFlow) {
-    // Generate 6 data points based on investing cash flow
-    final investingCashFlow = cashFlow.cashSummary.netCashFromInvesting;
-    
-    print("📊 Investing Cash Flow: $investingCashFlow");
-    
-    // Always return data points, even if zero, to maintain chart structure
-    final spots = [
-      FlSpot(0, investingCashFlow * 0.5),
-      FlSpot(1, investingCashFlow * 0.7),
-      FlSpot(2, investingCashFlow * 0.6),
-      FlSpot(3, investingCashFlow * 0.8),
-      FlSpot(4, investingCashFlow * 0.9),
-      FlSpot(5, investingCashFlow),
-    ];
-    print("📊 Investing Cash Flow Spots: $spots");
-    return spots;
-  }
-
-  double _getMinY(CashFlow cashFlow) {
-    final operatingCashFlow = cashFlow.cashSummary.netCashFromOperations;
-    final investingCashFlow = cashFlow.cashSummary.netCashFromInvesting;
-    
-    // Get the minimum value from both cash flows
-    final minValue = [operatingCashFlow * 0.5, investingCashFlow * 0.5].reduce((a, b) => a < b ? a : b);
-    
-    // Ensure minimum is never negative for better chart display
-    final result = minValue < 0 ? minValue - (minValue.abs() * 0.1) : 0.0;
-    print("📊 Y-Axis Min: $result");
-    return result;
-  }
-
-  double _getMaxY(CashFlow cashFlow) {
-    final operatingCashFlow = cashFlow.cashSummary.netCashFromOperations;
-    final investingCashFlow = cashFlow.cashSummary.netCashFromInvesting;
-    
-    // Get the maximum value from both cash flows
-    final maxValue = [operatingCashFlow, investingCashFlow].reduce((a, b) => a > b ? a : b);
-    
-    // If max is zero, provide a default range for better chart display
-    if (maxValue == 0.0) {
-      print("📊 Y-Axis Max (Default): 10000");
-      return 10000.0;
+    // Ensure we never return 0 to prevent chart interval issues
+    if (maxValue == 0) {
+      return 10000; // Default range for empty data
     }
     
-    // Add some padding above the maximum value
-    final result = maxValue + (maxValue.abs() * 0.1);
-    print("📊 Y-Axis Max (Real): $result");
-    return result;
+    return maxValue * 1.2;
   }
 
-  double _getYAxisInterval(CashFlow cashFlow) {
-    final maxValue = _getMaxY(cashFlow);
-    if (maxValue <= 1000) return 100;
-    if (maxValue <= 10000) return 1000;
-    if (maxValue <= 100000) return 10000;
-    if (maxValue <= 1000000) return 100000;
-    return 1000000;
-  }
-
-  String _formatYAxisLabel(double value) {
-    if (value == 0) return '0';
-    if (value < 1000) return value.toStringAsFixed(0);
-    if (value < 1000000) return '${(value / 1000).toStringAsFixed(0)}K';
-    return '${(value / 1000000).toStringAsFixed(1)}M';
+  double _getWaterfallMinY(CashFlow cashFlow) {
+    // Use only fields present in API response
+    final minValue = [
+      cashFlow.cashSummary.netCashFromOperations,
+      cashFlow.cashSummary.netCashFromInvesting,
+      cashFlow.cashSummary.netCashFromFinancing,
+    ].reduce((a, b) => a < b ? a : b);
+    return minValue < 0 ? minValue * 1.2 : 0.0;
   }
 
   Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
@@ -1249,5 +1127,111 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
         ref.read(cashFlowViewModelProvider.notifier).selectCashFlow(cashFlow);
       },
     );
+  }
+
+  // Waterfall Chart Helper Methods
+  List<BarChartGroupData> _getWaterfallBarGroups(CashFlow cashFlow) {
+    // Use only the fields that are present in the API response
+    final beginningCash = cashFlow.cashSummary.beginningCash;
+    final operatingFlow = cashFlow.cashSummary.netCashFromOperations;
+    final investingFlow = cashFlow.cashSummary.netCashFromInvesting;
+    final financingFlow = cashFlow.cashSummary.netCashFromFinancing;
+    final endingCash = cashFlow.cashSummary.endingCash;
+    
+    // Calculate cumulative positions for proper waterfall effect
+    final afterOperating = beginningCash + operatingFlow;
+    final afterInvesting = afterOperating + investingFlow;
+    final afterFinancing = afterInvesting + financingFlow;
+    
+    return [
+      // 1. Beginning Cash (Starting point)
+      BarChartGroupData(
+        x: 0,
+        barRods: [
+          BarChartRodData(
+            fromY: 0,
+            toY: beginningCash,
+            color: const Color(0xFF2196F3), // Blue
+            width: 45,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ],
+      ),
+      // 2. Operating Activities (shows change from beginning)
+      BarChartGroupData(
+        x: 1,
+        barRods: [
+          BarChartRodData(
+            fromY: beginningCash,
+            toY: afterOperating,
+            color: operatingFlow >= 0 
+              ? const Color(0xFF10B981) // Green if positive
+              : const Color(0xFFEF4444), // Red if negative
+            width: 40,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ],
+      ),
+      // 3. Investing Activities (shows change from after operating)
+      BarChartGroupData(
+        x: 2,
+        barRods: [
+          BarChartRodData(
+            fromY: afterOperating,
+            toY: afterInvesting,
+            color: investingFlow >= 0 
+              ? const Color(0xFF10B981) // Green if positive
+              : const Color(0xFFEF4444), // Red if negative
+            width: 40,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ],
+      ),
+      // 4. Financing Activities (shows change from after investing)
+      BarChartGroupData(
+        x: 3,
+        barRods: [
+          BarChartRodData(
+            fromY: afterInvesting,
+            toY: afterFinancing,
+            color: financingFlow >= 0 
+              ? const Color(0xFF10B981) // Green if positive
+              : const Color(0xFFEF4444), // Red if negative
+            width: 40,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ],
+      ),
+      // 5. Ending Cash (Final result - should match afterFinancing)
+      BarChartGroupData(
+        x: 4,
+        barRods: [
+          BarChartRodData(
+            fromY: 0,
+            toY: endingCash,
+            color: const Color(0xFF2196F3), // Blue
+            width: 45,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  String _getWaterfallLabel(int index) {
+    const labels = [
+      'Beginning\nCash',
+      'Operating\nActivities',
+      'Investing\nActivities',
+      'Financing\nActivities',
+      'Ending\nCash',
+    ];
+    return labels[index];
   }
 }

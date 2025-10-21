@@ -9,6 +9,7 @@ class BalanceSheetState {
   final bool isLoading;
   final BalanceSheet? balanceSheet;
   final List<BalanceSheet>? balanceSheets;
+  final BalanceSheet? selectedBalanceSheet;
   final String? error;
   final bool hasData;
 
@@ -16,6 +17,7 @@ class BalanceSheetState {
     this.isLoading = false,
     this.balanceSheet,
     this.balanceSheets,
+    this.selectedBalanceSheet,
     this.error,
     this.hasData = false,
   });
@@ -24,6 +26,7 @@ class BalanceSheetState {
     bool? isLoading,
     BalanceSheet? balanceSheet,
     List<BalanceSheet>? balanceSheets,
+    BalanceSheet? selectedBalanceSheet,
     String? error,
     bool? hasData,
   }) {
@@ -31,6 +34,7 @@ class BalanceSheetState {
       isLoading: isLoading ?? this.isLoading,
       balanceSheet: balanceSheet ?? this.balanceSheet,
       balanceSheets: balanceSheets ?? this.balanceSheets,
+      selectedBalanceSheet: selectedBalanceSheet ?? this.selectedBalanceSheet,
       error: error ?? this.error,
       hasData: hasData ?? this.hasData,
     );
@@ -43,34 +47,23 @@ class BalanceSheetViewModel extends StateNotifier<BalanceSheetState> {
 
   BalanceSheetViewModel(this._reportsRepository) : super(BalanceSheetState());
 
-  Future<void> loadBalanceSheet() async {
-    state = state.copyWith(isLoading: true, error: null);
-    
-    try {
-      final balanceSheet = await _reportsRepository.getBalanceSheet();
-      state = state.copyWith(
-        isLoading: false,
-        balanceSheet: balanceSheet,
-        hasData: true,
-        error: null,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-        hasData: false,
-      );
-    }
-  }
-
   Future<void> loadAllBalanceSheets() async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
       final balanceSheets = await _reportsRepository.getAllBalanceSheets();
+      
+      // Select the most recent balance sheet by default
+      BalanceSheet? selectedSheet;
+      if (balanceSheets.isNotEmpty) {
+        selectedSheet = balanceSheets.reduce((a, b) => 
+          a.generatedAt.isAfter(b.generatedAt) ? a : b);
+      }
+      
       state = state.copyWith(
         isLoading: false,
         balanceSheets: balanceSheets,
+        selectedBalanceSheet: selectedSheet,
         hasData: true,
         error: null,
       );
@@ -84,8 +77,11 @@ class BalanceSheetViewModel extends StateNotifier<BalanceSheetState> {
   }
 
   void refresh() {
-    loadBalanceSheet();
     loadAllBalanceSheets();
+  }
+
+  void selectBalanceSheet(BalanceSheet balanceSheet) {
+    state = state.copyWith(selectedBalanceSheet: balanceSheet);
   }
 
   void clearError() {
