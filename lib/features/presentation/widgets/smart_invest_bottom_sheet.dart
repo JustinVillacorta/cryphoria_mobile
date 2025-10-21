@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'send_investment_eth_modal.dart';
 import '../providers/smart_invest_providers.dart';
 import '../../domain/entities/smart_invest.dart';
+import '../../domain/entities/investment_report.dart';
 
 class SmartInvestBottomSheet extends ConsumerStatefulWidget {
   const SmartInvestBottomSheet({Key? key}) : super(key: key);
@@ -11,7 +12,8 @@ class SmartInvestBottomSheet extends ConsumerStatefulWidget {
   ConsumerState<SmartInvestBottomSheet> createState() => _SmartInvestBottomSheetState();
 }
 
-class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet> {
+class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
+    with SingleTickerProviderStateMixin {
   String searchQuery = '';
   bool isAddingEntry = false;
   bool isEditingEntry = false;
@@ -20,20 +22,31 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   String newName = '';
   String newRole = 'Investor';
   String newNotes = '';
+  int selectedTabIndex = 0;
+  String selectedTransactionFilter = 'ALL'; // ALL, RECEIVED, SENT
 
   // Persistent controllers — avoid recreating controllers in build (prevents cursor jumping / reversed typing)
   final TextEditingController _walletController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+  late TabController _tabController;
 
   final List<String> roles = ['Investor', 'Partner', 'Vendor', 'Client'];
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        selectedTabIndex = _tabController.index;
+      });
+    });
+    
     // Load address book entries when the bottom sheet opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(smartInvestNotifierProvider.notifier).getAddressBookList();
+      ref.read(smartInvestNotifierProvider.notifier).getInvestmentStatistics();
     });
   }
 
@@ -42,6 +55,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     _walletController.dispose();
     _nameController.dispose();
     _notesController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -58,8 +72,17 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       child: Column(
         children: [
           _buildHeader(),
+          _buildTabBar(),
           Expanded(
-            child: isAddingEntry || isEditingEntry ? _buildEntryForm() : _buildAddressBookList(state),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // Address Book Tab
+                isAddingEntry || isEditingEntry ? _buildEntryForm() : _buildAddressBookList(state),
+                // Investment Report Tab
+                _buildInvestmentReportView(state),
+              ],
+            ),
           ),
         ],
       ),
@@ -122,6 +145,27 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 16),
           _buildSearchBar(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[200]!, width: 1),
+        ),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        labelColor: Color(0xFF873FFF),
+        unselectedLabelColor: Colors.grey[600],
+        indicatorColor: Color(0xFF873FFF),
+        indicatorWeight: 3,
+        tabs: const [
+          Tab(text: 'Address Book'),
+          Tab(text: 'Investment Report'),
         ],
       ),
     );
@@ -841,5 +885,381 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         ),
       );
     }
+  }
+
+  Widget _buildInvestmentReportView(SmartInvestState state) {
+    if (state.isStatisticsLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'Loading investment statistics...',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.statisticsError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load investment statistics',
+              style: TextStyle(fontSize: 16, color: Colors.red[600]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.statisticsError!,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => ref.read(smartInvestNotifierProvider.notifier).getInvestmentStatistics(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.investmentStatistics == null) {
+      return const Center(
+        child: Text(
+          'No investment data available',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
+
+    final statistics = state.investmentStatistics!;
+    final filteredTransactions = _getFilteredTransactions(statistics.investments);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Summary Cards
+          _buildSummaryCards(statistics),
+          const SizedBox(height: 24),
+          
+          // Transaction Filter Tabs
+          _buildTransactionFilterTabs(),
+          const SizedBox(height: 16),
+          
+          // Transaction List
+          _buildTransactionList(filteredTransactions),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCards(InvestmentStatistics statistics) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildSummaryCard(
+            'Total Received',
+            '\$${statistics.totalReceived.toStringAsFixed(2)}',
+            const Color(0xFF10B981),
+            Icons.trending_up,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildSummaryCard(
+            'Total Sent',
+            '\$${statistics.totalSent.toStringAsFixed(2)}',
+            const Color(0xFFEF4444),
+            Icons.trending_down,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildSummaryCard(
+            'Transactions',
+            '${statistics.count}',
+            const Color(0xFF3B82F6),
+            Icons.receipt_long,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(String title, String value, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionFilterTabs() {
+    return Row(
+      children: [
+        _buildFilterTab('ALL', selectedTransactionFilter == 'ALL'),
+        const SizedBox(width: 8),
+        _buildFilterTab('RECEIVED', selectedTransactionFilter == 'RECEIVED'),
+        const SizedBox(width: 8),
+        _buildFilterTab('SENT', selectedTransactionFilter == 'SENT'),
+      ],
+    );
+  }
+
+  Widget _buildFilterTab(String label, bool isSelected) {
+    return GestureDetector(
+      onTap: () => setState(() => selectedTransactionFilter = label),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Color(0xFF873FFF) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : Colors.grey[600],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionList(List<InvestmentTransaction> transactions) {
+    if (transactions.isEmpty) {
+      return const Center(
+        child: Column(
+          children: [
+            Icon(Icons.inbox, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No transactions found',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: transactions.map((transaction) => _buildTransactionCard(transaction)).toList(),
+    );
+  }
+
+  Widget _buildTransactionCard(InvestmentTransaction transaction) {
+    final isReceived = transaction.direction == 'RECEIVED';
+    final color = isReceived ? const Color(0xFF10B981) : const Color(0xFFEF4444);
+    final icon = isReceived ? Icons.arrow_downward : Icons.arrow_upward;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isReceived ? transaction.investorName : transaction.recipientName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      transaction.descriptionReceiverPov,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '\$${transaction.amount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatTimestamp(transaction.timestamp),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () => _copyToClipboard(transaction.transactionHash),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Hash: ${transaction.transactionHash.substring(0, 10)}...',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.copy,
+                    size: 16,
+                    color: Colors.grey[500],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<InvestmentTransaction> _getFilteredTransactions(List<InvestmentTransaction> transactions) {
+    if (selectedTransactionFilter == 'ALL') {
+      return transactions;
+    }
+    return transactions.where((transaction) => transaction.direction == selectedTransactionFilter).toList();
+  }
+
+  String _formatTimestamp(String timestamp) {
+    try {
+      final dateTime = DateTime.parse(timestamp);
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+      
+      if (difference.inDays > 0) {
+        return '${difference.inDays}d ago';
+      } else if (difference.inHours > 0) {
+        return '${difference.inHours}h ago';
+      } else if (difference.inMinutes > 0) {
+        return '${difference.inMinutes}m ago';
+      } else {
+        return 'Just now';
+      }
+    } catch (e) {
+      return timestamp;
+    }
+  }
+
+  void _copyToClipboard(String text) {
+    // Note: You'll need to add clipboard functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Copied: ${text.substring(0, 10)}...'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 }

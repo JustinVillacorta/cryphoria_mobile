@@ -161,37 +161,37 @@ class ExcelExportHelper {
       _addSectionHeader(sheet, 'OPERATING ACTIVITIES', 'A$currentRow');
       currentRow += 2;
       
-      for (var activity in cashFlow.operatingActivities) {
-        _addDataRow(sheet, activity.description, activity.amount, 'A$currentRow', 'B$currentRow');
-        currentRow += 1;
-      }
-      _addTotalRow(sheet, 'Net Cash from Operating Activities', cashFlow.summary.netCashFromOperations, 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Cash Receipts', cashFlow.operatingActivities.cashReceipts.total, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Cash Payments', cashFlow.operatingActivities.cashPayments.total, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTotalRow(sheet, 'Net Cash from Operating Activities', cashFlow.cashSummary.netCashFromOperations, 'A$currentRow', 'B$currentRow');
       currentRow += 3;
       
       // Investing Activities
       _addSectionHeader(sheet, 'INVESTING ACTIVITIES', 'A$currentRow');
       currentRow += 2;
       
-      for (var activity in cashFlow.investingActivities) {
-        _addDataRow(sheet, activity.description, activity.amount, 'A$currentRow', 'B$currentRow');
-        currentRow += 1;
-      }
-      _addTotalRow(sheet, 'Net Cash from Investing Activities', cashFlow.summary.netCashFromInvesting, 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Cash Receipts', cashFlow.investingActivities.cashReceipts.total, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Cash Payments', cashFlow.investingActivities.cashPayments.total, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTotalRow(sheet, 'Net Cash from Investing Activities', cashFlow.cashSummary.netCashFromInvesting, 'A$currentRow', 'B$currentRow');
       currentRow += 3;
       
       // Financing Activities
       _addSectionHeader(sheet, 'FINANCING ACTIVITIES', 'A$currentRow');
       currentRow += 2;
       
-      for (var activity in cashFlow.financingActivities) {
-        _addDataRow(sheet, activity.description, activity.amount, 'A$currentRow', 'B$currentRow');
-        currentRow += 1;
-      }
-      _addTotalRow(sheet, 'Net Cash from Financing Activities', cashFlow.summary.netCashFromFinancing, 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Cash Receipts', cashFlow.financingActivities.cashReceipts.total, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Cash Payments', cashFlow.financingActivities.cashPayments.total, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTotalRow(sheet, 'Net Cash from Financing Activities', cashFlow.cashSummary.netCashFromFinancing, 'A$currentRow', 'B$currentRow');
       currentRow += 3;
       
       // Net Change in Cash
-      _addTotalRow(sheet, 'NET CHANGE IN CASH', cashFlow.summary.netChangeInCash, 'A$currentRow', 'B$currentRow');
+      _addTotalRow(sheet, 'NET CHANGE IN CASH', cashFlow.cashSummary.netChangeInCash, 'A$currentRow', 'B$currentRow');
       
       _autoFitColumns(sheet);
       

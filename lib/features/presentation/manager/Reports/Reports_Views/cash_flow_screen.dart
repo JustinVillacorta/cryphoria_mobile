@@ -22,7 +22,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     // Load cash flow only if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(cashFlowViewModelProvider);
-      if (state.cashFlow == null && !state.isLoading) {
+      if (state.selectedCashFlow == null && !state.isLoading) {
         ref.read(cashFlowViewModelProvider.notifier).loadCashFlow();
       }
     });
@@ -115,7 +115,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       );
     }
 
-    if (!state.hasData || state.cashFlow == null) {
+    if (!state.hasData || state.selectedCashFlow == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -163,6 +163,10 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       padding: const EdgeInsets.only(top: 8),
       child: Column(
         children: [
+          // Period Selector
+          if (state.cashFlowListResponse != null && state.cashFlowListResponse!.cashFlowStatements.length > 1)
+            _buildPeriodSelector(state),
+          
           // Professional Header (white, subtle border)
           Container(
             margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
@@ -232,7 +236,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Operating Cash Flow',
-                        '\$${state.cashFlow!.summary.netCashFromOperations.toStringAsFixed(2)}',
+                        '\$${state.selectedCashFlow!.cashSummary.netCashFromOperations.toStringAsFixed(2)}',
                         const Color(0xFF10B981),
                         Icons.trending_up,
                       ),
@@ -241,7 +245,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Investing Cash Flow',
-                        '\$${state.cashFlow!.summary.netCashFromInvesting.toStringAsFixed(2)}',
+                        '\$${state.selectedCashFlow!.cashSummary.netCashFromInvesting.toStringAsFixed(2)}',
                         const Color(0xFFEF4444),
                         Icons.trending_down,
                       ),
@@ -254,7 +258,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                     Expanded(
                       child: _buildMetricCard(
                         'Net Change',
-                        '\$${state.cashFlow!.summary.netChangeInCash.toStringAsFixed(2)}',
+                        '\$${state.selectedCashFlow!.cashSummary.netChangeInCash.toStringAsFixed(2)}',
                         const Color(0xFF3B82F6),
                         Icons.account_balance_wallet,
                       ),
@@ -387,7 +391,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
           const SizedBox(height: 15),
 
           // Content
-          isChartView ? _buildChartView(state.cashFlow!) : _buildTableView(state.cashFlow!),
+          isChartView ? _buildChartView(state.selectedCashFlow!) : _buildTableView(state.selectedCashFlow!),
         ],
       ),
     );
@@ -744,39 +748,33 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
             child: Column(
               children: [
                 // Operating Activities Section - using dynamic data from summary
-                _buildSectionHeader('Operating Activities', '\$${cashFlow.summary.netCashFromOperations.toStringAsFixed(2)}', Colors.green[600]!),
+                _buildSectionHeader('Operating Activities', '\$${cashFlow.cashSummary.netCashFromOperations.toStringAsFixed(2)}', Colors.green[600]!),
                 const SizedBox(height: 8),
-                ...cashFlow.operatingActivities.map((activity) => 
-                  _buildCashFlowRow(activity.description, '\$${activity.amount.toStringAsFixed(2)}', 
-                    activity.amount >= 0 ? Colors.green[600]! : Colors.red[600]!)
-                ).toList(),
-                _buildTotalRow('Net Cash from Operating Activities', '\$${cashFlow.summary.netCashFromOperations.toStringAsFixed(2)}', Colors.green[600]!),
+                _buildCashFlowRow('Cash Receipts', '\$${cashFlow.operatingActivities.cashReceipts.total.toStringAsFixed(2)}', Colors.green[600]!),
+                _buildCashFlowRow('Cash Payments', '\$${cashFlow.operatingActivities.cashPayments.total.toStringAsFixed(2)}', Colors.red[600]!),
+                _buildTotalRow('Net Cash from Operating Activities', '\$${cashFlow.cashSummary.netCashFromOperations.toStringAsFixed(2)}', Colors.green[600]!),
 
                 const SizedBox(height: 20),
 
                 // Investing Activities Section - using dynamic data from summary
-                _buildSectionHeader('Investing Activities', '\$${cashFlow.summary.netCashFromInvesting.toStringAsFixed(2)}', 
-                  cashFlow.summary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
+                _buildSectionHeader('Investing Activities', '\$${cashFlow.cashSummary.netCashFromInvesting.toStringAsFixed(2)}', 
+                  cashFlow.cashSummary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
                 const SizedBox(height: 8),
-                ...cashFlow.investingActivities.map((activity) => 
-                  _buildCashFlowRow(activity.description, '\$${activity.amount.toStringAsFixed(2)}', 
-                    activity.amount >= 0 ? Colors.green[600]! : Colors.red[600]!)
-                ).toList(),
-                _buildTotalRow('Net Cash from Investing Activities', '\$${cashFlow.summary.netCashFromInvesting.toStringAsFixed(2)}', 
-                  cashFlow.summary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
+                _buildCashFlowRow('Cash Receipts', '\$${cashFlow.investingActivities.cashReceipts.total.toStringAsFixed(2)}', Colors.green[600]!),
+                _buildCashFlowRow('Cash Payments', '\$${cashFlow.investingActivities.cashPayments.total.toStringAsFixed(2)}', Colors.red[600]!),
+                _buildTotalRow('Net Cash from Investing Activities', '\$${cashFlow.cashSummary.netCashFromInvesting.toStringAsFixed(2)}', 
+                  cashFlow.cashSummary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
 
                 const SizedBox(height: 20),
 
                 // Financing Activities Section - using dynamic data from summary
-                _buildSectionHeader('Financing Activities', '\$${cashFlow.summary.netCashFromFinancing.toStringAsFixed(2)}', 
-                  cashFlow.summary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
+                _buildSectionHeader('Financing Activities', '\$${cashFlow.cashSummary.netCashFromFinancing.toStringAsFixed(2)}', 
+                  cashFlow.cashSummary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
                 const SizedBox(height: 8),
-                ...cashFlow.financingActivities.map((activity) => 
-                  _buildCashFlowRow(activity.description, '\$${activity.amount.toStringAsFixed(2)}', 
-                    activity.amount >= 0 ? Colors.green[600]! : Colors.red[600]!)
-                ).toList(),
-                _buildTotalRow('Net Cash from Financing Activities', '\$${cashFlow.summary.netCashFromFinancing.toStringAsFixed(2)}', 
-                  cashFlow.summary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
+                _buildCashFlowRow('Cash Receipts', '\$${cashFlow.financingActivities.cashReceipts.total.toStringAsFixed(2)}', Colors.green[600]!),
+                _buildCashFlowRow('Cash Payments', '\$${cashFlow.financingActivities.cashPayments.total.toStringAsFixed(2)}', Colors.red[600]!),
+                _buildTotalRow('Net Cash from Financing Activities', '\$${cashFlow.cashSummary.netCashFromFinancing.toStringAsFixed(2)}', 
+                  cashFlow.cashSummary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
 
                 const SizedBox(height: 20),
 
@@ -792,19 +790,19 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildSummaryRow('Net Cash from Operating Activities', '\$${cashFlow.summary.netCashFromOperations.toStringAsFixed(2)}', 
-                        cashFlow.summary.netCashFromOperations >= 0 ? Colors.green[600]! : Colors.red[600]!),
+                      _buildSummaryRow('Net Cash from Operating Activities', '\$${cashFlow.cashSummary.netCashFromOperations.toStringAsFixed(2)}', 
+                        cashFlow.cashSummary.netCashFromOperations >= 0 ? Colors.green[600]! : Colors.red[600]!),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Net Cash from Investing Activities', '\$${cashFlow.summary.netCashFromInvesting.toStringAsFixed(2)}', 
-                        cashFlow.summary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
+                      _buildSummaryRow('Net Cash from Investing Activities', '\$${cashFlow.cashSummary.netCashFromInvesting.toStringAsFixed(2)}', 
+                        cashFlow.cashSummary.netCashFromInvesting >= 0 ? Colors.green[600]! : Colors.red[600]!),
                       const SizedBox(height: 8),
-                      _buildSummaryRow('Net Cash from Financing Activities', '\$${cashFlow.summary.netCashFromFinancing.toStringAsFixed(2)}', 
-                        cashFlow.summary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
+                      _buildSummaryRow('Net Cash from Financing Activities', '\$${cashFlow.cashSummary.netCashFromFinancing.toStringAsFixed(2)}', 
+                        cashFlow.cashSummary.netCashFromFinancing >= 0 ? Colors.green[600]! : Colors.red[600]!),
                       const SizedBox(height: 12),
                       Container(height: 1, color: Colors.grey[300]),
                       const SizedBox(height: 12),
-                      _buildSummaryRow('Net Change in Cash', '\$${cashFlow.summary.netChangeInCash.toStringAsFixed(2)}', 
-                        cashFlow.summary.netChangeInCash >= 0 ? Colors.green[600]! : Colors.red[600]!, isTotal: true),
+                      _buildSummaryRow('Net Change in Cash', '\$${cashFlow.cashSummary.netChangeInCash.toStringAsFixed(2)}', 
+                        cashFlow.cashSummary.netChangeInCash >= 0 ? Colors.green[600]! : Colors.red[600]!, isTotal: true),
                     ],
                   ),
                 ),
@@ -956,7 +954,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   // Helper methods for generating dynamic chart data
   List<FlSpot> _getOperatingCashFlowSpots(CashFlow cashFlow) {
     // Generate 6 data points based on operating cash flow
-    final operatingCashFlow = cashFlow.summary.netCashFromOperations;
+    final operatingCashFlow = cashFlow.cashSummary.netCashFromOperations;
     
     print("📊 Operating Cash Flow: $operatingCashFlow");
     
@@ -975,7 +973,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
 
   List<FlSpot> _getInvestingCashFlowSpots(CashFlow cashFlow) {
     // Generate 6 data points based on investing cash flow
-    final investingCashFlow = cashFlow.summary.netCashFromInvesting;
+    final investingCashFlow = cashFlow.cashSummary.netCashFromInvesting;
     
     print("📊 Investing Cash Flow: $investingCashFlow");
     
@@ -993,8 +991,8 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   }
 
   double _getMinY(CashFlow cashFlow) {
-    final operatingCashFlow = cashFlow.summary.netCashFromOperations;
-    final investingCashFlow = cashFlow.summary.netCashFromInvesting;
+    final operatingCashFlow = cashFlow.cashSummary.netCashFromOperations;
+    final investingCashFlow = cashFlow.cashSummary.netCashFromInvesting;
     
     // Get the minimum value from both cash flows
     final minValue = [operatingCashFlow * 0.5, investingCashFlow * 0.5].reduce((a, b) => a < b ? a : b);
@@ -1006,8 +1004,8 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   }
 
   double _getMaxY(CashFlow cashFlow) {
-    final operatingCashFlow = cashFlow.summary.netCashFromOperations;
-    final investingCashFlow = cashFlow.summary.netCashFromInvesting;
+    final operatingCashFlow = cashFlow.cashSummary.netCashFromOperations;
+    final investingCashFlow = cashFlow.cashSummary.netCashFromInvesting;
     
     // Get the maximum value from both cash flows
     final maxValue = [operatingCashFlow, investingCashFlow].reduce((a, b) => a > b ? a : b);
@@ -1163,23 +1161,23 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       // Convert CashFlow to report data format for PDF generation
       final reportData = {
         'summary': {
-          'net_cash_from_operations': cashFlow.summary.netCashFromOperations,
-          'net_cash_from_investing': cashFlow.summary.netCashFromInvesting,
-          'net_cash_from_financing': cashFlow.summary.netCashFromFinancing,
-          'net_change_in_cash': cashFlow.summary.netChangeInCash,
+          'net_cash_from_operations': cashFlow.cashSummary.netCashFromOperations,
+          'net_cash_from_investing': cashFlow.cashSummary.netCashFromInvesting,
+          'net_cash_from_financing': cashFlow.cashSummary.netCashFromFinancing,
+          'net_change_in_cash': cashFlow.cashSummary.netChangeInCash,
         },
-        'operating_activities': cashFlow.operatingActivities.map((activity) => {
-          'description': activity.description,
-          'amount': activity.amount,
-        }).toList(),
-        'investing_activities': cashFlow.investingActivities.map((activity) => {
-          'description': activity.description,
-          'amount': activity.amount,
-        }).toList(),
-        'financing_activities': cashFlow.financingActivities.map((activity) => {
-          'description': activity.description,
-          'amount': activity.amount,
-        }).toList(),
+        'operating_activities': [
+          {'description': 'Cash Receipts', 'amount': cashFlow.operatingActivities.cashReceipts.total},
+          {'description': 'Cash Payments', 'amount': cashFlow.operatingActivities.cashPayments.total},
+        ],
+        'investing_activities': [
+          {'description': 'Cash Receipts', 'amount': cashFlow.investingActivities.cashReceipts.total},
+          {'description': 'Cash Payments', 'amount': cashFlow.investingActivities.cashPayments.total},
+        ],
+        'financing_activities': [
+          {'description': 'Cash Receipts', 'amount': cashFlow.financingActivities.cashReceipts.total},
+          {'description': 'Cash Payments', 'amount': cashFlow.financingActivities.cashPayments.total},
+        ],
       };
 
       // Generate PDF
@@ -1217,5 +1215,68 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
         );
       }
     }
+  }
+
+  Widget _buildPeriodSelector(CashFlowState state) {
+    final cashFlowStatements = state.cashFlowListResponse!.cashFlowStatements;
+    final currentIndex = cashFlowStatements.indexOf(state.selectedCashFlow!);
+    
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.calendar_today, color: Color(0xFF8B5CF6), size: 20),
+          const SizedBox(width: 12),
+          const Text(
+            'Period:',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: DropdownButton<int>(
+              value: currentIndex,
+              isExpanded: true,
+              underline: Container(),
+              items: cashFlowStatements.asMap().entries.map((entry) {
+                final index = entry.key;
+                final cashFlow = entry.value;
+                final periodStart = DateTime.parse(cashFlow.periodStart.toIso8601String());
+                final periodEnd = DateTime.parse(cashFlow.periodEnd.toIso8601String());
+                
+                return DropdownMenuItem<int>(
+                  value: index,
+                  child: Text(
+                    '${periodStart.day}/${periodStart.month}/${periodStart.year} - ${periodEnd.day}/${periodEnd.month}/${periodEnd.year}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                );
+              }).toList(),
+              onChanged: (int? newIndex) {
+                if (newIndex != null && newIndex != currentIndex) {
+                  ref.read(cashFlowViewModelProvider.notifier).selectCashFlow(cashFlowStatements[newIndex]);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

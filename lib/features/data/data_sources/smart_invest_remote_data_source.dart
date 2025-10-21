@@ -2,12 +2,14 @@
 
 import 'package:dio/dio.dart';
 import '../../domain/entities/smart_invest.dart';
+import '../../domain/entities/investment_report.dart';
 
 abstract class SmartInvestRemoteDataSource {
   Future<SmartInvestResponse> sendInvestment(SmartInvestRequest request);
   Future<AddressBookUpsertResponse> upsertAddressBookEntry(AddressBookUpsertRequest request);
   Future<AddressBookListResponse> getAddressBookList();
   Future<AddressBookDeleteResponse> deleteAddressBookEntry(String address);
+  Future<InvestmentStatistics> getInvestmentStatistics();
 }
 
 class SmartInvestRemoteDataSourceImpl implements SmartInvestRemoteDataSource {
@@ -80,6 +82,25 @@ class SmartInvestRemoteDataSourceImpl implements SmartInvestRemoteDataSource {
       final body = e.response?.data;
       final status = e.response?.statusCode;
       throw Exception('Failed to delete address book entry: $status $body');
+    }
+  }
+
+  @override
+  Future<InvestmentStatistics> getInvestmentStatistics() async {
+    try {
+      final response = await dio.get(
+        '/api/financial/investment-report/statistics/',
+      );
+      
+      if (response.data['success'] == true) {
+        return InvestmentStatistics.fromJson(response.data);
+      } else {
+        throw Exception('Failed to get investment statistics: ${response.data['error'] ?? 'Unknown error'}');
+      }
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      final status = e.response?.statusCode;
+      throw Exception('Failed to get investment statistics: $status $body');
     }
   }
 }
