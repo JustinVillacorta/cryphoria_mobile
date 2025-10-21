@@ -7,6 +7,7 @@ import '../Reports_ViewModel/payroll_reports_view_model.dart';
 import '../../../../domain/entities/payslip.dart';
 import '../../../widgets/excel_export_helper.dart';
 import '../../../widgets/pdf_generation_helper.dart';
+import '../../../widgets/download_report_bottom_sheet.dart';
 
 class PayrollSummaryScreen extends ConsumerStatefulWidget {
   const PayrollSummaryScreen({super.key});
@@ -582,7 +583,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
-                  onPressed: () => _downloadPdf(context, payslipsResponse),
+                  onPressed: () => _showDownloadOptions(context, payslipsResponse),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -970,6 +971,14 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _showDownloadOptions(BuildContext context, PayslipsResponse payslipsResponse) async {
+    showDownloadReportOptions(
+      context: context,
+      onPdfDownload: () => _downloadPdf(context, payslipsResponse),
+      onExcelDownload: () => _exportToExcel(context, payslipsResponse),
     );
   }
 

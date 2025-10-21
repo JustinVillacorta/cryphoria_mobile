@@ -6,6 +6,7 @@ import '../Reports_ViewModel/tax_reports_view_model.dart';
 import '../../../../domain/entities/tax_report.dart';
 import '../../../widgets/excel_export_helper.dart';
 import '../../../widgets/pdf_generation_helper.dart';
+import '../../../widgets/download_report_bottom_sheet.dart';
 
 class TaxReportsScreen extends ConsumerStatefulWidget {
   const TaxReportsScreen({super.key});
@@ -432,7 +433,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => _downloadPdf(context, state.selectedReport!),
+                    onPressed: () => _showDownloadOptions(context, state.selectedReport!),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF8B5CF6),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1098,6 +1099,14 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showDownloadOptions(BuildContext context, TaxReport taxReport) async {
+    showDownloadReportOptions(
+      context: context,
+      onPdfDownload: () => _downloadPdf(context, taxReport),
+      onExcelDownload: () => _exportToExcel(context, taxReport),
     );
   }
 

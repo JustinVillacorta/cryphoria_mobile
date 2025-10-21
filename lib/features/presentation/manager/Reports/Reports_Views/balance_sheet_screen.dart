@@ -6,6 +6,7 @@ import '../Reports_ViewModel/balance_sheet_view_model.dart';
 import '../../../../domain/entities/balance_sheet.dart';
 import '../../../widgets/excel_export_helper.dart';
 import '../../../widgets/pdf_generation_helper.dart';
+import '../../../widgets/download_report_bottom_sheet.dart';
 
 class BalanceSheetScreen extends ConsumerStatefulWidget {
   const BalanceSheetScreen({super.key});
@@ -749,7 +750,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => _downloadPdf(context, balanceSheetState.balanceSheet!),
+                  onPressed: () => _showDownloadOptions(context, balanceSheetState.balanceSheet!),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1411,6 +1412,14 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _showDownloadOptions(BuildContext context, BalanceSheet balanceSheet) async {
+    showDownloadReportOptions(
+      context: context,
+      onPdfDownload: () => _downloadPdf(context, balanceSheet),
+      onExcelDownload: () => _exportToExcel(context, balanceSheet),
     );
   }
 

@@ -6,6 +6,7 @@ import '../Reports_ViewModel/cash_flow_view_model.dart';
 import '../../../../domain/entities/cash_flow.dart';
 import '../../../widgets/excel_export_helper.dart';
 import '../../../widgets/pdf_generation_helper.dart';
+import '../../../widgets/download_report_bottom_sheet.dart';
 
 class CashFlowScreen extends ConsumerStatefulWidget {
   const CashFlowScreen({super.key});
@@ -622,7 +623,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => _downloadPdf(context, cashFlow),
+                  onPressed: () => _showDownloadOptions(context, cashFlow),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -687,32 +688,6 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                 ),
               ),
               const Spacer(),
-              GestureDetector(
-                onTap: () => _exportToExcel(context, cashFlow),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.green[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green[200]!),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.download, size: 14, color: Colors.green[600]),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Export to Excel',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.green[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
 
@@ -1097,6 +1072,14 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _showDownloadOptions(BuildContext context, CashFlow cashFlow) async {
+    showDownloadReportOptions(
+      context: context,
+      onPdfDownload: () => _downloadPdf(context, cashFlow),
+      onExcelDownload: () => _exportToExcel(context, cashFlow),
     );
   }
 
