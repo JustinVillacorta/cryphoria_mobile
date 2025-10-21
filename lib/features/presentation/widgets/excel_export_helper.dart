@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart';
 import '../../domain/entities/balance_sheet.dart';
 import '../../domain/entities/cash_flow.dart';
+import '../../domain/entities/income_statement.dart';
 import '../../domain/entities/payslip.dart';
 
 class ExcelExportHelper {
@@ -201,7 +201,7 @@ class ExcelExportHelper {
     }
   }
 
-  static Future<String> exportIncomeStatementToExcel(Map<String, Map<String, Object>> incomeStatementData) async {
+  static Future<String> exportIncomeStatementToExcel(IncomeStatement incomeStatement) async {
     try {
       var excel = Excel.createExcel();
       var sheet = excel['Income Statement'];
@@ -217,43 +217,39 @@ class ExcelExportHelper {
       _addSectionHeader(sheet, 'REVENUE', 'A$currentRow');
       currentRow += 2;
       
-      final summaryData = incomeStatementData['Summary'] as Map<String, Object>;
-      final revenueData = incomeStatementData['Revenue Detail'] as Map<String, Object>;
-      final expenseData = incomeStatementData['Expense Detail'] as Map<String, Object>;
-      
-      _addDataRow(sheet, 'Total Revenue', (summaryData['Total Revenue'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Total Revenue', incomeStatement.revenue.totalRevenue, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Trading Revenue', (revenueData['Trading Revenue'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Trading Revenue', incomeStatement.revenue.tradingRevenue, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Payroll Income', (revenueData['Payroll Income'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Payroll Income', incomeStatement.revenue.payrollIncome, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Other Income', (revenueData['Other Income'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Other Income', incomeStatement.revenue.otherIncome, 'A$currentRow', 'B$currentRow');
       currentRow += 2;
       
       // Expenses Section
       _addSectionHeader(sheet, 'EXPENSES', 'A$currentRow');
       currentRow += 2;
       
-      _addDataRow(sheet, 'Total Expenses', (summaryData['Total Expenses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Total Expenses', incomeStatement.expenses.totalExpenses, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Transaction Fees', (expenseData['Transaction Fees'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Transaction Fees', incomeStatement.expenses.transactionFees, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Trading Losses', (expenseData['Trading Losses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Trading Losses', incomeStatement.expenses.tradingLosses, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Operational Expenses', (expenseData['Operational Expenses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Operational Expenses', incomeStatement.expenses.operationalExpenses, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Tax Expenses', (expenseData['Tax Expenses'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Tax Expenses', incomeStatement.expenses.taxExpenses, 'A$currentRow', 'B$currentRow');
       currentRow += 2;
       
       // Profitability Section
       _addSectionHeader(sheet, 'PROFITABILITY', 'A$currentRow');
       currentRow += 2;
       
-      _addDataRow(sheet, 'Gross Profit', (summaryData['Gross Profit'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Gross Profit', incomeStatement.grossProfit.grossProfit, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Net Income', (summaryData['Net Income'] as num).toDouble(), 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Net Income', incomeStatement.netIncome.netIncome, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addTextRow(sheet, 'Profitability Status', summaryData['Profitability Status'].toString(), 'A$currentRow', 'B$currentRow');
+      _addTextRow(sheet, 'Profitability Status', incomeStatement.summary.profitabilityStatus.toString(), 'A$currentRow', 'B$currentRow');
       
       _autoFitColumns(sheet);
       
@@ -542,8 +538,8 @@ class ExcelExportHelper {
     final file = File('${directory.path}/${fileName}_${DateTime.now().millisecondsSinceEpoch}.xlsx');
     await file.writeAsBytes(bytes!);
     
-    // Open the generated Excel file
-    await OpenFile.open(file.path);
+    // Don't automatically open the file to avoid loading state issues
+    // Users can manually open the file from the success message
     
     return file.path;
   }

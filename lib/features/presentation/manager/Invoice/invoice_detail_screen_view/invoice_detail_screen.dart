@@ -4,6 +4,7 @@ import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/pdf_generation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:open_file/open_file.dart';
 
 
 
@@ -617,9 +618,25 @@ class InvoiceDetailScreen extends ConsumerWidget {
       if (pdfPath.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Invoice PDF generated successfully!\nSaved to: $pdfPath'),
+            content: Text('Invoice PDF saved successfully!\nTap to open: ${pdfPath.split('/').last}'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Open',
+              textColor: Colors.white,
+              onPressed: () async {
+                try {
+                  await OpenFile.open(pdfPath);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Could not open file: $e'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+            ),
           ),
         );
       } else {

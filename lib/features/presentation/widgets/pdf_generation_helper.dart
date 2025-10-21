@@ -3,7 +3,7 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:open_file/open_file.dart';
+import '../../domain/entities/income_statement.dart';
 
 class PdfGenerationHelper {
   static Future<String> generateTaxReportPdf(Map<String, dynamic> reportData) async {
@@ -619,7 +619,7 @@ class PdfGenerationHelper {
     }
   }
   
-  static Future<String> generateIncomeStatementPdf(Map<String, dynamic> reportData) async {
+  static Future<String> generateIncomeStatementPdf(IncomeStatement incomeStatement) async {
     final pdf = pw.Document();
     
     pdf.addPage(
@@ -638,59 +638,79 @@ class PdfGenerationHelper {
               pw.SizedBox(height: 20),
               
               // Summary
-              if (reportData['summary'] != null) ...[
-                pw.Text(
-                  'Financial Summary',
-                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Text('Total Revenue: \$${reportData['summary']['total_revenue']?.toStringAsFixed(2) ?? '0.00'}'),
-                pw.Text('Total Expenses: \$${reportData['summary']['total_expenses']?.toStringAsFixed(2) ?? '0.00'}'),
-                pw.Text('Net Income: \$${reportData['summary']['net_income']?.toStringAsFixed(2) ?? '0.00'}'),
-                pw.SizedBox(height: 20),
-              ],
+              pw.Text(
+                'Financial Summary',
+                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Text('Total Revenue: \$${incomeStatement.revenue.totalRevenue.toStringAsFixed(2)}'),
+              pw.Text('Total Expenses: \$${incomeStatement.expenses.totalExpenses.toStringAsFixed(2)}'),
+              pw.Text('Net Income: \$${incomeStatement.netIncome.netIncome.toStringAsFixed(2)}'),
+              pw.SizedBox(height: 20),
               
               // Revenue
-              if (reportData['revenue'] != null) ...[
-                pw.Text(
-                  'Revenue',
-                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Table(
-                  border: pw.TableBorder.all(),
-                  columnWidths: {
-                    0: pw.FlexColumnWidth(2),
-                    1: pw.FlexColumnWidth(1),
-                  },
-                  children: [
-                    pw.TableRow(
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('Revenue Source', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('Amount', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    ...(reportData['revenue'] as List<dynamic>).map((item) => pw.TableRow(
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text(item['name'] ?? ''),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('\$${(item['amount'] ?? 0).toStringAsFixed(2)}'),
-                        ),
-                      ],
-                    )).toList(),
-                  ],
-                ),
-              ],
+              pw.Text(
+                'Revenue',
+                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Table(
+                border: pw.TableBorder.all(),
+                columnWidths: {
+                  0: pw.FlexColumnWidth(2),
+                  1: pw.FlexColumnWidth(1),
+                },
+                children: [
+                  pw.TableRow(
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8.0),
+                        child: pw.Text('Revenue Source', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8.0),
+                        child: pw.Text('Amount', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8.0),
+                        child: pw.Text('Trading Revenue'),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8.0),
+                        child: pw.Text('\$${incomeStatement.revenue.tradingRevenue.toStringAsFixed(2)}'),
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8.0),
+                        child: pw.Text('Payroll Income'),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8.0),
+                        child: pw.Text('\$${incomeStatement.revenue.payrollIncome.toStringAsFixed(2)}'),
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8.0),
+                        child: pw.Text('Other Income'),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8.0),
+                        child: pw.Text('\$${incomeStatement.revenue.otherIncome.toStringAsFixed(2)}'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ],
           );
         },
@@ -1408,8 +1428,8 @@ class PdfGenerationHelper {
     final file = File('${directory.path}/${fileName}_${DateTime.now().millisecondsSinceEpoch}.pdf');
     await file.writeAsBytes(bytes);
     
-    // Open the generated PDF file
-    await OpenFile.open(file.path);
+    // Don't automatically open the file to avoid loading state issues
+    // Users can manually open the file from the success message
     
     return file.path;
   }

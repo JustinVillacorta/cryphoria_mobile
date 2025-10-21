@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:open_file/open_file.dart';
 import '../../Payroll/payroll_management_screen.dart';
 import '../Reports_ViewModel/payroll_reports_view_model.dart';
 import '../../../../domain/entities/payslip.dart';
@@ -995,9 +996,25 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Excel file saved to: $filePath'),
+            content: Text('Excel file saved successfully!\nTap to open: ${filePath.split('/').last}'),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Open',
+              textColor: Colors.white,
+              onPressed: () async {
+                try {
+                  await OpenFile.open(filePath);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Could not open file: $e'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+            ),
           ),
         );
       }
@@ -1057,9 +1074,25 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('PDF saved to: $filePath'),
+            content: Text('PDF saved successfully!\nTap to open: ${filePath.split('/').last}'),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Open',
+              textColor: Colors.white,
+              onPressed: () async {
+                try {
+                  await OpenFile.open(filePath);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Could not open file: $e'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+            ),
           ),
         );
       }

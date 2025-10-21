@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:open_file/open_file.dart';
 import '../../../../domain/entities/payslip.dart';
 import 'package:intl/intl.dart';
 import '../../../widgets/pdf_generation_helper.dart';
@@ -417,9 +418,25 @@ class PayslipDetailsView extends ConsumerWidget {
       if (pdfPath.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payslip PDF generated successfully!\nSaved to: $pdfPath'),
+            content: Text('Payslip PDF saved successfully!\nTap to open: ${pdfPath.split('/').last}'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Open',
+              textColor: Colors.white,
+              onPressed: () async {
+                try {
+                  await OpenFile.open(pdfPath);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Could not open file: $e'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+            ),
           ),
         );
       } else {
