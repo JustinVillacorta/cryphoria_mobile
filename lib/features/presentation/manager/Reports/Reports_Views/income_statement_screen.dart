@@ -8,6 +8,7 @@ import '../../../../../dependency_injection/riverpod_providers.dart';
 import '../../../widgets/excel_export_helper.dart';
 import '../../../widgets/pdf_generation_helper.dart';
 import '../../../widgets/download_report_bottom_sheet.dart';
+import '../../../widgets/report_period_selector.dart';
 
 class IncomeStatementScreen extends ConsumerStatefulWidget {
   const IncomeStatementScreen({super.key});
@@ -411,88 +412,17 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.assessment,
-                  color: Color(0xFF8B5CF6),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Income Statement',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Financial Performance Report',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          DropdownButton<IncomeStatement>(
-            value: state.selectedIncomeStatement,
-            isExpanded: true,
-            underline: Container(),
-            items: state.incomeStatements!.asMap().entries.map((entry) {
-              final statement = entry.value;
-              final startDate = statement.periodStart;
-              final endDate = statement.periodEnd;
-              final periodText = '${startDate.day}/${startDate.month}/${startDate.year} - ${endDate.day}/${endDate.month}/${endDate.year}';
-              
-              return DropdownMenuItem<IncomeStatement>(
-                value: statement,
-                child: Text(periodText),
-              );
-            }).toList(),
-            onChanged: (IncomeStatement? newValue) {
-              if (newValue != null) {
-                ref.read(incomeStatementViewModelProvider.notifier).selectIncomeStatement(newValue);
-              }
-            },
-          ),
-        ],
-      ),
+    return ReportPeriodSelector<IncomeStatement>(
+      items: state.incomeStatements!,
+      selectedItem: state.selectedIncomeStatement!,
+      formatPeriod: (statement) {
+        final start = statement.periodStart;
+        final end = statement.periodEnd;
+        return '${start.day}/${start.month}/${start.year} - ${end.day}/${end.month}/${end.year}';
+      },
+      onPeriodChanged: (statement) {
+        ref.read(incomeStatementViewModelProvider.notifier).selectIncomeStatement(statement);
+      },
     );
   }
 

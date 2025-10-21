@@ -7,6 +7,7 @@ import '../../../../domain/entities/cash_flow.dart';
 import '../../../widgets/excel_export_helper.dart';
 import '../../../widgets/pdf_generation_helper.dart';
 import '../../../widgets/download_report_bottom_sheet.dart';
+import '../../../widgets/report_period_selector.dart';
 
 class CashFlowScreen extends ConsumerStatefulWidget {
   const CashFlowScreen({super.key});
@@ -1235,64 +1236,18 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
 
   Widget _buildPeriodSelector(CashFlowState state) {
     final cashFlowStatements = state.cashFlowListResponse!.cashFlowStatements;
-    final currentIndex = cashFlowStatements.indexOf(state.selectedCashFlow!);
     
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.calendar_today, color: Color(0xFF8B5CF6), size: 20),
-          const SizedBox(width: 12),
-          const Text(
-            'Period:',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: DropdownButton<int>(
-              value: currentIndex,
-              isExpanded: true,
-              underline: Container(),
-              items: cashFlowStatements.asMap().entries.map((entry) {
-                final index = entry.key;
-                final cashFlow = entry.value;
-                final periodStart = DateTime.parse(cashFlow.periodStart.toIso8601String());
-                final periodEnd = DateTime.parse(cashFlow.periodEnd.toIso8601String());
-                
-                return DropdownMenuItem<int>(
-                  value: index,
-                  child: Text(
-                    '${periodStart.day}/${periodStart.month}/${periodStart.year} - ${periodEnd.day}/${periodEnd.month}/${periodEnd.year}',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                );
-              }).toList(),
-              onChanged: (int? newIndex) {
-                if (newIndex != null && newIndex != currentIndex) {
-                  ref.read(cashFlowViewModelProvider.notifier).selectCashFlow(cashFlowStatements[newIndex]);
-                }
-              },
-            ),
-          ),
-        ],
-      ),
+    return ReportPeriodSelector<CashFlow>(
+      items: cashFlowStatements,
+      selectedItem: state.selectedCashFlow!,
+      formatPeriod: (cashFlow) {
+        final start = DateTime.parse(cashFlow.periodStart.toIso8601String());
+        final end = DateTime.parse(cashFlow.periodEnd.toIso8601String());
+        return '${start.day}/${start.month}/${start.year} - ${end.day}/${end.month}/${end.year}';
+      },
+      onPeriodChanged: (cashFlow) {
+        ref.read(cashFlowViewModelProvider.notifier).selectCashFlow(cashFlow);
+      },
     );
   }
 }
