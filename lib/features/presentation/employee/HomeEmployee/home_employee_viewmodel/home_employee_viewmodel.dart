@@ -91,7 +91,7 @@ class HomeEmployeeState {
 class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
   HomeEmployeeNotifier({
     required WalletService walletService,
-    required FakeTransactionsDataSource transactionsDataSource,
+    required TransactionsDataSource transactionsDataSource,
     required GetEmployeeDashboardData getEmployeeDashboardData,
   })  : _walletService = walletService,
         _transactionsDataSource = transactionsDataSource,
@@ -99,7 +99,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
         super(HomeEmployeeState.initial());
 
   final WalletService _walletService;
-  final FakeTransactionsDataSource _transactionsDataSource;
+  final TransactionsDataSource _transactionsDataSource;
   final GetEmployeeDashboardData _getDashboardData;
 
   Future<void> getDashboardData(String employeeId) async {
@@ -161,7 +161,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
         state = state.copyWith(wallet: wallet);
       }
       
-      final transactions = _transactionsDataSource.getTransactions();
+      final transactions = await _transactionsDataSource.getRecentTransactions(limit: 10);
       state = state.copyWith(
         transactions: List.unmodifiable(transactions),
         hasError: false,
@@ -248,7 +248,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
 
   Future<void> _fetchTransactions() async {
     try {
-      final transactions = _transactionsDataSource.getTransactions();
+      final transactions = await _transactionsDataSource.getRecentTransactions(limit: 10);
       state = state.copyWith(
         transactions: List.unmodifiable(transactions),
         hasError: false,

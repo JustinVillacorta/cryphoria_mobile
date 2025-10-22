@@ -9,7 +9,7 @@ import 'package:mocktail/mocktail.dart';
 class _MockWalletService extends Mock implements WalletService {}
 
 class _MockTransactionsDataSource extends Mock
-    implements FakeTransactionsDataSource {}
+    implements TransactionsDataSource {}
 
 class _MockGetEmployeeDashboardData extends Mock
     implements GetEmployeeDashboardData {}

@@ -607,12 +607,18 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          transaction['subtitle']?.toString() ?? '',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
+                        // Subtitle constrained to avoid overflow; show ellipsis when long
+                        Flexible(
+                          child: Text(
+                            transaction['subtitle']?.toString() ?? '',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
                           ),
                         ),
                       ],
@@ -630,17 +636,23 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
               ),
               
               // Amount and details
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    transaction['amount']?.toString() ?? '\$0.00',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isPositive ? Colors.green : Colors.black,
+              // Constrain right column to prevent row overflow on narrow screens
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      transaction['amount']?.toString() ?? '\$0.00',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isPositive ? Colors.green : Colors.black,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
                     ),
-                  ),
                   const SizedBox(height: 4),
                   if (transaction['price'] != null || transaction['fee'] != null) ...[
                     Row(
@@ -690,7 +702,8 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                       ),
                     ),
                   ],
-                ],
+                  ],
+                ),
               ),
             ],
           ),

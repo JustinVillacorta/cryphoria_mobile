@@ -201,9 +201,9 @@ final ethPaymentServiceProvider = Provider<EthPaymentService>((ref) {
 });
 
 
-final fakeTransactionsDataSourceProvider =
-    Provider<FakeTransactionsDataSource>((ref) {
-  return FakeTransactionsDataSource(
+final transactionsDataSourceProvider =
+    Provider<TransactionsDataSource>((ref) {
+  return TransactionsDataSource(
     ethPaymentService: ref.watch(ethPaymentServiceProvider),
   );
 });
@@ -461,7 +461,7 @@ final homeEmployeeNotifierProvider =
   // Home employee provider refreshes to get real-time data
   return HomeEmployeeNotifier(
     walletService: ref.watch(walletServiceProvider),
-    transactionsDataSource: ref.watch(fakeTransactionsDataSourceProvider),
+    transactionsDataSource: ref.watch(transactionsDataSourceProvider),
     getEmployeeDashboardData: ref.watch(getEmployeeDashboardDataProvider),
   );
 });
