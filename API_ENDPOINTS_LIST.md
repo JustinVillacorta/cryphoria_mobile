@@ -139,7 +139,7 @@ POST   /api/contracts/validate             # Validate contract code (line 745)
 **File**: `lib/features/data/data_sources/audit_remote_data_source.dart`
 
 ```
-GET    /api/financial/tax-report/list/     # Get tax reports (line 769)
+GET    /api/financial/tax-report/list      # Get tax reports (line 338)
 GET    /api/balance-sheet/list/            # Get balance sheets (lines 907, 945)
 GET    /api/cash-flow/list/                # Get cash flow statements (line 988)
 GET    /api/portfolio/value/               # Get portfolio value (line 1457)

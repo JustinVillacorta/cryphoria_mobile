@@ -34,14 +34,6 @@ class ExcelExportHelper {
       _addDataRow(sheet, 'Crypto Holdings', balanceSheet.assets.currentAssets.cryptoHoldings.totalValue, 'A$currentRow', 'B$currentRow');
       currentRow += 1;
       
-      // Cash Equivalents
-      _addDataRow(sheet, 'Cash Equivalents', balanceSheet.assets.currentAssets.cashEquivalents, 'A$currentRow', 'B$currentRow');
-      currentRow += 1;
-      
-      // Receivables
-      _addDataRow(sheet, 'Receivables', balanceSheet.assets.currentAssets.receivables.toDouble(), 'A$currentRow', 'B$currentRow');
-      currentRow += 1;
-      
       _addTotalRow(sheet, 'Total Current Assets', balanceSheet.assets.currentAssets.total, 'A$currentRow', 'B$currentRow');
       currentRow += 2;
       
@@ -221,8 +213,6 @@ class ExcelExportHelper {
       currentRow++;
       _addDataRow(sheet, 'Trading Revenue', incomeStatement.revenue.tradingRevenue, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Payroll Income', incomeStatement.revenue.payrollIncome, 'A$currentRow', 'B$currentRow');
-      currentRow++;
       _addDataRow(sheet, 'Other Income', incomeStatement.revenue.otherIncome, 'A$currentRow', 'B$currentRow');
       currentRow += 2;
       
@@ -234,8 +224,7 @@ class ExcelExportHelper {
       currentRow++;
       _addDataRow(sheet, 'Transaction Fees', incomeStatement.expenses.transactionFees, 'A$currentRow', 'B$currentRow');
       currentRow++;
-      _addDataRow(sheet, 'Trading Losses', incomeStatement.expenses.tradingLosses, 'A$currentRow', 'B$currentRow');
-      currentRow++;
+      // Removed Payroll Income and Trading Losses rows
       _addDataRow(sheet, 'Operational Expenses', incomeStatement.expenses.operationalExpenses, 'A$currentRow', 'B$currentRow');
       currentRow++;
       _addDataRow(sheet, 'Tax Expenses', incomeStatement.expenses.taxExpenses, 'A$currentRow', 'B$currentRow');

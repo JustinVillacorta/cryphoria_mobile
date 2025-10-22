@@ -313,8 +313,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
           _buildPersonalInformationCard(),
           const SizedBox(height: 20),
           _buildEmploymentInformationCard(),
-          const SizedBox(height: 20),
-          _buildBenefitsCard(),
+          // Benefits section removed per requirements
         ],
       ),
     );
@@ -340,28 +339,14 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
       icon: Icons.work_outline,
       title: 'Employment Information',
       children: [
-        _buildInfoRow('Basic Salary', widget.employee.payrollInfo != null 
-            ? '${widget.employee.payrollInfo!.salaryAmount.toStringAsFixed(2)} ${widget.employee.payrollInfo!.salaryCurrency}'
-            : 'Not set'),
-        _buildInfoRow('Start Date', widget.employee.payrollInfo?.startDate.toString().split(' ')[0] ?? 'Not set'),
-        _buildInfoRow('Employment Type', 'Full-time'),
-        _buildInfoRow('Payment Schedule', widget.employee.payrollInfo?.paymentFrequency ?? 'Not set'),
+        // Removed Basic Salary, Start Date, Employment Type, Payment Schedule
         _buildInfoRow('Department', widget.employee.department ?? 'General'),
         _buildInfoRow('Position', widget.employee.position ?? 'Employee'),
       ],
     );
   }
 
-  Widget _buildBenefitsCard() {
-    return _buildCard(
-      icon: Icons.favorite_outline,
-      title: 'Benefits',
-      children: [
-        _buildBenefitRow('Health Insurance', 'Enrolled'),
-        _buildBenefitRow('Retirement Plan', 'Enrolled'),
-      ],
-    );
-  }
+  // Benefits card removed per requirements
 
   Widget _buildPayrollTab() {
     return SingleChildScrollView(
@@ -441,55 +426,11 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                   ],
                 ),
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Overtime',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    Text(
-                      '\$${latestPayslip.overtimePay.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Allowances',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    Text(
-                      '\$${latestPayslip.allowances.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -502,11 +443,34 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                       ),
                     ),
                     Text(
-                      '-\$${latestPayslip.totalDeductions.toStringAsFixed(2)}',
+                      '\$${latestPayslip.totalDeductions.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.red,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Net Pay',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      '\$${latestPayslip.netAmount.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
                     ),
                   ],
@@ -896,38 +860,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     );
   }
 
-  Widget _buildBenefitRow(String benefit, String status) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            benefit,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              status,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.green,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // _buildBenefitRow removed with Benefits section
 
   Widget _buildDeductionRow(String label, String amount) {
     return Padding(

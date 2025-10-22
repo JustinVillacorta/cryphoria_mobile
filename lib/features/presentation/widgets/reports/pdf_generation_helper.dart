@@ -152,13 +152,13 @@ class PdfGenerationHelper {
                     // Current Assets
                     if (reportData['assets']['current_assets'] != null) ...[
                       pw.TableRow(
-                        children: [
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.all(8.0),
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
                             child: pw.Text('Current Assets', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                          ),
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.all(8.0),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
                             child: pw.Text(''),
                           ),
                         ],
@@ -173,32 +173,6 @@ class PdfGenerationHelper {
                             pw.Padding(
                               padding: const pw.EdgeInsets.all(8.0),
                               child: pw.Text('\$${(reportData['assets']['current_assets']['crypto_holdings'] ?? 0).toStringAsFixed(2)}'),
-                            ),
-                          ],
-                        ),
-                      if (reportData['assets']['current_assets']['cash_equivalents'] != null)
-                        pw.TableRow(
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.only(left: 16.0, top: 4.0, bottom: 4.0, right: 8.0),
-                              child: pw.Text('Cash Equivalents'),
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(8.0),
-                              child: pw.Text('\$${(reportData['assets']['current_assets']['cash_equivalents'] ?? 0).toStringAsFixed(2)}'),
-                            ),
-                          ],
-                        ),
-                      if (reportData['assets']['current_assets']['receivables'] != null)
-                        pw.TableRow(
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.only(left: 16.0, top: 4.0, bottom: 4.0, right: 8.0),
-                              child: pw.Text('Receivables'),
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(8.0),
-                              child: pw.Text('\$${(reportData['assets']['current_assets']['receivables'] ?? 0).toStringAsFixed(2)}'),
                             ),
                           ],
                         ),
@@ -752,45 +726,6 @@ class PdfGenerationHelper {
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(8.0),
                         child: pw.Text('\$${(payslipData['base_salary'] ?? 0).toStringAsFixed(2)}'),
-                      ),
-                    ],
-                  ),
-                  if ((payslipData['overtime_pay'] ?? 0) > 0)
-                    pw.TableRow(
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('Overtime Pay'),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('\$${(payslipData['overtime_pay'] ?? 0).toStringAsFixed(2)}'),
-                        ),
-                      ],
-                    ),
-                  if ((payslipData['bonus'] ?? 0) > 0)
-                    pw.TableRow(
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('Bonus'),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('\$${(payslipData['bonus'] ?? 0).toStringAsFixed(2)}'),
-                        ),
-                      ],
-                    ),
-                  if ((payslipData['allowances'] ?? 0) > 0)
-                    pw.TableRow(
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('Allowances'),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('\$${(payslipData['allowances'] ?? 0).toStringAsFixed(2)}'),
                         ),
                       ],
                     ),
@@ -1064,18 +999,7 @@ class PdfGenerationHelper {
                       ),
                     ],
                   ),
-                  pw.TableRow(
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(8.0),
-                        child: pw.Text('Payroll Income'),
-                      ),
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(8.0),
-                        child: pw.Text('\$${incomeStatement.revenue.payrollIncome.toStringAsFixed(2)}'),
-                      ),
-                    ],
-                  ),
+                  // Removed Payroll Income row
                   pw.TableRow(
                     children: [
                       pw.Padding(

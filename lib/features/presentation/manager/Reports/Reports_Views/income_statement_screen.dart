@@ -715,7 +715,6 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                 _buildTableSection('Revenue', [
                   _buildTableRow('Total Revenue', incomeStatement.revenue.totalRevenue),
                   _buildTableRow('Trading Revenue', incomeStatement.revenue.tradingRevenue),
-                  _buildTableRow('Payroll Income', incomeStatement.revenue.payrollIncome),
                   _buildTableRow('Other Income', incomeStatement.revenue.otherIncome),
                 ], const Color(0xFF4CAF50)),
                 
@@ -725,7 +724,6 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                 _buildTableSection('Expenses', [
                   _buildTableRow('Total Expenses', incomeStatement.expenses.totalExpenses),
                   _buildTableRow('Transaction Fees', incomeStatement.expenses.transactionFees),
-                  _buildTableRow('Trading Losses', incomeStatement.expenses.tradingLosses),
                   _buildTableRow('Operational Expenses', incomeStatement.expenses.operationalExpenses),
                   _buildTableRow('Tax Expenses', incomeStatement.expenses.taxExpenses),
                 ], const Color(0xFFF44336)),

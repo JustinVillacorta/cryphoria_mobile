@@ -333,9 +333,9 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   @override
   Future<List<TaxReportModel>> getTaxReports() async {
     try {
-      print("📤 Getting tax reports from /api/tax-reports/list/");
+      print("📤 Getting tax reports from /api/financial/tax-report/list");
       
-      final response = await dio.get('/api/tax-reports/list/');
+      final response = await dio.get('/api/financial/tax-report/list');
 
       print("📥 Tax reports response:");
       print("📊 Status code: ${response.statusCode}");

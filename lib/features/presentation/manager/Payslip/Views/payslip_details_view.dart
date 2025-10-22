@@ -170,9 +170,6 @@ class PayslipDetailsView extends ConsumerWidget {
                     child: Column(
                       children: [
                         _buildAmountRow('Base Salary', payslip.baseSalary, screenWidth),
-                        if (payslip.overtimePay > 0) _buildAmountRow('Overtime Pay', payslip.overtimePay, screenWidth),
-                        if (payslip.bonus > 0) _buildAmountRow('Bonus', payslip.bonus, screenWidth),
-                        if (payslip.allowances > 0) _buildAmountRow('Allowances', payslip.allowances, screenWidth),
                         Divider(height: 24),
                         _buildAmountRow('Total Earnings', payslip.totalEarnings, screenWidth, isTotal: true),
                       ],
@@ -326,7 +323,7 @@ class PayslipDetailsView extends ConsumerWidget {
     );
   }
 
-  Widget _buildAmountRow(String label, double amount, double screenWidth, {bool isTotal = false, bool isDeduction = false}) {
+  Widget _buildAmountRow(String label, double amount, double screenWidth, {bool isTotal = false}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 6),
       child: Row(

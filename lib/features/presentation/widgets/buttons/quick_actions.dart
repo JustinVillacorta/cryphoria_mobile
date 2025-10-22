@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/payments/payment_bottom_sheet.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/reports/generate_report_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/investments/smart_invest_bottom_sheet.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Audit/Views/audit_contract_main_screen.dart';
 
@@ -19,7 +18,7 @@ class QuickActions extends ConsumerStatefulWidget {
 class _QuickActionsState extends ConsumerState<QuickActions> with SingleTickerProviderStateMixin {
   final ScrollController _quickActionController = ScrollController();
   // progress indicator removed; keep controller for potential future use
-  bool _expanded = false;
+  // Removed expand/more behavior
 
   @override
   void initState() {
@@ -45,7 +44,7 @@ class _QuickActionsState extends ConsumerState<QuickActions> with SingleTickerPr
         ),
         const SizedBox(height: 16),
 
-        // Horizontal scroll row (shows 4 items; tapping More expands to show 2 extra actions inline)
+        // Single row with four actions
         SizedBox(
           height: 110,
           child: Padding(
@@ -86,10 +85,10 @@ class _QuickActionsState extends ConsumerState<QuickActions> with SingleTickerPr
                 Expanded(
                   child: Center(
                     child: _buildQuickActionItem(
-                      Icons.more_horiz,
-                      _expanded ? 'Less' : 'More',
+                      Icons.trending_up,
+                      'Invest\nSmart',
                       const Color(0xff9747FF),
-                      onTap: () => setState(() => _expanded = !_expanded),
+                      onTap: () => showSmartInvestBottomSheet(context),
                     ),
                   ),
                 ),
@@ -97,39 +96,7 @@ class _QuickActionsState extends ConsumerState<QuickActions> with SingleTickerPr
             ),
           ),
         ),
-
-        const SizedBox(height: 8),
-
-        // Expandable area: shows extra actions below the row when expanded
-        AnimatedSize(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
-          child: _expanded
-              ? Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      _buildQuickActionItem(
-                        Icons.bar_chart,
-                        'Generate\nReport',
-                        const Color(0xff9747FF),
-                        onTap: () => showGenerateReportBottomSheet(context),
-                      ),
-                      const SizedBox(width: 24),
-                      _buildQuickActionItem(
-                        Icons.trending_up,
-                        'Invest\nSmart',
-                        const Color(0xff9747FF),
-                        onTap: () => showSmartInvestBottomSheet(context),
-                      ),
-                    ],
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
-
-        // Removed the pill-like indicator; replaced with a single-row of 4 actions
+        // Single row ends here
       ],
     );
   }
@@ -213,14 +180,7 @@ class _QuickActionsState extends ConsumerState<QuickActions> with SingleTickerPr
       builder: (context) => PayrollBottomSheet(),
     );
   }
-  void showGenerateReportBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const GenerateReportBottomSheet(),
-    );
-  }
+  // Removed Generate Report bottom sheet
 
   void showSmartInvestBottomSheet(BuildContext context) {
     showModalBottomSheet(

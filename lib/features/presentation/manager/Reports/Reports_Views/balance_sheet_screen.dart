@@ -659,8 +659,6 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                     const SizedBox(height: 8),
                     _buildCryptoBreakdown(balanceSheet.assets.currentAssets.cryptoHoldings),
                   ],
-                  _buildBalanceSheetRow('Cash Equivalents', '\$${balanceSheet.assets.currentAssets.cashEquivalents.toStringAsFixed(2)}'),
-                  _buildBalanceSheetRow('Receivables', '\$${balanceSheet.assets.currentAssets.receivables.toStringAsFixed(2)}'),
                   _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.currentAssets.total.toStringAsFixed(2)}'),
                   
                   const SizedBox(height: 16),
