@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/gestures.dart';
 
-import 'package:cryphoria_mobile/features/presentation/widgets/terms_and_conditions_content.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/auth/terms_and_conditions_content.dart';
 
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/role_selector.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/auth/role_selector.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/OTP_Verification/Views/otp_verification_view.dart';
 import 'package:cryphoria_mobile/shared/validation/validators.dart';
 import 'package:cryphoria_mobile/shared/widgets/password_strength_bar.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/navigation/widget_tree.dart';
 
 class AppRoutes {
   static const String login = '/login';

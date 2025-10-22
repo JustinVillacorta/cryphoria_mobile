@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/manager_connect_wallet_bottom_sheet.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/wallet/manager_connect_wallet_bottom_sheet.dart';
 
 class ManagerWalletConnectScreen extends StatelessWidget {
   const ManagerWalletConnectScreen({Key? key}) : super(key: key);

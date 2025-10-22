@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/transaction_details.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/transactions/transaction_details.dart';
 /// Screen that supplies FAKE DATA to the widget.
 /// Push this screen with Navigator when you want to preview.
 class TransactionDetailsScreen extends StatelessWidget {

@@ -4,9 +4,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:open_file/open_file.dart';
 import '../Reports_ViewModel/tax_reports_view_model.dart';
 import '../../../../domain/entities/tax_report.dart';
-import '../../../widgets/excel_export_helper.dart';
-import '../../../widgets/pdf_generation_helper.dart';
-import '../../../widgets/download_report_bottom_sheet.dart';
+import '../../../widgets/reports/excel_export_helper.dart';
+import '../../../widgets/reports/pdf_generation_helper.dart';
+import '../../../widgets/reports/download_report_bottom_sheet.dart';
 
 class TaxReportsScreen extends ConsumerStatefulWidget {
   const TaxReportsScreen({super.key});

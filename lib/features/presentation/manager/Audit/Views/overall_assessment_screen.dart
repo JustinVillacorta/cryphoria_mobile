@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_file/open_file.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import '../../../../domain/entities/audit_report.dart';
-import '../../../widgets/pdf_generation_helper.dart';
+import '../../../widgets/reports/pdf_generation_helper.dart';
 
 class OverallAssessmentScreen extends ConsumerWidget {
   final String contractName;

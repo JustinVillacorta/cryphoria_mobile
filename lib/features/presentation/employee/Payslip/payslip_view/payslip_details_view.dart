@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import '../../../../domain/entities/payslip.dart';
 import '../providers/payroll_history_providers.dart';
-import '../../../../presentation/widgets/pdf_generation_helper.dart';
+import '../../../../presentation/widgets/reports/pdf_generation_helper.dart';
 
 class PayslipDetailsView extends ConsumerWidget {
   final String payslipId;

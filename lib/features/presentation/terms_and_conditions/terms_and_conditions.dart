@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/terms_and_conditions_content.dart';
+import '../widgets/auth/terms_and_conditions_content.dart';
 
 class TermsAndConditionsScreen extends StatelessWidget {
   const TermsAndConditionsScreen({super.key});

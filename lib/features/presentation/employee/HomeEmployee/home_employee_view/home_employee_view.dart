@@ -1,14 +1,10 @@
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/notification_view/notification_view.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/Payslip/payslip_view/payslip_history_view.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/Payslip/providers/payroll_history_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_payout_info.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_top_bar.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_transaction_header.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_transaction_lists.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_wallet_card.dart';
-import 'package:cryphoria_mobile/features/domain/entities/employee_transaction_status.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/employee/employee_payout_info.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/employee/employee_top_bar.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/wallet/wallet_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';

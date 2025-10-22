@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../dependency_injection/riverpod_providers.dart';
-import '../../widgets/payroll_bottom_sheet.dart';
+import '../../widgets/payroll/payroll_bottom_sheet.dart';
 
 class PayrollManagementScreen extends ConsumerStatefulWidget {
   const PayrollManagementScreen({Key? key}) : super(key: key);

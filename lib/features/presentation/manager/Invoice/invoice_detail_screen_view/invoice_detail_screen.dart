@@ -1,7 +1,7 @@
 // lib/features/presentation/screens/invoice_detail_screen.dart
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/pdf_generation_helper.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/reports/pdf_generation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_file/open_file.dart';

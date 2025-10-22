@@ -18,11 +18,7 @@ class PayslipScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.1),
-        automaticallyImplyLeading: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: false,
         titleSpacing: 0,
         title: Padding(
           padding: const EdgeInsets.only(left: 16),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/transaction_details.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/transactions/transaction_details.dart';
 
 class AllTransactionsScreen extends ConsumerStatefulWidget {
   const AllTransactionsScreen({super.key});

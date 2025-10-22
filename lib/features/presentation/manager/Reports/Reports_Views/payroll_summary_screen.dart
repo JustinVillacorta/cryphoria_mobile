@@ -5,9 +5,9 @@ import 'package:open_file/open_file.dart';
 import '../../Payroll/payroll_management_screen.dart';
 import '../Reports_ViewModel/payroll_reports_view_model.dart';
 import '../../../../domain/entities/payslip.dart';
-import '../../../widgets/excel_export_helper.dart';
-import '../../../widgets/pdf_generation_helper.dart';
-import '../../../widgets/download_report_bottom_sheet.dart';
+import '../../../widgets/reports/excel_export_helper.dart';
+import '../../../widgets/reports/pdf_generation_helper.dart';
+import '../../../widgets/reports/download_report_bottom_sheet.dart';
 
 class PayrollSummaryScreen extends ConsumerStatefulWidget {
   const PayrollSummaryScreen({super.key});

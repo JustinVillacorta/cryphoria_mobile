@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../domain/entities/payroll_entry.dart';
 import '../providers/payroll_history_providers.dart';
-import '../../../../presentation/widgets/pdf_generation_helper.dart';
+import '../../../../presentation/widgets/reports/pdf_generation_helper.dart';
 
 class PayslipEntryDetailsView extends ConsumerWidget {
   final String entryId;

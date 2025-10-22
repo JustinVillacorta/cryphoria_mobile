@@ -2,7 +2,6 @@ import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Lo
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/auth_wrapper.dart';
 import 'dart:async';
 
 class OnboardingScreen extends StatefulWidget {

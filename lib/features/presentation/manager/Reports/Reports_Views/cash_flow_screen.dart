@@ -4,10 +4,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:open_file/open_file.dart';
 import '../Reports_ViewModel/cash_flow_view_model.dart';
 import '../../../../domain/entities/cash_flow.dart';
-import '../../../widgets/excel_export_helper.dart';
-import '../../../widgets/pdf_generation_helper.dart';
-import '../../../widgets/download_report_bottom_sheet.dart';
-import '../../../widgets/report_period_selector.dart';
+import '../../../widgets/reports/excel_export_helper.dart';
+import '../../../widgets/reports/pdf_generation_helper.dart';
+import '../../../widgets/reports/download_report_bottom_sheet.dart';
+import '../../../widgets/reports/report_period_selector.dart';
 
 class CashFlowScreen extends ConsumerStatefulWidget {
   const CashFlowScreen({super.key});

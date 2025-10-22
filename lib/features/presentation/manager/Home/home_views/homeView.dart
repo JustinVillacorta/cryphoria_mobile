@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/wallet_card.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/manager_home_skeleton.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/quick_actions.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/recent_transactions.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/wallet/wallet_card.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/skeletons/manager_home_skeleton.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/buttons/quick_actions.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/transactions/recent_transactions.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});

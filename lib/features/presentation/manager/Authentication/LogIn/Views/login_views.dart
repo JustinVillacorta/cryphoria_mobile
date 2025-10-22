@@ -1,3 +1,5 @@
+import 'package:cryphoria_mobile/features/presentation/widgets/navigation/employee_widget_tree.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/navigation/widget_tree.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,8 +8,6 @@ import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Forgot_Password/Views/forgot_password_request_view.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/widget_tree.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_widget_tree.dart';
 import 'package:cryphoria_mobile/shared/validation/validators.dart';
 
 class LogIn extends ConsumerStatefulWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee_management_skeleton.dart';
+import 'package:cryphoria_mobile/features/presentation/widgets/skeletons/employee_management_skeleton.dart';
 import '../employee_viewmodel/employee_viewmodel.dart';
 import 'add_employee_screen.dart';
 import 'employee_detail_screen.dart';

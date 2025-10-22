@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_file/open_file.dart';
 import '../../../../domain/entities/payslip.dart';
 import 'package:intl/intl.dart';
-import '../../../widgets/pdf_generation_helper.dart';
+import '../../../widgets/reports/pdf_generation_helper.dart';
 
 class PayslipDetailsView extends ConsumerWidget {
   final Payslip payslip;
