@@ -873,6 +873,9 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final maxValue = [
       cashFlow.cashSummary.beginningCash,
       cashFlow.cashSummary.endingCash,
+      cashFlow.cashSummary.netCashFromOperations.abs(),
+      cashFlow.cashSummary.netCashFromInvesting.abs(),
+      cashFlow.cashSummary.netCashFromFinancing.abs(),
     ].reduce((a, b) => a > b ? a : b);
     
     // Ensure we never return 0 to prevent chart interval issues
@@ -1040,23 +1043,19 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       // Convert CashFlow to report data format for PDF generation
       final reportData = {
         'summary': {
+          'beginning_cash': cashFlow.cashSummary.beginningCash,
           'net_cash_from_operations': cashFlow.cashSummary.netCashFromOperations,
           'net_cash_from_investing': cashFlow.cashSummary.netCashFromInvesting,
           'net_cash_from_financing': cashFlow.cashSummary.netCashFromFinancing,
           'net_change_in_cash': cashFlow.cashSummary.netChangeInCash,
+          'ending_cash': cashFlow.cashSummary.endingCash,
         },
-        'operating_activities': [
-          {'description': 'Cash Receipts', 'amount': cashFlow.operatingActivities.cashReceipts.total},
-          {'description': 'Cash Payments', 'amount': cashFlow.operatingActivities.cashPayments.total},
-        ],
-        'investing_activities': [
-          {'description': 'Cash Receipts', 'amount': cashFlow.investingActivities.cashReceipts.total},
-          {'description': 'Cash Payments', 'amount': cashFlow.investingActivities.cashPayments.total},
-        ],
-        'financing_activities': [
-          {'description': 'Cash Receipts', 'amount': cashFlow.financingActivities.cashReceipts.total},
-          {'description': 'Cash Payments', 'amount': cashFlow.financingActivities.cashPayments.total},
-        ],
+        'period_info': {
+          'period_start': cashFlow.periodStart.toIso8601String().split('T')[0],
+          'period_end': cashFlow.periodEnd.toIso8601String().split('T')[0],
+          'report_type': cashFlow.reportType,
+          'currency': cashFlow.currency,
+        },
       };
 
       // Generate PDF
@@ -1138,11 +1137,6 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final financingFlow = cashFlow.cashSummary.netCashFromFinancing;
     final endingCash = cashFlow.cashSummary.endingCash;
     
-    // Calculate cumulative positions for proper waterfall effect
-    final afterOperating = beginningCash + operatingFlow;
-    final afterInvesting = afterOperating + investingFlow;
-    final afterFinancing = afterInvesting + financingFlow;
-    
     return [
       // 1. Beginning Cash (Starting point)
       BarChartGroupData(
@@ -1160,13 +1154,13 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
           ),
         ],
       ),
-      // 2. Operating Activities (shows change from beginning)
+      // 2. Operating Activities (shows the change amount, not cumulative)
       BarChartGroupData(
         x: 1,
         barRods: [
           BarChartRodData(
-            fromY: beginningCash,
-            toY: afterOperating,
+            fromY: operatingFlow >= 0 ? 0 : operatingFlow,
+            toY: operatingFlow >= 0 ? operatingFlow : 0,
             color: operatingFlow >= 0 
               ? const Color(0xFF10B981) // Green if positive
               : const Color(0xFFEF4444), // Red if negative
@@ -1175,13 +1169,13 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
           ),
         ],
       ),
-      // 3. Investing Activities (shows change from after operating)
+      // 3. Investing Activities (shows the change amount, not cumulative)
       BarChartGroupData(
         x: 2,
         barRods: [
           BarChartRodData(
-            fromY: afterOperating,
-            toY: afterInvesting,
+            fromY: investingFlow >= 0 ? 0 : investingFlow,
+            toY: investingFlow >= 0 ? investingFlow : 0,
             color: investingFlow >= 0 
               ? const Color(0xFF10B981) // Green if positive
               : const Color(0xFFEF4444), // Red if negative
@@ -1190,13 +1184,13 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
           ),
         ],
       ),
-      // 4. Financing Activities (shows change from after investing)
+      // 4. Financing Activities (shows the change amount, not cumulative)
       BarChartGroupData(
         x: 3,
         barRods: [
           BarChartRodData(
-            fromY: afterInvesting,
-            toY: afterFinancing,
+            fromY: financingFlow >= 0 ? 0 : financingFlow,
+            toY: financingFlow >= 0 ? financingFlow : 0,
             color: financingFlow >= 0 
               ? const Color(0xFF10B981) // Green if positive
               : const Color(0xFFEF4444), // Red if negative
@@ -1205,7 +1199,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
           ),
         ],
       ),
-      // 5. Ending Cash (Final result - should match afterFinancing)
+      // 5. Ending Cash (Final result)
       BarChartGroupData(
         x: 4,
         barRods: [

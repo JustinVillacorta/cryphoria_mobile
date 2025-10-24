@@ -25,62 +25,75 @@ class PdfGenerationHelper {
               ),
               pw.SizedBox(height: 20),
               
-              // Report Summary
-              pw.Text(
-                'Report Summary',
-                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-              ),
-              pw.SizedBox(height: 10),
+              // Report Information
+              if (reportData['report_info'] != null) ...[
+                pw.Text(
+                  'Report Information',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text('Report ID: ${reportData['report_info']['report_id'] ?? 'N/A'}'),
+                pw.Text('Report Type: ${reportData['report_info']['report_type'] ?? 'N/A'}'),
+                pw.Text('Status: ${reportData['report_info']['status'] ?? 'N/A'}'),
+                pw.Text('Period: ${reportData['report_info']['period_start'] ?? 'N/A'} - ${reportData['report_info']['period_end'] ?? 'N/A'}'),
+                pw.Text('Generated: ${reportData['report_info']['generated_at'] ?? 'N/A'}'),
+                pw.SizedBox(height: 20),
+              ],
               
-              // Summary data
+              // Financial Performance
+              if (reportData['financial_data'] != null) ...[
+                pw.Text(
+                  'Financial Performance',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text('Capital Gains: \$${reportData['financial_data']['capital_gains']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Capital Losses: \$${reportData['financial_data']['capital_losses']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Net P&L: \$${reportData['financial_data']['net_pnl']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Total Income: \$${reportData['financial_data']['total_income']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Total Expenses: \$${reportData['financial_data']['total_expenses']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.SizedBox(height: 20),
+              ],
+              
+              // Tax Summary
               if (reportData['summary'] != null) ...[
+                pw.Text(
+                  'Tax Summary',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
                 pw.Text('Total Income: \$${reportData['summary']['total_income']?.toStringAsFixed(2) ?? '0.00'}'),
                 pw.Text('Total Deductions: \$${reportData['summary']['total_deductions']?.toStringAsFixed(2) ?? '0.00'}'),
                 pw.Text('Taxable Income: \$${reportData['summary']['taxable_income']?.toStringAsFixed(2) ?? '0.00'}'),
                 pw.Text('Total Tax Owed: \$${reportData['summary']['total_tax_owed']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Total Tax Paid: \$${reportData['summary']['total_tax_paid']?.toStringAsFixed(2) ?? '0.00'}'),
+                pw.Text('Net Tax Owed: \$${reportData['summary']['net_tax_owed']?.toStringAsFixed(2) ?? '0.00'}'),
                 pw.SizedBox(height: 20),
               ],
               
-              // Categories
-              if (reportData['categories'] != null) ...[
+              // Metadata
+              if (reportData['metadata'] != null) ...[
                 pw.Text(
-                  'Tax Categories',
-                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                  'Report Details',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 10),
-                
-                pw.Table(
-                  border: pw.TableBorder.all(),
-                  columnWidths: {
-                    0: pw.FlexColumnWidth(2),
-                    1: pw.FlexColumnWidth(1),
-                  },
-                  children: [
-                    pw.TableRow(
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('Category', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('Amount', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    ...(reportData['categories'] as List<dynamic>).map((category) => pw.TableRow(
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text(category['name'] ?? ''),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('\$${(category['amount'] ?? 0).toStringAsFixed(2)}'),
-                        ),
-                      ],
-                    )).toList(),
-                  ],
+                pw.Text('Transaction Count: ${reportData['metadata']['transaction_count'] ?? 0}'),
+                pw.Text('Accounting Method: ${reportData['metadata']['accounting_method'] ?? 'N/A'}'),
+                pw.Text('Tax Year: ${reportData['metadata']['tax_year'] ?? DateTime.now().year}'),
+                pw.SizedBox(height: 20),
+              ],
+              
+              // Analysis
+              if (reportData['analysis'] != null && reportData['analysis'].toString().isNotEmpty) ...[
+                pw.Text(
+                  'Analysis',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text(
+                  reportData['analysis'].toString(),
+                  style: pw.TextStyle(fontSize: 12),
                 ),
               ],
             ],
@@ -516,6 +529,16 @@ class PdfGenerationHelper {
                   ],
                 ),
                 pw.SizedBox(height: 20),
+                
+                // Report Information
+                pw.Text(
+                  'Report Information',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text('Report Date: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}'),
+                pw.Text('Report Type: Balance Sheet'),
+                pw.Text('Financial Position: As of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}'),
               ],
             ],
           );
@@ -542,27 +565,30 @@ class PdfGenerationHelper {
                   style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
                 ),
               ),
-              pw.SizedBox(height: 20),
+              pw.SizedBox(height: 10),
               
-              // Summary
+              // Period Information
+              if (reportData['period_info'] != null) ...[
+                pw.Text(
+                  'Period: ${reportData['period_info']['period_start']} to ${reportData['period_info']['period_end']}',
+                  style: pw.TextStyle(fontSize: 12),
+                ),
+                pw.Text(
+                  'Report Type: ${reportData['period_info']['report_type']}',
+                  style: pw.TextStyle(fontSize: 12),
+                ),
+                pw.Text(
+                  'Currency: ${reportData['period_info']['currency']}',
+                  style: pw.TextStyle(fontSize: 12),
+                ),
+                pw.SizedBox(height: 20),
+              ],
+              
+              // Cash Flow Summary Table
               if (reportData['summary'] != null) ...[
                 pw.Text(
                   'Cash Flow Summary',
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Text('Net Cash from Operations: \$${reportData['summary']['net_cash_from_operations']?.toStringAsFixed(2) ?? '0.00'}'),
-                pw.Text('Net Cash from Investing: \$${reportData['summary']['net_cash_from_investing']?.toStringAsFixed(2) ?? '0.00'}'),
-                pw.Text('Net Cash from Financing: \$${reportData['summary']['net_cash_from_financing']?.toStringAsFixed(2) ?? '0.00'}'),
-                pw.Text('Net Change in Cash: \$${reportData['summary']['net_change_in_cash']?.toStringAsFixed(2) ?? '0.00'}'),
-                pw.SizedBox(height: 20),
-              ],
-              
-              // Operating Activities
-              if (reportData['operating_activities'] != null) ...[
-                pw.Text(
-                  'Operating Activities',
-                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 10),
                 pw.Table(
@@ -576,7 +602,7 @@ class PdfGenerationHelper {
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('Activity', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                          child: pw.Text('Item', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8.0),
@@ -584,20 +610,94 @@ class PdfGenerationHelper {
                         ),
                       ],
                     ),
-                    ...(reportData['operating_activities'] as List<dynamic>).map((activity) => pw.TableRow(
+                    pw.TableRow(
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text(activity['description'] ?? ''),
+                          child: pw.Text('Beginning Cash'),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('\$${(activity['amount'] ?? 0).toStringAsFixed(2)}'),
+                          child: pw.Text('\$${(reportData['summary']['beginning_cash'] ?? 0).toStringAsFixed(2)}'),
                         ),
                       ],
-                    )).toList(),
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Net Cash from Operating Activities'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(reportData['summary']['net_cash_from_operations'] ?? 0).toStringAsFixed(2)}'),
+                        ),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Net Cash from Investing Activities'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(reportData['summary']['net_cash_from_investing'] ?? 0).toStringAsFixed(2)}'),
+                        ),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Net Cash from Financing Activities'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(reportData['summary']['net_cash_from_financing'] ?? 0).toStringAsFixed(2)}'),
+                        ),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Net Change in Cash', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(reportData['summary']['net_change_in_cash'] ?? 0).toStringAsFixed(2)}', 
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Ending Cash', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('\$${(reportData['summary']['ending_cash'] ?? 0).toStringAsFixed(2)}', 
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
+                pw.SizedBox(height: 20),
+                
+                // Report Information
+                pw.Text(
+                  'Report Information',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text('Period: ${reportData['period_info']['period_start']} to ${reportData['period_info']['period_end']}'),
+                pw.Text('Report Type: ${reportData['period_info']['report_type']}'),
+                pw.Text('Currency: ${reportData['period_info']['currency']}'),
+                pw.Text('Report Period: As of monthly'),
               ],
             ],
           );
@@ -960,6 +1060,21 @@ class PdfGenerationHelper {
               pw.Text('Total Revenue: \$${incomeStatement.revenue.totalRevenue.toStringAsFixed(2)}'),
               pw.Text('Total Expenses: \$${incomeStatement.expenses.totalExpenses.toStringAsFixed(2)}'),
               pw.Text('Net Income: \$${incomeStatement.netIncome.netIncome.toStringAsFixed(2)}'),
+              pw.SizedBox(height: 20),
+              
+              // Report Information
+              pw.Text(
+                'Report Information',
+                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Text('Period: ${incomeStatement.periodStart.day}/${incomeStatement.periodStart.month}/${incomeStatement.periodStart.year} - ${incomeStatement.periodEnd.day}/${incomeStatement.periodEnd.month}/${incomeStatement.periodEnd.year}'),
+              pw.Text('Currency: ${incomeStatement.currency}'),
+              pw.Text('Generated: ${incomeStatement.generatedAt.day}/${incomeStatement.generatedAt.month}/${incomeStatement.generatedAt.year}'),
+              pw.Text('Transactions Processed: ${incomeStatement.metadata.transactionCount}'),
+              pw.Text('Payroll Entries: ${incomeStatement.metadata.payrollCount}'),
+              pw.Text('Period Length: ${incomeStatement.metadata.periodLengthDays} days'),
+              pw.Text('Primary Revenue Source: ${incomeStatement.summary.primaryRevenueSource}'),
               pw.SizedBox(height: 20),
               
               // Revenue

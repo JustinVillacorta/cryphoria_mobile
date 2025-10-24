@@ -7,6 +7,7 @@ import '../../../../domain/entities/tax_report.dart';
 import '../../../widgets/reports/excel_export_helper.dart';
 import '../../../widgets/reports/pdf_generation_helper.dart';
 import '../../../widgets/reports/download_report_bottom_sheet.dart';
+import '../../../widgets/reports/report_period_selector.dart';
 
 class TaxReportsScreen extends ConsumerStatefulWidget {
   const TaxReportsScreen({super.key});
@@ -166,7 +167,11 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            // Professional Header (white + subtle border)
+          // Period Selector
+          if (state.taxReports.length > 1)
+            _buildPeriodSelector(state),
+          
+          // Professional Header (white + subtle border)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -238,8 +243,8 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                     children: [
                       Expanded(
                         child: _buildMetricCard(
-                          'Total Income',
-                          '\$${state.selectedReport!.summary.totalIncome.toStringAsFixed(2)}',
+                          'Capital Gains',
+                          '\$${(state.selectedReport!.totalGains ?? 0).toStringAsFixed(2)}',
                           const Color(0xFF10B981),
                           Icons.trending_up,
                         ),
@@ -247,10 +252,10 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildMetricCard(
-                          'Total Deductions',
-                          '\$${state.selectedReport!.summary.totalDeductions.toStringAsFixed(2)}',
-                          const Color(0xFF3B82F6),
-                          Icons.remove_circle_outline,
+                          'Capital Losses',
+                          '\$${(state.selectedReport!.totalLosses ?? 0).toStringAsFixed(2)}',
+                          const Color(0xFFEF4444),
+                          Icons.trending_down,
                         ),
                       ),
                     ],
@@ -260,86 +265,22 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                     children: [
                       Expanded(
                         child: _buildMetricCard(
-                          'Tax Owed',
-                          '\$${state.selectedReport!.summary.totalTaxOwed.toStringAsFixed(2)}',
-                          const Color(0xFFEF4444),
-                          Icons.account_balance,
+                          'Net P&L',
+                          '\$${(state.selectedReport!.netPnl ?? 0).toStringAsFixed(2)}',
+                          const Color(0xFF3B82F6),
+                          Icons.account_balance_wallet,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildMetricCard(
+                          'Total Expenses',
+                          '\$${(state.selectedReport!.totalExpenses ?? 0).toStringAsFixed(2)}',
+                          const Color(0xFFF59E0B),
+                          Icons.payments,
                         ),
                       ),
                     ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Filter Dropdown Section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[200]!, width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.filter_list,
-                        color: Colors.grey[600],
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Filter Reports',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[800],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: state.selectedReportType ?? 'ALL',
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'ALL', child: Text('All Reports')),
-                      DropdownMenuItem(value: 'DAILY', child: Text('Daily')),
-                      DropdownMenuItem(value: 'WEEKLY', child: Text('Weekly')),
-                      DropdownMenuItem(value: 'MONTHLY', child: Text('Monthly')),
-                      DropdownMenuItem(value: 'QUARTERLY', child: Text('Quarterly')),
-                      DropdownMenuItem(value: 'YEARLY', child: Text('Yearly')),
-                    ],
-                    onChanged: (String? value) {
-                      ref.read(taxReportsViewModelProvider.notifier).selectReportType(value);
-                    },
                   ),
                 ],
               ),
@@ -525,186 +466,135 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
           const SizedBox(height: 20),
 
-          // Chart
-          SizedBox(
-            height: 300,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawHorizontalLine: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 2000,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey[300]!,
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        const style = TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 12,
-                        );
-                        Widget text;
-                        switch (value.toInt()) {
-                          case 0:
-                            text = const Text('Jan', style: style);
-                            break;
-                          case 1:
-                            text = const Text('Feb', style: style);
-                            break;
-                          case 2:
-                            text = const Text('Mar', style: style);
-                            break;
-                          case 3:
-                            text = const Text('Apr', style: style);
-                            break;
-                          case 4:
-                            text = const Text('May', style: style);
-                            break;
-                          case 5:
-                            text = const Text('Jun', style: style);
-                            break;
-                          default:
-                            text = const Text('', style: style);
-                            break;
-                        }
-                        return text;
-                      },
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 2000,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        return Text(
-                          '${(value / 1000).toInt()}K',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 12,
-                          ),
-                        );
-                      },
-                      reservedSize: 40,
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(
-                  show: true,
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                minX: 0,
-                maxX: 5,
-                minY: 0,
-                maxY: 12000,
-                lineBarsData: [
-                  // Tax Payable Line - using dynamic data
-                  LineChartBarData(
-                    spots: _getTaxPayableSpots(taxReport),
-                    isCurved: true,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF8B5CF6), Color(0xFF8B5CF6)],
-                    ),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: const Color(0xFF8B5CF6),
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: false,
-                    ),
-                  ),
-                  // Tax Paid Line - using dynamic data
-                  LineChartBarData(
-                    spots: _getTaxPaidSpots(taxReport),
-                    isCurved: true,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF10B981)],
-                    ),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: const Color(0xFF10B981),
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: false,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Chart Legend
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLegendItem('Tax Payable', const Color(0xFF8B5CF6)),
-              const SizedBox(width: 20),
-              _buildLegendItem('Tax Paid', const Color(0xFF10B981)),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Summary Card
+          // Main Report Container (following income statement pattern)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF8B5CF6).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: const Color(0xFF8B5CF6).withOpacity(0.2),
-              ),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[200]!, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Financial Performance Chart Section
+                const Text(
+                  'Financial Performance',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 300,
+                  child: BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: _getMaxValue(taxReport),
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            return BarTooltipItem(
+                              '${rod.toY.toStringAsFixed(0)}\n${_getTooltipText(group.x.toDouble())}',
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (double value, TitleMeta meta) {
+                              const style = TextStyle(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                              );
+                              switch (value.toInt()) {
+                                case 0:
+                                  return const Text('Gains', style: style);
+                                case 1:
+                                  return const Text('Losses', style: style);
+                                case 2:
+                                  return const Text('Net P&L', style: style);
+                                case 3:
+                                  return const Text('Expenses', style: style);
+                                default:
+                                  return const Text('');
+                              }
+                            },
+                            reservedSize: 30,
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 50,
+                            interval: _getMaxValue(taxReport) / 5,
+                            getTitlesWidget: (double value, TitleMeta meta) {
+                              return Text(
+                                '\$${(value / 1000).toStringAsFixed(0)}K',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      barGroups: _getBarGroups(taxReport),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: _getMaxValue(taxReport) / 5,
+                        getDrawingHorizontalLine: (value) {
+                          return FlLine(
+                            color: Colors.grey[200]!,
+                            strokeWidth: 1,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 30),
+                
+                // Summary Section
                 const Text(
                   'Summary',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF8B5CF6),
+                    color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 Text(
                   taxReport.llmAnalysis ?? 'No analysis available for this report.',
                   style: const TextStyle(
@@ -809,32 +699,44 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
                 // Display actual tax report data from backend
                 _buildVATItem(
-                  'Total Income',
-                  '\$${taxReport.summary.totalIncome.toStringAsFixed(2)}',
+                  'Capital Gains',
+                  '\$${(taxReport.totalGains ?? 0).toStringAsFixed(2)}',
                 ),
                 const SizedBox(height: 16),
                 
                 _buildVATItem(
-                  'Total Deductions',
-                  '\$${taxReport.summary.totalDeductions.toStringAsFixed(2)}',
+                  'Capital Losses',
+                  '\$${(taxReport.totalLosses ?? 0).toStringAsFixed(2)}',
                 ),
                 const SizedBox(height: 16),
                 
                 _buildVATItem(
-                  'Taxable Income',
-                  '\$${taxReport.summary.taxableIncome.toStringAsFixed(2)}',
+                  'Net P&L',
+                  '\$${(taxReport.netPnl ?? 0).toStringAsFixed(2)}',
                 ),
                 const SizedBox(height: 16),
                 
                 _buildVATItem(
-                  'Total Tax Owed',
-                  '\$${taxReport.summary.totalTaxOwed.toStringAsFixed(2)}',
+                  'Total Expenses',
+                  '\$${(taxReport.totalExpenses ?? 0).toStringAsFixed(2)}',
                 ),
                 const SizedBox(height: 16),
                 
                 _buildVATItem(
-                  'Total Tax Paid',
-                  '\$${taxReport.summary.totalTaxPaid.toStringAsFixed(2)}',
+                  'Report Type',
+                  taxReport.reportType,
+                ),
+                const SizedBox(height: 16),
+                
+                _buildVATItem(
+                  'Period',
+                  '${_formatDate(taxReport.periodStart.toString())} - ${_formatDate(taxReport.periodEnd.toString())}',
+                ),
+                const SizedBox(height: 16),
+                
+                _buildVATItem(
+                  'Transactions',
+                  '${taxReport.metadata['transaction_count'] ?? 0}',
                 ),
                 const SizedBox(height: 20),
 
@@ -852,7 +754,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Total Income',
+                            'Capital Gains',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -860,7 +762,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                             ),
                           ),
                           Text(
-                            '\$${taxReport.summary.totalIncome.toStringAsFixed(2)}',
+                            '\$${(taxReport.totalGains ?? 0).toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -874,7 +776,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Total Deductions',
+                            'Capital Losses',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -882,7 +784,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                             ),
                           ),
                           Text(
-                            '\$${taxReport.summary.totalDeductions.toStringAsFixed(2)}',
+                            '\$${(taxReport.totalLosses ?? 0).toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -896,7 +798,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Taxable Income',
+                            'Net P&L',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -904,7 +806,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                             ),
                           ),
                           Text(
-                            '\$${taxReport.summary.taxableIncome.toStringAsFixed(2)}',
+                            '\$${(taxReport.netPnl ?? 0).toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -918,7 +820,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Total Tax Liability',
+                            'Total Expenses',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -926,7 +828,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                             ),
                           ),
                           Text(
-                            '\$${taxReport.summary.totalTaxOwed.toStringAsFixed(2)}',
+                            '\$${(taxReport.totalExpenses ?? 0).toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -946,28 +848,97 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
+  double _getMaxValue(TaxReport taxReport) {
+    final gains = (taxReport.totalGains ?? 0).abs();
+    final losses = (taxReport.totalLosses ?? 0).abs();
+    final netPnl = (taxReport.netPnl ?? 0).abs();
+    final expenses = (taxReport.totalExpenses ?? 0).abs();
+    
+    // Find the maximum value among all four categories
+    final maxValue = [gains, losses, netPnl, expenses].reduce((a, b) => a > b ? a : b) * 1.2;
+    
+    // Ensure we never return 0 to prevent chart interval issues
+    if (maxValue == 0) {
+      return 1000; // Default range for empty data
+    }
+    
+    return maxValue;
+  }
+
+  List<BarChartGroupData> _getBarGroups(TaxReport taxReport) {
+    return [
+      BarChartGroupData(
+        x: 0,
+        barRods: [
+          BarChartRodData(
+            toY: taxReport.totalGains ?? 0,
+            color: const Color(0xFF10B981),
+            width: 60,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
           ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
+        ],
+      ),
+      BarChartGroupData(
+        x: 1,
+        barRods: [
+          BarChartRodData(
+            toY: taxReport.totalLosses ?? 0,
+            color: const Color(0xFFEF4444),
+            width: 60,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      ),
+      BarChartGroupData(
+        x: 2,
+        barRods: [
+          BarChartRodData(
+            toY: (taxReport.netPnl ?? 0).abs(),
+            color: const Color(0xFF3B82F6),
+            width: 60,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 3,
+        barRods: [
+          BarChartRodData(
+            toY: taxReport.totalExpenses ?? 0,
+            color: const Color(0xFFF59E0B),
+            width: 60,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  String _getTooltipText(double x) {
+    switch (x.toInt()) {
+      case 0:
+        return 'Capital Gains';
+      case 1:
+        return 'Capital Losses';
+      case 2:
+        return 'Net P&L';
+      case 3:
+        return 'Total Expenses';
+      default:
+        return '';
+    }
   }
 
   Widget _buildVATItem(String title, String amount) {
@@ -1010,32 +981,6 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     } catch (e) {
       return 'N/A';
     }
-  }
-
-  List<FlSpot> _getTaxPayableSpots(TaxReport taxReport) {
-    // Generate dynamic chart data based on tax report data
-    final totalTaxOwed = taxReport.summary.totalTaxOwed;
-    return [
-      FlSpot(0, totalTaxOwed * 0.8),
-      FlSpot(1, totalTaxOwed * 0.7),
-      FlSpot(2, totalTaxOwed * 0.9),
-      FlSpot(3, totalTaxOwed * 0.6),
-      FlSpot(4, totalTaxOwed * 1.0),
-      FlSpot(5, totalTaxOwed * 0.85),
-    ];
-  }
-
-  List<FlSpot> _getTaxPaidSpots(TaxReport taxReport) {
-    // Generate dynamic chart data based on tax report data
-    final totalTaxPaid = taxReport.summary.totalTaxPaid;
-    return [
-      FlSpot(0, totalTaxPaid * 0.8),
-      FlSpot(1, totalTaxPaid * 0.7),
-      FlSpot(2, totalTaxPaid * 0.9),
-      FlSpot(3, totalTaxPaid * 0.6),
-      FlSpot(4, totalTaxPaid * 0.95),
-      FlSpot(5, totalTaxPaid * 0.85),
-    ];
   }
 
   Widget _buildMetricCard(String title, String value, Color color, IconData icon) {
@@ -1121,8 +1066,8 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
         ),
       );
 
-      // Generate Excel file
-      final filePath = await ExcelExportHelper.exportTaxReportToExcel();
+      // Generate Excel file with actual tax report data
+      final filePath = await ExcelExportHelper.exportTaxReportToExcel(taxReport);
 
       // Close loading dialog
       if (context.mounted) {
@@ -1187,16 +1132,33 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
       // Convert TaxReport to report data format for PDF generation
       final reportData = {
+        'report_info': {
+          'report_id': taxReport.reportId,
+          'report_type': taxReport.reportType,
+          'period_start': taxReport.periodStart.toString(),
+          'period_end': taxReport.periodEnd.toString(),
+          'generated_at': taxReport.reportDate.toString(),
+          'status': taxReport.status,
+        },
+        'financial_data': {
+          'capital_gains': taxReport.totalGains ?? 0,
+          'capital_losses': taxReport.totalLosses ?? 0,
+          'net_pnl': taxReport.netPnl ?? 0,
+          'total_income': taxReport.totalIncome ?? 0,
+          'total_expenses': taxReport.totalExpenses ?? 0,
+        },
         'summary': {
           'total_income': taxReport.summary.totalIncome,
           'total_deductions': taxReport.summary.totalDeductions,
           'taxable_income': taxReport.summary.taxableIncome,
           'total_tax_owed': taxReport.summary.totalTaxOwed,
         },
-        'categories': taxReport.categories.map((category) => {
-          'name': category.name,
-          'amount': category.amount,
-        }).toList(),
+        'metadata': {
+          'transaction_count': taxReport.metadata['transaction_count'] ?? 0,
+          'accounting_method': taxReport.metadata['accounting_method'] ?? 'N/A',
+          'tax_year': taxReport.metadata['tax_year'] ?? DateTime.now().year,
+        },
+        'analysis': taxReport.llmAnalysis ?? 'No analysis available for this report.',
       };
 
       // Generate PDF
@@ -1251,4 +1213,24 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
       }
     }
   }
+
+  Widget _buildPeriodSelector(TaxReportsState state) {
+    if (state.taxReports.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return ReportPeriodSelector<TaxReport>(
+      items: state.taxReports,
+      selectedItem: state.selectedReport!,
+      formatPeriod: (taxReport) {
+        final start = taxReport.periodStart;
+        final end = taxReport.periodEnd;
+        return '${start.day}/${start.month}/${start.year} - ${end.day}/${end.month}/${end.year}';
+      },
+      onPeriodChanged: (taxReport) {
+        ref.read(taxReportsViewModelProvider.notifier).selectTaxReport(taxReport);
+      },
+    );
+  }
 }
+
