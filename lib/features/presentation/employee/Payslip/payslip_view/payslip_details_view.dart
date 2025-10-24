@@ -180,8 +180,6 @@ class PayslipDetailsView extends ConsumerWidget {
                 SizedBox(height: isSmallScreen ? 8 : 12),
                 _buildPayslipHeader(payslip, isSmallScreen, isTablet, isDesktop),
                 SizedBox(height: isSmallScreen ? 16 : 20),
-                _buildStatusCard(payslip, isSmallScreen, isTablet, isDesktop),
-                SizedBox(height: isSmallScreen ? 16 : 20),
                 _buildPaymentDetailsCard(payslip, isSmallScreen, isTablet, isDesktop),
                 SizedBox(height: isSmallScreen ? 16 : 20),
                 _buildEarningsCard(payslip, isSmallScreen, isTablet, isDesktop),
@@ -313,89 +311,6 @@ class PayslipDetailsView extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStatusCard(Payslip payslip, bool isSmallScreen, bool isTablet, bool isDesktop) {
-    final status = payslip.status ?? 'UNKNOWN';
-    final statusColor = _getStatusColor(status);
-    
-    return Container(
-      padding: EdgeInsets.all(isDesktop ? 20 : isTablet ? 18 : 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(isTablet ? 10 : 8),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              _getStatusIcon(status),
-              color: statusColor,
-              size: isTablet ? 22 : 20,
-            ),
-          ),
-          SizedBox(width: isTablet ? 14 : 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Status',
-                  style: GoogleFonts.inter(
-                    fontSize: isTablet ? 13 : 12,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF6B6B6B),
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  status.toUpperCase(),
-                  style: GoogleFonts.inter(
-                    fontSize: isTablet ? 17 : 16,
-                    fontWeight: FontWeight.w600,
-                    color: statusColor,
-                    height: 1.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (payslip.paymentProcessed == true)
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: isTablet ? 12 : 10,
-                vertical: isTablet ? 7 : 6,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'PAID',
-                style: GoogleFonts.inter(
-                  fontSize: isTablet ? 13 : 12,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF10B981),
-                  height: 1.2,
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 
@@ -787,50 +702,6 @@ class PayslipDetailsView extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toUpperCase()) {
-      case 'COMPLETED':
-      case 'PAID':
-        return const Color(0xFF10B981);
-      case 'SCHEDULED':
-      case 'GENERATED':
-        return const Color(0xFF3B82F6);
-      case 'FAILED':
-        return const Color(0xFFEF4444);
-      case 'PROCESSING':
-        return const Color(0xFFF59E0B);
-      case 'PENDING':
-      case 'DRAFT':
-        return const Color(0xFF6B6B6B);
-      case 'SENT':
-        return const Color(0xFF9747FF);
-      default:
-        return const Color(0xFF6B6B6B);
-    }
-  }
-
-  IconData _getStatusIcon(String status) {
-    switch (status.toUpperCase()) {
-      case 'COMPLETED':
-      case 'PAID':
-        return Icons.check_circle_outlined;
-      case 'SCHEDULED':
-      case 'GENERATED':
-        return Icons.schedule_outlined;
-      case 'FAILED':
-        return Icons.error_outline;
-      case 'PROCESSING':
-        return Icons.hourglass_empty_outlined;
-      case 'PENDING':
-      case 'DRAFT':
-        return Icons.schedule_outlined;
-      case 'SENT':
-        return Icons.send_outlined;
-      default:
-        return Icons.help_outline;
-    }
   }
 
   void _generatePdf(BuildContext context, Payslip payslip) async {

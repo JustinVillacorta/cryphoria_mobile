@@ -6,7 +6,7 @@ import '../../../../domain/entities/employee.dart';
 import '../../../../domain/entities/payslip.dart' as payslip_entity;
 import '../../../../../dependency_injection/riverpod_providers.dart';
 import '../../Payslip/Views/payslip_details_view.dart';
-import '../../../employee/Payslip/payslip_view/payslip_history_view.dart';
+import 'employee_payslip_list_view.dart';
 
 class EmployeeDetailScreen extends ConsumerStatefulWidget {
   final Employee employee;
@@ -1309,7 +1309,11 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const PayslipScreen(),
+        builder: (context) => EmployeePayslipListView(
+          employee: widget.employee,
+          payslips: employeePayslips,
+          onRefresh: _loadEmployeePayslips,
+        ),
       ),
     );
   }

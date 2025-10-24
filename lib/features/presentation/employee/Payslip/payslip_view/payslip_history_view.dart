@@ -144,8 +144,6 @@ class PayslipScreen extends ConsumerWidget {
               // Summary Cards
               _buildTotalEntriesCard(payrollDetails.payslips, isSmallScreen, isTablet, isDesktop),
               SizedBox(height: isTablet ? 16 : 12),
-              _buildPaymentStatisticsCard(payrollDetails.payslips, isSmallScreen, isTablet, isDesktop),
-              SizedBox(height: isTablet ? 16 : 12),
               _buildFinancialSummaryCard(payrollDetails.payslips, isSmallScreen, isTablet, isDesktop),
               SizedBox(height: isTablet ? 24 : 16),
               
@@ -223,82 +221,6 @@ class PayslipScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPaymentStatisticsCard(List<Payslip> payslips, bool isSmallScreen, bool isTablet, bool isDesktop) {
-    return Container(
-      padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Payment Statistics',
-            style: GoogleFonts.inter(
-              fontSize: isTablet ? 17 : 16,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1A1A1A),
-              letterSpacing: -0.2,
-              height: 1.3,
-            ),
-          ),
-          SizedBox(height: isSmallScreen ? 14 : 16),
-          _buildStatisticRow('Paid', payslips.where((p) => p.status == 'PAID').length, const Color(0xFF10B981), Icons.check_circle_outlined, isTablet),
-          SizedBox(height: isSmallScreen ? 10 : 12),
-          _buildStatisticRow('Sent', payslips.where((p) => p.status == 'SENT').length, const Color(0xFF3B82F6), Icons.send_outlined, isTablet),
-          SizedBox(height: isSmallScreen ? 10 : 12),
-          _buildStatisticRow('Generated', payslips.where((p) => p.status == 'GENERATED').length, const Color(0xFFF59E0B), Icons.schedule_outlined, isTablet),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatisticRow(String label, int count, Color color, IconData icon, bool isTablet) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: isTablet ? 12 : 10,
-        horizontal: isTablet ? 14 : 12,
-      ),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: isTablet ? 20 : 18),
-          SizedBox(width: isTablet ? 12 : 10),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: isTablet ? 15 : 14,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF1A1A1A),
-              height: 1.3,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            '$count',
-            style: GoogleFonts.inter(
-              fontSize: isTablet ? 17 : 16,
-              fontWeight: FontWeight.w700,
-              color: color,
-              height: 1.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFinancialSummaryCard(List<Payslip> payslips, bool isSmallScreen, bool isTablet, bool isDesktop) {
     return Container(
       padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
@@ -328,18 +250,10 @@ class PayslipScreen extends ConsumerWidget {
           ),
           SizedBox(height: isSmallScreen ? 14 : 16),
           _buildFinancialRow(
-            'Total Paid',
-            '\$${payslips.where((p) => p.status == 'PAID').fold(0.0, (sum, p) => sum + p.finalNetPay).toStringAsFixed(2)}',
-            const Color(0xFF10B981),
+            'Total Salary',
+            '\$${payslips.fold(0.0, (sum, p) => sum + p.finalNetPay).toStringAsFixed(2)}',
+            const Color(0xFF9747FF),
             Icons.attach_money_outlined,
-            isTablet,
-          ),
-          SizedBox(height: isSmallScreen ? 10 : 12),
-          _buildFinancialRow(
-            'Total Pending',
-            '\$${payslips.where((p) => p.status != 'PAID').fold(0.0, (sum, p) => sum + p.finalNetPay).toStringAsFixed(2)}',
-            const Color(0xFFF59E0B),
-            Icons.schedule_outlined,
             isTablet,
           ),
         ],
@@ -507,37 +421,6 @@ class PayslipScreen extends ConsumerWidget {
                       ),
                     ),
                     SizedBox(height: isTablet ? 10 : 8),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 10 : 8,
-                        vertical: isTablet ? 6 : 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(payslip.status ?? 'PENDING').withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _getStatusIcon(payslip.status ?? 'PENDING'),
-                            color: _getStatusColor(payslip.status ?? 'PENDING'),
-                            size: isTablet ? 14 : 12,
-                          ),
-                          SizedBox(width: isTablet ? 6 : 4),
-                          Text(
-                            (payslip.status ?? 'PENDING').toUpperCase(),
-                            style: GoogleFonts.inter(
-                              fontSize: isTablet ? 12 : 11,
-                              fontWeight: FontWeight.w600,
-                              color: _getStatusColor(payslip.status ?? 'PENDING'),
-                              height: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: isTablet ? 10 : 8),
                     Text(
                       'ID: ${(payslip.payslipId ?? 'unknown').substring(0, 8)}...',
                       style: GoogleFonts.inter(
@@ -580,49 +463,5 @@ class PayslipScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toUpperCase()) {
-      case 'COMPLETED':
-      case 'PAID':
-        return const Color(0xFF10B981);
-      case 'SCHEDULED':
-      case 'GENERATED':
-        return const Color(0xFF3B82F6);
-      case 'FAILED':
-        return const Color(0xFFEF4444);
-      case 'PROCESSING':
-        return const Color(0xFFF59E0B);
-      case 'PENDING':
-      case 'DRAFT':
-        return const Color(0xFF6B6B6B);
-      case 'SENT':
-        return const Color(0xFF9747FF);
-      default:
-        return const Color(0xFF6B6B6B);
-    }
-  }
-
-  IconData _getStatusIcon(String status) {
-    switch (status.toUpperCase()) {
-      case 'COMPLETED':
-      case 'PAID':
-        return Icons.check_circle_outlined;
-      case 'SCHEDULED':
-      case 'GENERATED':
-        return Icons.schedule_outlined;
-      case 'FAILED':
-        return Icons.error_outline;
-      case 'PROCESSING':
-        return Icons.hourglass_empty_outlined;
-      case 'PENDING':
-      case 'DRAFT':
-        return Icons.schedule_outlined;
-      case 'SENT':
-        return Icons.send_outlined;
-      default:
-        return Icons.help_outline;
-    }
   }
 }

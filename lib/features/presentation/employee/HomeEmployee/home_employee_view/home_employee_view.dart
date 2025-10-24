@@ -1,6 +1,4 @@
-import 'package:cryphoria_mobile/features/presentation/employee/Payslip/payslip_view/payslip_history_view.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/Payslip/providers/payroll_history_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/employee/employee_payout_info.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/employee/employee_top_bar.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet/wallet_card.dart';
@@ -137,12 +135,6 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                       ),
                       SizedBox(height: sectionGap),
                       const WalletCard(),
-                      SizedBox(height: sectionGap),
-                      PayoutInfoWidget(
-                        nextPayoutDate: state.nextPayoutDate,
-                        frequency: state.payoutFrequency,
-                        isTablet: isTablet,
-                      ),
                       SizedBox(height: sectionGap),
                       
                       // Recent Payslips Section
