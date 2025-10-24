@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/gestures.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:cryphoria_mobile/features/presentation/widgets/auth/terms_and_conditions_content.dart';
-
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/auth/role_selector.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/OTP_Verification/Views/otp_verification_view.dart';
@@ -29,14 +29,13 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   final TextEditingController _securityAnswerController = TextEditingController();
   String _password = '';
   
-  // Role selection state
-  String _selectedRole = 'Employee'; // Default to Employee
-
-  // Gesture recognizers for tappable Terms/Privacy text
+  String _selectedRole = 'Employee';
   late TapGestureRecognizer _termsRecognizer;
   late TapGestureRecognizer _privacyRecognizer;
-  // Whether the user has accepted terms (main checkbox)
   bool _agreed = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _submitted = false;
 
   @override
   void initState() {
@@ -86,39 +85,68 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // For tablets/desktop, show side-by-side layout
-            if (constraints.maxWidth > 800) {
+            final size = MediaQuery.of(context).size;
+            final isTablet = size.width > 600;
+            final isLargeTablet = size.width > 900;
+            final isDesktop = size.width > 1200;
+            
+            if (isDesktop) {
               return Row(
                 children: [
-                  // Left side - Sign Up
                   Expanded(
-                    child: _buildRegisterForm(context),
-                  ),
-                  // Right side - Log In (hidden for now, show register)
-                  Expanded(
+                    flex: 5,
                     child: Container(
-                      color: Colors.white,
-                      child: const Center(
-                        child: Text(
-                          'Log In',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black54,
-                          ),
+                      color: const Color(0xFF9747FF),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.account_balance_wallet,
+                              size: 120,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Cryphoria',
+                              style: GoogleFonts.inter(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: -1,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 48),
+                              child: Text(
+                                'Smarter Crypto Finance for Growth',
+                                style: GoogleFonts.inter(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white.withOpacity(0.9),
+                                  height: 1.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
+                  Expanded(
+                    flex: 5,
+                    child: _buildRegisterForm(context, size, isTablet, isLargeTablet, isDesktop),
+                  ),
                 ],
               );
             } else {
-              // For mobile, show full screen register
-              return _buildRegisterForm(context);
+              return _buildRegisterForm(context, size, isTablet, isLargeTablet, isDesktop);
             }
           },
         ),
@@ -126,318 +154,340 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     );
   }
 
-  Widget _buildRegisterForm(BuildContext context) {
+  Widget _buildRegisterForm(BuildContext context, Size size, bool isTablet, bool isLargeTablet, bool isDesktop) {
     final viewModel = ref.watch(registerViewModelProvider);
+    final isSmallScreen = size.height < 700;
+    
+    final horizontalPadding = isDesktop ? 60.0 : isLargeTablet ? 48.0 : isTablet ? 36.0 : 24.0;
+    final formMaxWidth = isDesktop ? 480.0 : isLargeTablet ? 520.0 : isTablet ? 560.0 : 400.0;
+    final titleFontSize = isDesktop ? 36.0 : isLargeTablet ? 34.0 : isTablet ? 32.0 : isSmallScreen ? 28.0 : 32.0;
+    final subtitleFontSize = isDesktop ? 16.0 : isLargeTablet ? 15.5 : isTablet ? 15.0 : 14.0;
+    final fieldSpacing = isSmallScreen ? 14.0 : isTablet ? 18.0 : 16.0;
+    final buttonHeight = isTablet ? 56.0 : isSmallScreen ? 50.0 : 52.0;
+    final verticalPadding = isSmallScreen ? 20.0 : isTablet ? 40.0 : 32.0;
+    
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
       child: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: BoxConstraints(maxWidth: formMaxWidth),
             child: Form(
               key: _formKey,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
+              autovalidateMode: _submitted
+                  ? AutovalidateMode.onUserInteraction
+                  : AutovalidateMode.disabled,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                // Title
-                const Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                  Text(
+                    'Create Account',
+                    style: GoogleFonts.inter(
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A1A),
+                      letterSpacing: -0.5,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                
-                // Subtitle
-                const Text(
-                  'Sign up and simplify crypto bookkeeping and invoicing.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
+                  SizedBox(height: isSmallScreen ? 8 : 12),
+                  
+                  Text(
+                    'Sign up and simplify crypto bookkeeping and invoicing.',
+                    style: GoogleFonts.inter(
+                      fontSize: subtitleFontSize,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF6B6B6B),
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'I am creating an account as a:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12),
-
-                // Role Selection
-                RoleSelector(
-                  selectedRole: _selectedRole,
-                  onRoleSelected: (role) => setState(() => _selectedRole = role),
-                ),
-                const SizedBox(height: 12),
-
-                // First Name field
-                _buildTextField(
-                  controller: _firstNameController,
-                  label: 'First Name',
-                  icon: Icons.person_outline,
-                  validator: (v) => AppValidators.validateName(v, min: 2, max: 50),
-                  inputFormatters: AppValidators.nameInputFormatters,
-                  onChanged: (_) {},
-                ),
-                const SizedBox(height: 20),
-
-                // Last Name field
-                _buildTextField(
-                  controller: _lastNameController,
-                  label: 'Last Name',
-                  icon: Icons.person_outline,
-                  validator: (v) => AppValidators.validateName(v, min: 2, max: 50),
-                  inputFormatters: AppValidators.nameInputFormatters,
-                  onChanged: (_) {},
-                ),
-                const SizedBox(height: 20),
-
-                // Username field
-                _buildTextField(
-                  controller: _usernameController,
-                  label: 'Username',
-                  icon: Icons.account_circle_outlined,
-                  validator: (v) => AppValidators.validateUsername(v, min: 3, max: 20),
-                  inputFormatters: AppValidators.usernameInputFormatters,
-                  onChanged: (_) {},
-                ),
-                const SizedBox(height: 20),
-
-                // Email field
-                _buildTextField(
-                  controller: _emailController,
-                  label: 'Email',
-                  icon: Icons.email_outlined,
-                  validator: AppValidators.validateEmail,
-                  keyboardType: TextInputType.emailAddress,
-                  onChanged: (_) {},
-                ),
-                const SizedBox(height: 20),
-
-                // Password field
-                _buildTextField(
-                  controller: _passwordController,
-                  label: 'Password',
-                  icon: Icons.lock_outline,
-                  isPassword: true,
-                  validator: (v) => AppValidators.validatePassword(v, min: AppValidators.defaultPasswordMin, max: AppValidators.defaultPasswordMax),
-                  onChanged: (v) => setState(() => _password = v ?? ''),
-                ),
-                PasswordStrengthBar(password: _password),
-                const SizedBox(height: 20),
-
-                // Confirm Password field
-                _buildTextField(
-                  controller: _confirmPasswordController,
-                  label: 'Confirm Password',
-                  icon: Icons.lock_outline,
-                  isPassword: true,
-                  validator: (v) => AppValidators.validateConfirmPassword(v, _passwordController.text),
-                  onChanged: (_) {},
-                ),
-                const SizedBox(height: 20),
-
-                // Security Answer field
-                _buildTextField(
-                  controller: _securityAnswerController,
-                  label: 'Security Answer (e.g., My favorite pet is Max)',
-                  icon: Icons.security_outlined,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Security answer is required' : null,
-                  onChanged: (_) {},
-                ),
-                const SizedBox(height: 24),
-
-                // Terms and Conditions
-                Row(
-                  children: [
-                    SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: Checkbox(
-                        value: _agreed,
-                        onChanged: (value) async {
-                          // Open modal when user taps checkbox
-                          final accepted = await _showTermsModal();
-                          if (accepted == true && mounted) setState(() => _agreed = true);
-                        },
-                        activeColor: const Color(0xFF8B5CF6),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: RichText(
-                            text: TextSpan(
-                              text: 'I agree to the ',
-                              style: const TextStyle(color: Colors.black54, fontSize: 14),
-                              children: [
-                                TextSpan(
-                                  text: 'Terms and Conditions',
-                                  style: const TextStyle(
-                                    color: Color(0xFF8B5CF6),
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  recognizer: _termsRecognizer,
-                                ),
-                                const TextSpan(text: ' and '),
-                                TextSpan(
-                                  text: 'Privacy Policy',
-                                  style: const TextStyle(
-                                    color: Color(0xFF8B5CF6),
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  recognizer: _privacyRecognizer,
-                                ),
-                                const TextSpan(text: '.'),
-                              ],
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-
-                // Sign Up Button
-                ElevatedButton(
-                  onPressed: viewModel.isLoading ? null : _register,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: viewModel.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : const Text(
-                          'Sign Up',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                ),
-                const SizedBox(height: 24),
-
-                // Log In link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Already have an Account? ',
-                      style: TextStyle(
-                        color: Colors.black54,
-                        fontSize: 14,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Log In',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Error message
-                if (viewModel.error != null && viewModel.error!.isNotEmpty) ...[
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
+                  SizedBox(height: isSmallScreen ? 24 : isTablet ? 32 : 28),
+                  
+                  Align(
+                    alignment: Alignment.centerLeft,
                     child: Text(
-                      viewModel.error!,
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 14,
+                      'I am creating an account as a:',
+                      style: GoogleFonts.inter(
+                        fontSize: isSmallScreen ? 14 : 15,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A1A),
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    ));
-  }
+                  SizedBox(height: 12),
 
-  Widget _buildRoleCard({
-    required String role,
-    required IconData icon,
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF8B5CF6).withOpacity(0.1) : Colors.white,
-          border: Border.all(
-            color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFE5E7EB),
-            width: isSelected ? 2 : 1,
+                  RoleSelector(
+                    selectedRole: _selectedRole,
+                    onRoleSelected: (role) => setState(() => _selectedRole = role),
+                  ),
+                  SizedBox(height: fieldSpacing + 4),
+
+                  _buildTextField(
+                    controller: _firstNameController,
+                    label: 'First Name',
+                    icon: Icons.person_outline,
+                    validator: (v) => AppValidators.validateName(v, min: 2, max: 50),
+                    inputFormatters: AppValidators.nameInputFormatters,
+                    onChanged: (_) {},
+                    isSmallScreen: isSmallScreen,
+                    isTablet: isTablet,
+                  ),
+                  SizedBox(height: fieldSpacing),
+
+                  _buildTextField(
+                    controller: _lastNameController,
+                    label: 'Last Name',
+                    icon: Icons.person_outline,
+                    validator: (v) => AppValidators.validateName(v, min: 2, max: 50),
+                    inputFormatters: AppValidators.nameInputFormatters,
+                    onChanged: (_) {},
+                    isSmallScreen: isSmallScreen,
+                    isTablet: isTablet,
+                  ),
+                  SizedBox(height: fieldSpacing),
+
+                  _buildTextField(
+                    controller: _usernameController,
+                    label: 'Username',
+                    icon: Icons.account_circle_outlined,
+                    validator: (v) => AppValidators.validateUsername(v, min: 3, max: 20),
+                    inputFormatters: AppValidators.usernameInputFormatters,
+                    onChanged: (_) {},
+                    isSmallScreen: isSmallScreen,
+                    isTablet: isTablet,
+                  ),
+                  SizedBox(height: fieldSpacing),
+
+                  _buildTextField(
+                    controller: _emailController,
+                    label: 'Email',
+                    icon: Icons.email_outlined,
+                    validator: AppValidators.validateEmail,
+                    keyboardType: TextInputType.emailAddress,
+                    inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
+                    onChanged: (_) {},
+                    isSmallScreen: isSmallScreen,
+                    isTablet: isTablet,
+                  ),
+                  SizedBox(height: fieldSpacing),
+
+                  _buildTextField(
+                    controller: _passwordController,
+                    label: 'Password',
+                    icon: Icons.lock_outline,
+                    isPassword: true,
+                    obscureText: _obscurePassword,
+                    validator: (v) => AppValidators.validatePassword(v, min: AppValidators.defaultPasswordMin, max: AppValidators.defaultPasswordMax),
+                    onChanged: (v) => setState(() => _password = v ?? ''),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                        color: const Color(0xFF6B6B6B),
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    isSmallScreen: isSmallScreen,
+                    isTablet: isTablet,
+                  ),
+                  PasswordStrengthBar(password: _password),
+                  SizedBox(height: fieldSpacing),
+
+                  _buildTextField(
+                    controller: _confirmPasswordController,
+                    label: 'Confirm Password',
+                    icon: Icons.lock_outline,
+                    isPassword: true,
+                    obscureText: _obscureConfirmPassword,
+                    validator: (v) => AppValidators.validateConfirmPassword(v, _passwordController.text),
+                    onChanged: (_) {},
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                        color: const Color(0xFF6B6B6B),
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                    ),
+                    isSmallScreen: isSmallScreen,
+                    isTablet: isTablet,
+                  ),
+                  SizedBox(height: fieldSpacing),
+
+                  _buildTextField(
+                    controller: _securityAnswerController,
+                    label: 'Security Answer (e.g., My favorite pet is Max)',
+                    icon: Icons.security_outlined,
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Security answer is required' : null,
+                    onChanged: (_) {},
+                    isSmallScreen: isSmallScreen,
+                    isTablet: isTablet,
+                  ),
+                  SizedBox(height: isSmallScreen ? 20 : 24),
+
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: Checkbox(
+                          value: _agreed,
+                          onChanged: (value) async {
+                            final accepted = await _showTermsModal();
+                            if (accepted == true && mounted) setState(() => _agreed = true);
+                          },
+                          activeColor: const Color(0xFF9747FF),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            text: 'I agree to the ',
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF6B6B6B),
+                              fontSize: isSmallScreen ? 13 : 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Terms and Conditions',
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFF9747FF),
+                                  decoration: TextDecoration.underline,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                recognizer: _termsRecognizer,
+                              ),
+                              const TextSpan(text: ' and '),
+                              TextSpan(
+                                text: 'Privacy Policy',
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFF9747FF),
+                                  decoration: TextDecoration.underline,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                recognizer: _privacyRecognizer,
+                              ),
+                              const TextSpan(text: '.'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: isSmallScreen ? 24 : isTablet ? 32 : 28),
+
+                  SizedBox(
+                    height: buttonHeight,
+                    child: ElevatedButton(
+                      onPressed: viewModel.isLoading ? null : _register,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF9747FF),
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: const Color(0xFF9747FF).withOpacity(0.6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: viewModel.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              'Sign Up',
+                              style: GoogleFonts.inter(
+                                fontSize: isTablet ? 17 : 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                    ),
+                  ),
+                  SizedBox(height: isSmallScreen ? 20 : 24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an Account? ',
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF6B6B6B),
+                          fontSize: isSmallScreen ? 14 : 15,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                          child: Text(
+                            'Log In',
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF9747FF),
+                              fontSize: isSmallScreen ? 14 : 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  if (viewModel.error != null && viewModel.error!.isNotEmpty) ...[
+                    SizedBox(height: isSmallScreen ? 20 : 24),
+                    Container(
+                      padding: EdgeInsets.all(isSmallScreen ? 14 : 16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              viewModel.error!,
+                              style: GoogleFonts.inter(
+                                color: Colors.red.shade700,
+                                fontSize: isSmallScreen ? 13 : 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: isSelected ? Colors.white : Colors.black54,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? const Color(0xFF8B5CF6) : Colors.black87,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -448,58 +498,92 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     required String label,
     required IconData icon,
     bool isPassword = false,
+    bool obscureText = false,
     String? Function(String?)? validator,
     List<TextInputFormatter>? inputFormatters,
     TextInputType? keyboardType,
     void Function(String?)? onChanged,
+    Widget? suffixIcon,
+    required bool isSmallScreen,
+    required bool isTablet,
   }) {
+    final fontSize = isSmallScreen ? 14.0 : 15.0;
+    final iconSize = isSmallScreen ? 18.0 : 20.0;
+    final verticalPadding = isSmallScreen ? 14.0 : isTablet ? 18.0 : 16.0;
+    
     return TextFormField(
       controller: controller,
-      obscureText: isPassword,
+      obscureText: isPassword ? obscureText : false,
       validator: validator,
       inputFormatters: inputFormatters,
       keyboardType: keyboardType,
       onChanged: onChanged,
+      style: GoogleFonts.inter(
+        color: const Color(0xFF1A1A1A),
+        fontSize: fontSize,
+        fontWeight: FontWeight.w400,
+      ),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(
           icon,
-          color: Colors.black54,
-          size: 20,
+          color: const Color(0xFF6B6B6B),
+          size: iconSize,
         ),
-        labelStyle: const TextStyle(
-          color: Colors.black54,
-          fontSize: 14,
+        suffixIcon: suffixIcon,
+        labelStyle: GoogleFonts.inter(
+          color: const Color(0xFF6B6B6B),
+          fontSize: fontSize,
+          fontWeight: FontWeight.w400,
         ),
         filled: true,
-        fillColor: const Color(0xFFF8F9FA),
+        fillColor: const Color(0xFFFAFAFA),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF9747FF), width: 2),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        errorStyle: GoogleFonts.inter(
+          fontSize: isSmallScreen ? 12 : 13,
+          fontWeight: FontWeight.w400,
         ),
         errorMaxLines: 2,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
-      style: const TextStyle(
-        color: Colors.black87,
-        fontSize: 14,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: verticalPadding,
+        ),
       ),
     );
   }
 
   void _register() async {
+    setState(() => _submitted = true);
+    
     if (!_agreed) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the Terms and Privacy Policy'),
+        SnackBar(
+          content: Text(
+            'Please accept the Terms and Privacy Policy',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -509,8 +593,14 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fix the highlighted fields'),
+        SnackBar(
+          content: Text(
+            'Please fix the highlighted fields',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -534,8 +624,14 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
     if (viewModel.error == null && viewModel.registerResponse != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration successful! Please verify your email.'),
+        SnackBar(
+          content: Text(
+            'Registration successful! Please verify your email.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -546,13 +642,6 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
           builder: (context) => OTPVerificationView(
             email: _emailController.text.trim(),
           ),
-        ),
-      );
-    } else if (viewModel.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(viewModel.error!),
-          backgroundColor: Colors.red,
         ),
       );
     }
@@ -596,7 +685,13 @@ class _AgreementDialogState extends State<_AgreementDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.title),
+      title: Text(
+        widget.title,
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w600,
+          fontSize: 20,
+        ),
+      ),
       content: SizedBox(
         width: 600,
         height: 400,
@@ -618,11 +713,14 @@ class _AgreementDialogState extends State<_AgreementDialog> {
                 Checkbox(
                   value: _checked,
                   onChanged: (v) => setState(() => _checked = v ?? false),
-                  activeColor: const Color(0xFF8B5CF6),
+                  activeColor: const Color(0xFF9747FF),
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
-                  child: Text('I agree to the Terms and Conditions and Privacy Policy.'),
+                Expanded(
+                  child: Text(
+                    'I agree to the Terms and Conditions and Privacy Policy.',
+                    style: GoogleFonts.inter(fontSize: 14),
+                  ),
                 ),
               ],
             ),
@@ -632,11 +730,17 @@ class _AgreementDialogState extends State<_AgreementDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Close'),
+          child: Text(
+            'Close',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          ),
         ),
         TextButton(
           onPressed: _checked ? () => Navigator.of(context).pop(true) : null,
-          child: const Text('Accept'),
+          child: Text(
+            'Accept',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );
