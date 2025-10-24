@@ -356,9 +356,9 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   @override
   Future<List<BalanceSheetModel>> getAllBalanceSheets() async {
     try {
-      print("📤 Getting all balance sheets from /api/balance-sheet/list/");
+      print("📤 Getting all balance sheets from /api/financial/balance-sheet/list/");
       
-      final response = await dio.get('/api/balance-sheet/list/');
+      final response = await dio.get('/api/financial/balance-sheet/list/');
 
       print("📥 All balance sheets response:");
       print("📊 Status code: ${response.statusCode}");
@@ -380,9 +380,9 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   @override
   Future<CashFlowListResponseModel> getCashFlow() async {
     try {
-      print("📤 Getting cash flow from /api/cash-flow/list/");
+      print("📤 Getting cash flow from /api/financial/cash-flow/list/");
       
-      final response = await dio.get('/api/cash-flow/list/');
+      final response = await dio.get('/api/financial/cash-flow/list/');
 
       print("📥 Cash flow response:");
       print("📊 Status code: ${response.statusCode}");

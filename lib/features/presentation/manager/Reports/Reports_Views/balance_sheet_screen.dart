@@ -529,7 +529,9 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                           case 0:
                             return const Text('Assets', style: style);
                           case 1:
-                            return const Text('Liabilities + Equity', style: style);
+                            return const Text('Liabilities', style: style);
+                          case 2:
+                            return const Text('Equity', style: style);
                           default:
                             return const Text('');
                         }
@@ -1287,7 +1289,9 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     final assets = balanceSheet.totals.totalAssets.abs();
     final liabilities = balanceSheet.totals.totalLiabilities.abs();
     final equity = balanceSheet.totals.totalEquity.abs();
-    final maxValue = (assets > liabilities + equity ? assets : liabilities + equity) * 1.1;
+    
+    // Find the maximum value among all three categories
+    final maxValue = [assets, liabilities, equity].reduce((a, b) => a > b ? a : b) * 1.1;
     
     // Ensure we never return 0 to prevent chart interval issues
     if (maxValue == 0) {
@@ -1314,13 +1318,28 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           ),
         ],
       ),
-      // Liabilities + Equity Bar
+      // Liabilities Bar
       BarChartGroupData(
         x: 1,
         barRods: [
           BarChartRodData(
-            toY: (balanceSheet.totals.totalLiabilities + balanceSheet.totals.totalEquity).abs(),
-            color: const Color(0xFFEF4444), // Red for liabilities + equity
+            toY: balanceSheet.totals.totalLiabilities.abs(),
+            color: const Color(0xFFEF4444), // Red for liabilities
+            width: 40,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ],
+      ),
+      // Equity Bar
+      BarChartGroupData(
+        x: 2,
+        barRods: [
+          BarChartRodData(
+            toY: balanceSheet.totals.totalEquity.abs(),
+            color: const Color(0xFF3B82F6), // Blue for equity
             width: 40,
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(4),
@@ -1337,7 +1356,9 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       case 0:
         return 'Total Assets';
       case 1:
-        return 'Liabilities + Equity';
+        return 'Total Liabilities';
+      case 2:
+        return 'Total Equity';
       default:
         return '';
     }
