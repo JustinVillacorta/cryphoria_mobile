@@ -82,18 +82,18 @@ class WalletRemoteDataSource {
     bool? isInvesting,
     String? investorName,
   }) async {
-    final url = '${baseUrl}send_eth/';
+    final url = '/api/eth/send/';
     try {
       final requestData = {
         'to_address': toAddress, // Backend expects 'to_address', not 'to'
-        'amount': amount,
-        if (gasPrice != null) 'gas_price': gasPrice,
-        if (gasLimit != null) 'gas_limit': gasLimit,
-        if (company != null) 'company': company,
-        if (category != null) 'category': category,
-        if (description != null) 'description': description,
-        if (isInvesting != null) 'is_investing': isInvesting,
-        if (investorName != null) 'investor_name': investorName,
+        'amount': amount.toString(),
+        'gas_price': gasPrice ?? "20",
+        'gas_limit': gasLimit ?? "21000",
+        'company': company ?? "",
+        'category': category ?? "",
+        'description': description ?? "",
+        'is_investing': isInvesting ?? false,
+        'investor_name': investorName ?? "",
       };
       
       // Validate address format

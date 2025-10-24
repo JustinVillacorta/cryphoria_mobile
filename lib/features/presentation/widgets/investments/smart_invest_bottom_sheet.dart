@@ -280,6 +280,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       'icon': Icons.business,
     }).toList();
 
+    print('📋 Widget: Building address book with ${state.addressBookEntries.length} entries');
     print('📋 Address book entries:');
     for (var entry in entries) {
       print('📋 - ${entry['name']}: ${entry['walletAddress']}');

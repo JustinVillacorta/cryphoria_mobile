@@ -22,22 +22,23 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
   final TextEditingController _companyController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   
-  String selectedCategory = 'Investment';
   bool isLoading = false;
-  
-  final List<String> categories = [
-    'Investment',
-    'Seed Funding',
-    'Series A',
-    'Series B',
-    'Partnership',
-    'Strategic Investment'
-  ];
 
   @override
   void initState() {
     super.initState();
     _companyController.text = widget.recipientName;
+    
+    // Add listeners to trigger UI rebuilds when field values change
+    _amountController.addListener(() {
+      setState(() {});
+    });
+    _companyController.addListener(() {
+      setState(() {});
+    });
+    _descriptionController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -46,6 +47,18 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
     _companyController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  bool _isFormValid() {
+    if (isLoading) return false;
+    final amount = _amountController.text.trim();
+    final company = _companyController.text.trim();
+    final description = _descriptionController.text.trim();
+    
+    return amount.isNotEmpty && 
+           company.isNotEmpty && 
+           description.isNotEmpty &&
+           double.tryParse(amount) != null;
   }
 
   @override
@@ -166,51 +179,6 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
             label: 'Investor Name / Company',
             controller: _companyController,
             hintText: 'Company name',
-          ),
-          const SizedBox(height: 20),
-          
-          // Category Dropdown
-          const Text(
-            'Category',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: DropdownButton<String>(
-              value: selectedCategory,
-              isExpanded: true,
-              underline: const SizedBox(),
-              icon: const Icon(Icons.keyboard_arrow_down),
-              items: categories.map((String category) {
-                return DropdownMenuItem<String>(
-                  value: category,
-                  child: Text(
-                    category,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  setState(() {
-                    selectedCategory = newValue;
-                  });
-                }
-              },
-            ),
           ),
           const SizedBox(height: 20),
           
@@ -340,13 +308,6 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
             ],
           ),
           const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Category:', style: TextStyle(fontSize: 14, color: Colors.grey)),
-              Text(selectedCategory, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-            ],
-          ),
         ],
       ),
     );
@@ -388,13 +349,11 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
             flex: 2,
             child: Container(
               decoration: BoxDecoration(
-                color: (isLoading || _amountController.text.isEmpty)
-                    ? Colors.grey[300]
-                    : Colors.purple[600],
+                color: _isFormValid() ? Colors.purple[600] : Colors.grey[300],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextButton.icon(
-                onPressed: (isLoading || _amountController.text.isEmpty) ? null : _sendInvestment,
+                onPressed: isLoading ? null : _sendInvestment,
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -437,10 +396,23 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
   }
 
   void _sendInvestment() async {
-    if (_amountController.text.isEmpty) {
+    final amountText = _amountController.text.trim();
+    if (amountText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter an amount'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validate that the amount is a valid number
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid amount greater than 0'),
           backgroundColor: Colors.red,
         ),
       );

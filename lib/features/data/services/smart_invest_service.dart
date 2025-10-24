@@ -37,7 +37,7 @@ class SmartInvestService {
       print('📋 toAddress: $recipientAddress');
       print('📋 amount: $parsedAmount');
       print('📋 company: $investorName');
-      print('📋 category: ${category ?? 'Investment'}');
+      print('📋 category: ${category ?? 'INVESTMENT'}');
       print('📋 description: $description');
       print('📋 isInvesting: true');
       print('📋 investorName: $investorName');
@@ -46,7 +46,7 @@ class SmartInvestService {
         toAddress: recipientAddress,
         amount: parsedAmount,
         company: investorName, // Use investor name as company
-        category: category ?? 'Investment', // Default to 'Investment' if not provided
+        category: category ?? 'INVESTMENT', // Default to 'INVESTMENT' if not provided
         description: description,
         isInvesting: true, // Always true for smart investments
         investorName: investorName, // Pass investor name separately

@@ -51,6 +51,8 @@ class EthPaymentService {
         company: company,
         category: category,
         description: description,
+        isInvesting: false, // Always false for payment transactions
+        investorName: "", // Empty for payment transactions
       );
 
       // Debug logging

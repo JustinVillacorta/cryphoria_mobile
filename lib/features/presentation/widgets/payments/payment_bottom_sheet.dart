@@ -21,7 +21,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   String recipientName = '';
   String recipientAddress = '';
   String description = '';
-  String category = 'Office Expenses';
+  String category = 'BUSINESS_PAYMENT';
   
   // Service dependencies
   late EthPaymentService _ethPaymentService;
@@ -33,11 +33,9 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   bool _isDisposed = false;
 
   final List<String> categories = [
-    'Office Expenses',
-    'Travel',
-    'Marketing',
-    'Equipment',
-    'Software',
+    'CUSTOMER_PAYMENT',
+    'BUSINESS_PAYMENT',
+    'SUPPLIER_PAYMENT',
   ];
 
   @override
