@@ -1,27 +1,16 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../models/audit/audit_report_model.dart';
-import '../models/audit/smart_contract_model.dart';
 import '../models/tax_report_model.dart';
 import '../models/cash_flow_model.dart';
 import '../models/balance_sheet_model.dart';
 import '../models/portfolio_model.dart';
 import '../models/payslip_model.dart';
 import '../models/income_statement_model.dart';
-import '../../domain/entities/smart_contract.dart';
 import '../../domain/entities/audit_report.dart';
 
 abstract class AuditRemoteDataSource {
-  Future<String> submitAuditRequest(AuditRequestModel request);
-  Future<AuditStatus> getAuditStatus(String auditId);
-  Future<AuditReportModel> getAuditReport(String auditId);
-  Future<List<AuditReportModel>> getUserAuditReports();
-  Future<bool> cancelAudit(String auditId);
-  Future<List<SmartContractModel>> getContracts();
-  Future<SmartContractModel> uploadContract(String name, String fileName, String sourceCode);
-  Future<SmartContractModel> getContract(String contractId);
-  Future<bool> deleteContract(String contractId);
-  Future<List<ContractType>> getSupportedContractTypes();
-  Future<bool> validateContractCode(String sourceCode);
+  Future<AuditReportModel> uploadContract(File contractFile);
   
   // Financial Reports
   Future<List<TaxReportModel>> getTaxReports();
@@ -38,184 +27,61 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   AuditRemoteDataSourceImpl({required this.dio});
 
   @override
-  Future<String> submitAuditRequest(AuditRequestModel request) async {
-    print("🌐 AuditRemoteDataSource.submitAuditRequest called");
-    print("📋 Audit request: ${request.toJson()}");
+  Future<AuditReportModel> uploadContract(File contractFile) async {
+    print("🌐 AuditRemoteDataSource.uploadContract called");
+    print("📁 File: ${contractFile.path}");
     
     try {
       print("📤 Making POST request to /api/ai/audit-contract/");
       
+      // Create FormData with file upload
+      final formData = FormData.fromMap({
+        'contract_file': await MultipartFile.fromFile(
+          contractFile.path,
+          filename: contractFile.path.split('/').last,
+        ),
+      });
+      
       final response = await dio.post(
         '/api/ai/audit-contract/',
-        data: {
-          'contract_code': request.sourceCode,
-          'contract_name': request.contractName,
-          'contract_address': '', // Optional
-          'upload_method': 'text',
-        },
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          sendTimeout: const Duration(minutes: 5),
+          receiveTimeout: const Duration(minutes: 5),
+        ),
       );
 
-      print("📥 Submit audit response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
+            print("📥 Upload contract response:");
+            print("📊 Status code: ${response.statusCode}");
+            print("📄 Response data: ${response.data}");
+            
+            // Debug: Print the full response structure
+            if (response.data is Map<String, dynamic>) {
+              final responseData = response.data as Map<String, dynamic>;
+              print("🔍 Response structure:");
+              print("  - success: ${responseData['success']}");
+              print("  - audit: ${responseData['audit']}");
+              if (responseData['audit'] != null) {
+                final auditData = responseData['audit'] as Map<String, dynamic>;
+                print("  - audit.vulnerabilities: ${auditData['vulnerabilities']}");
+                print("  - audit.vulnerabilities_found: ${auditData['vulnerabilities_found']}");
+                print("  - audit.ai_vulnerabilities: ${auditData['ai_vulnerabilities']}");
+              }
+            }
 
       if (response.statusCode == 200) {
-        final responseData = response.data;
-        // Extract audit_id from nested audit object
-        final auditData = responseData['audit'] as Map<String, dynamic>?;
-        return auditData?['audit_id'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString();
-      } else {
-        throw Exception('Failed to submit audit request: ${response.statusMessage}');
-      }
-    } on DioException catch (e) {
-      print("❌ DioException in submitAuditRequest: $e");
-      throw Exception('Network error: ${e.message}');
-    }
-  }
-
-  @override
-  Future<AuditReportModel> getAuditReport(String auditId) async {
-    print("🌐 AuditRemoteDataSource.getAuditReport called with auditId: $auditId");
-    
-    try {
-      print("📤 Making GET request to /api/ai/audit-report/$auditId");
-      
-      final response = await dio.get('/api/ai/audit-report/$auditId');
-
-      print("📥 Get audit report response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-
-      if (response.statusCode == 200) {
-        return AuditReportModel.fromJson(response.data as Map<String, dynamic>);
-      } else {
-        throw Exception('Failed to get audit report: ${response.statusMessage}');
-      }
-    } on DioException catch (e) {
-      print("❌ DioException in getAuditReport: $e");
-      throw Exception('Network error: ${e.message}');
-    }
-  }
-
-  @override
-  Future<AuditStatus> getAuditStatus(String auditId) async {
-    print("🌐 AuditRemoteDataSource.getAuditStatus called with auditId: $auditId");
-    
-    try {
-      print("📤 Making GET request to /api/ai/audit-status/$auditId");
-      
-      final response = await dio.get('/api/ai/audit-status/$auditId');
-      
-      print("📥 Response received: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-      
-      if (response.statusCode == 200) {
-        // Parse the status string and convert to enum
-        final statusString = response.data['status'] as String;
-        return AuditStatus.values.firstWhere(
-          (status) => status.name.toLowerCase() == statusString.toLowerCase(),
-          orElse: () => AuditStatus.pending,
-        );
-      } else {
-        throw Exception('Failed to get audit status: ${response.statusCode}');
-      }
-    } on DioException catch (e) {
-      print("❌ DioException in getAuditStatus: ${e.message}");
-      throw Exception('Network error: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<AuditReportModel>> getUserAuditReports() async {
-    print("🌐 AuditRemoteDataSource.getUserAuditReports called");
-    
-    try {
-      print("📤 Making GET request to /api/ai/audit-reports/");
-      
-      final response = await dio.get('/api/ai/audit-reports/');
-      
-      print("📥 Response received: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-      
-      if (response.statusCode == 200) {
-        final List<dynamic> reportsJson = response.data;
-        return reportsJson.map((json) => AuditReportModel.fromJson(json as Map<String, dynamic>)).toList();
-      } else {
-        throw Exception('Failed to get user audit reports: ${response.statusCode}');
-      }
-    } on DioException catch (e) {
-      print("❌ DioException in getUserAuditReports: ${e.message}");
-      throw Exception('Network error: ${e.message}');
-    }
-  }
-
-  @override
-  Future<bool> cancelAudit(String auditId) async {
-    print("🌐 AuditRemoteDataSource.cancelAudit called with auditId: $auditId");
-    
-    try {
-      print("📤 Making POST request to /api/ai/cancel-audit/$auditId");
-      
-      final response = await dio.post('/api/ai/cancel-audit/$auditId');
-      
-      print("📥 Response received: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-      
-      return response.statusCode == 200;
-    } on DioException catch (e) {
-      print("❌ DioException in cancelAudit: ${e.message}");
-      throw Exception('Network error: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<SmartContractModel>> getContracts() async {
-    print("🌐 AuditRemoteDataSource.getContracts called");
-    
-    try {
-      print("📤 Making GET request to /api/contracts/");
-      
-      final response = await dio.get('/api/contracts/');
-
-      print("📥 Get contracts response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-
-      if (response.statusCode == 200) {
-        final List<dynamic> contracts = response.data as List<dynamic>;
-        return contracts.map((contract) => SmartContractModel.fromJson(contract as Map<String, dynamic>)).toList();
-      } else {
-        throw Exception('Failed to get contracts: ${response.statusMessage}');
-      }
-    } on DioException catch (e) {
-      print("❌ DioException in getContracts: $e");
-      throw Exception('Network error: ${e.message}');
-    }
-  }
-
-  @override
-  Future<SmartContractModel> uploadContract(String name, String fileName, String sourceCode) async {
-    print("🌐 AuditRemoteDataSource.uploadContract called");
-    print("📋 Contract name: $name, fileName: $fileName");
-    
-    try {
-      print("📤 Making POST request to /api/contracts/upload/");
-      
-      final response = await dio.post(
-        '/api/contracts/upload/',
-        data: {
-          'name': name,
-          'file_name': fileName,
-          'source_code': sourceCode,
-        },
-      );
-
-      print("📥 Upload contract response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-
-      if (response.statusCode == 200) {
-        return SmartContractModel.fromJson(response.data as Map<String, dynamic>);
+        final responseData = response.data as Map<String, dynamic>;
+        
+        // Check if the response has the expected format with audit data
+        if (responseData['success'] == true && responseData['audit'] != null) {
+          final auditData = responseData['audit'] as Map<String, dynamic>;
+          return _parseAuditResponse(auditData);
+        } else {
+          throw Exception('Unexpected response format from audit endpoint');
+        }
       } else {
         throw Exception('Failed to upload contract: ${response.statusMessage}');
       }
@@ -225,110 +91,279 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     }
   }
 
-  @override
-  Future<SmartContractModel> getContract(String contractId) async {
-    print("🌐 AuditRemoteDataSource.getContract called with contractId: $contractId");
+  AuditReportModel _parseAuditResponse(Map<String, dynamic> auditData) {
+    print("🔍 Parsing audit response data:");
+    print("📊 Vulnerabilities count: ${auditData['vulnerabilities']?.length ?? 0}");
+    print("⛽ Gas optimization: ${auditData['gas_optimization']}");
+    print("📝 Recommendations: ${auditData['recommendations']?.toString().substring(0, 100)}...");
     
-    try {
-      print("📤 Making GET request to /api/contracts/$contractId");
-      
-      final response = await dio.get('/api/contracts/$contractId');
-
-      print("📥 Get contract response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-
-      if (response.statusCode == 200) {
-        return SmartContractModel.fromJson(response.data as Map<String, dynamic>);
-      } else {
-        throw Exception('Failed to get contract: ${response.statusMessage}');
+    // Debug: Print all available fields in auditData
+    print("🔍 All audit data fields:");
+    auditData.forEach((key, value) {
+      print("  - $key: ${value.runtimeType} = $value");
+    });
+    
+    // Debug: Print the entire vulnerabilities array
+    if (auditData['vulnerabilities'] != null) {
+      print("🔍 Raw vulnerabilities array:");
+      final vulnList = auditData['vulnerabilities'] as List<dynamic>;
+      for (int i = 0; i < vulnList.length; i++) {
+        print("  Vulnerability $i: ${vulnList[i]}");
       }
-    } on DioException catch (e) {
-      print("❌ DioException in getContract: $e");
-      throw Exception('Network error: ${e.message}');
+    } else {
+      print("🔍 No vulnerabilities field found in audit data");
     }
-  }
-
-  @override
-  Future<bool> deleteContract(String contractId) async {
-    print("🌐 AuditRemoteDataSource.deleteContract called with contractId: $contractId");
     
-    try {
-      print("📤 Making DELETE request to /api/contracts/$contractId");
-      
-      final response = await dio.delete('/api/contracts/$contractId');
-
-      print("📥 Delete contract response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-
-      return response.statusCode == 200;
-    } on DioException catch (e) {
-      print("❌ DioException in deleteContract: $e");
-      throw Exception('Network error: ${e.message}');
+    // Parse vulnerabilities from the API response
+    final vulnerabilities = <VulnerabilityModel>[];
+    
+    // Check both 'vulnerabilities' and 'ai_vulnerabilities' fields
+    List<dynamic> vulnList = [];
+    if (auditData['vulnerabilities'] != null) {
+      vulnList = auditData['vulnerabilities'] as List<dynamic>;
+      print("🔍 Found ${vulnList.length} vulnerabilities in 'vulnerabilities' field");
+    } else if (auditData['ai_vulnerabilities'] != null) {
+      vulnList = auditData['ai_vulnerabilities'] as List<dynamic>;
+      print("🔍 Found ${vulnList.length} vulnerabilities in 'ai_vulnerabilities' field");
     }
-  }
-
-  @override
-  Future<List<ContractType>> getSupportedContractTypes() async {
-    print("🌐 AuditRemoteDataSource.getSupportedContractTypes called");
     
-    try {
-      print("📤 Making GET request to /api/contracts/types/");
-      
-      final response = await dio.get('/api/contracts/types/');
-
-      print("📥 Get contract types response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-
-      if (response.statusCode == 200) {
-        final List<dynamic> types = response.data as List<dynamic>;
-        return types.map((type) {
-          final typeString = type['type'] as String? ?? type.toString();
-          return ContractType.values.firstWhere(
-            (e) => e.name.toLowerCase() == typeString.toLowerCase(),
-            orElse: () => ContractType.custom,
-          );
-        }).toList();
-      } else {
-        throw Exception('Failed to get contract types: ${response.statusMessage}');
+    if (vulnList.isNotEmpty) {
+      print("🔍 Processing ${vulnList.length} vulnerabilities from API");
+      for (int i = 0; i < vulnList.length; i++) {
+        final vuln = vulnList[i] as Map<String, dynamic>;
+        print("🔍 Processing vulnerability $i: ${vuln['title']}");
+        
+        // Map severity from API format to enum
+        Severity severity;
+        final severityString = (vuln['severity'] as String).toUpperCase();
+        switch (severityString) {
+          case 'HIGH':
+            severity = Severity.high;
+            break;
+          case 'MEDIUM':
+            severity = Severity.medium;
+            break;
+          case 'LOW':
+            severity = Severity.low;
+            break;
+          case 'CRITICAL':
+            severity = Severity.critical;
+            break;
+          default:
+            severity = Severity.info;
+        }
+        
+        final vulnerability = VulnerabilityModel(
+          id: 'vuln_${auditData['audit_id']}_$i',
+          title: vuln['title'] as String? ?? 'Unknown Vulnerability',
+          description: vuln['description'] as String? ?? 'No description available',
+          severity: severity,
+          category: vuln['category'] as String? ?? vuln['cwe_id'] as String? ?? 'Unknown',
+          lineNumbers: vuln['line_number'] != null ? [vuln['line_number'] as int] : [],
+          remediation: vuln['recommendation'] as String?,
+        );
+        
+        vulnerabilities.add(vulnerability);
+        print("✅ Added vulnerability: ${vulnerability.title} (${severity.name})");
       }
-    } on DioException catch (e) {
-      print("❌ DioException in getSupportedContractTypes: $e");
-      throw Exception('Network error: ${e.message}');
+    } else {
+      print("🔍 No vulnerabilities found in either 'vulnerabilities' or 'ai_vulnerabilities' fields");
     }
-  }
-
-  @override
-  Future<bool> validateContractCode(String sourceCode) async {
-    print("🌐 AuditRemoteDataSource.validateContractCode called");
     
-    try {
-      print("📤 Making POST request to /api/contracts/validate/");
-      
-      final response = await dio.post(
-        '/api/contracts/validate/',
-        data: {
-          'source_code': sourceCode,
-        },
-      );
+    print("🔍 Final vulnerabilities count after parsing: ${vulnerabilities.length}");
 
-      print("📥 Validate contract response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
+    // Calculate security metrics from vulnerabilities
+    final criticalIssues = vulnerabilities.where((v) => v.severity == Severity.critical).length;
+    final highRiskIssues = vulnerabilities.where((v) => v.severity == Severity.high).length;
+    final mediumRiskIssues = vulnerabilities.where((v) => v.severity == Severity.medium).length;
+    final lowRiskIssues = vulnerabilities.where((v) => v.severity == Severity.low).length;
+    
+    final securityScore = _calculateSecurityScore(criticalIssues, highRiskIssues, mediumRiskIssues, lowRiskIssues);
 
-      if (response.statusCode == 200) {
-        final responseData = response.data as Map<String, dynamic>;
-        return responseData['valid'] as bool? ?? false;
-      } else {
-        throw Exception('Failed to validate contract: ${response.statusMessage}');
+    final securityAnalysis = SecurityAnalysisModel(
+      criticalIssues: criticalIssues,
+      highRiskIssues: highRiskIssues,
+      mediumRiskIssues: mediumRiskIssues,
+      lowRiskIssues: lowRiskIssues,
+      securityScore: securityScore,
+      completedChecks: [],
+    );
+
+    // Parse recommendations from audit report
+    final recommendations = <RecommendationModel>[];
+    if (auditData['recommendations'] != null) {
+      final recString = auditData['recommendations'] as String;
+      if (recString.isNotEmpty) {
+        // Split recommendations by newlines and create recommendation objects
+        final recLines = recString.split('\n').where((line) => line.trim().isNotEmpty).toList();
+        for (int i = 0; i < recLines.length; i++) {
+        recommendations.add(RecommendationModel(
+            title: 'Recommendation ${i + 1}',
+            description: recLines[i].trim(),
+            priority: Priority.high,
+            category: 'Security',
+          ));
+        }
       }
-    } on DioException catch (e) {
-      print("❌ DioException in validateContractCode: $e");
-      throw Exception('Network error: ${e.message}');
+    }
+
+    // Parse gas optimization from API response
+    final gasScore = _parseGasOptimizationScore(auditData);
+    final gasSuggestions = _parseGasOptimizationSuggestions(auditData);
+    print("⛽ Gas optimization score: $gasScore");
+    print("⛽ Gas optimization suggestions count: ${gasSuggestions.length}");
+    
+    final gasOptimization = GasOptimizationModel(
+      optimizationScore: gasScore,
+      suggestions: gasSuggestions,
+    );
+
+    // Create code quality
+    final codeQuality = CodeQualityModel(
+      qualityScore: 70.0,
+      linesOfCode: auditData['source_code']?.toString().split('\n').length ?? 0,
+      complexityScore: 5,
+      issues: [],
+    );
+
+    return AuditReportModel(
+      id: auditData['audit_id'] as String? ?? auditData['_id'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      contractName: auditData['contract_name'] as String? ?? 'Unknown Contract',
+      fileName: auditData['filename'] as String? ?? 'contract.sol',
+      timestamp: DateTime.parse(auditData['created_at'] as String? ?? DateTime.now().toIso8601String()),
+      status: AuditStatus.completed,
+      securityAnalysis: securityAnalysis,
+      gasOptimization: gasOptimization,
+      codeQuality: codeQuality,
+      vulnerabilities: vulnerabilities,
+      recommendations: recommendations,
+      overallScore: _calculateOverallScore(securityScore, gasOptimization.optimizationScore, codeQuality.qualityScore),
+    );
+    
+    print("✅ Final audit report created:");
+    print("📊 Vulnerabilities: ${vulnerabilities.length}");
+    print("⛽ Gas suggestions: ${gasOptimization.suggestions.length}");
+    print("📝 Recommendations: ${recommendations.length}");
+    print("🎯 Overall score: ${_calculateOverallScore(securityScore, gasOptimization.optimizationScore, codeQuality.qualityScore)}");
+    
+    // Debug: Print first few vulnerabilities in detail
+    if (vulnerabilities.isNotEmpty) {
+      print("🔍 First vulnerability details:");
+      final firstVuln = vulnerabilities.first;
+      print("  ID: ${firstVuln.id}");
+      print("  Title: ${firstVuln.title}");
+      print("  Description: ${firstVuln.description}");
+      print("  Severity: ${firstVuln.severity.name}");
+      print("  Category: ${firstVuln.category}");
+      print("  Line Numbers: ${firstVuln.lineNumbers}");
+      print("  Remediation: ${firstVuln.remediation}");
+    }
+    
+    // Debug: Print first few gas optimization suggestions
+    if (gasOptimization.suggestions.isNotEmpty) {
+      print("⛽ First gas optimization suggestion:");
+      final firstSuggestion = gasOptimization.suggestions.first;
+      print("  Function: ${firstSuggestion.function}");
+      print("  Suggestion: ${firstSuggestion.suggestion}");
+      print("  Priority: ${firstSuggestion.priority.name}");
     }
   }
+
+  double _calculateSecurityScore(int critical, int high, int medium, int low) {
+    // Calculate security score based on vulnerability counts
+    final totalIssues = critical + high + medium + low;
+    if (totalIssues == 0) return 100.0;
+    
+    final weightedScore = (critical * 0) + (high * 20) + (medium * 60) + (low * 80);
+    return (weightedScore / totalIssues).clamp(0.0, 100.0);
+  }
+
+  double _calculateOverallScore(double security, double gas, double quality) {
+    return (security * 0.5 + gas * 0.3 + quality * 0.2).clamp(0.0, 100.0);
+  }
+
+  double _parseGasOptimizationScore(Map<String, dynamic> auditData) {
+    // Try to extract gas optimization score from the API response
+    if (auditData['gas_optimization'] != null) {
+      final gasOptString = auditData['gas_optimization'] as String;
+      
+      // If it's an error message, return a low score
+      if (gasOptString.toLowerCase().contains('error')) {
+        return 30.0; // Low score for analysis errors
+      }
+      
+      // Try to parse a numeric score if present
+      final scoreMatch = RegExp(r'(\d+(?:\.\d+)?)').firstMatch(gasOptString);
+      if (scoreMatch != null) {
+        return double.tryParse(scoreMatch.group(1)!) ?? 50.0;
+      }
+    }
+    
+    // Default score if no gas optimization data available
+    return 50.0;
+  }
+
+  List<GasOptimizationSuggestionModel> _parseGasOptimizationSuggestions(Map<String, dynamic> auditData) {
+    final suggestions = <GasOptimizationSuggestionModel>[];
+    
+    // Check if there are gas optimization suggestions in the API response
+    if (auditData['gas_optimization'] != null) {
+      final gasOptString = auditData['gas_optimization'] as String;
+      
+      // If it's an error message, create a suggestion about the error
+      if (gasOptString.toLowerCase().contains('error')) {
+        suggestions.add(GasOptimizationSuggestionModel(
+          function: 'Gas Analysis',
+          suggestion: 'Gas optimization analysis failed: $gasOptString. Manual review recommended.',
+          priority: Priority.high,
+        ));
+      } else if (gasOptString.isNotEmpty && !gasOptString.toLowerCase().contains('error')) {
+        // If there's actual gas optimization data, parse it
+        suggestions.add(GasOptimizationSuggestionModel(
+          function: 'Gas Optimization',
+          suggestion: gasOptString,
+          priority: Priority.medium,
+        ));
+      }
+    }
+    
+    // Add some general gas optimization suggestions based on vulnerabilities
+    List<dynamic> vulnList = [];
+    if (auditData['vulnerabilities'] != null) {
+      vulnList = auditData['vulnerabilities'] as List<dynamic>;
+    } else if (auditData['ai_vulnerabilities'] != null) {
+      vulnList = auditData['ai_vulnerabilities'] as List<dynamic>;
+    }
+    
+    if (vulnList.isNotEmpty) {
+      final hasArithmeticIssues = vulnList.any((vuln) => 
+        (vuln['category'] as String?)?.toLowerCase().contains('arithmetic') == true ||
+        (vuln['cwe_id'] as String?)?.contains('190') == true);
+      
+      if (hasArithmeticIssues) {
+        suggestions.add(GasOptimizationSuggestionModel(
+          function: 'Arithmetic Operations',
+          suggestion: 'Consider using SafeMath library or Solidity 0.8+ for overflow protection to reduce gas costs.',
+          priority: Priority.high,
+        ));
+      }
+      
+      // Add gas optimization suggestions based on AI vulnerabilities
+      final gasOptimizationVulns = vulnList.where((vuln) => 
+        (vuln['title'] as String?)?.toLowerCase().contains('gas') == true).toList();
+      
+      for (final vuln in gasOptimizationVulns) {
+        suggestions.add(GasOptimizationSuggestionModel(
+          function: 'Gas Optimization',
+          suggestion: vuln['recommendation'] as String? ?? vuln['description'] as String? ?? 'Review gas usage patterns',
+          priority: Priority.medium,
+        ));
+      }
+    }
+    
+    return suggestions;
+  }
+
 
   @override
   Future<List<TaxReportModel>> getTaxReports() async {

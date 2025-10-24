@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import '../ViewModels/audit_results_viewmodel.dart';
 import '../ViewModels/audit_main_viewmodel.dart';
 import 'package:cryphoria_mobile/features/domain/entities/audit_report.dart';
 import 'overall_assessment_screen.dart';
 
 class AuditResultsScreen extends ConsumerStatefulWidget {
-  final String contractName;
-  final String fileName;
+  final AuditReport? auditReport;
+  final String? contractName;
+  final String? fileName;
   final String? auditId;
 
   const AuditResultsScreen({
     super.key,
-    required this.contractName,
-    required this.fileName,
+    this.auditReport,
+    this.contractName,
+    this.fileName,
     this.auditId,
   });
 
@@ -25,8 +26,8 @@ class AuditResultsScreen extends ConsumerStatefulWidget {
 class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  late AuditResultsViewModel _resultsViewModel;
   late AuditMainViewModel _mainViewModel;
+  AuditReport? _currentAuditReport;
 
   @override
   void initState() {
@@ -34,56 +35,40 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     _tabController = TabController(length: 2, vsync: this);
     
     // Initialize ViewModels
-    _resultsViewModel = ref.read(auditResultsViewModelProvider);
     _mainViewModel = ref.read(auditMainViewModelProvider);
     
-    // Add listeners
-    _resultsViewModel.addListener(_onResultsViewModelChanged);
-    
-    // Load audit report if we have an audit ID and not already loaded
+    // Set audit report if provided directly
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_mainViewModel.currentAuditId != null && 
-          _resultsViewModel.auditReport == null && 
-          !_resultsViewModel.isLoading) {
-        _resultsViewModel.loadAuditReport(_mainViewModel.currentAuditId!);
+      print("🔍 UI: initState - widget.auditReport = ${widget.auditReport}");
+      print("🔍 UI: initState - _mainViewModel.currentAuditReport = ${_mainViewModel.currentAuditReport}");
+      
+      if (widget.auditReport != null) {
+        print("🔍 UI: Using widget.auditReport");
+        print("🔍 UI: widget.auditReport.vulnerabilities.length = ${widget.auditReport!.vulnerabilities.length}");
+        _currentAuditReport = widget.auditReport;
+        setState(() {});
+      } else if (_mainViewModel.currentAuditReport != null) {
+        print("🔍 UI: Using _mainViewModel.currentAuditReport");
+        print("🔍 UI: _mainViewModel.currentAuditReport.vulnerabilities.length = ${_mainViewModel.currentAuditReport!.vulnerabilities.length}");
+        _currentAuditReport = _mainViewModel.currentAuditReport;
+        setState(() {});
+      }
+      
+      print("🔍 UI: Final _currentAuditReport = ${_currentAuditReport}");
+      if (_currentAuditReport != null) {
+        print("🔍 UI: Final _currentAuditReport.vulnerabilities.length = ${_currentAuditReport!.vulnerabilities.length}");
       }
     });
   }
 
   @override
   void dispose() {
-    _resultsViewModel.removeListener(_onResultsViewModelChanged);
     _tabController.dispose();
     super.dispose();
   }
 
-  void _onResultsViewModelChanged() {
-    if (_resultsViewModel.error != null) {
-      print("❌ AuditResultsScreen: Error in results viewmodel - ${_resultsViewModel.error}");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading audit results: ${_resultsViewModel.error}'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 5),
-        ),
-      );
-    }
-    
-    // Update main ViewModel if we got a report
-    if (_resultsViewModel.auditReport != null) {
-      print("✅ AuditResultsScreen: Successfully loaded audit report");
-      _mainViewModel.setCurrentAuditReport(_resultsViewModel.auditReport!);
-    }
-    
-    // Debug loading state
-    if (_resultsViewModel.isLoading) {
-      print("🔄 AuditResultsScreen: Loading audit report...");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final resultsViewModel = ref.watch(auditResultsViewModelProvider);
     ref.watch(auditMainViewModelProvider);
 
     return Scaffold(
@@ -91,23 +76,11 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
       appBar: _buildAppBar(),
       body: Builder(
         builder: (context) {
-          if (resultsViewModel.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
-              ),
-            );
-          }
-
-          if (resultsViewModel.error != null) {
-            return _buildErrorState(resultsViewModel.error!);
-          }
-
-          if (!resultsViewModel.hasReport) {
+          if (_currentAuditReport == null) {
             return _buildNoReportState();
           }
 
-          return _buildResultsContent(resultsViewModel);
+          return _buildResultsContent(_currentAuditReport!);
         },
       ),
     );
@@ -133,55 +106,6 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     );
   }
 
-  Widget _buildErrorState(String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Error Loading Results',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                if (_mainViewModel.currentAuditId != null) {
-                  _resultsViewModel.loadAuditReport(_mainViewModel.currentAuditId!);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF9747FF),
-              ),
-              child: const Text(
-                'Retry',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildNoReportState() {
     return Center(
@@ -205,7 +129,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'The audit report is not available yet. This might be because:\n• The audit is still processing\n• There was an error generating the report\n• The audit ID is invalid',
+              'The audit report is not available. Please restart the audit process.',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 16,
@@ -215,34 +139,14 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                print("🔄 Retrying to load audit report...");
-                if (_mainViewModel.currentAuditId != null) {
-                  print("📊 Current audit ID: ${_mainViewModel.currentAuditId}");
-                  _resultsViewModel.loadAuditReport(_mainViewModel.currentAuditId!);
-                } else {
-                  print("❌ No audit ID available in main viewmodel");
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No audit ID available. Please restart the audit process.'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF9747FF),
               ),
               child: const Text(
-                'Retry Loading Report',
+                'Go Back',
                 style: TextStyle(color: Colors.white),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Audit ID: ${_mainViewModel.currentAuditId ?? 'Not available'}',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 12,
               ),
             ),
           ],
@@ -251,8 +155,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     );
   }
 
-  Widget _buildResultsContent(AuditResultsViewModel viewModel) {
-    final report = viewModel.auditReport!;
+  Widget _buildResultsContent(AuditReport report) {
     
     return Column(
       children: [
@@ -297,37 +200,15 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                Row(
-                  children: [
-                    const Text(
-                      'Audit Results',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _getRiskColor(report.securityAnalysis.criticalIssues),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        _getRiskLevel(report.securityAnalysis.criticalIssues),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                // Contract Information Section
+                _buildContractInfoSection(report),
                 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                
+                // Audit Summary Section
+                _buildAuditSummarySection(report),
+                
+                const SizedBox(height: 16),
                 
                 // Vulnerabilities Section
                 _buildExpandableSection(
@@ -349,6 +230,18 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
                   icon: Icons.tune,
                   color: Colors.green,
                   content: _buildGasOptimizationContent(report),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Recommendations Section
+                _buildExpandableSection(
+                  title: 'Recommendations',
+                  count: report.recommendations.length,
+                  subtitle: 'Action Items',
+                  icon: Icons.lightbulb,
+                  color: Colors.blue,
+                  content: _buildRecommendationsContent(report),
                 ),
                 
                 const SizedBox(height: 32),
@@ -474,6 +367,10 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
   }
 
   Widget _buildVulnerabilitiesContent(AuditReport report) {
+    print("🔍 UI: _buildVulnerabilitiesContent called");
+    print("🔍 UI: report.vulnerabilities.length = ${report.vulnerabilities.length}");
+    print("🔍 UI: report.vulnerabilities = ${report.vulnerabilities}");
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -652,14 +549,277 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     );
   }
 
-  String _getRiskLevel(int criticalIssues) {
-    if (criticalIssues > 0) return 'Critical Risk';
-    return 'Low Risk';
+  Widget _buildContractInfoSection(AuditReport report) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.description, color: Colors.blue[700], size: 24),
+              const SizedBox(width: 12),
+              const Text(
+                'Contract Information',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          _buildInfoRow('Contract Name', report.contractName),
+          _buildInfoRow('File Name', report.fileName),
+          _buildInfoRow('Audit ID', report.id),
+          _buildInfoRow('Status', report.status.name.toUpperCase()),
+          _buildInfoRow('Audit Date', _formatDate(report.timestamp)),
+          _buildInfoRow('Overall Score', '${report.overallScore.toStringAsFixed(1)}/100'),
+        ],
+      ),
+    );
   }
 
-  Color _getRiskColor(int criticalIssues) {
-    if (criticalIssues > 0) return Colors.red;
-    return Colors.green;
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAuditSummarySection(AuditReport report) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Audit Summary',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryStatItem(
+                  'Critical Issues',
+                  '${report.securityAnalysis.criticalIssues}',
+                  Icons.error,
+                  Colors.red,
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryStatItem(
+                  'High Risk',
+                  '${report.securityAnalysis.highRiskIssues}',
+                  Icons.warning,
+                  Colors.orange,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryStatItem(
+                  'Medium Risk',
+                  '${report.securityAnalysis.mediumRiskIssues}',
+                  Icons.info,
+                  Colors.yellow[700]!,
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryStatItem(
+                  'Low Risk',
+                  '${report.securityAnalysis.lowRiskIssues}',
+                  Icons.check_circle,
+                  Colors.blue,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryStatItem(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(right: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendationsContent(AuditReport report) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${report.recommendations.length} recommendations were provided to improve your smart contract security and performance.',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        // List recommendations
+        ...report.recommendations.map((recommendation) => 
+          _buildRecommendationItem(recommendation)),
+      ],
+    );
+  }
+
+  Widget _buildRecommendationItem(Recommendation recommendation) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _getPriorityColor(recommendation.priority).withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getPriorityColor(recommendation.priority),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  recommendation.priority.name.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                recommendation.category,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            recommendation.title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            recommendation.description,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[700],
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getPriorityColor(Priority priority) {
+    switch (priority) {
+      case Priority.high:
+        return Colors.red;
+      case Priority.medium:
+        return Colors.orange;
+      case Priority.low:
+        return Colors.blue;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   Color _getSeverityColor(Severity severity) {
@@ -682,8 +842,8 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
       context,
       MaterialPageRoute(
         builder: (context) => OverallAssessmentScreen(
-          contractName: widget.contractName,
-          fileName: widget.fileName,
+          contractName: widget.contractName ?? 'Unknown Contract',
+          fileName: widget.fileName ?? 'contract.sol',
         ),
       ),
     );

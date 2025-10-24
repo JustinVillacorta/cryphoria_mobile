@@ -41,9 +41,6 @@ import '../features/domain/repositories/auth_repository.dart';
 import '../features/domain/repositories/audit_repository.dart';
 import '../features/domain/repositories/employee_repository.dart';
 import '../features/domain/repositories/reports_repository.dart';
-import '../features/domain/usecases/Audit/get_audit_report_usecase.dart';
-import '../features/domain/usecases/Audit/get_audit_status_usecase.dart';
-import '../features/domain/usecases/Audit/submit_audit_usecase.dart';
 import '../features/domain/usecases/Audit/upload_contract_usecase.dart';
 import '../features/domain/usecases/DocumentUpload/upload_business_documents_usecase.dart';
 import '../features/domain/repositories/document_upload_repository.dart';
@@ -92,10 +89,8 @@ import '../features/domain/usecases/Reports/get_report_status_usecase.dart';
 import '../features/domain/usecases/Reports/get_user_reports_usecase.dart';
 
 import '../features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
-import '../features/presentation/manager/Audit/ViewModels/audit_analysis_viewmodel.dart';
 import '../features/presentation/manager/Audit/ViewModels/audit_contract_viewmodel.dart';
 import '../features/presentation/manager/Audit/ViewModels/audit_main_viewmodel.dart';
-import '../features/presentation/manager/Audit/ViewModels/audit_results_viewmodel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import '../features/presentation/manager/Reports/Reports_ViewModel/income_statement_viewmodel.dart';
@@ -132,7 +127,7 @@ final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
     return 'http://10.0.2.2:8000';
   }
-  return 'http://192.168.0.30:8000';
+  return 'http://192.168.5.53:8000';
 });
 
 final flutterSecureStorageProvider =
@@ -380,18 +375,6 @@ final getEmployeeDashboardDataProvider =
   );
 });
 
-final submitAuditUseCaseProvider = Provider<SubmitAuditUseCase>((ref) {
-  return SubmitAuditUseCase(ref.watch(auditRepositoryProvider));
-});
-
-final getAuditReportUseCaseProvider = Provider<GetAuditReportUseCase>((ref) {
-  return GetAuditReportUseCase(ref.watch(auditRepositoryProvider));
-});
-
-final getAuditStatusUseCaseProvider = Provider<GetAuditStatusUseCase>((ref) {
-  return GetAuditStatusUseCase(ref.watch(auditRepositoryProvider));
-});
-
 final uploadContractUseCaseProvider = Provider<UploadContractUseCase>((ref) {
   return UploadContractUseCase(ref.watch(auditRepositoryProvider));
 });
@@ -479,9 +462,6 @@ final walletNotifierProvider =
 
 final auditNotifierProvider = ChangeNotifierProvider<AuditNotifier>((ref) {
   final notifier = AuditNotifier(
-    submitAuditUseCase: ref.watch(submitAuditUseCaseProvider),
-    getAuditReportUseCase: ref.watch(getAuditReportUseCaseProvider),
-    getAuditStatusUseCase: ref.watch(getAuditStatusUseCaseProvider),
     uploadContractUseCase: ref.watch(uploadContractUseCaseProvider),
   );
   ref.onDispose(notifier.dispose);
@@ -492,26 +472,6 @@ final auditContractViewModelProvider =
     ChangeNotifierProvider<AuditContractViewModel>((ref) {
   final viewModel = AuditContractViewModel(
     uploadContractUseCase: ref.watch(uploadContractUseCaseProvider),
-  );
-  ref.onDispose(viewModel.dispose);
-  return viewModel;
-});
-
-final auditAnalysisViewModelProvider =
-    ChangeNotifierProvider<AuditAnalysisViewModel>((ref) {
-  final viewModel = AuditAnalysisViewModel(
-    submitAuditUseCase: ref.watch(submitAuditUseCaseProvider),
-    getAuditStatusUseCase: ref.watch(getAuditStatusUseCaseProvider),
-  );
-  ref.onDispose(viewModel.dispose);
-  return viewModel;
-});
-
-final auditResultsViewModelProvider =
-    ChangeNotifierProvider<AuditResultsViewModel>((ref) {
-  ref.keepAlive(); // Cache ViewModel to prevent recreation on navigation
-  final viewModel = AuditResultsViewModel(
-    getAuditReportUseCase: ref.watch(getAuditReportUseCaseProvider),
   );
   ref.onDispose(viewModel.dispose);
   return viewModel;
