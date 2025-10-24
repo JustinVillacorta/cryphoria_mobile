@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../dependency_injection/riverpod_providers.dart';
 import '../../../../domain/entities/payslip.dart';
 import '../Widgets/payslip_list_item.dart';
@@ -30,27 +31,43 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
     final state = ref.watch(payslipListViewModelProvider);
     final viewModel = ref.read(payslipListViewModelProvider.notifier);
     
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
+    final isDesktop = size.width > 1024;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: Text(
           'Payslips',
-          style: TextStyle(
+          style: GoogleFonts.inter(
             color: Colors.white,
-            fontSize: screenWidth * 0.045,
+            fontSize: isDesktop ? 20.0 : isTablet ? 19.0 : 18.0,
             fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
+            height: 1.2,
           ),
         ),
-        backgroundColor: Color(0xFF9747FF),
+        backgroundColor: const Color(0xFF9747FF),
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+            size: isTablet ? 26 : 24,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: Icon(
+              Icons.refresh_outlined,
+              color: Colors.white,
+              size: isTablet ? 24 : 22,
+            ),
             onPressed: () => viewModel.refreshPayslips(),
+            tooltip: 'Refresh',
           ),
         ],
       ),
@@ -59,7 +76,7 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
           // Filter section
           Container(
             color: Colors.white,
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(isDesktop ? 20 : isTablet ? 18 : 16),
             child: PayslipFilterWidget(
               currentFilter: state.currentFilter,
               onFilterChanged: (filter) => viewModel.updateFilter(filter),
@@ -68,28 +85,34 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
           
           // Content
           Expanded(
-            child: _buildContent(state, viewModel, screenWidth, screenHeight),
+            child: _buildContent(state, viewModel, isTablet, isDesktop),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildContent(state, viewModel, double screenWidth, double screenHeight) {
+  Widget _buildContent(state, viewModel, bool isTablet, bool isDesktop) {
+    final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
+    final maxContentWidth = isDesktop ? 1200.0 : isTablet ? 900.0 : double.infinity;
+
     if (state.isLoading) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
+            const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+              strokeWidth: 2.5,
             ),
-            SizedBox(height: 16),
+            SizedBox(height: isTablet ? 20 : 16),
             Text(
               'Loading payslips...',
-              style: TextStyle(
-                fontSize: screenWidth * 0.04,
-                color: Colors.grey[600],
+              style: GoogleFonts.inter(
+                fontSize: isTablet ? 16 : 15,
+                color: const Color(0xFF6B6B6B),
+                fontWeight: FontWeight.w400,
+                height: 1.4,
               ),
             ),
           ],
@@ -99,44 +122,62 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
 
     if (state.error != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: screenWidth * 0.15,
-              color: Colors.red[300],
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Error loading payslips',
-              style: TextStyle(
-                fontSize: screenWidth * 0.045,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: isTablet ? 64 : 56,
+                color: Colors.red.shade400,
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              state.error!,
-              style: TextStyle(
-                fontSize: screenWidth * 0.035,
-                color: Colors.red[600],
+              SizedBox(height: isTablet ? 20 : 16),
+              Text(
+                'Error loading payslips',
+                style: GoogleFonts.inter(
+                  fontSize: isTablet ? 19 : 18,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1A1A1A),
+                  height: 1.3,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => viewModel.refreshPayslips(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF9747FF),
+              SizedBox(height: isTablet ? 10 : 8),
+              Text(
+                state.error!,
+                style: GoogleFonts.inter(
+                  fontSize: isTablet ? 15 : 14,
+                  color: Colors.red.shade600,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
               ),
-              child: Text(
-                'Retry',
-                style: TextStyle(color: Colors.white),
+              SizedBox(height: isTablet ? 28 : 24),
+              ElevatedButton(
+                onPressed: () => viewModel.refreshPayslips(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF9747FF),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? 28 : 24,
+                    vertical: isTablet ? 14 : 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Retry',
+                  style: GoogleFonts.inter(
+                    fontSize: isTablet ? 16 : 15,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -148,26 +189,31 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
           children: [
             Icon(
               Icons.receipt_long_outlined,
-              size: screenWidth * 0.15,
-              color: Colors.grey[300],
+              size: isTablet ? 64 : 56,
+              color: const Color(0xFF6B6B6B).withOpacity(0.4),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: isTablet ? 20 : 16),
             Text(
               'No payslips found',
-              style: TextStyle(
-                fontSize: screenWidth * 0.045,
+              style: GoogleFonts.inter(
+                fontSize: isTablet ? 19 : 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
+                color: const Color(0xFF1A1A1A),
+                height: 1.3,
               ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Payslips will appear here once they are generated',
-              style: TextStyle(
-                fontSize: screenWidth * 0.035,
-                color: Colors.grey[600],
+            SizedBox(height: isTablet ? 10 : 8),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Text(
+                'Payslips will appear here once they are generated',
+                style: GoogleFonts.inter(
+                  fontSize: isTablet ? 15 : 14,
+                  color: const Color(0xFF6B6B6B),
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -176,17 +222,24 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
 
     return RefreshIndicator(
       onRefresh: () => viewModel.refreshPayslips(),
-      color: Color(0xFF9747FF),
-      child: ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: state.payslips.length,
-        itemBuilder: (context, index) {
-          final payslip = state.payslips[index];
-          return PayslipListItem(
-            payslip: payslip,
-            onTap: () => _navigateToDetails(payslip),
-          );
-        },
+      color: const Color(0xFF9747FF),
+      strokeWidth: 2.5,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxContentWidth),
+          child: ListView.separated(
+            padding: EdgeInsets.all(horizontalPadding),
+            itemCount: state.payslips.length,
+            separatorBuilder: (context, index) => SizedBox(height: isTablet ? 14 : 12),
+            itemBuilder: (context, index) {
+              final payslip = state.payslips[index];
+              return PayslipListItem(
+                payslip: payslip,
+                onTap: () => _navigateToDetails(payslip),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
