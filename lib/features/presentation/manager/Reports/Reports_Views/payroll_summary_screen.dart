@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:open_file/open_file.dart';
-import '../../Payroll/payroll_management_screen.dart';
 import '../Reports_ViewModel/payroll_reports_view_model.dart';
 import '../../../../domain/entities/payslip.dart';
 import '../../../widgets/reports/excel_export_helper.dart';
@@ -53,15 +52,6 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black87),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const PayrollManagementScreen(),
-              ),
-            ),
-          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.black87),
             onPressed: () => ref.read(payrollReportsViewModelProvider.notifier).refresh(),
@@ -402,10 +392,10 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
 
     print("📊 Employee payroll map: $employeePayrollMap");
 
-    // Get top 7 employees by payroll amount
+    // Get top 5 employees by payroll amount (reduced for better spacing)
     final sortedEmployees = employeePayrollMap.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    final topEmployees = sortedEmployees.take(7).toList();
+    final topEmployees = sortedEmployees.take(5).toList();
     
     print("🏆 Top employees: ${topEmployees.map((e) => '${e.key}: \$${e.value}').join(', ')}");
 
@@ -413,16 +403,57 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          // Payroll Overview Bar Chart
+          // Filter and Report Type
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Payroll Overview',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.bar_chart, size: 16, color: Colors.purple[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Charts',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.purple[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Chart Container (using same styling as other reports)
           Container(
-            height: 300,
+            height: 320,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[200]!, width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -434,7 +465,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
                 const Text(
                   'Payroll Overview',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
@@ -444,8 +475,23 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
                   child: BarChart(
                     BarChartData(
                       alignment: BarChartAlignment.spaceAround,
-                      maxY: 1000, // Fixed max for consistent display
-                      barTouchData: BarTouchData(enabled: false),
+                      maxY: _getPayrollMaxY(topEmployees),
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            final employeeName = topEmployees[group.x.toInt()].key;
+                            return BarTooltipItem(
+                              '$employeeName\n\$${rod.toY.toStringAsFixed(0)}',
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                       titlesData: FlTitlesData(
                         show: true,
                         rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -455,41 +501,47 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
                             showTitles: true,
                             getTitlesWidget: (double value, TitleMeta meta) {
                               if (value.toInt() < topEmployees.length) {
+                                final employeeName = topEmployees[value.toInt()].key;
+                                // Truncate long names and add ellipsis
+                                final displayName = employeeName.length > 12 
+                                    ? '${employeeName.substring(0, 12)}...'
+                                    : employeeName;
+                                
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: Text(
-                                    topEmployees[value.toInt()].key,
+                                    displayName,
                                     style: const TextStyle(
-                                      color: Colors.grey,
+                                      color: Colors.black87,
                                       fontWeight: FontWeight.w500,
-                                      fontSize: 10,
+                                      fontSize: 9,
                                     ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 );
                               }
                               return const Text('');
                             },
-                            reservedSize: 30,
+                            reservedSize: 40, // Increased space for labels
                           ),
                         ),
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            interval: 250,
+                            reservedSize: 50,
+                            interval: _getPayrollMaxY(topEmployees) / 5,
                             getTitlesWidget: (double value, TitleMeta meta) {
-                              if (value == 0) {
-                                return const Text('0', style: TextStyle(color: Colors.grey, fontSize: 10));
-                              }
                               return Text(
-                                '${(value / 1000).toInt()}K',
+                                '\$${(value / 1000).toStringAsFixed(0)}K',
                                 style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
                                   fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87,
                                 ),
                               );
                             },
-                            reservedSize: 42,
                           ),
                         ),
                       ),
@@ -500,9 +552,9 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
                           x: index,
                           barRods: [
                             BarChartRodData(
-                              toY: topEmployees[index].value.clamp(0.0, 1000.0),
+                              toY: topEmployees[index].value,
                               color: const Color(0xFF8B5CF6).withOpacity(0.8),
-                              width: 20,
+                              width: 40,
                               borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(4),
                                 topRight: Radius.circular(4),
@@ -510,6 +562,17 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
                             ),
                           ],
                         ),
+                      ),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: _getPayrollMaxY(topEmployees) / 5,
+                        getDrawingHorizontalLine: (value) {
+                          return FlLine(
+                            color: Colors.grey[200]!,
+                            strokeWidth: 1,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -1122,5 +1185,12 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
         );
       }
     }
+  }
+
+  // Payroll Chart Helper Methods
+  double _getPayrollMaxY(List<MapEntry<String, double>> topEmployees) {
+    if (topEmployees.isEmpty) return 1000;
+    final maxValue = topEmployees.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    return maxValue * 1.2;
   }
 }
