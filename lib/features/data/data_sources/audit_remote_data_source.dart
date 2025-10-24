@@ -56,21 +56,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
 
             print("📥 Upload contract response:");
             print("📊 Status code: ${response.statusCode}");
-            print("📄 Response data: ${response.data}");
-            
-            // Debug: Print the full response structure
-            if (response.data is Map<String, dynamic>) {
-              final responseData = response.data as Map<String, dynamic>;
-              print("🔍 Response structure:");
-              print("  - success: ${responseData['success']}");
-              print("  - audit: ${responseData['audit']}");
-              if (responseData['audit'] != null) {
-                final auditData = responseData['audit'] as Map<String, dynamic>;
-                print("  - audit.vulnerabilities: ${auditData['vulnerabilities']}");
-                print("  - audit.vulnerabilities_found: ${auditData['vulnerabilities_found']}");
-                print("  - audit.ai_vulnerabilities: ${auditData['ai_vulnerabilities']}");
-              }
-            }
 
       if (response.statusCode == 200) {
         final responseData = response.data as Map<String, dynamic>;
@@ -93,26 +78,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
 
   AuditReportModel _parseAuditResponse(Map<String, dynamic> auditData) {
     print("🔍 Parsing audit response data:");
-    print("📊 Vulnerabilities count: ${auditData['vulnerabilities']?.length ?? 0}");
-    print("⛽ Gas optimization: ${auditData['gas_optimization']}");
-    print("📝 Recommendations: ${auditData['recommendations']?.toString().substring(0, 100)}...");
-    
-    // Debug: Print all available fields in auditData
-    print("🔍 All audit data fields:");
-    auditData.forEach((key, value) {
-      print("  - $key: ${value.runtimeType} = $value");
-    });
-    
-    // Debug: Print the entire vulnerabilities array
-    if (auditData['vulnerabilities'] != null) {
-      print("🔍 Raw vulnerabilities array:");
-      final vulnList = auditData['vulnerabilities'] as List<dynamic>;
-      for (int i = 0; i < vulnList.length; i++) {
-        print("  Vulnerability $i: ${vulnList[i]}");
-      }
-    } else {
-      print("🔍 No vulnerabilities field found in audit data");
-    }
     
     // Parse vulnerabilities from the API response
     final vulnerabilities = <VulnerabilityModel>[];
@@ -191,19 +156,39 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
 
     // Parse recommendations from audit report
     final recommendations = <RecommendationModel>[];
+    
+    // Parse recommendations from the recommendations field
     if (auditData['recommendations'] != null) {
       final recString = auditData['recommendations'] as String;
       if (recString.isNotEmpty) {
         // Split recommendations by newlines and create recommendation objects
         final recLines = recString.split('\n').where((line) => line.trim().isNotEmpty).toList();
         for (int i = 0; i < recLines.length; i++) {
-        recommendations.add(RecommendationModel(
+          final line = recLines[i].trim();
+          final priority = _parseRecommendationPriority(line);
+          final category = _parseRecommendationCategory(line);
+          
+          recommendations.add(RecommendationModel(
             title: 'Recommendation ${i + 1}',
-            description: recLines[i].trim(),
-            priority: Priority.high,
-            category: 'Security',
+            description: line,
+            priority: priority,
+            category: category,
           ));
         }
+      }
+    }
+    
+    // Also parse AI recommendations if available
+    if (auditData['ai_recommendations'] != null) {
+      final aiRecs = auditData['ai_recommendations'] as List<dynamic>;
+      for (int i = 0; i < aiRecs.length; i++) {
+        final rec = aiRecs[i] as String;
+        recommendations.add(RecommendationModel(
+          title: 'AI Recommendation ${i + 1}',
+          description: rec,
+          priority: Priority.medium,
+          category: 'AI Analysis',
+        ));
       }
     }
 
@@ -218,11 +203,15 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       suggestions: gasSuggestions,
     );
 
-    // Create code quality
+    // Create code quality from API response
+    final linesOfCode = auditData['source_code']?.toString().split('\n').length ?? 0;
+    final codeQualityScore = _calculateCodeQualityScore(linesOfCode, vulnerabilities.length);
+    final complexityScore = _calculateComplexityScore(linesOfCode);
+    
     final codeQuality = CodeQualityModel(
-      qualityScore: 70.0,
-      linesOfCode: auditData['source_code']?.toString().split('\n').length ?? 0,
-      complexityScore: 5,
+      qualityScore: codeQualityScore,
+      linesOfCode: linesOfCode,
+      complexityScore: complexityScore,
       issues: [],
     );
 
@@ -280,6 +269,57 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
 
   double _calculateOverallScore(double security, double gas, double quality) {
     return (security * 0.5 + gas * 0.3 + quality * 0.2).clamp(0.0, 100.0);
+  }
+
+  double _calculateCodeQualityScore(int linesOfCode, int vulnerabilityCount) {
+    // Base score starts at 100
+    double score = 100.0;
+    
+    // Deduct points based on vulnerabilities
+    score -= vulnerabilityCount * 5.0;
+    
+    // Deduct points for very large files (complexity)
+    if (linesOfCode > 500) {
+      score -= 10.0;
+    } else if (linesOfCode > 1000) {
+      score -= 20.0;
+    }
+    
+    return score.clamp(0.0, 100.0);
+  }
+
+  int _calculateComplexityScore(int linesOfCode) {
+    if (linesOfCode < 100) return 1;
+    if (linesOfCode < 300) return 2;
+    if (linesOfCode < 500) return 3;
+    if (linesOfCode < 1000) return 4;
+    return 5;
+  }
+
+  Priority _parseRecommendationPriority(String recommendation) {
+    final lowerRec = recommendation.toLowerCase();
+    if (lowerRec.contains('high priority') || lowerRec.contains('critical')) {
+      return Priority.high;
+    } else if (lowerRec.contains('medium priority') || lowerRec.contains('important')) {
+      return Priority.medium;
+    } else if (lowerRec.contains('low priority') || lowerRec.contains('minor')) {
+      return Priority.low;
+    }
+    return Priority.medium; // Default
+  }
+
+  String _parseRecommendationCategory(String recommendation) {
+    final lowerRec = recommendation.toLowerCase();
+    if (lowerRec.contains('security') || lowerRec.contains('reentrancy') || lowerRec.contains('access control')) {
+      return 'Security';
+    } else if (lowerRec.contains('gas') || lowerRec.contains('optimization')) {
+      return 'Gas Optimization';
+    } else if (lowerRec.contains('testing') || lowerRec.contains('verification')) {
+      return 'Testing';
+    } else if (lowerRec.contains('ai analysis')) {
+      return 'AI Analysis';
+    }
+    return 'General'; // Default
   }
 
   double _parseGasOptimizationScore(Map<String, dynamic> auditData) {

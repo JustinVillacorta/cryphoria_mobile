@@ -539,40 +539,44 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
           padding: ResponsiveHelper.buttonPadding(context),
         ),
         child: _isUploading
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: context.iconSize(20),
-                    height: context.iconSize(20),
-                    child: const CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
+            ? Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: context.iconSize(20),
+                      height: context.iconSize(20),
+                      child: const CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: context.spacing(12)),
-                  Text(
-                    'Processing...',
-                    style: TextStyle(
-                      fontSize: context.fontSize(16),
-                      fontWeight: FontWeight.w600,
+                    SizedBox(width: context.spacing(12)),
+                    Text(
+                      'Processing...',
+                      style: TextStyle(
+                        fontSize: context.fontSize(16),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.analytics, size: context.iconSize(20)),
-                  SizedBox(width: context.spacing(8)),
-                  Text(
-                    'Start AI Analysis',
-                    style: TextStyle(
-                      fontSize: context.fontSize(16),
-                      fontWeight: FontWeight.w600,
+            : Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.analytics, size: context.iconSize(20)),
+                    SizedBox(width: context.spacing(8)),
+                    Text(
+                      'Start AI Analysis',
+                      style: TextStyle(
+                        fontSize: context.fontSize(16),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
       ),
     );
@@ -635,14 +639,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
           _isFileUploaded = true;
         });
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('File "${pickedFile.name}" uploaded successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+        // File uploaded successfully - no snackbar needed as UI already shows success state
       }
     } catch (e) {
       if (mounted) {
