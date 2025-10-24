@@ -160,12 +160,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const PayslipScreen(),
-                                ),
-                              );
+                              ref.read(selectedEmployeePageProvider.notifier).state = 1;
                             },
                             child: Text(
                               'View All',

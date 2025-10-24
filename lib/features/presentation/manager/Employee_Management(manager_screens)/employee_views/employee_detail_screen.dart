@@ -6,6 +6,7 @@ import '../../../../domain/entities/employee.dart';
 import '../../../../domain/entities/payslip.dart' as payslip_entity;
 import '../../../../../dependency_injection/riverpod_providers.dart';
 import '../../Payslip/Views/payslip_details_view.dart';
+import '../../../employee/Payslip/payslip_view/payslip_history_view.dart';
 
 class EmployeeDetailScreen extends ConsumerStatefulWidget {
   final Employee employee;
@@ -1305,20 +1306,10 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
   }
 
   void _viewAllPayslips() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Viewing all ${employeePayslips.length} payslips for ${widget.employee.displayName}',
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        margin: const EdgeInsets.all(16),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PayslipScreen(),
       ),
     );
   }
