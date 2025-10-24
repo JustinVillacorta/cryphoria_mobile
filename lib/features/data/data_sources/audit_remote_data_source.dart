@@ -342,8 +342,44 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
-        final List<dynamic> reports = response.data as List<dynamic>;
-        return reports.map((report) => TaxReportModel.fromJson(report as Map<String, dynamic>)).toList();
+        // Check if response has the wrapper structure with success and tax_reports
+        if (response.data is Map<String, dynamic>) {
+          final Map<String, dynamic> responseData = response.data as Map<String, dynamic>;
+          
+          // Check if it's the expected wrapper format
+          if (responseData.containsKey('success') && responseData.containsKey('tax_reports')) {
+            final bool success = responseData['success'] as bool? ?? false;
+            if (!success) {
+              throw Exception('API returned success: false');
+            }
+            
+            final dynamic taxReportsData = responseData['tax_reports'];
+            if (taxReportsData is List) {
+              final List<dynamic> reports = taxReportsData;
+              return reports.map((report) => TaxReportModel.fromJson(report as Map<String, dynamic>)).toList();
+            } else if (taxReportsData is Map<String, dynamic>) {
+              // Single report object - wrap it in a list
+              return [TaxReportModel.fromJson(taxReportsData)];
+            } else {
+              throw Exception('Unexpected tax_reports format: ${taxReportsData.runtimeType}');
+            }
+          } else {
+            // Fallback: handle direct array or single object (legacy format)
+            if (responseData is List) {
+              final List<dynamic> reports = responseData as List<dynamic>;
+              return reports.map((report) => TaxReportModel.fromJson(report as Map<String, dynamic>)).toList();
+            } else {
+              // Single report object - wrap it in a list
+              return [TaxReportModel.fromJson(responseData)];
+            }
+          }
+        } else if (response.data is List) {
+          // Direct array response (legacy format)
+          final List<dynamic> reports = response.data as List<dynamic>;
+          return reports.map((report) => TaxReportModel.fromJson(report as Map<String, dynamic>)).toList();
+        } else {
+          throw Exception('Unexpected response format: ${response.data.runtimeType}');
+        }
       } else {
         throw Exception('Failed to get tax reports: ${response.statusMessage}');
       }

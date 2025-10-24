@@ -9,7 +9,6 @@ class TaxReportsState {
   final bool isLoading;
   final List<TaxReport> taxReports;
   final TaxReport? selectedReport;
-  final String? selectedReportType;
   final String? error;
   final bool hasData;
 
@@ -17,7 +16,6 @@ class TaxReportsState {
     this.isLoading = false,
     this.taxReports = const [],
     this.selectedReport,
-    this.selectedReportType,
     this.error,
     this.hasData = false,
   });
@@ -26,7 +24,6 @@ class TaxReportsState {
     bool? isLoading,
     List<TaxReport>? taxReports,
     TaxReport? selectedReport,
-    String? selectedReportType,
     String? error,
     bool? hasData,
   }) {
@@ -34,18 +31,9 @@ class TaxReportsState {
       isLoading: isLoading ?? this.isLoading,
       taxReports: taxReports ?? this.taxReports,
       selectedReport: selectedReport ?? this.selectedReport,
-      selectedReportType: selectedReportType ?? this.selectedReportType,
       error: error ?? this.error,
       hasData: hasData ?? this.hasData,
     );
-  }
-
-  // Get filtered reports based on selected report type
-  List<TaxReport> get filteredReports {
-    if (selectedReportType == null || selectedReportType == 'ALL') {
-      return taxReports;
-    }
-    return taxReports.where((report) => report.reportType == selectedReportType).toList();
   }
 
   // Get the most recent report
@@ -93,20 +81,8 @@ class TaxReportsViewModel extends StateNotifier<TaxReportsState> {
     }
   }
 
-  void selectReportType(String? reportType) {
-    final filteredReports = reportType == null || reportType == 'ALL' 
-        ? state.taxReports 
-        : state.taxReports.where((report) => report.reportType == reportType).toList();
-    
-    final selectedReport = filteredReports.isNotEmpty 
-        ? filteredReports.reduce((a, b) => 
-            (a.generatedAt ?? a.createdAt).isAfter(b.generatedAt ?? b.createdAt) ? a : b)
-        : null;
-    
-    state = state.copyWith(
-      selectedReportType: reportType,
-      selectedReport: selectedReport,
-    );
+  void selectTaxReport(TaxReport report) {
+    state = state.copyWith(selectedReport: report);
   }
 
   void refresh() {

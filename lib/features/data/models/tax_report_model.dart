@@ -29,17 +29,17 @@ class TaxReportModel extends TaxReport {
 
   factory TaxReportModel.fromJson(Map<String, dynamic> json) {
     return TaxReportModel(
-      id: json['id']?.toString() ?? '',
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
       reportType: json['report_type']?.toString() ?? 'Tax Report',
-      reportDate: _safeParseDateTime(json['report_date']),
-      periodStart: _safeParseDateTime(json['period_start']),
-      periodEnd: _safeParseDateTime(json['period_end']),
+      reportDate: _safeParseDateTime(json['generated_at'] ?? json['report_date']),
+      periodStart: _safeParseDateTime(json['start_date'] ?? json['period_start']),
+      periodEnd: _safeParseDateTime(json['end_date'] ?? json['period_end']),
       currency: json['currency']?.toString() ?? 'USD',
-      summary: TaxSummaryModel.fromJson(_safeConvertMap(json['summary'])),
+      summary: _createDefaultSummary(json),
       categories: _safeConvertTaxCategoriesList(json['categories']),
       transactions: _safeConvertTaxTransactionsList(json['transactions']),
       metadata: _safeConvertMap(json['metadata']),
-      createdAt: _safeParseDateTime(json['created_at']),
+      createdAt: _safeParseDateTime(json['generated_at'] ?? json['created_at']),
       generatedAt: json['generated_at'] != null 
           ? _safeParseDateTime(json['generated_at']) 
           : null,
@@ -87,6 +87,51 @@ class TaxReportModel extends TaxReport {
     if (value is Map<String, dynamic>) return value;
     if (value is Map) return Map<String, dynamic>.from(value);
     return <String, dynamic>{};
+  }
+
+  static TaxSummaryModel _createDefaultSummary(Map<String, dynamic> json) {
+    // Extract data from top-level fields
+    final totalIncome = _safeToDouble(json['total_income']);
+    
+    // Extract data from metadata.calculations if available
+    final metadata = _safeConvertMap(json['metadata']);
+    final calculations = _safeConvertMap(metadata['calculations']);
+    final metadataTotalIncome = _safeToDouble(calculations['total_income']);
+    
+    // Use metadata values if top-level values are 0 or null
+    final finalTotalIncome = totalIncome > 0 ? totalIncome : metadataTotalIncome;
+    
+    // Extract tax deduction data
+    final taxDeductionSummary = _safeConvertMap(json['tax_deduction_summary']);
+    final periodSummary = _safeConvertMap(taxDeductionSummary['period_summary']);
+    final totalDeductionsMap = _safeConvertMap(periodSummary['total_deductions']);
+    
+    // Calculate total deductions from all deduction types
+    double totalDeductions = 0.0;
+    if (totalDeductionsMap.isNotEmpty) {
+      totalDeductions = totalDeductionsMap.values
+          .where((value) => value != null)
+          .map((value) => _safeToDouble(value))
+          .fold(0.0, (sum, value) => sum + value);
+    }
+    
+    // Extract total tax amount
+    final totalTaxAmount = _safeToDouble(periodSummary['total_tax_amount']);
+    
+    // Calculate taxable income
+    final taxableIncome = finalTotalIncome - totalDeductions;
+    
+    return TaxSummaryModel(
+      totalIncome: finalTotalIncome,
+      totalDeductions: totalDeductions,
+      taxableIncome: taxableIncome,
+      totalTaxOwed: totalTaxAmount,
+      totalTaxPaid: 0.0, // Default value - not provided in API
+      netTaxOwed: totalTaxAmount, // Same as totalTaxOwed for now
+      taxBreakdown: <String, double>{}, // Could be populated from tax_deduction_summary
+      incomeBreakdown: <String, double>{}, // Could be populated from metadata.calculations
+      deductionBreakdown: totalDeductionsMap.map((key, value) => MapEntry(key, _safeToDouble(value))),
+    );
   }
 
   static List<TaxCategoryModel> _safeConvertTaxCategoriesList(dynamic value) {

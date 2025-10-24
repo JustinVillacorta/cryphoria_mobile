@@ -127,6 +127,17 @@ class ExcelExportHelper {
       
       // Summary
       _addTotalRow(sheet, 'LIABILITIES + EQUITY', balanceSheet.totals.totalLiabilities + balanceSheet.totals.totalEquity, 'A$currentRow', 'B$currentRow');
+      currentRow += 3;
+      
+      // Report Information Section
+      _addSectionHeader(sheet, 'REPORT INFORMATION', 'A$currentRow');
+      currentRow += 2;
+      
+      _addTextRow(sheet, 'Report Date', '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}', 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTextRow(sheet, 'Report Type', 'Balance Sheet', 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTextRow(sheet, 'Financial Position', 'As of ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}', 'A$currentRow', 'B$currentRow');
       
       // Auto-fit columns
       _autoFitColumns(sheet);
@@ -145,45 +156,44 @@ class ExcelExportHelper {
       excel.delete('Sheet1');
       
       _addHeader(sheet, 'CASH FLOW STATEMENT', 'A1');
-      _addSubHeader(sheet, 'For the period ending ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}', 'A2');
+      _addSubHeader(sheet, 'For the period ${cashFlow.periodStart.toIso8601String().split('T')[0]} to ${cashFlow.periodEnd.toIso8601String().split('T')[0]}', 'A2');
+      _addSubHeader(sheet, 'Report Type: ${cashFlow.reportType} | Currency: ${cashFlow.currency}', 'A3');
       
-      int currentRow = 4;
+      int currentRow = 5;
       
-      // Operating Activities
-      _addSectionHeader(sheet, 'OPERATING ACTIVITIES', 'A$currentRow');
+      // Cash Flow Summary
+      _addSectionHeader(sheet, 'CASH FLOW SUMMARY', 'A$currentRow');
       currentRow += 2;
       
-      _addDataRow(sheet, 'Cash Receipts', cashFlow.operatingActivities.cashReceipts.total, 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Beginning Cash', cashFlow.cashSummary.beginningCash, 'A$currentRow', 'B$currentRow');
       currentRow += 1;
-      _addDataRow(sheet, 'Cash Payments', cashFlow.operatingActivities.cashPayments.total, 'A$currentRow', 'B$currentRow');
-      currentRow += 1;
-      _addTotalRow(sheet, 'Net Cash from Operating Activities', cashFlow.cashSummary.netCashFromOperations, 'A$currentRow', 'B$currentRow');
-      currentRow += 3;
       
-      // Investing Activities
-      _addSectionHeader(sheet, 'INVESTING ACTIVITIES', 'A$currentRow');
-      currentRow += 2;
-      
-      _addDataRow(sheet, 'Cash Receipts', cashFlow.investingActivities.cashReceipts.total, 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Net Cash from Operating Activities', cashFlow.cashSummary.netCashFromOperations, 'A$currentRow', 'B$currentRow');
       currentRow += 1;
-      _addDataRow(sheet, 'Cash Payments', cashFlow.investingActivities.cashPayments.total, 'A$currentRow', 'B$currentRow');
-      currentRow += 1;
-      _addTotalRow(sheet, 'Net Cash from Investing Activities', cashFlow.cashSummary.netCashFromInvesting, 'A$currentRow', 'B$currentRow');
-      currentRow += 3;
       
-      // Financing Activities
-      _addSectionHeader(sheet, 'FINANCING ACTIVITIES', 'A$currentRow');
-      currentRow += 2;
-      
-      _addDataRow(sheet, 'Cash Receipts', cashFlow.financingActivities.cashReceipts.total, 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Net Cash from Investing Activities', cashFlow.cashSummary.netCashFromInvesting, 'A$currentRow', 'B$currentRow');
       currentRow += 1;
-      _addDataRow(sheet, 'Cash Payments', cashFlow.financingActivities.cashPayments.total, 'A$currentRow', 'B$currentRow');
-      currentRow += 1;
-      _addTotalRow(sheet, 'Net Cash from Financing Activities', cashFlow.cashSummary.netCashFromFinancing, 'A$currentRow', 'B$currentRow');
-      currentRow += 3;
       
-      // Net Change in Cash
+      _addDataRow(sheet, 'Net Cash from Financing Activities', cashFlow.cashSummary.netCashFromFinancing, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
       _addTotalRow(sheet, 'NET CHANGE IN CASH', cashFlow.cashSummary.netChangeInCash, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      
+      _addTotalRow(sheet, 'ENDING CASH', cashFlow.cashSummary.endingCash, 'A$currentRow', 'B$currentRow');
+      currentRow += 3;
+      
+      // Report Information Section
+      _addSectionHeader(sheet, 'REPORT INFORMATION', 'A$currentRow');
+      currentRow += 2;
+      
+      _addTextRow(sheet, 'Period', '${cashFlow.periodStart.toIso8601String().split('T')[0]} to ${cashFlow.periodEnd.toIso8601String().split('T')[0]}', 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTextRow(sheet, 'Report Type', cashFlow.reportType, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTextRow(sheet, 'Currency', cashFlow.currency, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTextRow(sheet, 'Report Period', 'As of monthly', 'A$currentRow', 'B$currentRow');
       
       _autoFitColumns(sheet);
       
@@ -239,6 +249,25 @@ class ExcelExportHelper {
       _addDataRow(sheet, 'Net Income', incomeStatement.netIncome.netIncome, 'A$currentRow', 'B$currentRow');
       currentRow++;
       _addTextRow(sheet, 'Profitability Status', incomeStatement.summary.profitabilityStatus.toString(), 'A$currentRow', 'B$currentRow');
+      currentRow += 3;
+      
+      // Report Information Section
+      _addSectionHeader(sheet, 'REPORT INFORMATION', 'A$currentRow');
+      currentRow += 2;
+      
+      _addTextRow(sheet, 'Period', '${incomeStatement.periodStart.day}/${incomeStatement.periodStart.month}/${incomeStatement.periodStart.year} - ${incomeStatement.periodEnd.day}/${incomeStatement.periodEnd.month}/${incomeStatement.periodEnd.year}', 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTextRow(sheet, 'Currency', incomeStatement.currency, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTextRow(sheet, 'Generated', '${incomeStatement.generatedAt.day}/${incomeStatement.generatedAt.month}/${incomeStatement.generatedAt.year}', 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Transactions Processed', incomeStatement.metadata.transactionCount.toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Payroll Entries', incomeStatement.metadata.payrollCount.toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Period Length (Days)', incomeStatement.metadata.periodLengthDays.toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTextRow(sheet, 'Primary Revenue Source', incomeStatement.summary.primaryRevenueSource, 'A$currentRow', 'B$currentRow');
       
       _autoFitColumns(sheet);
       
@@ -407,7 +436,7 @@ class ExcelExportHelper {
     }
   }
 
-  static Future<String> exportTaxReportToExcel() async {
+  static Future<String> exportTaxReportToExcel(dynamic taxReport) async {
     try {
       var excel = Excel.createExcel();
       var sheet = excel['Tax Report'];
@@ -415,18 +444,74 @@ class ExcelExportHelper {
       excel.delete('Sheet1');
       
       _addHeader(sheet, 'TAX REPORT', 'A1');
-      _addSubHeader(sheet, 'For the tax year ${DateTime.now().year}', 'A2');
+      _addSubHeader(sheet, 'Report ID: ${taxReport.reportId}', 'A2');
+      _addSubHeader(sheet, 'Period: ${_formatDate(taxReport.periodStart.toString())} - ${_formatDate(taxReport.periodEnd.toString())}', 'A3');
       
-      int currentRow = 4;
+      int currentRow = 5;
       
-      // Tax Summary
-      _addDataRow(sheet, 'Total Taxable Income', 0.0, 'A$currentRow', 'B$currentRow');
+      // Report Information Section
+      _addSectionHeader(sheet, 'REPORT INFORMATION', 'A$currentRow');
+      currentRow += 2;
+      
+      _addTextRow(sheet, 'Report Type', taxReport.reportType, 'A$currentRow', 'B$currentRow');
       currentRow += 1;
-      _addDataRow(sheet, 'Total Tax Withheld', 0.0, 'A$currentRow', 'B$currentRow');
+      _addTextRow(sheet, 'Status', taxReport.status, 'A$currentRow', 'B$currentRow');
       currentRow += 1;
-      _addDataRow(sheet, 'Estimated Tax Due', 0.0, 'A$currentRow', 'B$currentRow');
+      _addTextRow(sheet, 'Generated At', _formatDate(taxReport.reportDate.toString()), 'A$currentRow', 'B$currentRow');
       currentRow += 1;
-      _addDataRow(sheet, 'Tax Refund', 0.0, 'A$currentRow', 'B$currentRow');
+      _addDataRow(sheet, 'Transaction Count', (taxReport.metadata['transaction_count'] ?? 0).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addTextRow(sheet, 'Accounting Method', taxReport.metadata['accounting_method'] ?? 'N/A', 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Tax Year', (taxReport.metadata['tax_year'] ?? DateTime.now().year).toDouble(), 'A$currentRow', 'B$currentRow');
+      currentRow += 3;
+      
+      // Financial Performance Section
+      _addSectionHeader(sheet, 'FINANCIAL PERFORMANCE', 'A$currentRow');
+      currentRow += 2;
+      
+      _addDataRow(sheet, 'Capital Gains', taxReport.totalGains ?? 0, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Capital Losses', taxReport.totalLosses ?? 0, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Net P&L', taxReport.netPnl ?? 0, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Total Income', taxReport.totalIncome ?? 0, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Total Expenses', taxReport.totalExpenses ?? 0, 'A$currentRow', 'B$currentRow');
+      currentRow += 3;
+      
+      // Tax Summary Section
+      _addSectionHeader(sheet, 'TAX SUMMARY', 'A$currentRow');
+      currentRow += 2;
+      
+      _addDataRow(sheet, 'Total Income', taxReport.summary.totalIncome, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Total Deductions', taxReport.summary.totalDeductions, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Taxable Income', taxReport.summary.taxableIncome, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Total Tax Owed', taxReport.summary.totalTaxOwed, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Total Tax Paid', taxReport.summary.totalTaxPaid, 'A$currentRow', 'B$currentRow');
+      currentRow += 1;
+      _addDataRow(sheet, 'Net Tax Owed', taxReport.summary.netTaxOwed, 'A$currentRow', 'B$currentRow');
+      currentRow += 3;
+      
+      // Analysis Section
+      if (taxReport.llmAnalysis != null && taxReport.llmAnalysis!.isNotEmpty) {
+        _addSectionHeader(sheet, 'ANALYSIS', 'A$currentRow');
+        currentRow += 2;
+        
+        // Split analysis into multiple rows if it's too long
+        final analysisLines = taxReport.llmAnalysis!.split('\n');
+        for (String line in analysisLines) {
+          if (line.trim().isNotEmpty) {
+            _addTextRow(sheet, line.trim(), '', 'A$currentRow', 'B$currentRow');
+            currentRow += 1;
+          }
+        }
+      }
       
       _autoFitColumns(sheet);
       
@@ -437,6 +522,15 @@ class ExcelExportHelper {
   }
 
   // Helper methods for formatting
+  static String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return dateString;
+    }
+  }
+
   static void _addHeader(Sheet sheet, String title, String cell) {
     var cellData = sheet.cell(CellIndex.indexByString(cell));
     cellData.value = TextCellValue(title);

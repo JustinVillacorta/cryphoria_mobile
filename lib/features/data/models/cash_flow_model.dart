@@ -11,11 +11,11 @@ class CashFlowListResponseModel extends CashFlowListResponse {
 
   factory CashFlowListResponseModel.fromJson(Map<String, dynamic> json) {
     return CashFlowListResponseModel(
-      success: json['success'] as bool,
-      cashFlowStatements: (json['cash_flow_statements'] as List<dynamic>)
-          .map((e) => CashFlowModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      count: json['count'] as int,
+      success: json['success'] as bool? ?? false,
+      cashFlowStatements: (json['cash_flow_statements'] as List<dynamic>?)
+          ?.map((e) => CashFlowModel.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
+      count: json['count'] as int? ?? 0,
     );
   }
 
@@ -55,21 +55,39 @@ class CashFlowModel extends CashFlow {
   });
 
   factory CashFlowModel.fromJson(Map<String, dynamic> json) {
+    // Handle different API response structures
+    Map<String, dynamic> operatingActivitiesData;
+    Map<String, dynamic> investingActivitiesData;
+    Map<String, dynamic> financingActivitiesData;
+    
+    // Check if it's the CUMULATIVE/TRANSACTION structure with cash_flows
+    if (json.containsKey('cash_flows')) {
+      final cashFlows = json['cash_flows'] as Map<String, dynamic>? ?? {};
+      operatingActivitiesData = cashFlows['operating_activities'] as Map<String, dynamic>? ?? {};
+      investingActivitiesData = cashFlows['investing_activities'] as Map<String, dynamic>? ?? {};
+      financingActivitiesData = cashFlows['financing_activities'] as Map<String, dynamic>? ?? {};
+    } else {
+      // PERIODIC structure with activities at root level
+      operatingActivitiesData = json['operating_activities'] as Map<String, dynamic>? ?? {};
+      investingActivitiesData = json['investing_activities'] as Map<String, dynamic>? ?? {};
+      financingActivitiesData = json['financing_activities'] as Map<String, dynamic>? ?? {};
+    }
+    
     return CashFlowModel(
-      id: json['_id'] as String,
-      cashFlowId: json['cash_flow_id'] as String,
-      userId: json['user_id'] as String,
-      reportType: json['report_type'] as String,
-      periodStart: DateTime.parse(json['period_start'] as String),
-      periodEnd: DateTime.parse(json['period_end'] as String),
-      generatedAt: DateTime.parse(json['generated_at'] as String),
-      currency: json['currency'] as String,
-      operatingActivities: OperatingActivitiesModel.fromJson(json['operating_activities'] as Map<String, dynamic>),
-      investingActivities: InvestingActivitiesModel.fromJson(json['investing_activities'] as Map<String, dynamic>),
-      financingActivities: FinancingActivitiesModel.fromJson(json['financing_activities'] as Map<String, dynamic>),
-      cashSummary: CashSummaryModel.fromJson(json['cash_summary'] as Map<String, dynamic>),
-      analysis: CashFlowAnalysisModel.fromJson(json['analysis'] as Map<String, dynamic>),
-      metadata: CashFlowMetadataModel.fromJson(json['metadata'] as Map<String, dynamic>),
+      id: json['_id'] as String? ?? '',
+      cashFlowId: json['cash_flow_id'] as String? ?? '',
+      userId: json['user_id'] as String? ?? '',
+      reportType: json['report_type'] as String? ?? '',
+      periodStart: DateTime.parse(json['period_start'] as String? ?? DateTime.now().toIso8601String()),
+      periodEnd: DateTime.parse(json['period_end'] as String? ?? DateTime.now().toIso8601String()),
+      generatedAt: DateTime.parse(json['generated_at'] as String? ?? DateTime.now().toIso8601String()),
+      currency: json['currency'] as String? ?? 'USD',
+      operatingActivities: OperatingActivitiesModel.fromJson(operatingActivitiesData),
+      investingActivities: InvestingActivitiesModel.fromJson(investingActivitiesData),
+      financingActivities: FinancingActivitiesModel.fromJson(financingActivitiesData),
+      cashSummary: CashSummaryModel.fromJson(json['cash_summary'] as Map<String, dynamic>? ?? {}),
+      analysis: CashFlowAnalysisModel.fromJson(json['analysis'] as Map<String, dynamic>? ?? {}),
+      metadata: CashFlowMetadataModel.fromJson(json['metadata'] as Map<String, dynamic>? ?? {}),
     );
   }
 
@@ -121,9 +139,9 @@ class OperatingActivitiesModel extends OperatingActivities {
 
   factory OperatingActivitiesModel.fromJson(Map<String, dynamic> json) {
     return OperatingActivitiesModel(
-      cashReceipts: OperatingBreakdownModel.fromJson(json['cash_receipts'] as Map<String, dynamic>),
-      cashPayments: OperatingBreakdownModel.fromJson(json['cash_payments'] as Map<String, dynamic>),
-      netCashFlow: (json['net_cash_flow'] as num).toDouble(),
+      cashReceipts: OperatingBreakdownModel.fromJson(json['cash_receipts'] as Map<String, dynamic>? ?? {}),
+      cashPayments: OperatingBreakdownModel.fromJson(json['cash_payments'] as Map<String, dynamic>? ?? {}),
+      netCashFlow: (json['net_cash_from_operations'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -153,9 +171,9 @@ class InvestingActivitiesModel extends InvestingActivities {
 
   factory InvestingActivitiesModel.fromJson(Map<String, dynamic> json) {
     return InvestingActivitiesModel(
-      cashReceipts: InvestingBreakdownModel.fromJson(json['cash_receipts'] as Map<String, dynamic>),
-      cashPayments: InvestingBreakdownModel.fromJson(json['cash_payments'] as Map<String, dynamic>),
-      netCashFlow: (json['net_cash_flow'] as num).toDouble(),
+      cashReceipts: InvestingBreakdownModel.fromJson(json['cash_receipts'] as Map<String, dynamic>? ?? {}),
+      cashPayments: InvestingBreakdownModel.fromJson(json['cash_payments'] as Map<String, dynamic>? ?? {}),
+      netCashFlow: (json['net_cash_from_investing'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -185,9 +203,9 @@ class FinancingActivitiesModel extends FinancingActivities {
 
   factory FinancingActivitiesModel.fromJson(Map<String, dynamic> json) {
     return FinancingActivitiesModel(
-      cashReceipts: FinancingBreakdownModel.fromJson(json['cash_receipts'] as Map<String, dynamic>),
-      cashPayments: FinancingBreakdownModel.fromJson(json['cash_payments'] as Map<String, dynamic>),
-      netCashFlow: (json['net_cash_flow'] as num).toDouble(),
+      cashReceipts: FinancingBreakdownModel.fromJson(json['cash_receipts'] as Map<String, dynamic>? ?? {}),
+      cashPayments: FinancingBreakdownModel.fromJson(json['cash_payments'] as Map<String, dynamic>? ?? {}),
+      netCashFlow: (json['net_cash_from_financing'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -374,12 +392,12 @@ class CashSummaryModel extends CashSummary {
 
   factory CashSummaryModel.fromJson(Map<String, dynamic> json) {
     return CashSummaryModel(
-      beginningCash: _safeToDouble(json['beginning_cash']),
+      beginningCash: _safeToDouble(json['cash_at_beginning']),
       netCashFromOperations: _safeToDouble(json['net_cash_from_operations']),
       netCashFromInvesting: _safeToDouble(json['net_cash_from_investing']),
       netCashFromFinancing: _safeToDouble(json['net_cash_from_financing']),
       netChangeInCash: _safeToDouble(json['net_change_in_cash']),
-      endingCash: _safeToDouble(json['ending_cash']),
+      endingCash: _safeToDouble(json['cash_at_end']),
     );
   }
 
@@ -429,12 +447,12 @@ class CashFlowAnalysisModel extends CashFlowAnalysis {
 
   factory CashFlowAnalysisModel.fromJson(Map<String, dynamic> json) {
     return CashFlowAnalysisModel(
-      cashFlowHealth: json['cash_flow_health'] as String,
+      cashFlowHealth: json['cash_flow_health'] as String? ?? 'Unknown',
       operatingCashRatio: _safeToDouble(json['operating_cash_ratio']),
       freeCashFlow: _safeToDouble(json['free_cash_flow']),
-      cashFlowComposition: CashFlowCompositionModel.fromJson(json['cash_flow_composition'] as Map<String, dynamic>),
-      liquidityPosition: json['liquidity_position'] as String,
-      keyInsights: (json['key_insights'] as List<dynamic>).cast<String>(),
+      cashFlowComposition: CashFlowCompositionModel.fromJson(json['cash_flow_composition'] as Map<String, dynamic>? ?? {}),
+      liquidityPosition: json['liquidity_position'] as String? ?? 'Unknown',
+      keyInsights: (json['key_insights'] as List<dynamic>?)?.cast<String>() ?? [],
     );
   }
 
@@ -525,10 +543,10 @@ class CashFlowMetadataModel extends CashFlowMetadata {
 
   factory CashFlowMetadataModel.fromJson(Map<String, dynamic> json) {
     return CashFlowMetadataModel(
-      transactionCount: json['transaction_count'] as int,
-      payrollEntries: json['payroll_entries'] as int,
-      invoicePayments: json['invoice_payments'] as int,
-      periodDays: json['period_days'] as int,
+      transactionCount: json['transaction_count'] as int? ?? 0,
+      payrollEntries: json['payroll_entries'] as int? ?? 0,
+      invoicePayments: json['invoice_payments'] as int? ?? 0,
+      periodDays: json['period_days'] as int? ?? 0,
     );
   }
 
