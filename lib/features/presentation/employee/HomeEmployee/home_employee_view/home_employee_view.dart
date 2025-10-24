@@ -7,6 +7,7 @@ import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet/wallet_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/Payslip/payslip_view/payslip_details_view.dart';
 
@@ -35,9 +36,16 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isTablet = screenWidth > 600;
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.height < 700;
+    final isTablet = size.width > 600;
+    final isDesktop = size.width > 1024;
+    
+    // Responsive sizing
+    final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
+    final verticalPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
+    final sectionGap = isDesktop ? 28.0 : isTablet ? 24.0 : 20.0;
+    
     final state = ref.watch(homeEmployeeNotifierProvider);
     final notifier = ref.read(homeEmployeeNotifierProvider.notifier);
     final payrollDetailsAsync = ref.watch(payrollDetailsProvider);
@@ -66,18 +74,18 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'Something went wrong',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
+                        color: const Color(0xFF1A1A1A),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       state.errorMessage,
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B6B6B),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -91,8 +99,17 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                         backgroundColor: const Color(0xFF9747FF),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: const Text('Retry'),
+                      child: Text(
+                        'Retry',
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -110,24 +127,24 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.05,
-                    vertical: screenHeight * 0.015,
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       EmployeeTobBarWidget(
-                        employeeName: state.employeeName,
-                        onNotificationTapped: () => _navigateToNotifications(context),
+                        employeeName: state.employeeName
                       ),
-                      SizedBox(height: screenHeight * 0.02),
-                      WalletCard(),
+                      SizedBox(height: sectionGap),
+                      const WalletCard(),
+                      SizedBox(height: sectionGap),
                       PayoutInfoWidget(
                         nextPayoutDate: state.nextPayoutDate,
                         frequency: state.payoutFrequency,
                         isTablet: isTablet,
                       ),
-                      SizedBox(height: screenHeight * 0.01),
+                      SizedBox(height: sectionGap),
                       
                       // Recent Payslips Section
                       Row(
@@ -135,10 +152,11 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                         children: [
                           Text(
                             'Recent Payslips',
-                            style: TextStyle(
-                              fontSize: isTablet ? 20 : 18,
+                            style: GoogleFonts.inter(
+                              fontSize: isDesktop ? 20 : isTablet ? 19 : 18,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1A1D1F),
+                              color: const Color(0xFF1A1A1A),
+                              letterSpacing: -0.3,
                             ),
                           ),
                           TextButton(
@@ -150,16 +168,19 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                                 ),
                               );
                             },
-                            child: const Text(
+                            child: Text(
                               'View All',
-                              style: TextStyle(
-                                color: Color(0xFF9747FF),
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF9747FF),
+                                fontSize: isSmallScreen ? 14 : 15,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                         ],
-                      ),                      
+                      ),
+                      SizedBox(height: isSmallScreen ? 12 : 16),
+                      
                       // Display recent payslips
                       payrollDetailsAsync.when(
                         data: (payrollDetails) {
@@ -168,8 +189,8 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                           if (recentPayslips.isEmpty) {
                             return Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: screenWidth * 0.04,
-                                vertical: screenHeight * 0.02,
+                                horizontal: horizontalPadding,
+                                vertical: isSmallScreen ? 32 : 48,
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -187,15 +208,15 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                                   children: [
                                     Icon(
                                       Icons.receipt_long_outlined,
-                                      size: 48,
-                                      color: Colors.grey[400],
+                                      size: isTablet ? 56 : 48,
+                                      color: const Color(0xFF6B6B6B).withOpacity(0.5),
                                     ),
-                                    const SizedBox(height: 12),
+                                    SizedBox(height: isSmallScreen ? 12 : 16),
                                     Text(
                                       'No payslips available',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey[600],
+                                      style: GoogleFonts.inter(
+                                        fontSize: isTablet ? 17 : 16,
+                                        color: const Color(0xFF6B6B6B),
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -207,33 +228,46 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                           
                           return Column(
                             children: recentPayslips.map((payslip) {
-                              return _buildPayslipCard(context, payslip, screenWidth, screenHeight);
+                              return _buildPayslipCard(context, payslip, size, isSmallScreen, isTablet);
                             }).toList(),
                           );
                         },
-                        loading: () => const Center(
+                        loading: () => Center(
                           child: Padding(
-                            padding: EdgeInsets.all(20.0),
-                            child: CircularProgressIndicator(color: Color(0xFF9747FF)),
+                            padding: const EdgeInsets.all(32.0),
+                            child: CircularProgressIndicator(
+                              color: const Color(0xFF9747FF),
+                              strokeWidth: 2,
+                            ),
                           ),
                         ),
                         error: (error, stack) => Container(
-                          padding: EdgeInsets.all(screenWidth * 0.04),
+                          padding: EdgeInsets.all(horizontalPadding),
                           decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red.shade200),
                           ),
-                          child: Text(
-                            'Failed to load payslips',
-                            style: TextStyle(
-                              color: Colors.red[700],
-                              fontSize: 14,
-                            ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Failed to load payslips',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.red.shade700,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                       
-                      SizedBox(height: screenHeight * 0.02),
+                      SizedBox(height: sectionGap),
                     ],
                   ),
                 ),
@@ -245,13 +279,13 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
     );
   }
 
-  Widget _buildPayslipCard(BuildContext context, payslip, double screenWidth, double screenHeight) {
+  Widget _buildPayslipCard(BuildContext context, payslip, Size size, bool isSmallScreen, bool isTablet) {
     final String date = DateFormat('MMM dd, yyyy').format(payslip.payDate);
     final String cryptoAmount = '${payslip.cryptoAmount.toStringAsFixed(4)} ${payslip.cryptocurrency ?? 'ETH'}';
     final String fiatAmount = '\$${payslip.finalNetPay.toStringAsFixed(2)} USD';
 
     return Container(
-      margin: EdgeInsets.only(bottom: screenHeight * 0.012),
+      margin: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -273,65 +307,62 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: EdgeInsets.all(screenWidth * 0.04),
+          padding: EdgeInsets.all(isTablet ? 20 : 16),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: isTablet ? 52 : 48,
+                height: isTablet ? 52 : 48,
                 decoration: BoxDecoration(
                   color: const Color(0xFF9747FF).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.receipt_outlined,
-                  color: Color(0xFF9747FF),
-                  size: 24,
+                  color: const Color(0xFF9747FF),
+                  size: isTablet ? 26 : 24,
                 ),
               ),
-              SizedBox(width: screenWidth * 0.04),
+              SizedBox(width: isTablet ? 16 : 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       date,
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 17 : 16,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A1D1F),
+                        color: const Color(0xFF1A1A1A),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(payslip.status ?? 'PENDING').withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(payslip.status ?? 'PENDING').withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getStatusIcon(payslip.status ?? 'PENDING'),
+                            color: _getStatusColor(payslip.status ?? 'PENDING'),
+                            size: 12,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _getStatusIcon(payslip.status ?? 'PENDING'),
-                                color: _getStatusColor(payslip.status ?? 'PENDING'),
-                                size: 12,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                (payslip.status ?? 'PENDING').toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: _getStatusColor(payslip.status ?? 'PENDING'),
-                                ),
-                              ),
-                            ],
+                          const SizedBox(width: 4),
+                          Text(
+                            (payslip.status ?? 'PENDING').toUpperCase(),
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _getStatusColor(payslip.status ?? 'PENDING'),
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -341,18 +372,18 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                 children: [
                   Text(
                     cryptoAmount,
-                    style: const TextStyle(
-                      fontSize: 15,
+                    style: GoogleFonts.inter(
+                      fontSize: isTablet ? 16 : 15,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1A1D1F),
+                      color: const Color(0xFF1A1A1A),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     fiatAmount,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
+                    style: GoogleFonts.inter(
+                      fontSize: isTablet ? 14 : 13,
+                      color: const Color(0xFF6B6B6B),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -381,7 +412,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
       case 'DRAFT':
         return Colors.grey;
       case 'SENT':
-        return Colors.purple;
+        return const Color(0xFF9747FF);
       default:
         return Colors.grey;
     }
@@ -409,13 +440,5 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
     }
   }
 
-  void _navigateToNotifications(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => NotificationsScreen(),
-      ),
-    );
-  }
-} 
+}
 

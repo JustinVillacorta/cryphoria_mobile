@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ===== Model =====
 class TransactionData {
@@ -57,96 +58,135 @@ class TransactionDetailsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.height < 700;
+    final isTablet = size.width > 600;
+    final isDesktop = size.width > 1024;
+    
+    final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
+    final verticalPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
+    final cardPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
+    final titleFontSize = isDesktop ? 20.0 : isTablet ? 19.0 : 18.0;
+    final appBarTitleSize = isDesktop ? 20.0 : isTablet ? 19.0 : 18.0;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F9FA),
+        backgroundColor: const Color(0xFFF9FAFB),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 24),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Transaction Details',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.inter(
+            color: const Color(0xFF1A1A1A),
+            fontSize: appBarTitleSize,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
           ),
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-        child: Column(
-          children: [
-            // Main Transaction Info Card
-            _buildMainTransactionCard(),
-            const SizedBox(height: 12),
-            
-            // Crypto Details Card
-            if (transaction.transactionHash != null) ...[
-              _buildCryptoDetailsCard(),
-              const SizedBox(height: 12),
-            ],
-            
-            // Additional Info Card
-            _buildAdditionalInfoCard(),
-          ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 900 : isTablet ? 700 : double.infinity,
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              verticalPadding,
+              horizontalPadding,
+              verticalPadding + 24,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Main Transaction Info Card
+                _buildMainTransactionCard(context, size, isSmallScreen, isTablet, isDesktop, cardPadding, titleFontSize),
+                SizedBox(height: isSmallScreen ? 12 : 16),
+                
+                // Crypto Details Card
+                if (transaction.transactionHash != null) ...[
+                  _buildCryptoDetailsCard(context, size, isSmallScreen, isTablet, isDesktop, cardPadding, titleFontSize),
+                  SizedBox(height: isSmallScreen ? 12 : 16),
+                ],
+                
+                // Additional Info Card
+                _buildAdditionalInfoCard(context, size, isSmallScreen, isTablet, isDesktop, cardPadding, titleFontSize),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMainTransactionCard() {
+  Widget _buildMainTransactionCard(BuildContext context, Size size, bool isSmallScreen, bool isTablet, bool isDesktop, double cardPadding, double titleFontSize) {
+    final iconSize = isDesktop ? 28.0 : isTablet ? 26.0 : 24.0;
+    final amountFontSize = isDesktop ? 20.0 : isTablet ? 19.0 : 18.0;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.all(cardPadding),
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-          bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(16),
-        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: EdgeInsets.all(isTablet ? 16 : 14),
                 decoration: BoxDecoration(
-                  color: transaction.isIncome ? Colors.green[50] : Colors.red[50],
+                  color: transaction.isIncome 
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   transaction.isIncome ? Icons.arrow_upward : Icons.arrow_downward,
                   color: transaction.isIncome ? Colors.green[600] : Colors.red[600],
-                  size: 24,
+                  size: iconSize,
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: isTablet ? 16 : 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       transaction.title,
-                      style: const TextStyle(
-                        fontSize: 18,
+                      style: GoogleFonts.inter(
+                        fontSize: titleFontSize,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A1A1A),
+                        color: const Color(0xFF1A1A1A),
+                        letterSpacing: -0.3,
+                        height: 1.2,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: isSmallScreen ? 4 : 6),
                     Text(
                       transaction.subtitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
+                        color: const Color(0xFF6B6B6B),
+                        fontWeight: FontWeight.w400,
+                        height: 1.3,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -154,17 +194,40 @@ class TransactionDetailsWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              Text(
-                '${transaction.isIncome ? '+' : '-'}${transaction.amount.toStringAsFixed(4)} ETH',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: transaction.isIncome ? Colors.green[600] : Colors.red[600],
-                ),
+              SizedBox(width: isTablet ? 16 : 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${transaction.isIncome ? '+' : '-'}${transaction.amount.toStringAsFixed(4)}',
+                    style: GoogleFonts.inter(
+                      fontSize: amountFontSize,
+                      fontWeight: FontWeight.w700,
+                      color: transaction.isIncome ? Colors.green[600] : Colors.red[600],
+                      height: 1.2,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'ETH',
+                    style: GoogleFonts.inter(
+                      fontSize: isTablet ? 14 : 13,
+                      fontWeight: FontWeight.w500,
+                      color: transaction.isIncome ? Colors.green[600] : Colors.red[600],
+                      height: 1.2,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isTablet ? 20 : 16),
+          Container(
+            height: 1,
+            color: const Color(0xFFE5E5E5),
+          ),
+          SizedBox(height: isTablet ? 20 : 16),
           Row(
             children: [
               Expanded(
@@ -172,14 +235,18 @@ class TransactionDetailsWidget extends StatelessWidget {
                   icon: Icons.access_time,
                   label: 'Date & Time',
                   value: transaction.dateTime,
+                  isSmallScreen: isSmallScreen,
+                  isTablet: isTablet,
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: isTablet ? 24 : 20),
               Expanded(
                 child: _buildInfoItem(
                   icon: Icons.category,
                   label: 'Category',
                   value: transaction.category,
+                  isSmallScreen: isSmallScreen,
+                  isTablet: isTablet,
                 ),
               ),
             ],
@@ -189,93 +256,115 @@ class TransactionDetailsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCryptoDetailsCard() {
-    return Builder(
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.account_balance_wallet, color: const Color(0xFF9747FF), size: 22),
-                const SizedBox(width: 10),
-                const Text(
-                  'Blockchain Details',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A1A),
-                  ),
+  Widget _buildCryptoDetailsCard(BuildContext context, Size size, bool isSmallScreen, bool isTablet, bool isDesktop, double cardPadding, double titleFontSize) {
+    return Container(
+      padding: EdgeInsets.all(cardPadding),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.account_balance_wallet,
+                color: const Color(0xFF9747FF),
+                size: isTablet ? 24 : 22,
+              ),
+              SizedBox(width: isTablet ? 12 : 10),
+              Text(
+                'Blockchain Details',
+                style: GoogleFonts.inter(
+                  fontSize: isTablet ? 18 : 17,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1A1A1A),
+                  letterSpacing: -0.3,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            // Transaction Hash
-            if (transaction.transactionHash != null) ...[
-              _buildCopyableItem(
-                label: 'Transaction Hash',
-                value: transaction.transactionHash!,
-                icon: Icons.fingerprint,
-                context: context,
               ),
-              const SizedBox(height: 12),
             ],
-            
-            // From Address
-            if (transaction.fromAddress != null) ...[
-              _buildCopyableItem(
-                label: 'From Address',
-                value: _formatAddress(transaction.fromAddress!),
-                icon: Icons.arrow_upward,
-                context: context,
-              ),
-              const SizedBox(height: 12),
-            ],
-            
-            // To Address
-            if (transaction.toAddress != null) ...[
-              _buildCopyableItem(
-                label: 'To Address',
-                value: _formatAddress(transaction.toAddress!),
-                icon: Icons.arrow_downward,
-                context: context,
-              ),
-              const SizedBox(height: 12),
-            ],
+          ),
+          SizedBox(height: isTablet ? 20 : 16),
           
-            // Gas Details and Status
+          // Transaction Hash
+          if (transaction.transactionHash != null) ...[
+            _buildCopyableItem(
+              label: 'Transaction Hash',
+              value: transaction.transactionHash!,
+              icon: Icons.fingerprint,
+              context: context,
+              isSmallScreen: isSmallScreen,
+              isTablet: isTablet,
+            ),
+            SizedBox(height: isSmallScreen ? 12 : 14),
+          ],
+          
+          // From Address
+          if (transaction.fromAddress != null) ...[
+            _buildCopyableItem(
+              label: 'From Address',
+              value: _formatAddress(transaction.fromAddress!),
+              icon: Icons.arrow_upward,
+              context: context,
+              isSmallScreen: isSmallScreen,
+              isTablet: isTablet,
+            ),
+            SizedBox(height: isSmallScreen ? 12 : 14),
+          ],
+          
+          // To Address
+          if (transaction.toAddress != null) ...[
+            _buildCopyableItem(
+              label: 'To Address',
+              value: _formatAddress(transaction.toAddress!),
+              icon: Icons.arrow_downward,
+              context: context,
+              isSmallScreen: isSmallScreen,
+              isTablet: isTablet,
+            ),
+            SizedBox(height: isSmallScreen ? 12 : 14),
+          ],
+        
+          // Gas Details and Status Row
+          if (transaction.gasCost != null || transaction.status != null) ...[
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (transaction.gasCost != null) ...[
                   Expanded(
+                    flex: transaction.status != null ? 1 : 1,
                     child: _buildInfoItem(
                       icon: Icons.local_gas_station,
                       label: 'Gas Cost',
                       value: transaction.gasCost!,
+                      isSmallScreen: isSmallScreen,
+                      isTablet: isTablet,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  if (transaction.status != null) SizedBox(width: isTablet ? 24 : 20),
                 ],
                 if (transaction.status != null)
                   Expanded(
-                    child: _buildStatusBadge(),
+                    flex: 1,
+                    child: _buildStatusBadge(isSmallScreen, isTablet),
                   ),
               ],
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 
-
-  Widget _buildAdditionalInfoCard() {
+  Widget _buildAdditionalInfoCard(BuildContext context, Size size, bool isSmallScreen, bool isTablet, bool isDesktop, double cardPadding, double titleFontSize) {
     // Only show if there's relevant additional data
     final hasAdditionalData = (transaction.description != null && transaction.description!.isNotEmpty) ||
                              (transaction.company != null && transaction.company!.isNotEmpty) ||
@@ -284,37 +373,53 @@ class TransactionDetailsWidget extends StatelessWidget {
     if (!hasAdditionalData) return const SizedBox.shrink();
     
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline, color: const Color(0xFF9747FF), size: 22),
-              const SizedBox(width: 10),
-              const Text(
+              Icon(
+                Icons.info_outline,
+                color: const Color(0xFF9747FF),
+                size: isTablet ? 24 : 22,
+              ),
+              SizedBox(width: isTablet ? 12 : 10),
+              Text(
                 'Additional Information',
-                style: TextStyle(
-                  fontSize: 17,
+                style: GoogleFonts.inter(
+                  fontSize: isTablet ? 18 : 17,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1A1A1A),
+                  color: const Color(0xFF1A1A1A),
+                  letterSpacing: -0.3,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isTablet ? 20 : 16),
           
           if (transaction.description != null && transaction.description!.isNotEmpty) ...[
             _buildInfoItem(
               icon: Icons.description,
               label: 'Description',
               value: transaction.description!,
+              isSmallScreen: isSmallScreen,
+              isTablet: isTablet,
             ),
-            const SizedBox(height: 12),
+            if ((transaction.company != null && transaction.company!.isNotEmpty) || 
+                (transaction.notes.isNotEmpty && transaction.notes != '—'))
+              SizedBox(height: isSmallScreen ? 16 : 18),
           ],
           
           if (transaction.company != null && transaction.company!.isNotEmpty) ...[
@@ -322,8 +427,11 @@ class TransactionDetailsWidget extends StatelessWidget {
               icon: Icons.business,
               label: 'Company',
               value: transaction.company!,
+              isSmallScreen: isSmallScreen,
+              isTablet: isTablet,
             ),
-            const SizedBox(height: 12),
+            if (transaction.notes.isNotEmpty && transaction.notes != '—')
+              SizedBox(height: isSmallScreen ? 16 : 18),
           ],
           
           if (transaction.notes.isNotEmpty && transaction.notes != '—') ...[
@@ -331,6 +439,8 @@ class TransactionDetailsWidget extends StatelessWidget {
               icon: Icons.note,
               label: 'Notes',
               value: transaction.notes,
+              isSmallScreen: isSmallScreen,
+              isTablet: isTablet,
             ),
           ],
         ],
@@ -342,33 +452,42 @@ class TransactionDetailsWidget extends StatelessWidget {
     required IconData icon,
     required String label,
     required String value,
+    required bool isSmallScreen,
+    required bool isTablet,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: Colors.grey[600]),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+            Icon(icon, size: isTablet ? 18 : 16, color: const Color(0xFF6B6B6B)),
+            SizedBox(width: isTablet ? 10 : 8),
+            Flexible(
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: isTablet ? 14 : 13,
+                  color: const Color(0xFF6B6B6B),
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: isSmallScreen ? 6 : 8),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 15,
-            color: Color(0xFF1A1A1A),
+          style: GoogleFonts.inter(
+            fontSize: isTablet ? 16 : 15,
+            color: const Color(0xFF1A1A1A),
             fontWeight: FontWeight.w500,
+            height: 1.4,
           ),
-          maxLines: 2,
+          maxLines: 3,
           overflow: TextOverflow.ellipsis,
         ),
       ],
@@ -380,40 +499,46 @@ class TransactionDetailsWidget extends StatelessWidget {
     required String value,
     required IconData icon,
     required BuildContext context,
+    required bool isSmallScreen,
+    required bool isTablet,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: () => _copyToClipboard(value, context),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(isTablet ? 16 : 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F9FA),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey[200]!),
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E5E5)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: Colors.grey[600]),
-            const SizedBox(width: 10),
+            Icon(icon, size: isTablet ? 20 : 18, color: const Color(0xFF6B6B6B)),
+            SizedBox(width: isTablet ? 12 : 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
+                    style: GoogleFonts.inter(
+                      fontSize: isTablet ? 14 : 13,
+                      color: const Color(0xFF6B6B6B),
                       fontWeight: FontWeight.w500,
+                      height: 1.3,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: isSmallScreen ? 4 : 6),
                   Text(
                     value,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF1A1A1A),
+                    style: GoogleFonts.inter(
+                      fontSize: isTablet ? 15 : 14,
+                      color: const Color(0xFF1A1A1A),
                       fontWeight: FontWeight.w500,
-                      fontFamily: 'monospace',
+                      height: 1.3,
+                      letterSpacing: -0.2,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -421,9 +546,10 @@ class TransactionDetailsWidget extends StatelessWidget {
                 ],
               ),
             ),
+            SizedBox(width: isTablet ? 12 : 10),
             Icon(
               Icons.copy,
-              size: 18,
+              size: isTablet ? 20 : 18,
               color: const Color(0xFF9747FF),
             ),
           ],
@@ -432,7 +558,7 @@ class TransactionDetailsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge() {
+  Widget _buildStatusBadge(bool isSmallScreen, bool isTablet) {
     Color statusColor;
     String statusText = transaction.status ?? 'Unknown';
     
@@ -449,40 +575,51 @@ class TransactionDetailsWidget extends StatelessWidget {
         statusColor = Colors.red[600]!;
         break;
       default:
-        statusColor = Colors.grey[600]!;
+        statusColor = const Color(0xFF6B6B6B);
     }
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
-            Icon(Icons.circle, size: 16, color: statusColor),
-            const SizedBox(width: 8),
-            Text(
-              'Status',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+            Icon(Icons.circle, size: isTablet ? 10 : 8, color: statusColor),
+            SizedBox(width: isTablet ? 10 : 8),
+            Flexible(
+              child: Text(
+                'Status',
+                style: GoogleFonts.inter(
+                  fontSize: isTablet ? 14 : 13,
+                  color: const Color(0xFF6B6B6B),
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: isSmallScreen ? 6 : 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 12 : 10,
+            vertical: isTablet ? 6 : 5,
+          ),
           decoration: BoxDecoration(
             color: statusColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: statusColor.withOpacity(0.3)),
           ),
           child: Text(
             statusText.toUpperCase(),
-            style: TextStyle(
-              fontSize: 12,
+            style: GoogleFonts.inter(
+              fontSize: isTablet ? 13 : 12,
               color: statusColor,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+              height: 1.2,
             ),
           ),
         ),
@@ -499,13 +636,20 @@ class TransactionDetailsWidget extends StatelessWidget {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Copied to clipboard'),
+        content: Text(
+          'Copied to clipboard',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         duration: const Duration(seconds: 2),
         backgroundColor: const Color(0xFF9747FF),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }

@@ -130,9 +130,9 @@ import '../features/domain/usecases/Profile/update_profile_usecase.dart';
 
 final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
-    return 'http://10.250.148.205:8000';
+    return 'http://10.0.2.2:8000';
   }
-  return 'http://192.168.5.53:8000';
+  return 'http://192.168.0.30:8000';
 });
 
 final flutterSecureStorageProvider =
@@ -150,11 +150,13 @@ final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
 
 final dioClientProvider = Provider<DioClient>((ref) {
   final baseUrl = ref.watch(baseUrlProvider);
+  
   final dio = Dio()
     ..options = BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(milliseconds: 10000),
-      receiveTimeout: const Duration(milliseconds: 90000),
+      connectTimeout: const Duration(seconds: 60),  // Increased to 60 seconds
+      receiveTimeout: const Duration(seconds: 60),  // Increased to 60 seconds
+      sendTimeout: const Duration(seconds: 60),     // Add send timeout too
     );
 
   return DioClient(
