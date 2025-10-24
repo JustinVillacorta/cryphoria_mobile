@@ -132,7 +132,7 @@ final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
     return 'http://10.0.2.2:8000';
   }
-  return 'http://192.168.0.30:8000';
+  return 'http://127.0.0.1:8000';
 });
 
 final flutterSecureStorageProvider =
@@ -154,9 +154,9 @@ final dioClientProvider = Provider<DioClient>((ref) {
   final dio = Dio()
     ..options = BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 60),  // Increased to 60 seconds
-      receiveTimeout: const Duration(seconds: 60),  // Increased to 60 seconds
-      sendTimeout: const Duration(seconds: 60),     // Add send timeout too
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      sendTimeout: const Duration(seconds: 30),
     );
 
   return DioClient(

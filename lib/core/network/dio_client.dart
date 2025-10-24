@@ -8,12 +8,8 @@ class DioClient {
 
   DioClient({
     required this.localDataSource, 
-    Dio? dio
-  }) : dio = dio ??
-            Dio(BaseOptions(
-              connectTimeout: const Duration(seconds: 30),
-              receiveTimeout: const Duration(seconds: 30),
-            )) {
+    required Dio dio,  // Make dio required, don't create a default one
+  }) : dio = dio {
     this.dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         // Don't add auth token to login/register endpoints

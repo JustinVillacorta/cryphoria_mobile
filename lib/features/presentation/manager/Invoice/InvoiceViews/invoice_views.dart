@@ -6,7 +6,7 @@ import 'package:cryphoria_mobile/features/presentation/widgets/invoice/swipable_
 import 'package:cryphoria_mobile/features/presentation/widgets/skeletons/invoice_screen_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 
 class InvoiceScreen extends ConsumerStatefulWidget {
   const InvoiceScreen({super.key});
@@ -45,188 +45,259 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
+    final isDesktop = size.width > 1024;
+    
+    final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
+    final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
+
     if (isLoadingUser) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: const Color(0xFFF9FAFB),
+        body: const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+            strokeWidth: 2.5,
+          ),
+        ),
       );
     }
 
     if (userId == null) {
-      return const Scaffold(
-        body: Center(child: Text('Please log in to view invoices')),
-      );
-    }
-
-    // Fetch invoices for the current user
-    final invoicesAsync = ref.watch(invoicesByUserProvider(userId!));
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+      return Scaffold(
+        backgroundColor: const Color(0xFFF9FAFB),
+        body: Center(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Header
-              const Text(
-                'Invoices',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
+              Icon(
+                Icons.login_outlined,
+                size: isTablet ? 64 : 56,
+                color: const Color(0xFF6B6B6B).withOpacity(0.4),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: isTablet ? 20 : 16),
               Text(
-                'Invoices are automatically generated from transactions like payroll, payments sent through "Send Payment", and client payments received.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Search Bar
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: searchController,
-                  onChanged: (value) {
-                    setState(() {
-                      searchQuery = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Search invoices...',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Filter Tabs
-              Row(
-                children: [
-                  _buildFilterTab('All'),
-                  const SizedBox(width: 12),
-                  _buildFilterTab('Paid'),
-                  const SizedBox(width: 12),
-                  _buildFilterTab('Pending'),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Invoice List
-              Expanded(
-                child: invoicesAsync.when(
-                  data: (invoices) {
-                    // Filter invoices based on search and status
-                    List<Invoice> filtered = _filterInvoices(invoices);
-
-                    if (filtered.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.receipt_long,
-                              size: 64,
-                              color: Colors.grey[300],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No invoices found',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Try adjusting your search or filter',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final invoice = filtered[index];
-                        return _buildInvoiceCard(invoice);
-                      },
-                    );
-                  },
-                  loading: () => const InvoiceScreenSkeleton(),
-                  error: (err, stack) => Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error loading invoices',
-                          style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '$err',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
+                'Please log in to view invoices',
+                style: GoogleFonts.inter(
+                  fontSize: isTablet ? 17 : 16,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1A1A1A),
+                  height: 1.3,
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
+      );
+    }
+
+    final invoicesAsync = ref.watch(invoicesByUserProvider(userId!));
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxContentWidth),
+            child: Padding(
+              padding: EdgeInsets.all(horizontalPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: isTablet ? 12 : 8),
+                  Text(
+                    'Invoices',
+                    style: GoogleFonts.inter(
+                      fontSize: isDesktop ? 28 : isTablet ? 26 : 24,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A1A),
+                      letterSpacing: -0.5,
+                      height: 1.2,
+                    ),
+                  ),
+                  SizedBox(height: isTablet ? 10 : 8),
+                  Text(
+                    'Invoices are automatically generated from transactions like payroll, payments sent through "Send Payment", and client payments received.',
+                    style: GoogleFonts.inter(
+                      fontSize: isTablet ? 15 : 14,
+                      color: const Color(0xFF6B6B6B),
+                      fontWeight: FontWeight.w400,
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: isTablet ? 28 : 24),
+
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;
+                        });
+                      },
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
+                        color: const Color(0xFF1A1A1A),
+                        fontWeight: FontWeight.w400,
+                        height: 1.4,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search invoices...',
+                        hintStyle: GoogleFonts.inter(
+                          color: const Color(0xFF6B6B6B),
+                          fontSize: isTablet ? 15 : 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_outlined,
+                          color: const Color(0xFF6B6B6B),
+                          size: isTablet ? 22 : 20,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 18 : 16,
+                          vertical: isTablet ? 18 : 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: isTablet ? 24 : 20),
+
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterTab('All', isTablet),
+                        SizedBox(width: isTablet ? 14 : 12),
+                        _buildFilterTab('Paid', isTablet),
+                        SizedBox(width: isTablet ? 14 : 12),
+                        _buildFilterTab('Pending', isTablet),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: isTablet ? 24 : 20),
+
+                  Expanded(
+                    child: invoicesAsync.when(
+                      data: (invoices) {
+                        List<Invoice> filtered = _filterInvoices(invoices);
+
+                        if (filtered.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.receipt_long_outlined,
+                                  size: isTablet ? 64 : 56,
+                                  color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                                ),
+                                SizedBox(height: isTablet ? 20 : 16),
+                                Text(
+                                  'No invoices found',
+                                  style: GoogleFonts.inter(
+                                    fontSize: isTablet ? 19 : 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1A1A1A),
+                                    height: 1.3,
+                                  ),
+                                ),
+                                SizedBox(height: isTablet ? 10 : 8),
+                                Text(
+                                  'Try adjusting your search or filter',
+                                  style: GoogleFonts.inter(
+                                    fontSize: isTablet ? 15 : 14,
+                                    color: const Color(0xFF6B6B6B),
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          itemCount: filtered.length,
+                          separatorBuilder: (context, index) => SizedBox(height: isTablet ? 14 : 12),
+                          itemBuilder: (context, index) {
+                            final invoice = filtered[index];
+                            return _buildInvoiceCard(invoice, isTablet);
+                          },
+                        );
+                      },
+                      loading: () => const InvoiceScreenSkeleton(),
+                      error: (err, stack) => Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: isTablet ? 64 : 56,
+                              color: Colors.red.shade400,
+                            ),
+                            SizedBox(height: isTablet ? 20 : 16),
+                            Text(
+                              'Error loading invoices',
+                              style: GoogleFonts.inter(
+                                fontSize: isTablet ? 19 : 18,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1A1A1A),
+                                height: 1.3,
+                              ),
+                            ),
+                            SizedBox(height: isTablet ? 10 : 8),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                              child: Text(
+                                '$err',
+                                style: GoogleFonts.inter(
+                                  fontSize: isTablet ? 15 : 14,
+                                  color: const Color(0xFF6B6B6B),
+                                  height: 1.4,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ));
   }
 
   List<Invoice> _filterInvoices(List<Invoice> invoices) {
     List<Invoice> filtered = invoices;
 
-    // Apply search filter
     if (searchQuery.isNotEmpty) {
       filtered = filtered
           .where((invoice) =>
-      invoice.clientName
-          .toLowerCase()
-          .contains(searchQuery.toLowerCase()) ||
-          invoice.invoiceNumber
-              .toLowerCase()
-              .contains(searchQuery.toLowerCase()))
+              invoice.clientName
+                  .toLowerCase()
+                  .contains(searchQuery.toLowerCase()) ||
+              invoice.invoiceNumber
+                  .toLowerCase()
+                  .contains(searchQuery.toLowerCase()))
           .toList();
     }
 
-    // Apply status filter (match "Paid" with "PAID", "Pending" with "SENT" or "DRAFT")
     if (selectedFilter != 'All') {
       if (selectedFilter == 'Paid') {
         filtered = filtered
@@ -235,8 +306,8 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
       } else if (selectedFilter == 'Pending') {
         filtered = filtered
             .where((invoice) =>
-        invoice.status.toUpperCase() == 'SENT' ||
-            invoice.status.toUpperCase() == 'DRAFT')
+                invoice.status.toUpperCase() == 'SENT' ||
+                invoice.status.toUpperCase() == 'DRAFT')
             .toList();
       }
     }
@@ -244,7 +315,7 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
     return filtered;
   }
 
-  Widget _buildFilterTab(String filter) {
+  Widget _buildFilterTab(String filter, bool isTablet) {
     final isSelected = selectedFilter == filter;
     return GestureDetector(
       onTap: () {
@@ -253,31 +324,44 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 20 : 18,
+          vertical: isTablet ? 10 : 9,
+        ),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF8B5CF6) : Colors.white,
+          color: isSelected ? const Color(0xFF9747FF) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF8B5CF6) : Colors.grey[300]!,
+            color: isSelected ? const Color(0xFF9747FF) : const Color(0xFFE5E5E5),
+            width: 1.5,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF9747FF).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           filter,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[600],
-            fontWeight: FontWeight.w500,
+          style: GoogleFonts.inter(
+            color: isSelected ? Colors.white : const Color(0xFF6B6B6B),
+            fontWeight: FontWeight.w600,
+            fontSize: isTablet ? 15 : 14,
+            height: 1.2,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInvoiceCard(Invoice invoice) {
-    // Map backend status to display status
+  Widget _buildInvoiceCard(Invoice invoice, bool isTablet) {
     String displayStatus =
-    invoice.status.toUpperCase() == 'PAID' ? 'Paid' : 'Pending';
+        invoice.status.toUpperCase() == 'PAID' ? 'Paid' : 'Pending';
 
-    // Get first item description or default text
     String description = invoice.items.isNotEmpty
         ? invoice.items.first.description
         : 'Invoice items';
@@ -310,50 +394,61 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
         // TODO: Implement delete invoice use case
         // await ref.read(deleteInvoiceProvider(invoice.invoiceId).future);
 
-        // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
-                children: const [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 12),
+                children: [
+                  const Icon(Icons.check_circle_outlined, color: Colors.white, size: 20),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text('Invoice deleted successfully'),
+                    child: Text(
+                      'Invoice deleted successfully',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
               backgroundColor: Colors.green[600],
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
+              margin: const EdgeInsets.all(16),
               duration: const Duration(seconds: 2),
             ),
           );
         }
 
-        // Refresh the invoice list
         // ref.invalidate(invoicesByUserProvider(userId!));
       } catch (e) {
-        // Show error message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
+                  const Icon(Icons.error_outline, color: Colors.white, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text('Failed to delete invoice: $e'),
+                    child: Text(
+                      'Failed to delete invoice: $e',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
               backgroundColor: Colors.red[600],
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
+              margin: const EdgeInsets.all(16),
               duration: const Duration(seconds: 3),
             ),
           );
