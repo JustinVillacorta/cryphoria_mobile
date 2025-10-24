@@ -66,7 +66,7 @@ class HomeEmployeeState {
     String? nextPayoutDate,
     String? payoutFrequency,
     List<Map<String, dynamic>>? recentTransactions,
-    Wallet? wallet,
+    Wallet? Function()? wallet, // Use function to allow explicit null
     List<Map<String, dynamic>>? transactions,
     String? selectedCurrency,
   }) {
@@ -81,7 +81,7 @@ class HomeEmployeeState {
       nextPayoutDate: nextPayoutDate ?? this.nextPayoutDate,
       payoutFrequency: payoutFrequency ?? this.payoutFrequency,
       recentTransactions: recentTransactions ?? this.recentTransactions,
-      wallet: wallet ?? this.wallet,
+      wallet: wallet != null ? wallet() : this.wallet,
       transactions: transactions ?? this.transactions,
       selectedCurrency: selectedCurrency ?? this.selectedCurrency,
     );
@@ -158,7 +158,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       // Fetch user's connected wallet from backend
       final wallet = await _walletService.getUserWallet();
       if (wallet != null) {
-        state = state.copyWith(wallet: wallet);
+        state = state.copyWith(wallet: () => wallet);
       }
       
       final transactions = await _transactionsDataSource.getRecentTransactions(limit: 10);
@@ -193,7 +193,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       );
       debugPrint('Connected wallet: ${wallet.toJson()}');
       state = state.copyWith(
-        wallet: wallet,
+        wallet: () => wallet,
         selectedCurrency: 'PHP',
         hasError: false,
         errorMessage: () => '',
@@ -222,7 +222,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       if (wallet != null) {
         debugPrint('Fetched wallet from backend: ${wallet.toJson()}');
         state = state.copyWith(
-          wallet: wallet,
+          wallet: () => wallet,
           selectedCurrency: 'PHP',
           hasError: false,
           errorMessage: () => '',
@@ -303,7 +303,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     try {
       final updatedWallet = await _walletService.refreshBalance(wallet);
       state = state.copyWith(
-        wallet: updatedWallet,
+        wallet: () => updatedWallet,
         errorMessage: () => '',
         hasError: false,
       );
@@ -339,11 +339,11 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     try {
       final refreshedWallet = await _walletService.reconnect();
       if (refreshedWallet != null) {
-        state = state.copyWith(wallet: refreshedWallet);
+        state = state.copyWith(wallet: () => refreshedWallet);
         debugPrint('🔍 Employee - Refreshed wallet: ${refreshedWallet.toJson()}');
       } else {
         debugPrint('🔍 Employee - No wallet returned from refresh, clearing state');
-        state = state.copyWith(wallet: null);
+        state = state.copyWith(wallet: () => null);
       }
       state = state.copyWith(errorMessage: () => '', hasError: false);
     } catch (e) {
@@ -370,7 +370,7 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
       // Force clear the wallet state
       debugPrint('🔍 Employee - Before state update, wallet is: ${state.wallet?.address}');
       state = state.copyWith(
-        wallet: null,
+        wallet: () => null,
         errorMessage: () => '',
         selectedCurrency: 'PHP',
         hasError: false,
@@ -386,6 +386,38 @@ class HomeEmployeeNotifier extends StateNotifier<HomeEmployeeState> {
     } finally {
       _setLoading(false);
       debugPrint('🔍 Employee - Disconnect process completed');
+    }
+  }
+
+  /// Switches wallet by first disconnecting current wallet, then allowing connection of new wallet
+  Future<void> switchWallet() async {
+    debugPrint('🔍 Employee - Starting switch wallet process');
+    _setLoading(true);
+    try {
+      // First disconnect the current wallet if one exists
+      if (state.wallet != null) {
+        debugPrint('🔍 Employee - Disconnecting current wallet: ${state.wallet!.address}');
+        await _walletService.disconnect(state.wallet!);
+        debugPrint('🔍 Employee - Current wallet disconnected');
+      }
+      
+      // Clear the wallet state
+      state = state.copyWith(
+        wallet: () => null,
+        errorMessage: () => '',
+        selectedCurrency: 'PHP',
+        hasError: false,
+      );
+      debugPrint('🔍 Employee - Wallet state cleared, ready for new connection');
+    } catch (e) {
+      debugPrint('❌ Employee - Switch wallet error: $e');
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: () => 'Failed to switch wallet: $e',
+      );
+    } finally {
+      _setLoading(false);
+      debugPrint('🔍 Employee - Switch wallet process completed');
     }
   }
 

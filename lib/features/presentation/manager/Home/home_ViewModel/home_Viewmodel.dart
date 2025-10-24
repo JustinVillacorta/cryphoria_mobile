@@ -39,7 +39,7 @@ class WalletState {
       );
 
   WalletState copyWith({
-    Wallet? wallet,
+    Wallet? Function()? wallet, // Use function to allow explicit null
     bool? isLoading,
     String? Function()? error, // Use function to allow explicit null
     List<Map<String, dynamic>>? transactions,
@@ -49,7 +49,7 @@ class WalletState {
     bool? isLoadingMore,
   }) {
     return WalletState(
-      wallet: wallet ?? this.wallet,
+      wallet: wallet != null ? wallet() : this.wallet,
       isLoading: isLoading ?? this.isLoading,
       error: error != null ? error() : this.error,
       transactions: transactions ?? this.transactions,
@@ -81,7 +81,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       // Fetch user's connected wallet from backend
       final wallet = await _walletService.getUserWallet();
       if (wallet != null) {
-        state = state.copyWith(wallet: wallet);
+        state = state.copyWith(wallet: () => wallet);
       }
       
       // Load transactions
@@ -109,7 +109,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       );
       
       // Wallet connected successfully - fetch transactions now
-      state = state.copyWith(wallet: wallet);
+      state = state.copyWith(wallet: () => wallet);
       await _fetchTransactions();
     } catch (e) {
       state = state.copyWith(error: () => e.toString());
@@ -125,7 +125,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       // Fetch user's connected wallet from backend
       final wallet = await _walletService.getUserWallet();
       if (wallet != null) {
-        state = state.copyWith(wallet: wallet);
+        state = state.copyWith(wallet: () => wallet);
         // Fetch transactions for the wallet
         await _fetchTransactions();
       } else {
@@ -203,7 +203,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       
       // Check if the notifier is still mounted before updating state
       if (mounted) {
-        state = state.copyWith(wallet: refreshedWallet);
+        state = state.copyWith(wallet: () => refreshedWallet);
         debugPrint('🔍 Manager - Refreshed wallet balance: ${refreshedWallet.toJson()}');
         state = state.copyWith(error: () => null);
       } else {
@@ -241,7 +241,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       
       // Force clear the wallet state
       debugPrint('🔍 Manager - Before state update, wallet is: ${state.wallet?.address}');
-      state = state.copyWith(wallet: null, error: () => null);
+      state = state.copyWith(wallet: () => null, error: () => null);
       debugPrint('🔍 Manager - After state update, wallet is: ${state.wallet?.address}');
       debugPrint('🔍 Manager - State updated, notifying listeners');
     } catch (e) {
@@ -250,6 +250,30 @@ class WalletNotifier extends StateNotifier<WalletState> {
     } finally {
       state = state.copyWith(isLoading: false);
       debugPrint('🔍 Manager - Disconnect process completed');
+    }
+  }
+
+  /// Switches wallet by first disconnecting current wallet, then allowing connection of new wallet
+  Future<void> switchWallet() async {
+    debugPrint('🔍 Manager - Starting switch wallet process');
+    state = state.copyWith(isLoading: true, error: () => null);
+    try {
+      // First disconnect the current wallet if one exists
+      if (state.wallet != null) {
+        debugPrint('🔍 Manager - Disconnecting current wallet: ${state.wallet!.address}');
+        await _walletService.disconnect(state.wallet!);
+        debugPrint('🔍 Manager - Current wallet disconnected');
+      }
+      
+      // Clear the wallet state
+      state = state.copyWith(wallet: () => null, error: () => null);
+      debugPrint('🔍 Manager - Wallet state cleared, ready for new connection');
+    } catch (e) {
+      debugPrint('❌ Manager - Switch wallet error: $e');
+      state = state.copyWith(error: () => e.toString());
+    } finally {
+      state = state.copyWith(isLoading: false);
+      debugPrint('🔍 Manager - Switch wallet process completed');
     }
   }
   

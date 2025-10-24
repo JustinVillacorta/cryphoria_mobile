@@ -102,6 +102,74 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
     );
   }
 
+  Future<void> _showSwitchWalletConfirmationDialog(BuildContext context, WalletNotifier notifier) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Switch Wallet'),
+          content: const Text(
+            'This will disconnect your current wallet and allow you to connect a different one. Continue?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.blue),
+              child: const Text('Switch'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true && mounted) {
+      try {
+        debugPrint('🔍 Manager UI - Starting switch wallet from confirmation dialog');
+        await notifier.switchWallet();
+        debugPrint('🔍 Manager UI - Switch wallet completed, checking state');
+
+        if (mounted) {
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          final updated = ref.read(walletNotifierProvider);
+          debugPrint('🔍 Manager UI - State after switch: wallet=${updated.wallet?.address}');
+
+          if (updated.error != null && updated.error!.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to switch wallet: ${updated.error}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Wallet disconnected. You can now connect a new wallet.'),
+                backgroundColor: Colors.blue,
+              ),
+            );
+            // Show connect wallet bottom sheet after successful switch
+            _showConnectWalletBottomSheet(context);
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ Manager UI - Switch wallet error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to switch wallet: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _showDisconnectConfirmationDialog(BuildContext context, WalletNotifier notifier) async {
     final result = await showDialog<bool>(
       context: context,
@@ -533,7 +601,7 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
                       }
                       break;
                     case 'switch':
-                      _showConnectWalletBottomSheet(context);
+                      await _showSwitchWalletConfirmationDialog(context, notifier);
                       break;
                     case 'disconnect':
                       await _showDisconnectConfirmationDialog(context, notifier);

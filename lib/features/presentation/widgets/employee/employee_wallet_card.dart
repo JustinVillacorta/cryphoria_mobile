@@ -238,7 +238,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
                     }
                     break;
                   case 'switch':
-                    await _showConnectWalletBottomSheet(context);
+                    await _showSwitchWalletConfirmationDialog(context, notifier);
                     break;
                   case 'disconnect':
                     await _showDisconnectConfirmationDialog(context, notifier);
@@ -400,6 +400,76 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         ),
       ],
     );
+  }
+
+  Future<void> _showSwitchWalletConfirmationDialog(BuildContext context, HomeEmployeeNotifier notifier) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Switch Wallet'),
+          content: const Text(
+            'This will disconnect your current wallet and allow you to connect a different one. Continue?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.blue),
+              child: const Text('Switch'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true && mounted) {
+      try {
+        debugPrint('🔍 Employee UI - Starting switch wallet from confirmation dialog');
+        await notifier.switchWallet();
+        debugPrint('🔍 Employee UI - Switch wallet completed, checking state');
+        
+        if (mounted) {
+          // Wait a bit to ensure state is updated
+          await Future.delayed(const Duration(milliseconds: 100));
+          
+          // Force a rebuild by reading the state after the async operation
+          final updated = ref.read(homeEmployeeNotifierProvider);
+          debugPrint('🔍 Employee UI - State after switch: wallet=${updated.wallet?.address}');
+          
+          if (updated.errorMessage.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to switch wallet: ${updated.errorMessage}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Wallet disconnected. You can now connect a new wallet.'),
+                backgroundColor: Colors.blue,
+              ),
+            );
+            // Show connect wallet bottom sheet after successful switch
+            await _showConnectWalletBottomSheet(context);
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ Employee UI - Switch wallet error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to switch wallet: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _showDisconnectConfirmationDialog(BuildContext context, HomeEmployeeNotifier notifier) async {
