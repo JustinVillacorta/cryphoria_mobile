@@ -322,34 +322,6 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                         color: const Color(0xFF1A1A1A),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(payslip.status ?? 'PENDING').withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _getStatusIcon(payslip.status ?? 'PENDING'),
-                            color: _getStatusColor(payslip.status ?? 'PENDING'),
-                            size: 12,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            (payslip.status ?? 'PENDING').toUpperCase(),
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: _getStatusColor(payslip.status ?? 'PENDING'),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -380,50 +352,6 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
         ),
       ),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toUpperCase()) {
-      case 'COMPLETED':
-      case 'PAID':
-        return Colors.green;
-      case 'SCHEDULED':
-      case 'GENERATED':
-        return Colors.blue;
-      case 'FAILED':
-        return Colors.red;
-      case 'PROCESSING':
-        return Colors.orange;
-      case 'PENDING':
-      case 'DRAFT':
-        return Colors.grey;
-      case 'SENT':
-        return const Color(0xFF9747FF);
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getStatusIcon(String status) {
-    switch (status.toUpperCase()) {
-      case 'COMPLETED':
-      case 'PAID':
-        return Icons.check_circle;
-      case 'SCHEDULED':
-      case 'GENERATED':
-        return Icons.schedule;
-      case 'FAILED':
-        return Icons.error;
-      case 'PROCESSING':
-        return Icons.hourglass_empty;
-      case 'PENDING':
-      case 'DRAFT':
-        return Icons.schedule;
-      case 'SENT':
-        return Icons.send;
-      default:
-        return Icons.help;
-    }
   }
 
 }

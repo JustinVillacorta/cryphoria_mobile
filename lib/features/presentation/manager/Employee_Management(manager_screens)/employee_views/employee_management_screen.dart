@@ -453,8 +453,6 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
     final avatarRadius = isTablet ? 26.0 : 24.0;
     final nameFontSize = isTablet ? 17.0 : 16.0;
     final detailsFontSize = isTablet ? 14.0 : 13.0;
-    final payFontSize = isTablet ? 18.0 : 17.0;
-    final payLabelSize = isTablet ? 13.0 : 12.0;
     
     // Check if profile image is valid
     final hasValidImage = employee.profileImage != null && 
@@ -570,29 +568,6 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                   ),
                 ],
               ),
-            ),
-            
-            // Net Pay
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '\$${employee.netPay.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Net Pay',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
             ),
           ],
         ),
