@@ -66,6 +66,10 @@ dev_dependencies:
   build_runner: ^2.4.7
   mocktail: ^1.0.1
   flutter_launcher_icons: ^0.13.1
+  lottie: ^3.1.0
+  google_fonts: ^6.1.0
+
+
 
 
 
@@ -87,9 +91,9 @@ flutter:
     - assets/icons/logo.png
     - assets/icons/manager.svg
     - assets/icons/employee.svg
-    - assets/video/intro.mp4
     - assets/images/wallet_bg.png
     - assets/images/wallet_bg2.png
+    - assets/lottie/intro.json
 
 
 flutter_launcher_icons:

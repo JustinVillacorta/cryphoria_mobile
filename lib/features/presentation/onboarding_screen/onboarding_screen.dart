@@ -1,8 +1,9 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
-import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'dart:async';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -12,10 +13,6 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  late VideoPlayerController _videoController;
-  bool _isVideoInitialized = false;
-  String? _errorMessage;
-  // Words to cycle through with fade animation
   final List<String> _words = ['Growth', 'Insights', 'Simplicity'];
   int _wordIndex = 0;
   Timer? _wordTimer;
@@ -23,8 +20,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeVideo();
-    // Start cycling headline words
     _wordTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!mounted) return;
       setState(() {
@@ -33,286 +28,351 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
-  void _initializeVideo() {
-    // Load video from assets
-    _videoController = VideoPlayerController.asset('assets/video/intro.mp4')
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isVideoInitialized = true;
-          });
-          _videoController.play();
-          _videoController.setLooping(true);
-          _videoController.setVolume(0.5); // Set volume to 50%
-        }
-      }).catchError((error) {
-        if (mounted) {
-          setState(() {
-            _errorMessage = 'Error loading video: $error';
-          });
-        }
-        print('Error initializing video: $error');
-      });
-  }
-
   @override
   void dispose() {
-    _videoController.dispose();
     _wordTimer?.cancel();
     super.dispose();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscape = orientation == Orientation.landscape;
+    final isSmallScreen = size.height < 700;
+    final isTablet = size.width > 600;
+    final isLargeTablet = size.width > 900;
+
+    // Responsive Lottie sizing
+    final lottieSize = _calculateLottieSize(size, isLandscape, isSmallScreen, isTablet, isLargeTablet);
+    
+    // Responsive padding and spacing
+    final horizontalPadding = _calculateHorizontalPadding(isTablet, isLargeTablet);
+    final headlineFontSize = _calculateHeadlineFontSize(size, isSmallScreen, isTablet, isLargeTablet);
+    final subtitleFontSize = _calculateSubtitleFontSize(isSmallScreen, isTablet, isLargeTablet);
+    final buttonHeight = isSmallScreen ? 50.0 : isTablet ? 58.0 : 54.0;
+    final bottomSpacing = _calculateBottomSpacing(size, isSmallScreen, isTablet);
+
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Full screen video background
-          Positioned.fill(
-            child: _isVideoInitialized
-                ? FittedBox(
-              fit: BoxFit.cover,
-              child: SizedBox(
-                width: _videoController.value.size.width,
-                height: _videoController.value.size.height,
-                child: VideoPlayer(_videoController),
+      backgroundColor: const Color(0xFFFAFAFA),
+      body: SafeArea(
+        child: isLandscape
+            ? _buildLandscapeLayout(
+                size,
+                lottieSize,
+                horizontalPadding,
+                headlineFontSize,
+                subtitleFontSize,
+                buttonHeight,
+                bottomSpacing,
+                isSmallScreen,
+              )
+            : _buildPortraitLayout(
+                size,
+                lottieSize,
+                horizontalPadding,
+                headlineFontSize,
+                subtitleFontSize,
+                buttonHeight,
+                bottomSpacing,
+                isSmallScreen,
+                isTablet,
               ),
-            )
-                : _errorMessage != null
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 60),
-                  SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      _errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+  // Calculate responsive sizes
+  double _calculateLottieSize(Size size, bool isLandscape, bool isSmallScreen, bool isTablet, bool isLargeTablet) {
+    if (isLandscape) {
+      return isTablet ? size.height * 0.5 : size.height * 0.45;
+    }
+    if (isLargeTablet) return 400.0;
+    if (isTablet) return 350.0;
+    if (isSmallScreen) return size.width * 0.55;
+    return size.width * 0.65;
+  }
+
+  double _calculateHorizontalPadding(bool isTablet, bool isLargeTablet) {
+    if (isLargeTablet) return 80.0;
+    if (isTablet) return 60.0;
+    return 28.0;
+  }
+
+  double _calculateHeadlineFontSize(Size size, bool isSmallScreen, bool isTablet, bool isLargeTablet) {
+    if (isLargeTablet) return 48.0;
+    if (isTablet) return 42.0;
+    if (isSmallScreen) return size.width < 360 ? 26.0 : 30.0;
+    return 34.0;
+  }
+
+  double _calculateSubtitleFontSize(bool isSmallScreen, bool isTablet, bool isLargeTablet) {
+    if (isLargeTablet) return 20.0;
+    if (isTablet) return 18.0;
+    if (isSmallScreen) return 14.0;
+    return 16.0;
+  }
+
+  double _calculateBottomSpacing(Size size, bool isSmallScreen, bool isTablet) {
+    if (isTablet) return 80.0;
+    if (isSmallScreen) return size.height * 0.05;
+    return size.height * 0.08;
+  }
+
+  // Portrait layout
+  Widget _buildPortraitLayout(
+    Size size,
+    double lottieSize,
+    double horizontalPadding,
+    double headlineFontSize,
+    double subtitleFontSize,
+    double buttonHeight,
+    double bottomSpacing,
+    bool isSmallScreen,
+    bool isTablet,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableHeight = constraints.maxHeight;
+        final lottieTopPadding = isSmallScreen 
+            ? availableHeight * 0.08 
+            : isTablet 
+                ? availableHeight * 0.12 
+                : availableHeight * 0.1;
+
+        return Stack(
+          children: [
+            // Lottie animation
+            Positioned(
+              top: lottieTopPadding,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Lottie.asset(
+                  'assets/lottie/intro.json',
+                  fit: BoxFit.contain,
+                  width: lottieSize,
+                  height: lottieSize,
+                ),
+              ),
+            ),
+
+            // Content
+            Column(
+              children: [
+                SizedBox(height: lottieTopPadding + lottieSize + (isSmallScreen ? 20 : 40)),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                    child: _buildContent(
+                      headlineFontSize,
+                      subtitleFontSize,
+                      buttonHeight,
+                      bottomSpacing,
+                      isSmallScreen,
                     ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Landscape layout
+  Widget _buildLandscapeLayout(
+    Size size,
+    double lottieSize,
+    double horizontalPadding,
+    double headlineFontSize,
+    double subtitleFontSize,
+    double buttonHeight,
+    double bottomSpacing,
+    bool isSmallScreen,
+  ) {
+    return Row(
+      children: [
+        // Lottie side
+        Expanded(
+          flex: 4,
+          child: Center(
+            child: Lottie.asset(
+              'assets/lottie/intro.json',
+              fit: BoxFit.contain,
+              width: lottieSize,
+              height: lottieSize,
+            ),
+          ),
+        ),
+        
+        // Content side
+        Expanded(
+          flex: 6,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: 20,
+            ),
+            child: _buildContent(
+              headlineFontSize,
+              subtitleFontSize,
+              buttonHeight,
+              bottomSpacing,
+              isSmallScreen,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Content builder
+  Widget _buildContent(
+    double headlineFontSize,
+    double subtitleFontSize,
+    double buttonHeight,
+    double bottomSpacing,
+    bool isSmallScreen,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Headline
+        Text(
+          'Smarter Crypto Finance for',
+          style: GoogleFonts.inter(
+            fontSize: headlineFontSize,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1A1A1A),
+            height: 1.2,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Flexible(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 600),
+                switchInCurve: Curves.easeInOut,
+                switchOutCurve: Curves.easeInOut,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.3),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Text(
+                  _words[_wordIndex],
+                  key: ValueKey<int>(_wordIndex),
+                  style: GoogleFonts.inter(
+                    fontSize: headlineFontSize,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF9747FF),
+                    height: 1.2,
+                    letterSpacing: -0.5,
+                  ),
+                ),
               ),
-            )
-                : Center(
-              child: CircularProgressIndicator(
-                color: const Color(0xFF8E24AA),
+            ),
+          ],
+        ),
+
+        SizedBox(height: isSmallScreen ? 16 : 20),
+        
+        // Subtitle
+        Text(
+          'Designed to simplify accounting and accelerate crypto-native growth.',
+          style: GoogleFonts.inter(
+            fontSize: subtitleFontSize,
+            fontWeight: FontWeight.w400,
+            color: const Color(0xFF6B6B6B),
+            height: 1.6,
+            letterSpacing: 0,
+          ),
+        ),
+        
+        SizedBox(height: isSmallScreen ? 32 : 40),
+
+        // Get Started Button
+        SizedBox(
+          width: double.infinity,
+          height: buttonHeight,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RegisterView()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF9747FF),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+              shadowColor: Colors.transparent,
+            ),
+            child: Text(
+              'Get Started',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
               ),
             ),
           ),
+        ),
+        
+        const SizedBox(height: 20),
 
-          // Dark gradient overlay for text readability
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.7),
+        // Login redirect
+        Center(
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LogIn()),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: RichText(
+                text: TextSpan(
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF6B6B6B),
+                    letterSpacing: 0,
+                  ),
+                  children: [
+                    const TextSpan(text: 'Already have an account? '),
+                    TextSpan(
+                      text: 'Log in',
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF9747FF),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
-                  stops: const [0.5, 1.0],
                 ),
               ),
             ),
           ),
-
-          // Content overlay
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    alignment: Alignment.centerLeft,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'Smarter Crypto Finance',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            height: 1.3,
-                            shadows: [
-                              Shadow(
-                                offset: Offset(0, 2),
-                                blurRadius: 8,
-                                color: Colors.black45,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            const Text(
-                              'for ',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                height: 1.3,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(0, 2),
-                                    blurRadius: 8,
-                                    color: Colors.black45,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            // Animated word
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 700),
-                              switchInCurve: Curves.easeIn,
-                              switchOutCurve: Curves.easeOut,
-                              layoutBuilder: (currentChild, previousChildren) {
-                                // Overlap children so fade is smooth
-                                return Stack(
-                                  alignment: Alignment.centerLeft,
-                                  children: [
-                                    ...previousChildren,
-                                    if (currentChild != null) currentChild,
-                                  ],
-                                );
-                              },
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: Align(alignment: Alignment.centerLeft, child: child),
-                                );
-                              },
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  _words[_wordIndex],
-                                  key: ValueKey<int>(_wordIndex),
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF9747FF),
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 8,
-                                        color: Colors.black45,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Subtext
-                  Text(
-                    'Designed to simplify accounting \nand accelerate crypto-native growth.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[300],
-                      height: 1.5,
-                      shadows: const [
-                        Shadow(
-                          offset: Offset(0, 1),
-                          blurRadius: 4,
-                          color: Colors.black45,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Get Started Button at the bottom
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const RegisterView()),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF9747FF),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 2,
-                        shadowColor: const Color(0xFF9747FF).withOpacity(0.5),
-                      ),
-                      child: const Text(
-                        'Get Started',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Already have an account text
-                  Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const LogIn(),
-                          ),
-                        );
-                      },
-                      child: RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[400],
-                          ),
-                          children: const [
-                            TextSpan(text: 'Already have an account? '),
-                            TextSpan(
-                              text: 'Log in',
-                              style: TextStyle(
-                                color: Color(0xFF9747FF),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 60)
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+        
+        SizedBox(height: bottomSpacing),
+      ],
     );
   }
 }
