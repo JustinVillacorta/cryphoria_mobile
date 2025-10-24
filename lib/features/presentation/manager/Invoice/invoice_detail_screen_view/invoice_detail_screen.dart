@@ -4,9 +4,8 @@ import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/reports/pdf_generation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:open_file/open_file.dart';
-
-
 
 class InvoiceDetailScreen extends ConsumerWidget {
   final String invoiceId;
@@ -16,110 +15,134 @@ class InvoiceDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final invoiceAsync = ref.watch(invoiceByIdProvider(invoiceId));
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
+    final isDesktop = size.width > 1024;
+    
+    final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F9FA),
+        backgroundColor: const Color(0xFFF9FAFB),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(
+            Icons.arrow_back,
+            color: const Color(0xFF1A1A1A),
+            size: isTablet ? 26 : 24,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Invoice Details',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
+          style: GoogleFonts.inter(
+            color: const Color(0xFF1A1A1A),
+            fontSize: isDesktop ? 20.0 : isTablet ? 19.0 : 18.0,
             fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
+            height: 1.2,
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.picture_as_pdf, color: Colors.black87),
+            icon: Icon(
+              Icons.picture_as_pdf_outlined,
+              color: const Color(0xFF1A1A1A),
+              size: isTablet ? 24 : 22,
+            ),
             onPressed: () {
               invoiceAsync.whenData((invoice) => _handleDownloadPdf(context, invoice));
             },
+            tooltip: 'Download PDF',
           ),
         ],
       ),
-      body: invoiceAsync.when(
-        data: (invoice) => _buildDetailContent(context, invoice),
-        loading: () => const Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF8B5CF6),
-          ),
-        ),
-        error: (err, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.grey[400],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxContentWidth),
+          child: invoiceAsync.when(
+            data: (invoice) => _buildDetailContent(context, invoice, isTablet, isDesktop),
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+                strokeWidth: 2.5,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading invoice',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+            ),
+            error: (err, stack) => Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: isDesktop ? 32.0 : isTablet ? 24.0 : 20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: isTablet ? 64 : 56,
+                      color: Colors.red.shade400,
+                    ),
+                    SizedBox(height: isTablet ? 20 : 16),
+                    Text(
+                      'Error loading invoice',
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 19 : 18,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.3,
+                      ),
+                    ),
+                    SizedBox(height: isTablet ? 12 : 10),
+                    Text(
+                      err.toString(),
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
+                        color: const Color(0xFF6B6B6B),
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                err.toString(),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[500],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildDetailContent(BuildContext context, Invoice invoice) {
+  Widget _buildDetailContent(BuildContext context, Invoice invoice, bool isTablet, bool isDesktop) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.height < 700;
+    final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(horizontalPadding),
       child: Column(
         children: [
-          // Invoice Header Card
-          _buildInvoiceHeaderCard(invoice),
-          const SizedBox(height: 16),
-
-          // Parties Card
-          _buildPartiesCard(invoice),
-          const SizedBox(height: 16),
-
-          // Items Card
-          _buildItemsCard(invoice),
-          const SizedBox(height: 16),
-
-          // Payment Info Card (if paid)
+          SizedBox(height: isSmallScreen ? 8 : 12),
+          _buildInvoiceHeaderCard(invoice, isSmallScreen, isTablet, isDesktop),
+          SizedBox(height: isSmallScreen ? 16 : 20),
+          _buildPartiesCard(invoice, isSmallScreen, isTablet, isDesktop),
+          SizedBox(height: isSmallScreen ? 16 : 20),
+          _buildItemsCard(invoice, isSmallScreen, isTablet, isDesktop),
+          SizedBox(height: isSmallScreen ? 16 : 20),
           if (invoice.status.toLowerCase() == 'paid') ...[
-            _buildPaymentInfoCard(invoice),
-            const SizedBox(height: 16),
+            _buildPaymentInfoCard(invoice, isSmallScreen, isTablet, isDesktop),
+            SizedBox(height: isSmallScreen ? 16 : 20),
           ],
-
-          const SizedBox(height: 24),
+          SizedBox(height: isSmallScreen ? 24 : 32),
         ],
       ),
     );
   }
 
-  Widget _buildInvoiceHeaderCard(Invoice invoice) {
+  Widget _buildInvoiceHeaderCard(Invoice invoice, bool isSmallScreen, bool isTablet, bool isDesktop) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -133,29 +156,37 @@ class InvoiceDetailScreen extends ConsumerWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    invoice.invoiceNumber,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      invoice.invoiceNumber,
+                      style: GoogleFonts.inter(
+                        fontSize: isDesktop ? 22 : isTablet ? 21 : 20,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1A1A1A),
+                        letterSpacing: -0.5,
+                        height: 1.2,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Issued: ${_formatDate(invoice.issueDate)}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
+                    SizedBox(height: isSmallScreen ? 6 : 8),
+                    Text(
+                      'Issued: ${_formatDate(invoice.issueDate)}',
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
+                        color: const Color(0xFF6B6B6B),
+                        fontWeight: FontWeight.w400,
+                        height: 1.4,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              _buildStatusBadge(invoice.status),
+              SizedBox(width: 12),
+              _buildStatusBadge(invoice.status, isTablet),
             ],
           ),
         ],
@@ -163,12 +194,12 @@ class InvoiceDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPartiesCard(Invoice invoice) {
+  Widget _buildPartiesCard(Invoice invoice, bool isSmallScreen, bool isTablet, bool isDesktop) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -180,15 +211,17 @@ class InvoiceDetailScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Parties',
-            style: TextStyle(
-              fontSize: 16,
+            style: GoogleFonts.inter(
+              fontSize: isTablet ? 17 : 16,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: const Color(0xFF1A1A1A),
+              letterSpacing: -0.2,
+              height: 1.3,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isSmallScreen ? 16 : 20),
           Row(
             children: [
               Expanded(
@@ -197,43 +230,48 @@ class InvoiceDetailScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'From',
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 13 : 12,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B6B6B),
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 6),
                     Text(
                       'Cryphoria Mobile',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.4,
                       ),
                     ),
                   ],
                 ),
               ),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'To',
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 13 : 12,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B6B6B),
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 6),
                     Text(
                       invoice.clientName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.4,
                       ),
                     ),
                   ],
@@ -246,11 +284,11 @@ class InvoiceDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildItemsCard(Invoice invoice) {
+  Widget _buildItemsCard(Invoice invoice, bool isSmallScreen, bool isTablet, bool isDesktop) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -263,57 +301,62 @@ class InvoiceDetailScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: const Text(
+            padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
+            child: Text(
               'Invoice Items',
-              style: TextStyle(
-                fontSize: 16,
+              style: GoogleFonts.inter(
+                fontSize: isTablet ? 17 : 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: const Color(0xFF1A1A1A),
+                letterSpacing: -0.2,
+                height: 1.3,
               ),
             ),
           ),
-          // Items - Mobile-friendly card layout
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: invoice.items.length,
             separatorBuilder: (context, index) => Divider(
               height: 1,
-              color: Colors.grey[200],
+              color: const Color(0xFFE5E5E5),
             ),
             itemBuilder: (context, index) {
               final item = invoice.items[index];
-              return _buildItemCard(item);
+              return _buildItemCard(item, isSmallScreen, isTablet, isDesktop);
             },
           ),
-          // Totals
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: const Color(0xFFF9FAFB),
               border: Border(
-                top: BorderSide(color: Colors.grey[200]!),
+                top: BorderSide(color: const Color(0xFFE5E5E5), width: 1.5),
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
               ),
             ),
             child: Column(
               children: [
-                _buildTotalRow('Subtotal:', invoice.subtotal, false),
-                const SizedBox(height: 8),
-                _buildTotalRow('Tax:', invoice.taxAmount, false),
-                const SizedBox(height: 12),
-                Divider(color: Colors.grey[300]),
-                const SizedBox(height: 12),
-                _buildTotalRow('Total:', invoice.totalAmount, true),
-                const SizedBox(height: 4),
+                _buildTotalRow('Subtotal:', invoice.subtotal, false, isTablet),
+                SizedBox(height: isSmallScreen ? 10 : 12),
+                _buildTotalRow('Tax:', invoice.taxAmount, false, isTablet),
+                SizedBox(height: isSmallScreen ? 14 : 16),
+                Divider(color: const Color(0xFFE5E5E5), thickness: 1.5),
+                SizedBox(height: isSmallScreen ? 14 : 16),
+                _buildTotalRow('Total:', invoice.totalAmount, true, isTablet),
+                SizedBox(height: 6),
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     invoice.currency,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[500],
+                    style: GoogleFonts.inter(
+                      fontSize: isTablet ? 12 : 11,
+                      color: const Color(0xFF6B6B6B),
                       fontWeight: FontWeight.w500,
+                      height: 1.3,
                     ),
                   ),
                 ),
@@ -325,98 +368,97 @@ class InvoiceDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildItemCard(dynamic item) {
+  Widget _buildItemCard(dynamic item, bool isSmallScreen, bool isTablet, bool isDesktop) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Description
           Text(
             item.description,
-            style: const TextStyle(
-              fontSize: 15,
+            style: GoogleFonts.inter(
+              fontSize: isTablet ? 16 : 15,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: const Color(0xFF1A1A1A),
+              height: 1.3,
             ),
           ),
-          const SizedBox(height: 12),
-          
-          // Details row
+          SizedBox(height: isSmallScreen ? 14 : 16),
           Row(
             children: [
-              // Quantity
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Quantity',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 13 : 12,
+                        color: const Color(0xFF6B6B6B),
                         fontWeight: FontWeight.w500,
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 6),
                     Text(
                       item.quantity.toString(),
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.3,
                       ),
                     ),
                   ],
                 ),
               ),
-              
-              // Unit Price
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Unit Price',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 13 : 12,
+                        color: const Color(0xFF6B6B6B),
                         fontWeight: FontWeight.w500,
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 6),
                     Text(
                       '\$${item.unitPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.3,
                       ),
                     ),
                   ],
                 ),
               ),
-              
-              // Total
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       'Total',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 13 : 12,
+                        color: const Color(0xFF6B6B6B),
                         fontWeight: FontWeight.w500,
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 6),
                     Text(
                       '\$${item.totalPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 17 : 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.2,
                       ),
                     ),
                   ],
@@ -429,12 +471,12 @@ class InvoiceDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPaymentInfoCard(Invoice invoice) {
+  Widget _buildPaymentInfoCard(Invoice invoice, bool isSmallScreen, bool isTablet, bool isDesktop) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -446,15 +488,17 @@ class InvoiceDetailScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Payment Information',
-            style: TextStyle(
-              fontSize: 16,
+            style: GoogleFonts.inter(
+              fontSize: isTablet ? 17 : 16,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: const Color(0xFF1A1A1A),
+              letterSpacing: -0.2,
+              height: 1.3,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isSmallScreen ? 16 : 20),
           Row(
             children: [
               Expanded(
@@ -463,41 +507,48 @@ class InvoiceDetailScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Payment Date',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 13 : 12,
+                        color: const Color(0xFF6B6B6B),
+                        fontWeight: FontWeight.w500,
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 6),
                     Text(
                       _formatDate(invoice.issueDate),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.4,
                       ),
                     ),
                   ],
                 ),
               ),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Payment Method',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 13 : 12,
+                        color: const Color(0xFF6B6B6B),
+                        fontWeight: FontWeight.w500,
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 6),
                     Text(
                       'N/A',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                      style: GoogleFonts.inter(
+                        fontSize: isTablet ? 15 : 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.4,
                       ),
                     ),
                   ],
@@ -510,59 +561,64 @@ class InvoiceDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTotalRow(String label, double amount, bool isBold) {
+  Widget _buildTotalRow(String label, double amount, bool isBold, bool isTablet) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: isBold ? 16 : 14,
+          style: GoogleFonts.inter(
+            fontSize: isBold ? (isTablet ? 17 : 16) : (isTablet ? 15 : 14),
             fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
-            color: isBold ? Colors.black87 : Colors.grey[700],
+            color: isBold ? const Color(0xFF1A1A1A) : const Color(0xFF6B6B6B),
+            height: 1.3,
           ),
         ),
         Text(
           '\$${amount.toStringAsFixed(2)}',
-          style: TextStyle(
-            fontSize: isBold ? 18 : 14,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-            color: Colors.black87,
+          style: GoogleFonts.inter(
+            fontSize: isBold ? (isTablet ? 19 : 18) : (isTablet ? 15 : 14),
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+            color: const Color(0xFF1A1A1A),
+            height: 1.2,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(String status, bool isTablet) {
     Color bgColor;
     Color textColor;
     IconData icon;
 
     switch (status.toLowerCase()) {
       case 'paid':
-        bgColor = const Color(0xFFD1FAE5);
-        textColor = const Color(0xFF059669);
-        icon = Icons.check_circle;
+        bgColor = const Color(0xFF10B981).withOpacity(0.1);
+        textColor = const Color(0xFF10B981);
+        icon = Icons.check_circle_outlined;
         break;
       case 'pending':
-        bgColor = const Color(0xFFFEF3C7);
-        textColor = const Color(0xFFD97706);
-        icon = Icons.schedule;
+        bgColor = const Color(0xFFF59E0B).withOpacity(0.1);
+        textColor = const Color(0xFFF59E0B);
+        icon = Icons.schedule_outlined;
         break;
       case 'overdue':
-        bgColor = const Color(0xFFFEE2E2);
-        textColor = const Color(0xFFDC2626);
-        icon = Icons.error;
+        bgColor = const Color(0xFFEF4444).withOpacity(0.1);
+        textColor = const Color(0xFFEF4444);
+        icon = Icons.error_outline;
         break;
       default:
-        bgColor = const Color(0xFFE5E7EB);
-        textColor = const Color(0xFF6B7280);
-        icon = Icons.info;
+        bgColor = const Color(0xFF6B6B6B).withOpacity(0.1);
+        textColor = const Color(0xFF6B6B6B);
+        icon = Icons.info_outline;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 14 : 12,
+        vertical: isTablet ? 8 : 7,
+      ),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
@@ -570,14 +626,15 @@ class InvoiceDetailScreen extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 6),
+          Icon(icon, size: isTablet ? 17 : 16, color: textColor),
+          SizedBox(width: isTablet ? 7 : 6),
           Text(
             status.toUpperCase(),
-            style: TextStyle(
+            style: GoogleFonts.inter(
               color: textColor,
-              fontSize: 12,
+              fontSize: isTablet ? 13 : 12,
               fontWeight: FontWeight.w600,
+              height: 1.2,
             ),
           ),
         ],
@@ -600,27 +657,40 @@ class InvoiceDetailScreen extends ConsumerWidget {
 
   void _handleDownloadPdf(BuildContext context, Invoice invoice) async {
     try {
-      // Show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+            strokeWidth: 2.5,
+          ),
         ),
       );
 
-      // Generate PDF using the PDF generation helper
       final pdfPath = await PdfGenerationHelper.generateInvoicePdf(invoice);
       
-      // Close loading dialog
-      Navigator.of(context, rootNavigator: true).pop();
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
 
-      if (pdfPath.isNotEmpty) {
+      if (pdfPath.isNotEmpty && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Invoice PDF saved successfully!\nTap to open: ${pdfPath.split('/').last}'),
-            backgroundColor: Colors.green,
+            content: Text(
+              'Invoice PDF saved successfully!\nTap to open: ${pdfPath.split('/').last}',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            backgroundColor: Colors.green[600],
             duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
             action: SnackBarAction(
               label: 'Open',
               textColor: Colors.white,
@@ -630,8 +700,19 @@ class InvoiceDetailScreen extends ConsumerWidget {
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Could not open file: $e'),
-                      backgroundColor: Colors.orange,
+                      content: Text(
+                        'Could not open file: $e',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      backgroundColor: Colors.orange[600],
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      margin: const EdgeInsets.all(16),
                     ),
                   );
                 }
@@ -639,26 +720,49 @@ class InvoiceDetailScreen extends ConsumerWidget {
             ),
           ),
         );
-      } else {
+      } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to generate invoice PDF'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: Text(
+              'Failed to generate invoice PDF',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            backgroundColor: Colors.red[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
     } catch (e) {
-      // Close loading dialog if it's still open
-      if (Navigator.of(context, rootNavigator: true).canPop()) {
+      if (context.mounted && Navigator.of(context, rootNavigator: true).canPop()) {
         Navigator.of(context, rootNavigator: true).pop();
       }
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error generating PDF: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error generating PDF: $e',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            backgroundColor: Colors.red[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
     }
   }
 }
