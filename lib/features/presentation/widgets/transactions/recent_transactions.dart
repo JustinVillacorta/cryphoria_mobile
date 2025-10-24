@@ -157,11 +157,11 @@ class RecentTransactions extends ConsumerWidget {
                   vertical: isSmallScreen ? 32 : 48,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.transparent,
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
