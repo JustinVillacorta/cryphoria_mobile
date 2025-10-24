@@ -465,29 +465,6 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                 ],
               ),
             ),
-            
-            // Net Pay
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '\$${employee.netPay.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Net Pay',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
