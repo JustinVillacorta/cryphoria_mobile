@@ -1,4 +1,5 @@
-import '../../entities/smart_contract.dart';
+import 'dart:io';
+import '../../entities/audit_report.dart';
 import '../../repositories/audit_repository.dart';
 
 class UploadContractUseCase {
@@ -6,7 +7,7 @@ class UploadContractUseCase {
 
   UploadContractUseCase(this.repository);
 
-  Future<SmartContract> execute(String name, String fileName, String sourceCode) async {
-    return await repository.uploadContract(name, fileName, sourceCode);
+  Future<AuditReport> execute(File contractFile) async {
+    return await repository.uploadContract(contractFile);
   }
 }

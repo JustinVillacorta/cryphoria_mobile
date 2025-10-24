@@ -1,5 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../../../domain/entities/smart_contract.dart';
+import '../../../../domain/entities/audit_report.dart';
 import '../../../../domain/usecases/Audit/upload_contract_usecase.dart';
 
 class AuditContractViewModel extends ChangeNotifier {
@@ -12,21 +13,17 @@ class AuditContractViewModel extends ChangeNotifier {
   // State
   bool _isLoading = false;
   String? _error;
-  SmartContract? _currentContract;
+  AuditReport? _currentAuditReport;
   String _contractName = '';
-  String? _selectedFileName;
-  String? _sourceCode;
+  File? _selectedFile;
 
   // Getters
   bool get isLoading => _isLoading;
   String? get error => _error;
-  SmartContract? get currentContract => _currentContract;
+  AuditReport? get currentAuditReport => _currentAuditReport;
   String get contractName => _contractName;
-  String? get selectedFileName => _selectedFileName;
-  bool get canProceed => _contractName.isNotEmpty && 
-                        _selectedFileName != null && 
-                        _sourceCode != null && 
-                        _sourceCode!.isNotEmpty;
+  File? get selectedFile => _selectedFile;
+  bool get canProceed => _contractName.isNotEmpty && _selectedFile != null;
 
   // Contract name validation
   void updateContractName(String name) {
@@ -36,20 +33,18 @@ class AuditContractViewModel extends ChangeNotifier {
   }
 
   // File selection and validation
-  void selectFile(String fileName, String sourceCode) {
-    _selectedFileName = fileName;
-    _sourceCode = sourceCode;
+  void selectFile(File file) {
+    _selectedFile = file;
     _clearError();
     notifyListeners();
   }
 
   void clearFile() {
-    _selectedFileName = null;
-    _sourceCode = null;
+    _selectedFile = null;
     notifyListeners();
   }
 
-  // Upload contract
+  // Upload contract and get immediate audit report
   Future<bool> uploadContract() async {
     if (!canProceed) {
       _setError('Please fill all required fields');
@@ -60,11 +55,7 @@ class AuditContractViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      _currentContract = await uploadContractUseCase.execute(
-        _contractName,
-        _selectedFileName!,
-        _sourceCode!,
-      );
+      _currentAuditReport = await uploadContractUseCase.execute(_selectedFile!);
       
       notifyListeners();
       return true;
@@ -78,10 +69,9 @@ class AuditContractViewModel extends ChangeNotifier {
 
   // Reset state
   void reset() {
-    _currentContract = null;
+    _currentAuditReport = null;
     _contractName = '';
-    _selectedFileName = null;
-    _sourceCode = null;
+    _selectedFile = null;
     _clearError();
     notifyListeners();
   }

@@ -7,7 +7,7 @@ import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import '../../../../../core/utils/responsive_helper.dart';
 import '../ViewModels/audit_contract_viewmodel.dart';
 import '../ViewModels/audit_main_viewmodel.dart';
-import 'ai_analysis_screen.dart';
+import 'audit_results_screen.dart';
 
 class ContractSetupScreen extends ConsumerStatefulWidget {
   const ContractSetupScreen({super.key});
@@ -23,7 +23,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
   bool _isFileUploaded = false;
   bool _isUploading = false;
   String? _selectedFileName;
-  String? _sourceCode;
+  File? _selectedFile;
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
   bool get _canProceed => 
       _contractNameController.text.trim().isNotEmpty && 
       _isFileUploaded && 
-      _sourceCode != null;
+      _selectedFile != null;
 
   @override
   Widget build(BuildContext context) {
@@ -477,9 +477,9 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
           _buildSummaryRow('File', _selectedFileName ?? 'Unknown'),
           SizedBox(height: context.spacing(12)),
           _buildSummaryRow('Source Code', 
-            _sourceCode != null 
-                ? '${_sourceCode!.length} characters' 
-                : 'Not loaded'),
+            _selectedFile != null 
+                ? 'File ready for upload' 
+                : 'Not selected'),
         ],
       ),
     );
@@ -539,40 +539,44 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
           padding: ResponsiveHelper.buttonPadding(context),
         ),
         child: _isUploading
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: context.iconSize(20),
-                    height: context.iconSize(20),
-                    child: const CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
+            ? Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: context.iconSize(20),
+                      height: context.iconSize(20),
+                      child: const CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: context.spacing(12)),
-                  Text(
-                    'Processing...',
-                    style: TextStyle(
-                      fontSize: context.fontSize(16),
-                      fontWeight: FontWeight.w600,
+                    SizedBox(width: context.spacing(12)),
+                    Text(
+                      'Processing...',
+                      style: TextStyle(
+                        fontSize: context.fontSize(16),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.analytics, size: context.iconSize(20)),
-                  SizedBox(width: context.spacing(8)),
-                  Text(
-                    'Start AI Analysis',
-                    style: TextStyle(
-                      fontSize: context.fontSize(16),
-                      fontWeight: FontWeight.w600,
+            : Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.analytics, size: context.iconSize(20)),
+                    SizedBox(width: context.spacing(8)),
+                    Text(
+                      'Start AI Analysis',
+                      style: TextStyle(
+                        fontSize: context.fontSize(16),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
       ),
     );
@@ -630,19 +634,12 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
         }
 
         setState(() {
-          _sourceCode = fileContent;
+          _selectedFile = File(pickedFile.path!);
           _selectedFileName = pickedFile.name;
           _isFileUploaded = true;
         });
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('File "${pickedFile.name}" uploaded successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+        // File uploaded successfully - no snackbar needed as UI already shows success state
       }
     } catch (e) {
       if (mounted) {
@@ -693,7 +690,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
   }
 
   Future<void> _proceedToAnalysis() async {
-    if (!_canProceed || _sourceCode == null) return;
+    if (!_canProceed || _selectedFile == null) return;
 
     setState(() {
       _isUploading = true;
@@ -731,12 +728,12 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
       
       // Set contract data in ViewModel
       _contractViewModel.updateContractName(_contractNameController.text.trim());
-      _contractViewModel.selectFile(_selectedFileName!, _sourceCode!);
+      _contractViewModel.selectFile(_selectedFile!);
       
       print("🚀 Starting contract upload...");
       print("📋 Contract name: ${_contractNameController.text.trim()}");
       print("📄 File name: $_selectedFileName");
-      print("📊 Source code length: ${_sourceCode!.length} characters");
+      print("📁 File path: ${_selectedFile!.path}");
       
       // Upload contract
       final uploadSuccess = await _contractViewModel.uploadContract();
@@ -753,19 +750,23 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
       print("✅ Contract upload successful!");
 
       // Set the uploaded contract in the main ViewModel so it's available for analysis
-      if (_contractViewModel.currentContract != null) {
-        _mainViewModel.setCurrentContract(_contractViewModel.currentContract!);
-        print("📤 Contract set in main ViewModel: ${_contractViewModel.currentContract!.id}");
+      if (_contractViewModel.currentAuditReport != null) {
+        print("🔍 Contract Setup: Setting audit report in main view model");
+        print("🔍 Contract Setup: Audit report vulnerabilities count: ${_contractViewModel.currentAuditReport!.vulnerabilities.length}");
+        print("🔍 Contract Setup: Audit report vulnerabilities: ${_contractViewModel.currentAuditReport!.vulnerabilities}");
+        _mainViewModel.setCurrentAuditReport(_contractViewModel.currentAuditReport!);
+        print("📤 Audit report received: ${_contractViewModel.currentAuditReport!.id}");
       }
 
-      // Navigate to AI analysis screen on successful upload
+      // Navigate directly to audit results screen since we have the complete report
       if (mounted) {
+        print("🔍 Contract Setup: Navigating to AuditResultsScreen");
+        print("🔍 Contract Setup: Passing audit report with ${_contractViewModel.currentAuditReport!.vulnerabilities.length} vulnerabilities");
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AiAnalysisScreen(
-              contractName: _contractNameController.text.trim(),
-              fileName: _selectedFileName!,
+            builder: (context) => AuditResultsScreen(
+              auditReport: _contractViewModel.currentAuditReport!,
             ),
           ),
         );

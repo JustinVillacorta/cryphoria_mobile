@@ -17,17 +17,15 @@ class OverallAssessmentScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final viewModel = ref.watch(auditResultsViewModelProvider);
+    final mainViewModel = ref.watch(auditMainViewModelProvider);
+    final auditReport = mainViewModel.currentAuditReport;
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         title: const Text(
           'Smart Audit Contract',
           style: TextStyle(
@@ -38,7 +36,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
         ),
         centerTitle: false,
       ),
-      body: viewModel.auditReport == null
+      body: auditReport == null
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -57,7 +55,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
                 ],
               ),
             )
-          : _buildAssessmentContent(context, viewModel.auditReport!, ref),
+          : _buildAssessmentContent(context, auditReport, ref),
     );
   }
 
@@ -157,25 +155,14 @@ class OverallAssessmentScreen extends ConsumerWidget {
               
               const SizedBox(height: 32),
               
-              // Header with back button
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Overall Assessment',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+              // Header
+              const Text(
+                'Overall Assessment',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
               ),
             ],
           ),
@@ -188,6 +175,11 @@ class OverallAssessmentScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Contract Details Section
+                _buildContractDetailsSection(auditReport),
+                
+                const SizedBox(height: 16),
+                
                 // Risk Assessment
                 _buildRiskAssessmentCard(auditReport, riskLevel, riskColor, riskMessage, criticalVulns, gasOptimizations),
                 
@@ -195,6 +187,11 @@ class OverallAssessmentScreen extends ConsumerWidget {
                 
                 // Gas Optimization
                 _buildGasOptimizationCard(auditReport, gasOptLevel, gasOptColor, gasOptMessage, gasOptimizations),
+                
+                const SizedBox(height: 16),
+                
+                // Code Quality Section
+                _buildCodeQualitySection(auditReport),
                 
                 const SizedBox(height: 24),
                 
@@ -814,6 +811,283 @@ class OverallAssessmentScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildContractDetailsSection(AuditReport auditReport) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.description, color: Colors.blue[700], size: 24),
+              const SizedBox(width: 12),
+              const Text(
+                'Contract Details',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          _buildDetailRow('Contract Name', auditReport.contractName),
+          _buildDetailRow('File Name', auditReport.fileName),
+          _buildDetailRow('Audit ID', auditReport.id),
+          _buildDetailRow('Status', auditReport.status.name.toUpperCase()),
+          _buildDetailRow('Audit Date', _formatDate(auditReport.timestamp)),
+          _buildDetailRow('Lines of Code', '${auditReport.codeQuality.linesOfCode}'),
+          _buildDetailRow('Complexity Score', '${auditReport.codeQuality.complexityScore}/10'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCodeQualitySection(AuditReport auditReport) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.purple[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.purple[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.code, color: Colors.purple[700], size: 24),
+              const SizedBox(width: 12),
+              const Text(
+                'Code Quality Analysis',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildQualityStatItem(
+                  'Quality Score',
+                  '${auditReport.codeQuality.qualityScore.toStringAsFixed(1)}/100',
+                  Icons.star,
+                  auditReport.codeQuality.qualityScore >= 70 ? Colors.green : Colors.orange,
+                ),
+              ),
+              Expanded(
+                child: _buildQualityStatItem(
+                  'Lines of Code',
+                  '${auditReport.codeQuality.linesOfCode}',
+                  Icons.code,
+                  Colors.blue,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildQualityStatItem(
+                  'Complexity',
+                  '${auditReport.codeQuality.complexityScore}/10',
+                  Icons.timeline,
+                  auditReport.codeQuality.complexityScore <= 5 ? Colors.green : Colors.orange,
+                ),
+              ),
+              Expanded(
+                child: _buildQualityStatItem(
+                  'Issues Found',
+                  '${auditReport.codeQuality.issues.length}',
+                  Icons.bug_report,
+                  auditReport.codeQuality.issues.isEmpty ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
+          ),
+          
+          if (auditReport.codeQuality.issues.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              'Code Issues',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...auditReport.codeQuality.issues.take(3).map((issue) => 
+              _buildCodeIssueItem(issue)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQualityStatItem(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(right: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCodeIssueItem(CodeIssue issue) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _getSeverityColor(issue.severity).withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: _getSeverityColor(issue.severity),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              issue.severity.name.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  issue.type,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  issue.description,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            'Line ${issue.lineNumber}',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getSeverityColor(Severity severity) {
+    switch (severity) {
+      case Severity.critical:
+        return Colors.red;
+      case Severity.high:
+        return Colors.orange;
+      case Severity.medium:
+        return Colors.yellow[700]!;
+      case Severity.low:
+        return Colors.blue;
+      case Severity.info:
+        return Colors.grey;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
   Widget _buildProgressStep(int step, bool isActive, bool isCompleted) {
     return Container(
       width: 32,
@@ -847,9 +1121,10 @@ class OverallAssessmentScreen extends ConsumerWidget {
   }
 
   void _showDownloadDialog(BuildContext context, WidgetRef ref) async {
-    final viewModel = ref.read(auditResultsViewModelProvider);
+    final mainViewModel = ref.read(auditMainViewModelProvider);
+    final auditReport = mainViewModel.currentAuditReport;
     
-    if (viewModel.auditReport == null) {
+    if (auditReport == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('No audit report available for download'),
@@ -874,7 +1149,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
 
     try {
       // Generate PDF
-      final filePath = await PdfGenerationHelper.generateAuditReportPdf(viewModel.auditReport!);
+      final filePath = await PdfGenerationHelper.generateAuditReportPdf(auditReport);
       
       // Close loading dialog
       if (context.mounted) {
