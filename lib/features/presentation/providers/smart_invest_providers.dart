@@ -141,7 +141,7 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
         amount: request.amount,
         investorName: request.investorName,
         description: request.description,
-        category: 'Investment', // Default category for smart investments
+        category: 'INVESTMENT', // Default category for smart investments
       );
       
       print('✅ SmartInvestNotifier.sendInvestment successful: ${response.data.transactionHash}');
@@ -163,12 +163,24 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
   }
 
   Future<void> upsertAddressBookEntry(AddressBookUpsertRequest request) async {
+    state = state.copyWith(isAddressBookLoading: true, addressBookError: null);
+    
     try {
       await upsertAddressBookUseCase.execute(request);
       // Refresh address book list after upsert
-      await getAddressBookList();
+      final response = await getAddressBookListUseCase.execute();
+      print('📋 Upsert: Got ${response.data.length} address book entries');
+      state = state.copyWith(
+        isAddressBookLoading: false,
+        addressBookEntries: List<AddressBookEntry>.from(response.data),
+        addressBookError: null,
+      );
+      print('📋 Upsert: State updated with ${state.addressBookEntries.length} entries');
     } catch (e) {
-      state = state.copyWith(addressBookError: e.toString());
+      state = state.copyWith(
+        isAddressBookLoading: false,
+        addressBookError: e.toString(),
+      );
     }
   }
 
@@ -179,7 +191,7 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
       final response = await getAddressBookListUseCase.execute();
       state = state.copyWith(
         isAddressBookLoading: false,
-        addressBookEntries: response.data,
+        addressBookEntries: List<AddressBookEntry>.from(response.data),
         addressBookError: null,
       );
     } catch (e) {
@@ -191,12 +203,24 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
   }
 
   Future<void> deleteAddressBookEntry(String address) async {
+    state = state.copyWith(isAddressBookLoading: true, addressBookError: null);
+    
     try {
       await deleteAddressBookUseCase.execute(address);
       // Refresh address book list after deletion
-      await getAddressBookList();
+      final response = await getAddressBookListUseCase.execute();
+      print('📋 Delete: Got ${response.data.length} address book entries');
+      state = state.copyWith(
+        isAddressBookLoading: false,
+        addressBookEntries: List<AddressBookEntry>.from(response.data),
+        addressBookError: null,
+      );
+      print('📋 Delete: State updated with ${state.addressBookEntries.length} entries');
     } catch (e) {
-      state = state.copyWith(addressBookError: e.toString());
+      state = state.copyWith(
+        isAddressBookLoading: false,
+        addressBookError: e.toString(),
+      );
     }
   }
 
