@@ -55,11 +55,11 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
       final shouldLogout = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: const Text('Logout', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.white70,
+          title: const Text('Logout', style: TextStyle(color: Colors.red)),
           content: const Text(
             'Are you sure you want to logout?',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: Colors.grey),
           ),
           actions: [
             TextButton(
