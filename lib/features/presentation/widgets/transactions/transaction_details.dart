@@ -333,32 +333,6 @@ class TransactionDetailsWidget extends StatelessWidget {
             SizedBox(height: isSmallScreen ? 12 : 14),
           ],
         
-          // Gas Details and Status Row
-          if (transaction.gasCost != null || transaction.status != null) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (transaction.gasCost != null) ...[
-                  Expanded(
-                    flex: transaction.status != null ? 1 : 1,
-                    child: _buildInfoItem(
-                      icon: Icons.local_gas_station,
-                      label: 'Gas Cost',
-                      value: transaction.gasCost!,
-                      isSmallScreen: isSmallScreen,
-                      isTablet: isTablet,
-                    ),
-                  ),
-                  if (transaction.status != null) SizedBox(width: isTablet ? 24 : 20),
-                ],
-                if (transaction.status != null)
-                  Expanded(
-                    flex: 1,
-                    child: _buildStatusBadge(isSmallScreen, isTablet),
-                  ),
-              ],
-            ),
-          ],
         ],
       ),
     );
@@ -558,74 +532,6 @@ class TransactionDetailsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(bool isSmallScreen, bool isTablet) {
-    Color statusColor;
-    String statusText = transaction.status ?? 'Unknown';
-    
-    switch (statusText.toLowerCase()) {
-      case 'confirmed':
-      case 'success':
-        statusColor = Colors.green[600]!;
-        break;
-      case 'pending':
-        statusColor = Colors.orange[600]!;
-        break;
-      case 'failed':
-      case 'error':
-        statusColor = Colors.red[600]!;
-        break;
-      default:
-        statusColor = const Color(0xFF6B6B6B);
-    }
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.circle, size: isTablet ? 10 : 8, color: statusColor),
-            SizedBox(width: isTablet ? 10 : 8),
-            Flexible(
-              child: Text(
-                'Status',
-                style: GoogleFonts.inter(
-                  fontSize: isTablet ? 14 : 13,
-                  color: const Color(0xFF6B6B6B),
-                  fontWeight: FontWeight.w500,
-                  height: 1.3,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: isSmallScreen ? 6 : 8),
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isTablet ? 12 : 10,
-            vertical: isTablet ? 6 : 5,
-          ),
-          decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: statusColor.withOpacity(0.3)),
-          ),
-          child: Text(
-            statusText.toUpperCase(),
-            style: GoogleFonts.inter(
-              fontSize: isTablet ? 13 : 12,
-              color: statusColor,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-              height: 1.2,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   String _formatAddress(String address) {
     if (address.length <= 10) return address;
