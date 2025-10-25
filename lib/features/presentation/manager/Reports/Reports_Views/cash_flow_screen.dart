@@ -9,6 +9,7 @@ import '../../../widgets/reports/excel_export_helper.dart';
 import '../../../widgets/reports/pdf_generation_helper.dart';
 import '../../../widgets/reports/download_report_bottom_sheet.dart';
 import '../../../widgets/reports/report_period_selector.dart';
+import '../../../widgets/skeletons/reports_skeleton.dart';
 
 class CashFlowScreen extends ConsumerStatefulWidget {
   const CashFlowScreen({super.key});
@@ -89,12 +90,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
 
   Widget _buildBody(CashFlowState state, bool isSmallScreen, bool isTablet, bool isDesktop, double horizontalPadding) {
     if (state.isLoading) {
-      return Center(
-        child: CircularProgressIndicator(
-          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
-          strokeWidth: 2.5,
-        ),
-      );
+      return const ReportsSkeleton();
     }
 
     if (state.error != null) {

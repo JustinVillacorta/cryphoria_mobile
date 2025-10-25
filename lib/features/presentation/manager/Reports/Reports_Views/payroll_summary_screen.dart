@@ -8,6 +8,7 @@ import '../../../../domain/entities/payslip.dart';
 import '../../../widgets/reports/excel_export_helper.dart';
 import '../../../widgets/reports/pdf_generation_helper.dart';
 import '../../../widgets/reports/download_report_bottom_sheet.dart';
+import '../../../widgets/skeletons/reports_skeleton.dart';
 
 class PayrollSummaryScreen extends ConsumerStatefulWidget {
   const PayrollSummaryScreen({super.key});
@@ -88,12 +89,7 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
 
   Widget _buildBody(PayrollReportsState state, bool isSmallScreen, bool isTablet, bool isDesktop, double horizontalPadding) {
     if (state.isLoading) {
-      return Center(
-        child: CircularProgressIndicator(
-          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
-          strokeWidth: 2.5,
-        ),
-      );
+      return const ReportsSkeleton();
     }
 
     if (state.error != null) {
