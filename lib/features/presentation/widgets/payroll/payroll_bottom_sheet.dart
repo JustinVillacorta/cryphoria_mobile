@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../dependency_injection/riverpod_providers.dart';
 import '../../../domain/entities/create_payslip_request.dart';
 import '../../../domain/entities/employee.dart' as domain_employee;
+import '../../../../core/network/dio_client.dart';
+import '../../../domain/repositories/payslip_repository.dart';
 import '../skeletons/payroll_employees_skeleton.dart';
+import 'background_processing_dialog.dart';
 
 class PayrollBottomSheet extends ConsumerStatefulWidget {
   const PayrollBottomSheet({Key? key}) : super(key: key);
@@ -322,26 +325,14 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
       final dioClient = ref.read(dioClientProvider);
       final payslipRepository = ref.read(payslipRepositoryProvider);
       
-      // Show loading dialog
+      // Show improved loading dialog with background option
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: Color(0xFF9747FF)),
-              SizedBox(height: 16),
-              Text(
-                'Sending payroll now...',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[700],
-                ),
-              ),
-            ],
-          ),
+        builder: (context) => _PayrollLoadingDialog(
+          selectedEmployees: selectedEmployees,
+          dioClient: dioClient,
+          payslipRepository: payslipRepository,
         ),
       );
 
@@ -581,6 +572,8 @@ class _PayrollBottomSheetState extends ConsumerState<PayrollBottomSheet> {
       }
     }
   }
+
+
 
   Future<void> _selectPayPeriodStart(BuildContext context) async {
     if (!mounted) return;
@@ -1339,5 +1332,293 @@ class EmployeePayrollInfo {
 
   void dispose() {
     salaryController.dispose();
+  }
+}
+
+class _PayrollLoadingDialog extends StatefulWidget {
+  final List<EmployeePayrollInfo> selectedEmployees;
+  final DioClient dioClient;
+  final PayslipRepository payslipRepository;
+
+  const _PayrollLoadingDialog({
+    required this.selectedEmployees,
+    required this.dioClient,
+    required this.payslipRepository,
+  });
+
+  @override
+  _PayrollLoadingDialogState createState() => _PayrollLoadingDialogState();
+}
+
+class _PayrollLoadingDialogState extends State<_PayrollLoadingDialog> {
+  bool showBackgroundOption = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Show background option after 3 seconds
+    Future.delayed(Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          showBackgroundOption = true;
+        });
+      }
+    });
+  }
+
+  // Continue payroll processing in background
+  Future<void> _continuePayrollProcessingInBackground({
+    required List<EmployeePayrollInfo> selectedEmployees,
+    required DioClient dioClient,
+    required PayslipRepository payslipRepository,
+  }) async {
+    try {
+      print('🔄 Starting background payroll processing');
+      
+      // Step 1: Create payroll entries and collect entry IDs with wallet addresses
+      final entryIds = <String>[];
+      final employeeWalletMap = <String, String>{}; // Map employee ID to wallet address
+      
+      for (final employeePayroll in selectedEmployees) {
+        final employee = employeePayroll.employee;
+        final salaryText = employeePayroll.salaryController.text.trim();
+        final salaryAmount = double.tryParse(salaryText) ?? 0.0;
+        
+        try {
+          print('DEBUG: [Background] Creating payroll entry for: ${employee.displayName}');
+          
+          final response = await dioClient.dio.post('/api/payroll/create/', data: {
+            'employee_id': employee.userId,
+            'employee_name': employee.displayName,
+            'salary_amount': salaryAmount,
+            'salary_currency': 'USD',
+            'payment_frequency': 'MONTHLY',
+            'start_date': DateTime.now().toIso8601String().split('T')[0],
+          });
+          
+          if (response.statusCode == 200 && response.data['success'] == true) {
+            final entryId = response.data['payroll_entry']['entry_id'];
+            final employeeWallet = response.data['payroll_entry']['employee_wallet'];
+            entryIds.add(entryId);
+            employeeWalletMap[employee.userId] = employeeWallet;
+            print('DEBUG: [Background] Payroll entry created: $entryId');
+          } else {
+            print('ERROR: [Background] Failed to create payroll entry for ${employee.displayName}');
+          }
+        } catch (e) {
+          print('ERROR: [Background] Exception creating payroll entry for ${employee.displayName}: $e');
+        }
+      }
+
+      if (entryIds.isEmpty) {
+        print('ERROR: [Background] No payroll entries were created');
+        return;
+      }
+
+      // Step 2: Process each payroll entry individually
+      int processedEntries = 0;
+      print('DEBUG: [Background] Processing ${entryIds.length} payroll entries');
+      
+      for (final entryId in entryIds) {
+        try {
+          print('DEBUG: [Background] Processing payroll entry: $entryId');
+          
+          final response = await dioClient.dio.post('/api/payroll/process/', data: {
+            'entry_id': entryId,
+          });
+          
+          if (response.statusCode == 200) {
+            processedEntries++;
+            print('DEBUG: [Background] Successfully processed payroll entry: $entryId');
+          } else {
+            print('ERROR: [Background] Failed to process payroll entry: $entryId');
+          }
+        } catch (e) {
+          print('ERROR: [Background] Exception processing payroll entry $entryId: $e');
+        }
+      }
+
+      // Step 3: Create payslips if payroll processing was successful
+      if (processedEntries > 0) {
+        print('DEBUG: [Background] Creating payslips for $processedEntries entries');
+        
+        for (final employeePayroll in selectedEmployees) {
+          final employee = employeePayroll.employee;
+          final salaryText = employeePayroll.salaryController.text.trim();
+          final salaryAmount = double.tryParse(salaryText) ?? 0.0;
+          final employeeWallet = employeeWalletMap[employee.userId] ?? employee.payrollInfo?.employeeWallet;
+          
+          final payslipRequest = CreatePayslipRequest(
+            employeeId: employee.userId,
+            employeeName: employee.displayName,
+            employeeEmail: employee.email,
+            employeeWallet: employeeWallet,
+            department: employee.department,
+            position: employee.position,
+            salaryAmount: salaryAmount,
+            salaryCurrency: 'USD',
+            cryptocurrency: 'ETH',
+            payPeriodStart: '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}',
+            payPeriodEnd: '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}',
+            payDate: '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}',
+            taxDeduction: 0.0,
+            insuranceDeduction: 0.0,
+            retirementDeduction: 0.0,
+            otherDeductions: 0.0,
+            overtimePay: 0.0,
+            bonus: 0.0,
+            allowances: 0.0,
+            notes: 'Generated from mobile payroll processing - Background',
+          );
+
+          try {
+            await payslipRepository.createPayslip(payslipRequest);
+            print('DEBUG: [Background] Payslip created for ${employee.displayName}');
+          } catch (e) {
+            print('ERROR: [Background] Failed to create payslip for ${employee.displayName}: $e');
+          }
+        }
+      }
+
+      print('✅ [Background] Payroll processing completed successfully');
+      
+    } catch (e) {
+      print('❌ [Background] Error in background payroll processing: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Container(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Animated loading indicator
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF9747FF).withOpacity(0.1),
+                    Color(0xFF9747FF).withOpacity(0.3),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9747FF)),
+                    strokeWidth: 3,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 24),
+            
+            // Main title
+            Text(
+              'Processing Payroll',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 8),
+            
+            // Subtitle
+            Text(
+              'Sending payroll for ${widget.selectedEmployees.length} employees...',
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey[600],
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32),
+            
+            // Background processing option (appears after 3 seconds)
+            AnimatedOpacity(
+              opacity: showBackgroundOption ? 1.0 : 0.0,
+              duration: Duration(milliseconds: 300),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        // Show background processing dialog
+                        final result = await showDialog<bool>(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => BackgroundProcessingDialog(),
+                        );
+                        
+                        if (result == true) {
+                          // User chose background processing
+                          Navigator.pop(context); // Close loading dialog
+                          Navigator.pop(context); // Close payroll bottom sheet
+                          
+                          // Continue processing in background
+                          _continuePayrollProcessingInBackground(
+                            selectedEmployees: widget.selectedEmployees,
+                            dioClient: widget.dioClient,
+                            payslipRepository: widget.payslipRepository,
+                          );
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Color(0xFF9747FF), width: 1.5),
+                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.work_outline,
+                        color: Color(0xFF9747FF),
+                        size: 20,
+                      ),
+                      label: Text(
+                        'Run in Background',
+                        style: TextStyle(
+                          color: Color(0xFF9747FF),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  
+                  // Help text
+                  Text(
+                    'You can continue using the app while payroll processes',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[500],
+                      height: 1.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
