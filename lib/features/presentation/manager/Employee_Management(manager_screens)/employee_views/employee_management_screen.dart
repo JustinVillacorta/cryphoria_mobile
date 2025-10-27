@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/skeletons/employee_management_skeleton.dart';
-import '../employee_viewmodel/employee_viewmodel.dart';
+import '../employee_viewmodel/employee_state.dart';
 import 'add_employee_screen.dart';
 import 'employee_detail_screen.dart';
 
@@ -15,18 +15,17 @@ class EmployeeManagementScreen extends ConsumerStatefulWidget {
 }
 
 class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScreen> {
-  late EmployeeViewModel _employeeViewModel;
   bool _isFilterExpanded = false;
   final List<String> _departments = ['Finance', 'Marketing', 'Operations', 'Sales', 'Technology'];
 
   @override
   void initState() {
     super.initState();
-    _employeeViewModel = ref.read(employeeViewModelProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_employeeViewModel.employees.isEmpty && !_employeeViewModel.isLoading) {
-        _employeeViewModel.getManagerTeam().catchError((_) {
-          _employeeViewModel.loadSampleData();
+      final state = ref.read(employeeViewModelProvider);
+      if (state.filteredEmployees.isEmpty && !state.isLoading) {
+        ref.read(employeeViewModelProvider.notifier).getManagerTeam().catchError((_) {
+          ref.read(employeeViewModelProvider.notifier).loadSampleData();
         });
       }
     });
@@ -39,7 +38,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
 
-    final viewModel = ref.watch(employeeViewModelProvider);
+    final state = ref.watch(employeeViewModelProvider);
 
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final verticalPadding = isDesktop ? 20.0 : isTablet ? 16.0 : 14.0;
@@ -115,9 +114,9 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
       body: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxContentWidth),
-          child: viewModel.isLoading
+          child: state.isLoading
               ? const EmployeeManagementSkeleton()
-              : viewModel.hasEmployees
+              : state.hasEmployees
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -164,7 +163,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                               fontSize: isTablet ? 15 : 14,
                               fontWeight: FontWeight.w400,
                             ),
-                            onChanged: viewModel.searchEmployees,
+                            onChanged: (query) => ref.read(employeeViewModelProvider.notifier).searchEmployees(query),
                           ),
                         ),
 
@@ -236,7 +235,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                             duration: const Duration(milliseconds: 300),
                             opacity: _isFilterExpanded ? 1.0 : 0.0,
                             child: _buildFilterSection(
-                              viewModel,
+                              state,
                               horizontalPadding,
                               isSmallScreen,
                               isTablet,
@@ -252,9 +251,9 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                               horizontalPadding,
                               isSmallScreen ? 20 : 24,
                             ),
-                            itemCount: viewModel.employees.length,
+                            itemCount: state.filteredEmployees.length,
                             itemBuilder: (context, index) {
-                              final employee = viewModel.employees[index];
+                              final employee = state.filteredEmployees[index];
                               return _buildEmployeeCard(
                                 employee,
                                 cardPadding,
@@ -363,7 +362,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
   }
 
   Widget _buildFilterSection(
-    EmployeeViewModel viewModel,
+    EmployeeState state,
     double horizontalPadding,
     bool isSmallScreen,
     bool isTablet,
@@ -392,15 +391,15 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
             scrollDirection: Axis.horizontal,
             child: Row(
               children: _departments.map((department) {
-                final isSelected = viewModel.selectedDepartment == department;
+                final isSelected = state.selectedDepartment == department;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: InkWell(
                     onTap: () {
                       if (isSelected) {
-                        viewModel.clearFilters();
+                        ref.read(employeeViewModelProvider.notifier).clearFilters();
                       } else {
-                        viewModel.filterByDepartment(department);
+                        ref.read(employeeViewModelProvider.notifier).filterByDepartment(department);
                       }
                     },
                     borderRadius: BorderRadius.circular(20),

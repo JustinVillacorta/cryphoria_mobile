@@ -15,7 +15,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(supportViewModelProvider).loadSupportMessages();
+      ref.read(supportViewModelProvider.notifier).loadSupportMessages();
     });
   }
 
@@ -23,7 +23,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-    final supportViewModel = ref.watch(supportViewModelProvider);
+    final supportState = ref.watch(supportViewModelProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
@@ -45,28 +45,28 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
         centerTitle: false,
         actions: [
           IconButton(
-            onPressed: () => supportViewModel.refreshSupportMessages(),
+            onPressed: () => ref.read(supportViewModelProvider.notifier).refreshSupportMessages(),
             icon: const Icon(Icons.refresh_rounded),
             color: const Color(0xFF6F4CF5),
           ),
         ],
       ),
-      body: supportViewModel.isLoadingMessages
+      body: supportState.isLoadingMessages
           ? const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6F4CF5)),
               ),
             )
-          : supportViewModel.supportMessages.isEmpty
+          : supportState.supportMessages.isEmpty
               ? _buildEmptyState(textTheme)
               : RefreshIndicator(
-                  onRefresh: () => supportViewModel.refreshSupportMessages(),
+                  onRefresh: () => ref.read(supportViewModelProvider.notifier).refreshSupportMessages(),
                   color: const Color(0xFF6F4CF5),
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                    itemCount: supportViewModel.supportMessages.length,
+                    itemCount: supportState.supportMessages.length,
                     itemBuilder: (context, index) {
-                      final message = supportViewModel.supportMessages[index];
+                      final message = supportState.supportMessages[index];
                       return _buildSupportTicketCard(message, textTheme);
                     },
                   ),

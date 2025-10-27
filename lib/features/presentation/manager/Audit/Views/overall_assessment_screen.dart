@@ -17,8 +17,8 @@ class OverallAssessmentScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mainViewModel = ref.watch(auditMainViewModelProvider);
-    final auditReport = mainViewModel.currentAuditReport;
+    final mainState = ref.watch(auditFlowViewModelProvider);
+    final auditReport = mainState.currentAuditReport;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -1099,8 +1099,8 @@ class OverallAssessmentScreen extends ConsumerWidget {
   }
 
   void _showDownloadDialog(BuildContext context, WidgetRef ref) async {
-    final mainViewModel = ref.read(auditMainViewModelProvider);
-    final auditReport = mainViewModel.currentAuditReport;
+    final mainState = ref.read(auditFlowViewModelProvider);
+    final auditReport = mainState.currentAuditReport;
 
     if (auditReport == null) {
       ScaffoldMessenger.of(context).showSnackBar(

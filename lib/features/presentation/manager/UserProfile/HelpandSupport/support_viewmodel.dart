@@ -1,33 +1,22 @@
-import 'package:flutter/material.dart';
-import '../../../../domain/entities/support_ticket.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/usecases/Support/submit_support_ticket_usecase.dart';
 import '../../../../domain/usecases/Support/get_support_messages_usecase.dart';
+import 'support_state.dart';
 
-class SupportViewModel extends ChangeNotifier {
+class SupportViewModel extends StateNotifier<SupportState> {
   final SubmitSupportTicketUseCase submitSupportTicketUseCase;
   final GetSupportMessagesUseCase getSupportMessagesUseCase;
 
   SupportViewModel({
     required this.submitSupportTicketUseCase,
     required this.getSupportMessagesUseCase,
-  });
-
-  bool _isSubmitting = false;
-  bool _isLoadingMessages = false;
-  String? _errorMessage;
-  String? _successMessage;
-  List<SupportMessage> _supportMessages = [];
-
-  bool get isSubmitting => _isSubmitting;
-  bool get isLoadingMessages => _isLoadingMessages;
-  String? get errorMessage => _errorMessage;
-  String? get successMessage => _successMessage;
-  List<SupportMessage> get supportMessages => _supportMessages;
+  }) : super(SupportState.initial());
 
   void clearMessages() {
-    _errorMessage = null;
-    _successMessage = null;
-    notifyListeners();
+    state = state.copyWith(
+      errorMessage: () => null,
+      successMessage: () => null,
+    );
   }
 
   Future<bool> submitSupportTicket({
@@ -37,10 +26,11 @@ class SupportViewModel extends ChangeNotifier {
     required String priority,
     List<String>? attachments,
   }) async {
-    _isSubmitting = true;
-    _errorMessage = null;
-    _successMessage = null;
-    notifyListeners();
+    state = state.copyWith(
+      isSubmitting: true,
+      errorMessage: () => null,
+      successMessage: () => null,
+    );
 
     try {
       final ticket = await submitSupportTicketUseCase.execute(
@@ -51,39 +41,41 @@ class SupportViewModel extends ChangeNotifier {
         attachments: attachments,
       );
 
-      _successMessage = 'Support ticket submitted successfully! Ticket ID: ${ticket.id}';
-      _isSubmitting = false;
-      notifyListeners();
+      state = state.copyWith(
+        isSubmitting: false,
+        successMessage: () => 'Support ticket submitted successfully! Ticket ID: ${ticket.id}',
+      );
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      _isSubmitting = false;
-      notifyListeners();
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: () => e.toString().replaceFirst('Exception: ', ''),
+      );
       return false;
     }
   }
 
   Future<void> loadSupportMessages() async {
-    _isLoadingMessages = true;
-    _errorMessage = null;
-    notifyListeners();
+    state = state.copyWith(
+      isLoadingMessages: true,
+      errorMessage: () => null,
+    );
 
     try {
       final messages = await getSupportMessagesUseCase.execute();
-      _supportMessages = messages;
-      _isLoadingMessages = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoadingMessages: false,
+        supportMessages: messages,
+      );
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      _isLoadingMessages = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoadingMessages: false,
+        errorMessage: () => e.toString().replaceFirst('Exception: ', ''),
+      );
     }
   }
 
   Future<void> refreshSupportMessages() async {
     await loadSupportMessages();
   }
-
-  @override
-  void dispose() => super.dispose();
 }

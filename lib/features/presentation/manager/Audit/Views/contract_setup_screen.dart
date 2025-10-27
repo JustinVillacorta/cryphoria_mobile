@@ -5,8 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 
 import '../../../../../core/utils/responsive_helper.dart';
-import '../ViewModels/audit_contract_viewmodel.dart';
-import '../ViewModels/audit_main_viewmodel.dart';
 import 'audit_results_screen.dart';
 
 
@@ -18,8 +16,6 @@ class ContractSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
-  late AuditContractViewModel _contractViewModel;
-  late AuditMainViewModel _mainViewModel;
   final TextEditingController _contractNameController = TextEditingController();
   bool _isFileUploaded = false;
   bool _isUploading = false;
@@ -29,8 +25,6 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
   @override
   void initState() {
     super.initState();
-    _contractViewModel = ref.read(auditContractViewModelProvider);
-    _mainViewModel = ref.read(auditMainViewModelProvider);
   }
 
   @override
@@ -713,23 +707,27 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
         );
       }
 
-      _contractViewModel.updateContractName(_contractNameController.text.trim());
-      _contractViewModel.selectFile(_selectedFile!);
+      // Use the provider's notifier
+      final contractViewModel = ref.read(auditUploadViewModelProvider.notifier);
+      
+      contractViewModel.updateContractName(_contractNameController.text.trim());
+      contractViewModel.selectFile(_selectedFile!);
 
-
-      final uploadSuccess = await _contractViewModel.uploadContract();
+      final uploadSuccess = await contractViewModel.uploadContract();
 
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
       if (!uploadSuccess) {
-        throw Exception(_contractViewModel.error ?? 'Upload failed');
+        final state = ref.read(auditUploadViewModelProvider);
+        throw Exception(state.error ?? 'Upload failed');
       }
 
-
-      if (_contractViewModel.currentAuditReport != null) {
-        _mainViewModel.setCurrentAuditReport(_contractViewModel.currentAuditReport!);
+      // Get the current state to access the audit report
+      final state = ref.read(auditUploadViewModelProvider);
+      if (state.currentAuditReport != null) {
+        ref.read(auditFlowViewModelProvider.notifier).setCurrentAuditReport(state.currentAuditReport!);
       }
 
       if (mounted) {
@@ -737,7 +735,7 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => AuditResultsScreen(
-              auditReport: _contractViewModel.currentAuditReport!,
+              auditReport: state.currentAuditReport!,
             ),
           ),
         );

@@ -6,18 +6,24 @@ class RegisterState {
   final String? error;
   final AuthUser? authUser;
   final LoginResponse? registerResponse;
-  final String registerMessage;
+  final String? registerMessage;
 
-  const RegisterState({
-    this.isLoading = false,
+  RegisterState({
+    required this.isLoading,
     this.error,
     this.authUser,
     this.registerResponse,
-    this.registerMessage = '',
+    this.registerMessage,
   });
 
   factory RegisterState.initial() {
-    return const RegisterState();
+    return RegisterState(
+      isLoading: false,
+      error: null,
+      authUser: null,
+      registerResponse: null,
+      registerMessage: null,
+    );
   }
 
   RegisterState copyWith({
@@ -25,16 +31,14 @@ class RegisterState {
     String? Function()? error,
     AuthUser? Function()? authUser,
     LoginResponse? Function()? registerResponse,
-    String? registerMessage,
+    String? Function()? registerMessage,
   }) {
     return RegisterState(
       isLoading: isLoading ?? this.isLoading,
       error: error != null ? error() : this.error,
       authUser: authUser != null ? authUser() : this.authUser,
       registerResponse: registerResponse != null ? registerResponse() : this.registerResponse,
-      registerMessage: registerMessage ?? this.registerMessage,
+      registerMessage: registerMessage != null ? registerMessage() : this.registerMessage,
     );
   }
-
-  Future<void> register(String trim, String text, String text2, String trim2, String trim3, String trim4, String trim5, String selectedRole) async {}
 }

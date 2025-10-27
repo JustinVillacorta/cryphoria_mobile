@@ -435,56 +435,70 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
                     ],
                   ),
 
-                  if (ref.watch(supportViewModelProvider).errorMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline, color: Colors.red[700], size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              ref.watch(supportViewModelProvider).errorMessage!,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: Colors.red[700],
+                  Builder(
+                    builder: (context) {
+                      final state = ref.watch(supportViewModelProvider);
+                      if (state.errorMessage != null) {
+                        return Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.red[200]!),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.error_outline, color: Colors.red[700], size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      state.errorMessage!,
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: Colors.red[700],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  if (ref.watch(supportViewModelProvider).successMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.green[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.check_circle_outline, color: Colors.green[700], size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              ref.watch(supportViewModelProvider).successMessage!,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: Colors.green[700],
+                          ],
+                        );
+                      }
+                      if (state.successMessage != null) {
+                        return Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.green[200]!),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.check_circle_outline, color: Colors.green[700], size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      state.successMessage!,
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: Colors.green[700],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                          ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                 ],
               ),
             ),
@@ -495,7 +509,8 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
   }
 
   bool _canSubmit() {
-    return _subjectHasText && _messageHasText && !ref.watch(supportViewModelProvider).isSubmitting;
+    final state = ref.watch(supportViewModelProvider);
+    return _subjectHasText && _messageHasText && !state.isSubmitting;
   }
 
   Future<void> _pickFiles() async {
@@ -540,7 +555,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
   }
 
   Future<void> _submitSupportTicket() async {
-    final supportViewModel = ref.read(supportViewModelProvider);
+    final supportViewModel = ref.read(supportViewModelProvider.notifier);
 
     supportViewModel.clearMessages();
 

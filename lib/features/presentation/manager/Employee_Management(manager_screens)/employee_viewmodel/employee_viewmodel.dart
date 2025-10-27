@@ -1,28 +1,16 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/entities/employee.dart';
 import '../../../../domain/usecases/Employee_management/get_all_employees_usecase.dart';
 import '../../../../domain/usecases/Employee_management/get_manager_team_usecase.dart';
 import '../../../../domain/usecases/Employee_management/add_employee_to_team_usecase.dart';
 import '../../../../domain/usecases/Employee_management/remove_employee_from_team_usecase.dart';
+import 'employee_state.dart';
 
-class EmployeeViewModel extends ChangeNotifier {
+class EmployeeViewModel extends StateNotifier<EmployeeState> {
   final GetAllEmployeesUseCase? _getAllEmployeesUseCase;
   final GetManagerTeamUseCase? _getManagerTeamUseCase;
   final AddEmployeeToTeamUseCase? _addEmployeeToTeamUseCase;
   final RemoveEmployeeFromTeamUseCase? _removeEmployeeFromTeamUseCase;
-
-  List<Employee> _employees = [];
-  List<Employee> _filteredEmployees = [];
-  bool _isLoading = false;
-  String? _error;
-  String _selectedDepartment = '';
-  String _searchQuery = '';
-
-  List<Employee> get employees => _filteredEmployees;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  String get selectedDepartment => _selectedDepartment;
-  bool get hasEmployees => _employees.isNotEmpty;
 
   EmployeeViewModel({
     GetAllEmployeesUseCase? getAllEmployeesUseCase,
@@ -32,15 +20,15 @@ class EmployeeViewModel extends ChangeNotifier {
   }) : _getAllEmployeesUseCase = getAllEmployeesUseCase,
        _getManagerTeamUseCase = getManagerTeamUseCase,
        _addEmployeeToTeamUseCase = addEmployeeToTeamUseCase,
-       _removeEmployeeFromTeamUseCase = removeEmployeeFromTeamUseCase;
+       _removeEmployeeFromTeamUseCase = removeEmployeeFromTeamUseCase,
+       super(EmployeeState.initial());
 
   Future<void> _loadInitialData() async {
-    _isLoading = true;
-    notifyListeners();
+    state = state.copyWith(isLoading: true);
 
     try {
       await Future.delayed(const Duration(milliseconds: 500));
-      _employees = [
+      final employees = [
         Employee(
           userId: '1',
           username: 'sarah.johnson',
@@ -84,44 +72,49 @@ class EmployeeViewModel extends ChangeNotifier {
           ),
         ),
       ];
-      _filteredEmployees = List.from(_employees);
-      _error = null;
+      state = state.copyWith(
+        employees: employees,
+        filteredEmployees: List.from(employees),
+        isLoading: false,
+        error: () => null,
+      );
     } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.toString(),
+      );
     }
   }
 
   void filterByDepartment(String department) {
-    _selectedDepartment = department;
+    state = state.copyWith(selectedDepartment: department);
     _applyFilters();
-    notifyListeners();
   }
 
   void searchEmployees(String query) {
-    _searchQuery = query.toLowerCase();
+    state = state.copyWith(searchQuery: query.toLowerCase());
     _applyFilters();
-    notifyListeners();
   }
 
   void _applyFilters() {
-    _filteredEmployees = _employees.where((employee) {
-      bool matchesDepartment = _selectedDepartment.isEmpty || 
-                               (employee.department?.toLowerCase() == _selectedDepartment.toLowerCase());
-      bool matchesSearch = _searchQuery.isEmpty || 
-                          employee.displayName.toLowerCase().contains(_searchQuery) ||
-                          employee.username.toLowerCase().contains(_searchQuery);
+    final filteredEmployees = state.employees.where((employee) {
+      bool matchesDepartment = state.selectedDepartment.isEmpty || 
+                               (employee.department?.toLowerCase() == state.selectedDepartment.toLowerCase());
+      bool matchesSearch = state.searchQuery.isEmpty || 
+                          employee.displayName.toLowerCase().contains(state.searchQuery) ||
+                          employee.username.toLowerCase().contains(state.searchQuery);
       return matchesDepartment && matchesSearch;
     }).toList();
+    
+    state = state.copyWith(filteredEmployees: filteredEmployees);
   }
 
   void clearFilters() {
-    _selectedDepartment = '';
-    _searchQuery = '';
-    _filteredEmployees = List.from(_employees);
-    notifyListeners();
+    state = state.copyWith(
+      selectedDepartment: '',
+      searchQuery: '',
+      filteredEmployees: List.from(state.employees),
+    );
   }
 
   Future<void> refresh() async {
@@ -129,8 +122,7 @@ class EmployeeViewModel extends ChangeNotifier {
   }
 
   void clearError() {
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(error: () => null);
   }
 
   Future<void> loadSampleData() async {
@@ -143,20 +135,23 @@ class EmployeeViewModel extends ChangeNotifier {
       return;
     }
 
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(
+      isLoading: true,
+      error: () => null,
+    );
 
     try {
       final employees = await _getManagerTeamUseCase.execute();
-      _employees = employees;
+      state = state.copyWith(
+        employees: employees,
+        isLoading: false,
+      );
       _applyFilters();
-      _isLoading = false;
-      notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.toString(),
+      );
     }
   }
 
@@ -171,9 +166,10 @@ class EmployeeViewModel extends ChangeNotifier {
       throw Exception('Add employee to team functionality not available');
     }
 
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(
+      isLoading: true,
+      error: () => null,
+    );
 
     try {
       final request = AddEmployeeToTeamRequest(
@@ -185,15 +181,14 @@ class EmployeeViewModel extends ChangeNotifier {
       );
 
       await _addEmployeeToTeamUseCase.execute(request);
-
       await getManagerTeam();
 
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(isLoading: false);
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.toString(),
+      );
       rethrow;
     }
   }
@@ -204,20 +199,23 @@ class EmployeeViewModel extends ChangeNotifier {
       return;
     }
 
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(
+      isLoading: true,
+      error: () => null,
+    );
 
     try {
       final employees = await _getAllEmployeesUseCase.execute();
-      _employees = employees;
+      state = state.copyWith(
+        employees: employees,
+        isLoading: false,
+      );
       _applyFilters();
-      _isLoading = false;
-      notifyListeners();
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.toString(),
+      );
     }
   }
 
@@ -226,33 +224,29 @@ class EmployeeViewModel extends ChangeNotifier {
       throw Exception('Remove employee from team functionality not available');
     }
 
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(
+      isLoading: true,
+      error: () => null,
+    );
 
     try {
       await _removeEmployeeFromTeamUseCase.execute(email);
 
-      _employees.removeWhere((employee) => employee.email == email);
+      final updatedEmployees = state.employees
+          .where((employee) => employee.email != email)
+          .toList();
 
-      _filteredEmployees = List.from(_employees);
-
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        employees: updatedEmployees,
+        filteredEmployees: updatedEmployees,
+        isLoading: false,
+      );
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.toString(),
+      );
       rethrow;
     }
-  }
-
-  List<String> get departments {
-    return _employees
-        .where((e) => e.department != null && e.department!.isNotEmpty)
-        .map((e) => e.department!)
-        .toSet()
-        .toList()
-      ..sort();
   }
 }

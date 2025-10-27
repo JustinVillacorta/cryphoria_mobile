@@ -52,17 +52,12 @@ class EthPaymentService {
         investorName: "",
       );
 
-      debugPrint('🔍 EthPaymentService received result: $result');
-      debugPrint('🔍 Result type: ${result.runtimeType}');
-      debugPrint('🔍 Result keys: ${result.keys.toList()}');
 
       result.forEach((key, value) {
-        debugPrint('🔍 $key: $value (${value.runtimeType})');
       });
 
       final transactionHash = result['transaction_hash']?.toString() ?? '';
       if (transactionHash.isEmpty) {
-        debugPrint('🚨 No transaction hash found in result: $result');
         throw Exception('Transaction failed: No transaction hash returned from server');
       }
 
@@ -87,10 +82,8 @@ class EthPaymentService {
         accountingProcessed: _parseBool(result['accounting_processed']) ?? false,
       );
 
-      debugPrint('✅ EthTransactionResult created successfully: ${ethResult.transactionHash}');
       return ethResult;
     } catch (e) {
-      debugPrint('🚨 EthPaymentService.sendEthTransaction error: $e');
       rethrow;
     }
   }
@@ -121,7 +114,6 @@ class EthPaymentService {
     try {
       return await remoteDataSource.estimateGas(request);
     } catch (e) {
-      debugPrint('🚨 EthPaymentService.estimateGas error: $e');
       rethrow;
     }
   }
@@ -140,7 +132,6 @@ class EthPaymentService {
         status: status,
       );
     } catch (e) {
-      debugPrint('🚨 EthPaymentService.getTransactionHistory error: $e');
       rethrow;
     }
   }
@@ -153,7 +144,6 @@ class EthPaymentService {
     try {
       return await remoteDataSource.getTransactionStatus(transactionHash);
     } catch (e) {
-      debugPrint('🚨 EthPaymentService.getTransactionStatus error: $e');
       rethrow;
     }
   }
@@ -180,7 +170,6 @@ class EthPaymentService {
 
       return {'is_received': false};
     } catch (e) {
-      debugPrint('🚨 EthPaymentService.checkIfTransactionReceived error: $e');
       return null;
     }
   }
@@ -204,7 +193,6 @@ class EthPaymentService {
           receivedTransactions.add(displayTx);
         }
       } catch (e) {
-        debugPrint('🚨 Error checking transaction $txHash: $e');
         continue;
       }
     }
@@ -244,7 +232,6 @@ class EthPaymentService {
 
       return transactions.map((tx) => _convertToDisplayTransaction(tx)).toList();
     } catch (e) {
-      debugPrint('🚨 EthPaymentService.getRecentPaymentTransactions error: $e');
       return [];
     }
   }

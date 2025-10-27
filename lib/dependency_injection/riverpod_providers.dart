@@ -27,7 +27,11 @@ import '../features/domain/repositories/support_repository.dart';
 import '../features/domain/usecases/Support/submit_support_ticket_usecase.dart';
 import '../features/domain/usecases/Support/get_support_messages_usecase.dart';
 import '../features/presentation/manager/UserProfile/HelpandSupport/support_viewmodel.dart';
-import '../features/data/notifiers/audit_notifier.dart';
+import '../features/presentation/manager/UserProfile/HelpandSupport/support_state.dart';
+import '../features/presentation/manager/Audit/ViewModels/audit_upload_viewmodel.dart';
+import '../features/presentation/manager/Audit/ViewModels/audit_upload_state.dart';
+import '../features/presentation/manager/Audit/ViewModels/audit_flow_viewmodel.dart';
+import '../features/presentation/manager/Audit/ViewModels/audit_flow_state.dart';
 import '../features/data/repositories_impl/auth_repository_impl.dart';
 import '../features/data/repositories_impl/audit_repository_impl.dart';
 import '../features/data/repositories_impl/employee_repository_impl.dart';
@@ -89,8 +93,6 @@ import '../features/domain/usecases/Reports/get_report_status_usecase.dart';
 import '../features/domain/usecases/Reports/get_user_reports_usecase.dart';
 
 import '../features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
-import '../features/presentation/manager/Audit/ViewModels/audit_contract_viewmodel.dart';
-import '../features/presentation/manager/Audit/ViewModels/audit_main_viewmodel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_view_model.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_state.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
@@ -105,6 +107,7 @@ import '../features/presentation/manager/Authentication/Forgot_Password/ViewMode
 import '../features/presentation/manager/Authentication/Forgot_Password/ViewModel/forgot_password_confirm_view_model.dart';
 import '../features/presentation/manager/Authentication/Forgot_Password/ViewModel/forgot_password_confirm_state.dart';
 import '../features/presentation/manager/Employee_Management(manager_screens)/employee_viewmodel/employee_viewmodel.dart';
+import '../features/presentation/manager/Employee_Management(manager_screens)/employee_viewmodel/employee_state.dart';
 
 
 import '../features/data/data_sources/employee_remote_data_source.dart'
@@ -447,42 +450,28 @@ final walletNotifierProvider =
   );
 });
 
-final auditNotifierProvider = ChangeNotifierProvider<AuditNotifier>((ref) {
-  final notifier = AuditNotifier(
+// Audit Upload ViewModel - Handles contract upload form & validation
+final auditUploadViewModelProvider =
+    StateNotifierProvider<AuditUploadViewModel, AuditUploadState>((ref) {
+  return AuditUploadViewModel(
     uploadContractUseCase: ref.watch(uploadContractUseCaseProvider),
   );
-  ref.onDispose(notifier.dispose);
-  return notifier;
 });
 
-final auditContractViewModelProvider =
-    ChangeNotifierProvider<AuditContractViewModel>((ref) {
-  final viewModel = AuditContractViewModel(
-    uploadContractUseCase: ref.watch(uploadContractUseCaseProvider),
-  );
-  ref.onDispose(viewModel.dispose);
-  return viewModel;
-});
-
-final auditMainViewModelProvider =
-    ChangeNotifierProvider<AuditMainViewModel>((ref) {
-  ref.keepAlive(); // Cache ViewModel to prevent recreation on navigation
-  final viewModel = AuditMainViewModel();
-  ref.onDispose(viewModel.dispose);
-  return viewModel;
+// Audit Flow ViewModel - Handles multi-step workflow navigation
+final auditFlowViewModelProvider =
+    StateNotifierProvider<AuditFlowViewModel, AuditFlowState>((ref) {
+  return AuditFlowViewModel();
 });
 
 final employeeViewModelProvider =
-    ChangeNotifierProvider<EmployeeViewModel>((ref) {
-  ref.keepAlive(); // Cache ViewModel to prevent recreation on navigation
-  final viewModel = EmployeeViewModel(
+    StateNotifierProvider<EmployeeViewModel, EmployeeState>((ref) {
+  return EmployeeViewModel(
     getAllEmployeesUseCase: ref.watch(getAllEmployeesUseCaseProvider),
     getManagerTeamUseCase: ref.watch(getManagerTeamUseCaseProvider),
     addEmployeeToTeamUseCase: ref.watch(addEmployeeToTeamUseCaseProvider),
     removeEmployeeFromTeamUseCase: ref.watch(removeEmployeeFromTeamUseCaseProvider),
   );
-  ref.onDispose(viewModel.dispose);
-  return viewModel;
 });
 
 
@@ -651,11 +640,9 @@ final getSupportMessagesUseCaseProvider = Provider<GetSupportMessagesUseCase>((r
 });
 
 
-final supportViewModelProvider = ChangeNotifierProvider<SupportViewModel>((ref) {
-  final viewModel = SupportViewModel(
+final supportViewModelProvider = StateNotifierProvider<SupportViewModel, SupportState>((ref) {
+  return SupportViewModel(
     submitSupportTicketUseCase: ref.watch(submitSupportTicketUseCaseProvider),
     getSupportMessagesUseCase: ref.watch(getSupportMessagesUseCaseProvider),
   );
-  ref.onDispose(viewModel.dispose);
-  return viewModel;
 });

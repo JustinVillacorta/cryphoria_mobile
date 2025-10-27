@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import '../ViewModels/audit_main_viewmodel.dart';
 import 'package:cryphoria_mobile/features/domain/entities/audit_report.dart';
 import 'overall_assessment_screen.dart';
 
@@ -26,7 +25,6 @@ class AuditResultsScreen extends ConsumerStatefulWidget {
 class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  late AuditMainViewModel _mainViewModel;
   AuditReport? _currentAuditReport;
 
   @override
@@ -34,19 +32,18 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-    _mainViewModel = ref.read(auditMainViewModelProvider);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-
+      // If an audit report was passed directly, use it
       if (widget.auditReport != null) {
         _currentAuditReport = widget.auditReport;
         setState(() {});
-      } else if (_mainViewModel.currentAuditReport != null) {
-        _currentAuditReport = _mainViewModel.currentAuditReport;
-        setState(() {});
-      }
-
-      if (_currentAuditReport != null) {
+      } else {
+        // Otherwise, check the state from the provider
+        final mainState = ref.read(auditFlowViewModelProvider);
+        if (mainState.currentAuditReport != null) {
+          _currentAuditReport = mainState.currentAuditReport;
+          setState(() {});
+        }
       }
     });
   }
@@ -59,7 +56,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(auditMainViewModelProvider);
+    ref.watch(auditFlowViewModelProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
