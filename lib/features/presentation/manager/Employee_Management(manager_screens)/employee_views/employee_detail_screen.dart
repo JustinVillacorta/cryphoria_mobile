@@ -1223,8 +1223,8 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                             navigator.pop();
                           } catch (e) {
                             if (!mounted) return;
-                            final navigator = Navigator.of(navContext);
-                            final messenger = ScaffoldMessenger.of(navContext);
+                            final navigator = Navigator.of(context);
+                            final messenger = ScaffoldMessenger.of(context);
                             
                             navigator.pop();
                             messenger.showSnackBar(

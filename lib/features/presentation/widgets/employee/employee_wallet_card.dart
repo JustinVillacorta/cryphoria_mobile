@@ -423,45 +423,41 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
     );
 
     if (result == true && mounted) {
-      final scaffoldContext = context;
       try {
         await notifier.switchWallet();
 
-        if (mounted) {
-          final messenger = ScaffoldMessenger.of(scaffoldContext);
-          await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+        final messenger = ScaffoldMessenger.of(context);
+        await Future.delayed(const Duration(milliseconds: 100));
 
-          final updated = ref.read(homeEmployeeNotifierProvider);
+        final updated = ref.read(homeEmployeeNotifierProvider);
 
-          if (!mounted) return;
-          if (updated.errorMessage.isNotEmpty) {
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text('Failed to switch wallet: ${updated.errorMessage}'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else {
-            messenger.showSnackBar(
-              const SnackBar(
-                content: Text('Wallet disconnected. You can now connect a new wallet.'),
-                backgroundColor: Colors.blue,
-              ),
-            );
-            if (!mounted) return;
-            // ignore: use_build_context_synchronously
-            await _showConnectWalletBottomSheet(scaffoldContext);
-          }
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        if (!mounted) return;
+        if (updated.errorMessage.isNotEmpty) {
+          messenger.showSnackBar(
             SnackBar(
-              content: Text('Failed to switch wallet: $e'),
+              content: Text('Failed to switch wallet: ${updated.errorMessage}'),
               backgroundColor: Colors.red,
             ),
           );
+        } else {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Wallet disconnected. You can now connect a new wallet.'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+          if (!mounted) return;
+          await _showConnectWalletBottomSheet(context);
         }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to switch wallet: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -491,50 +487,45 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
     );
 
     if (result == true && mounted) {
-      final scaffoldContext = context;
       try {
         await notifier.disconnectWallet();
 
-        if (mounted) {
-          final messenger = ScaffoldMessenger.of(scaffoldContext);
-          await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+        final messenger = ScaffoldMessenger.of(context);
+        await Future.delayed(const Duration(milliseconds: 100));
 
-          if (!mounted) return;
-          final updated = ref.read(homeEmployeeNotifierProvider);
+        if (!mounted) return;
+        final updated = ref.read(homeEmployeeNotifierProvider);
 
-          if (!mounted) return;
-          if (updated.errorMessage.isNotEmpty) {
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text('Failed to disconnect: ${updated.errorMessage}'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else {
-            messenger.showSnackBar(
-              const SnackBar(
-                content: Text('Wallet disconnected successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        }
-      } catch (e) {
-        if (mounted) {
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        if (!mounted) return;
+        if (updated.errorMessage.isNotEmpty) {
+          messenger.showSnackBar(
             SnackBar(
-              content: Text('Failed to disconnect: $e'),
+              content: Text('Failed to disconnect: ${updated.errorMessage}'),
               backgroundColor: Colors.red,
             ),
           );
+        } else {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Wallet disconnected successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to disconnect: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
   Future<void> _showConnectWalletBottomSheet(BuildContext context) async {
-    final scaffoldContext = context;
     final controller = TextEditingController();
     String selectedWallet = 'MetaMask';
     final notifier = ref.read(homeEmployeeNotifierProvider.notifier);
@@ -554,8 +545,8 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         );
 
         if (!mounted) return;
-        final navigator = Navigator.of(scaffoldContext);
-        final messenger = ScaffoldMessenger.of(scaffoldContext);
+        final navigator = Navigator.of(context);
+        final messenger = ScaffoldMessenger.of(context);
         
         if (navigator.canPop()) {
           navigator.pop();
@@ -574,8 +565,8 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         }
       } catch (e) {
         if (!mounted) return;
-        final navigator = Navigator.of(scaffoldContext);
-        final messenger = ScaffoldMessenger.of(scaffoldContext);
+        final navigator = Navigator.of(context);
+        final messenger = ScaffoldMessenger.of(context);
         
         if (navigator.canPop()) {
           navigator.pop();

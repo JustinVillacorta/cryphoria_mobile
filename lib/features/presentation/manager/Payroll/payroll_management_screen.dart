@@ -555,17 +555,18 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
   }
 
   void _showEmployeeDetails(Map<String, dynamic> employee) async {
-    final scaffoldContext = context;
     try {
       final response = await ref.read(dioClientProvider).dio.post(
         '/api/manager/payroll/employee-details/',
         data: {'employee_id': employee['employee_id']},
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200 && response.data['success'] == true) {
         _showEmployeeDetailsBottomSheet(response.data);
       } else {
-        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Failed to load employee details'),
             backgroundColor: Colors.red,
@@ -573,7 +574,8 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error loading employee details: $e'),
           backgroundColor: Colors.red,

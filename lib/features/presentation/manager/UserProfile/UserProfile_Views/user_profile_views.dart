@@ -72,11 +72,9 @@ class _UserProfileState extends ConsumerState<UserProfile> {
         ),
       );
 
-      if (shouldLogout == true) {
-        final dialogContext = context;
-        final navigator = Navigator.of(dialogContext);
+      if (shouldLogout == true && mounted) {
         showDialog(
-          context: dialogContext,
+          context: context,
           barrierDismissible: false,
           builder: (context) => const Center(
             child: CircularProgressIndicator(
@@ -87,7 +85,7 @@ class _UserProfileState extends ConsumerState<UserProfile> {
 
         final success = await logoutViewModel.logout();
 
-        if (mounted) navigator.pop();
+        if (mounted) Navigator.of(context).pop();
 
         if (success) {
           if (mounted) {
@@ -374,12 +372,9 @@ class _UserProfileState extends ConsumerState<UserProfile> {
 
               if (!mounted) return;
 
-              final navContext = context;
-              final navigator = Navigator.of(navContext);
-              final messenger = ScaffoldMessenger.of(navContext);
-
               if (authUser != null) {
-                final result = await navigator.push(
+                final result = await Navigator.push(
+                  context,
                   MaterialPageRoute(
                     builder: (_) => EditProfileScreen(currentUser: authUser),
                   ),
@@ -391,7 +386,8 @@ class _UserProfileState extends ConsumerState<UserProfile> {
                   _loadUserData();
                 }
               } else {
-                messenger.showSnackBar(
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('User data not found. Please log in again.'),
                     backgroundColor: Colors.red,

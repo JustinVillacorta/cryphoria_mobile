@@ -957,76 +957,70 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
         managerId: _managerId!,
       );
 
-      if (mounted) {
-        final navigator = Navigator.of(scaffoldContext, rootNavigator: true);
-        navigator.pop();
-        // ignore: use_build_context_synchronously
-        showDialog(
-          context: scaffoldContext,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  const Text('Submitting for approval...'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Please wait while we submit your documents',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
+      if (!mounted) return;
+      final navigator = Navigator.of(context, rootNavigator: true);
+      navigator.pop();
+      
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                const Text('Submitting for approval...'),
+                const SizedBox(height: 8),
+                Text(
+                  'Please wait while we submit your documents',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
                   ),
-                ],
-              ),
-            );
-          },
-        );
-      }
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        },
+      );
 
       await uploadUseCase.submitDocumentsForApproval();
 
-      if (mounted) {
-        // ignore: use_build_context_synchronously
-        final navigator = Navigator.of(scaffoldContext, rootNavigator: true);
-        // ignore: use_build_context_synchronously
-        final messenger = ScaffoldMessenger.of(scaffoldContext);
-        
-        navigator.pop();
+      if (!mounted) return;
+      final navigator2 = Navigator.of(context, rootNavigator: true);
+      final messenger = ScaffoldMessenger.of(context);
+      
+      navigator2.pop();
 
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Documents uploaded and submitted for approval successfully!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
-          ),
-        );
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Documents uploaded and submitted for approval successfully!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 4),
+        ),
+      );
 
-        _clearForm();
+      _clearForm();
 
-        _loadMyDocuments();
-      }
+      _loadMyDocuments();
     } catch (e) {
-      if (mounted) {
-        // ignore: use_build_context_synchronously
-        final navigator = Navigator.of(scaffoldContext, rootNavigator: true);
-        // ignore: use_build_context_synchronously
-        final messenger = ScaffoldMessenger.of(scaffoldContext);
-        
-        navigator.pop();
+      if (!mounted) return;
+      final navigator = Navigator.of(context, rootNavigator: true);
+      final messenger = ScaffoldMessenger.of(context);
+      
+      navigator.pop();
 
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Error uploading documents: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-      ),
-    );
-  }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Error uploading documents: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {

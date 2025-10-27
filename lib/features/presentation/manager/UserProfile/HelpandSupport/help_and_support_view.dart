@@ -514,7 +514,6 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
   }
 
   Future<void> _pickFiles() async {
-    final scaffoldContext = context;
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.any,
@@ -531,15 +530,14 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
         });
       }
     } catch (e) {
-      if (mounted) {
-        final messenger = ScaffoldMessenger.of(scaffoldContext);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Error picking files: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Error picking files: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
