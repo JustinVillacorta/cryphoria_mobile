@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
-/// Lightweight shimmer effect without extra dependencies.
 class _Shimmer extends StatefulWidget {
-  const _Shimmer({required this.child, Key? key}) : super(key: key);
+  const _Shimmer({required this.child});
   final Widget child;
 
   @override
@@ -24,8 +23,8 @@ class _ShimmerState extends State<_Shimmer> with SingleTickerProviderStateMixin 
 
   @override
   Widget build(BuildContext context) {
-    final base = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.6);
-    final highlight = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.25);
+    final base = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
+    final highlight = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.25);
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -61,7 +60,7 @@ class _GradientTranslation extends GradientTransform {
 }
 
 class _Bone extends StatelessWidget {
-  const _Bone({this.height = 14, this.width, this.radius = 12, Key? key}) : super(key: key);
+  const _Bone({this.height = 14, this.width, this.radius = 12});
   final double height;
   final double? width;
   final double radius;
@@ -71,25 +70,23 @@ class _Bone extends StatelessWidget {
       height: height,
       width: width,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.7),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(radius),
       ),
     );
   }
 }
 
-/// Reports skeleton that approximates the structure of financial reports
-/// including charts, data tables, and summary cards
 class ReportsSkeleton extends StatelessWidget {
   const ReportsSkeleton({
-    Key? key,
+    super.key,
     this.showChart = true,
     this.showSummaryCards = true,
     this.showDataTable = true,
     this.tableRows = 5,
     this.summaryCardsCount = 3,
     this.padding,
-  }) : super(key: key);
+  });
 
   final bool showChart;
   final bool showSummaryCards;
@@ -101,7 +98,7 @@ class ReportsSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pad = padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 18);
-    final cardColor = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+    final cardColor = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
 
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
@@ -114,7 +111,6 @@ class ReportsSkeleton extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Period selector skeleton
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: const [
@@ -124,7 +120,6 @@ class ReportsSkeleton extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Summary cards row
                 if (showSummaryCards) ...[
                   SizedBox(
                     height: 100,
@@ -158,7 +153,6 @@ class ReportsSkeleton extends StatelessWidget {
                   const SizedBox(height: 24),
                 ],
 
-                // Chart skeleton
                 if (showChart) ...[
                   Container(
                     width: double.infinity,
@@ -184,7 +178,6 @@ class ReportsSkeleton extends StatelessWidget {
                   const SizedBox(height: 24),
                 ],
 
-                // Data table skeleton
                 if (showDataTable) ...[
                   const _Bone(height: 18, width: 120),
                   const SizedBox(height: 12),
@@ -197,7 +190,6 @@ class ReportsSkeleton extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        // Table header
                         Row(
                           children: const [
                             Expanded(flex: 2, child: _Bone(height: 14, width: double.infinity)),
@@ -208,7 +200,6 @@ class ReportsSkeleton extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Table rows
                         ...List.generate(tableRows, (index) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
@@ -229,7 +220,6 @@ class ReportsSkeleton extends StatelessWidget {
                   const SizedBox(height: 24),
                 ],
 
-                // Action buttons skeleton
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: const [
@@ -248,19 +238,18 @@ class ReportsSkeleton extends StatelessWidget {
   }
 }
 
-/// Specialized skeleton for balance sheet with assets, liabilities, and equity sections
 class BalanceSheetSkeleton extends StatelessWidget {
   const BalanceSheetSkeleton({
-    Key? key,
+    super.key,
     this.padding,
-  }) : super(key: key);
+  });
 
   final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
     final pad = padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 18);
-    final cardColor = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+    final cardColor = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
 
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
@@ -273,7 +262,6 @@ class BalanceSheetSkeleton extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Period selector
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: const [
@@ -283,19 +271,15 @@ class BalanceSheetSkeleton extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Assets section
                 _buildSectionSkeleton('Assets', cardColor),
                 const SizedBox(height: 16),
 
-                // Liabilities section
                 _buildSectionSkeleton('Liabilities', cardColor),
                 const SizedBox(height: 16),
 
-                // Equity section
                 _buildSectionSkeleton('Equity', cardColor),
                 const SizedBox(height: 24),
 
-                // Action buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: const [
@@ -324,10 +308,8 @@ class BalanceSheetSkeleton extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section title
           const _Bone(height: 16, width: 100),
           const SizedBox(height: 12),
-          // Section items
           ...List.generate(4, (index) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -341,7 +323,6 @@ class BalanceSheetSkeleton extends StatelessWidget {
             );
           }),
           const SizedBox(height: 8),
-          // Section total
           Container(
             width: double.infinity,
             height: 1,
@@ -361,7 +342,6 @@ class BalanceSheetSkeleton extends StatelessWidget {
   }
 }
 
-/// Convenience wrapper to overlay the skeleton above existing content.
 class ReportsLoadingOverlay extends StatelessWidget {
   const ReportsLoadingOverlay({
     super.key,
@@ -369,7 +349,7 @@ class ReportsLoadingOverlay extends StatelessWidget {
     required this.child,
     this.skeletonType = ReportsSkeletonType.general,
   });
-  
+
   final bool loading;
   final Widget child;
   final ReportsSkeletonType skeletonType;
@@ -384,7 +364,7 @@ class ReportsLoadingOverlay extends StatelessWidget {
             child: AbsorbPointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.background.withOpacity(0.02),
+                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.02),
                 ),
                 child: _buildSkeleton(),
               ),

@@ -1,4 +1,3 @@
-// lib/features/data/repositories_impl/payslip_repository_impl.dart
 
 import '../../domain/entities/payslip.dart';
 import '../../domain/entities/create_payslip_request.dart';
@@ -19,20 +18,18 @@ class PayslipRepositoryImpl implements PayslipRepository {
     DateTime? endDate,
   }) async {
     try {
-      // Convert status enum to string
       String? statusString;
       if (status != null) {
         statusString = status.value;
       }
 
-      // Convert dates to strings
       String? startDateString;
       String? endDateString;
       if (startDate != null) {
-        startDateString = startDate.toIso8601String().substring(0, 10); // YYYY-MM-DD
+        startDateString = startDate.toIso8601String().substring(0, 10);
       }
       if (endDate != null) {
-        endDateString = endDate.toIso8601String().substring(0, 10); // YYYY-MM-DD
+        endDateString = endDate.toIso8601String().substring(0, 10);
       }
 
       return await remoteDataSource.getUserPayslips(

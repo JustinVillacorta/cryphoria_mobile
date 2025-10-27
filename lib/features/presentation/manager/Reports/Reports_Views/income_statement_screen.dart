@@ -40,10 +40,10 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
@@ -168,7 +168,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
               Icon(
                 Icons.assessment_outlined,
                 size: isTablet ? 64 : 56,
-                color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
               ),
               SizedBox(height: isSmallScreen ? 16 : 20),
               Text(
@@ -224,16 +224,14 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
       padding: EdgeInsets.only(top: isSmallScreen ? 12 : 16),
       child: Column(
         children: [
-          // Period Selector
           if (state.incomeStatements != null && state.incomeStatements!.length > 1)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: _buildPeriodSelector(state),
             ),
-          
+
           SizedBox(height: isSmallScreen ? 12 : 16),
-          
-          // Header Card
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildHeaderCard(state, isSmallScreen, isTablet, isDesktop),
@@ -241,7 +239,6 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
 
           SizedBox(height: isSmallScreen ? 16 : 20),
 
-          // View Toggle
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildViewToggle(isSmallScreen, isTablet),
@@ -249,27 +246,24 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
 
           SizedBox(height: isSmallScreen ? 16 : 20),
 
-          // Content
           isChartView 
             ? _buildChartView(state.selectedIncomeStatement!, isSmallScreen, isTablet, isDesktop, horizontalPadding)
             : _buildTableView(state.selectedIncomeStatement!, isSmallScreen, isTablet, isDesktop, horizontalPadding),
-          
+
           SizedBox(height: isSmallScreen ? 16 : 20),
-          
-          // Metadata
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildMetadata(state.selectedIncomeStatement!, isSmallScreen, isTablet),
           ),
-          
+
           SizedBox(height: isSmallScreen ? 20 : 24),
-          
-          // Action Buttons
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildActionButtons(state, isSmallScreen, isTablet),
           ),
-          
+
           SizedBox(height: isSmallScreen ? 24 : 32),
         ],
       ),
@@ -281,7 +275,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
     final subtitleSize = isDesktop ? 15.0 : isTablet ? 14.0 : 13.0;
     final iconSize = isDesktop ? 26.0 : isTablet ? 24.0 : 22.0;
     final iconContainerSize = isDesktop ? 48.0 : isTablet ? 44.0 : 40.0;
-    
+
     return Container(
       padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
       decoration: BoxDecoration(
@@ -289,7 +283,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -304,7 +298,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                 width: iconContainerSize,
                 height: iconContainerSize,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF9747FF).withOpacity(0.1),
+                  color: const Color(0xFF9747FF).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -393,7 +387,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
     final titleSize = isTablet ? 13.0 : 12.0;
     final valueSize = isTablet ? 17.0 : 16.0;
     final iconSize = isTablet ? 18.0 : 16.0;
-    
+
     return Container(
       padding: EdgeInsets.all(isTablet ? 16 : 14),
       decoration: BoxDecoration(
@@ -448,7 +442,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
   Widget _buildViewToggle(bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 15.0 : 14.0;
     final iconSize = isTablet ? 20.0 : 18.0;
-    
+
     return Container(
       height: isTablet ? 54 : 50,
       decoration: BoxDecoration(
@@ -456,7 +450,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -474,7 +468,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: isChartView ? [
                     BoxShadow(
-                      color: const Color(0xFF9747FF).withOpacity(0.3),
+                      color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -515,7 +509,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: !isChartView ? [
                     BoxShadow(
-                      color: const Color(0xFF9747FF).withOpacity(0.3),
+                      color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -562,7 +556,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -686,7 +680,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
   Widget _buildTableView(IncomeStatement incomeStatement, bool isSmallScreen, bool isTablet, bool isDesktop, double horizontalPadding) {
     final sectionTitleSize = isTablet ? 17.0 : 16.0;
     final rowSize = isTablet ? 15.0 : 14.0;
-    
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Container(
@@ -696,7 +690,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -716,8 +710,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
               ),
             ),
             SizedBox(height: isSmallScreen ? 18 : 22),
-            
-            // Revenue Section
+
             _buildTableSection(
               'Revenue',
               [
@@ -730,10 +723,9 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
               isSmallScreen,
               isTablet,
             ),
-            
+
             SizedBox(height: isSmallScreen ? 18 : 22),
-            
-            // Expenses Section
+
             _buildTableSection(
               'Expenses',
               [
@@ -747,10 +739,9 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
               isSmallScreen,
               isTablet,
             ),
-            
+
             SizedBox(height: isSmallScreen ? 18 : 22),
-            
-            // Profitability Section
+
             _buildTableSection(
               'Profitability',
               [
@@ -780,7 +771,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
             vertical: isTablet ? 10 : 8,
           ),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -833,7 +824,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
   Widget _buildMetadata(IncomeStatement incomeStatement, bool isSmallScreen, bool isTablet) {
     final titleSize = isTablet ? 17.0 : 16.0;
     final rowSize = isTablet ? 15.0 : 14.0;
-    
+
     return Container(
       padding: EdgeInsets.all(isTablet ? 20 : 18),
       decoration: BoxDecoration(
@@ -841,7 +832,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -911,7 +902,7 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
 
   Widget _buildActionButtons(IncomeStatementState state, bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 16.0 : 15.0;
-    
+
     return Row(
       children: [
         Expanded(
@@ -997,9 +988,10 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
   }
 
   Future<void> _downloadPdf(BuildContext context, IncomeStatement incomeStatement) async {
+    final scaffoldContext = context;
     try {
       showDialog(
-        context: context,
+        context: scaffoldContext,
         barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(
@@ -1011,12 +1003,12 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
 
       final filePath = await PdfGenerationHelper.generateIncomeStatementPdf(incomeStatement);
 
-      if (context.mounted) {
-        Navigator.of(context).pop();
+      if (scaffoldContext.mounted) {
+        Navigator.of(scaffoldContext).pop();
       }
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
             content: Text(
               'PDF saved successfully!\nTap to open: ${filePath.split('/').last}',
@@ -1091,9 +1083,10 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
   }
 
   Future<void> _downloadExcel(BuildContext context, IncomeStatement incomeStatement) async {
+    final scaffoldContext = context;
     try {
       showDialog(
-        context: context,
+        context: scaffoldContext,
         barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(
@@ -1105,12 +1098,12 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
 
       final filePath = await ExcelExportHelper.exportIncomeStatementToExcel(incomeStatement);
 
-      if (context.mounted) {
-        Navigator.of(context).pop();
+      if (scaffoldContext.mounted) {
+        Navigator.of(scaffoldContext).pop();
       }
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
             content: Text(
               'Excel file saved successfully!\nTap to open: ${filePath.split('/').last}',
@@ -1190,11 +1183,11 @@ class _IncomeStatementScreenState extends ConsumerState<IncomeStatementScreen> {
       incomeStatement.grossProfit.grossProfit,
       incomeStatement.netIncome.netIncome.abs(),
     ].reduce((a, b) => a > b ? a : b);
-    
+
     if (maxValue == 0) {
       return 10000;
     }
-    
+
     return maxValue * 1.2;
   }
 

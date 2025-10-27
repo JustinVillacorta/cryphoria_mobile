@@ -4,7 +4,6 @@ import '../../../../domain/entities/tax_report.dart';
 import '../../../../domain/repositories/reports_repository.dart';
 
 
-// State classes
 class TaxReportsState {
   final bool isLoading;
   final List<TaxReport> taxReports;
@@ -36,7 +35,6 @@ class TaxReportsState {
     );
   }
 
-  // Get the most recent report
   TaxReport? get mostRecentReport {
     if (taxReports.isEmpty) return null;
     final sortedReports = List<TaxReport>.from(taxReports);
@@ -49,7 +47,6 @@ class TaxReportsState {
   }
 }
 
-// View Model
 class TaxReportsViewModel extends StateNotifier<TaxReportsState> {
   final ReportsRepository _reportsRepository;
 
@@ -57,14 +54,14 @@ class TaxReportsViewModel extends StateNotifier<TaxReportsState> {
 
   Future<void> loadTaxReports() async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final taxReports = await _reportsRepository.getTaxReports();
       final mostRecent = taxReports.isNotEmpty ? 
           taxReports.reduce((a, b) => 
               (a.generatedAt ?? a.createdAt).isAfter(b.generatedAt ?? b.createdAt) ? a : b) 
           : null;
-      
+
       state = state.copyWith(
         isLoading: false,
         taxReports: taxReports,
@@ -94,7 +91,6 @@ class TaxReportsViewModel extends StateNotifier<TaxReportsState> {
   }
 }
 
-// Provider
 final taxReportsViewModelProvider = StateNotifierProvider<TaxReportsViewModel, TaxReportsState>((ref) {
   final reportsRepository = ref.watch(reportsRepositoryProvider);
   return TaxReportsViewModel(reportsRepository);

@@ -33,30 +33,20 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
-    // Initialize ViewModels
+
     _mainViewModel = ref.read(auditMainViewModelProvider);
-    
-    // Set audit report if provided directly
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print("🔍 UI: initState - widget.auditReport = ${widget.auditReport}");
-      print("🔍 UI: initState - _mainViewModel.currentAuditReport = ${_mainViewModel.currentAuditReport}");
-      
+
       if (widget.auditReport != null) {
-        print("🔍 UI: Using widget.auditReport");
-        print("🔍 UI: widget.auditReport.vulnerabilities.length = ${widget.auditReport!.vulnerabilities.length}");
         _currentAuditReport = widget.auditReport;
         setState(() {});
       } else if (_mainViewModel.currentAuditReport != null) {
-        print("🔍 UI: Using _mainViewModel.currentAuditReport");
-        print("🔍 UI: _mainViewModel.currentAuditReport.vulnerabilities.length = ${_mainViewModel.currentAuditReport!.vulnerabilities.length}");
         _currentAuditReport = _mainViewModel.currentAuditReport;
         setState(() {});
       }
-      
-      print("🔍 UI: Final _currentAuditReport = ${_currentAuditReport}");
+
       if (_currentAuditReport != null) {
-        print("🔍 UI: Final _currentAuditReport.vulnerabilities.length = ${_currentAuditReport!.vulnerabilities.length}");
       }
     });
   }
@@ -156,15 +146,13 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
   }
 
   Widget _buildResultsContent(AuditReport report) {
-    
+
     return Column(
       children: [
-        // Header with progress
         Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              // Progress indicator
               Row(
                 children: [
                   _buildProgressStep(1, false, true),
@@ -176,10 +164,9 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
                   _buildProgressStep(4, false, false),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
-              // Progress labels
+
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -192,25 +179,21 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
             ],
           ),
         ),
-        
-        // Content
+
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Contract Information Section
                 _buildContractInfoSection(report),
-                
+
                 const SizedBox(height: 16),
-                
-                // Audit Summary Section
+
                 _buildAuditSummarySection(report),
-                
+
                 const SizedBox(height: 16),
-                
-                // Vulnerabilities Section
+
                 _buildExpandableSection(
                   title: 'Vulnerabilities',
                   count: report.vulnerabilities.length,
@@ -219,10 +202,9 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
                   color: Colors.red,
                   content: _buildVulnerabilitiesContent(report),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
-                // Gas Optimization Section
+
                 _buildExpandableSection(
                   title: 'Gas Optimization',
                   count: report.gasOptimization.suggestions.length,
@@ -231,10 +213,9 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
                   color: Colors.green,
                   content: _buildGasOptimizationContent(report),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
-                // Recommendations Section
+
                 _buildExpandableSection(
                   title: 'Recommendations',
                   count: report.recommendations.length,
@@ -243,10 +224,9 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
                   color: Colors.blue,
                   content: _buildRecommendationsContent(report),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
-                // View Overall Assessment Button
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -275,7 +255,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
               ],
             ),
@@ -367,10 +347,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
   }
 
   Widget _buildVulnerabilitiesContent(AuditReport report) {
-    print("🔍 UI: _buildVulnerabilitiesContent called");
-    print("🔍 UI: report.vulnerabilities.length = ${report.vulnerabilities.length}");
-    print("🔍 UI: report.vulnerabilities = ${report.vulnerabilities}");
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -383,8 +360,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
           ),
         ),
         const SizedBox(height: 16),
-        
-        // List vulnerabilities
+
         ...report.vulnerabilities.map((vulnerability) => 
           _buildVulnerabilityItem(vulnerability)),
       ],
@@ -486,8 +462,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
           ),
         ),
         const SizedBox(height: 16),
-        
-        // List gas optimizations
+
         ...report.gasOptimization.suggestions.map((suggestion) => 
           _buildGasOptimizationItem(suggestion)),
       ],
@@ -576,7 +551,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
             ],
           ),
           const SizedBox(height: 16),
-          
+
           _buildInfoRow('Contract Name', report.contractName),
           _buildInfoRow('File Name', report.fileName),
           _buildInfoRow('Audit ID', report.id),
@@ -640,7 +615,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
             ),
           ),
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Expanded(
@@ -661,9 +636,9 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           Row(
             children: [
               Expanded(
@@ -737,8 +712,7 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
           ),
         ),
         const SizedBox(height: 16),
-        
-        // List recommendations
+
         ...report.recommendations.map((recommendation) => 
           _buildRecommendationItem(recommendation)),
       ],

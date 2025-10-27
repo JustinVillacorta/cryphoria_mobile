@@ -7,9 +7,8 @@ class CreatePayrollPeriodUseCase {
   CreatePayrollPeriodUseCase({required this.repository});
 
   Future<PayrollPeriod> execute(CreatePayrollPeriodRequest request) async {
-    // Validate the request
     _validateRequest(request);
-    
+
     return await repository.createPayrollPeriod(request);
   }
 

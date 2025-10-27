@@ -6,7 +6,7 @@ import '../../../../../dependency_injection/riverpod_providers.dart';
 import '../../../../domain/entities/document.dart';
 
 class ComplianceViewScreen extends ConsumerStatefulWidget {
-  const ComplianceViewScreen({Key? key}) : super(key: key);
+  const ComplianceViewScreen({super.key});
 
   @override
   ConsumerState<ComplianceViewScreen> createState() => _ComplianceViewScreenState();
@@ -14,8 +14,7 @@ class ComplianceViewScreen extends ConsumerStatefulWidget {
 
 class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
   final _formKey = GlobalKey<FormState>();
-  
-  // Text controllers for business information
+
   final TextEditingController _businessNameController = TextEditingController();
   final TextEditingController _businessTypeController = TextEditingController();
   final TextEditingController _businessRegistrationNumberController = TextEditingController();
@@ -23,11 +22,10 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
   final TextEditingController _businessPhoneController = TextEditingController();
   final TextEditingController _businessEmailController = TextEditingController();
 
-  // File upload states
   File? _dtiDocument;
   File? _birForm;
   File? _managerId;
-  
+
   bool _isUploading = false;
   List<Document> _myDocuments = [];
   bool _isLoadingDocuments = false;
@@ -79,7 +77,6 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
           children: [
               _buildMyDocumentsSection(),
               const SizedBox(height: 24),
-              // Business Information Section
               _buildSectionHeader(
                 'Business Information',
                 Icons.business,
@@ -87,10 +84,9 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
               ),
               const SizedBox(height: 16),
               _buildBusinessInfoForm(),
-              
+
               const SizedBox(height: 32),
-              
-              // Document Upload Section
+
               _buildSectionHeader(
                 'Required Documents',
                 Icons.upload_file,
@@ -98,12 +94,11 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
               ),
               const SizedBox(height: 16),
               _buildDocumentUploads(),
-              
+
               const SizedBox(height: 32),
-              
-              // Submit Button
+
               _buildSubmitButton(),
-              
+
               const SizedBox(height: 32),
             ],
           ),
@@ -301,7 +296,6 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
           if (document.fileUrl != null)
             IconButton(
               onPressed: () {
-                // TODO: Implement document preview/download
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Document preview not implemented yet'),
@@ -597,7 +591,7 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
     required VoidCallback onUpload,
   }) {
     final bool isUploaded = file != null;
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -734,7 +728,6 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
 
     return Column(
       children: [
-        // Debug info (only show when not all fields are complete)
         if (!canSubmit) ...[
           Container(
             width: double.infinity,
@@ -776,8 +769,7 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
             ),
           ),
         ],
-        
-        // Submit Button
+
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -846,6 +838,7 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
   }
 
   Future<void> _pickFile(String documentType) async {
+    final scaffoldContext = context;
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -855,11 +848,10 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
 
       if (result != null && result.files.isNotEmpty) {
         final pickedFile = result.files.first;
-        
-        // Check file size (10MB limit)
+
         if (pickedFile.size > 10 * 1024 * 1024) {
           if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
               const SnackBar(
                 content: Text('File size exceeds 10MB limit'),
                 backgroundColor: Colors.red,
@@ -884,8 +876,8 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
         });
 
         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+SnackBar(
               content: Text('$documentType uploaded successfully'),
               backgroundColor: Colors.green,
                             ),
@@ -894,7 +886,7 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
       }
     } catch (e) {
       if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                             SnackBar(
             content: Text('Error uploading file: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -905,8 +897,9 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
   }
 
   Future<void> _submitCompliance() async {
+    final scaffoldContext = context;
     if (_dtiDocument == null || _birForm == null || _managerId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
         const SnackBar(
           content: Text('Please upload all required documents'),
           backgroundColor: Colors.red,
@@ -920,11 +913,9 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
     });
 
     try {
-      print("🚀 Starting document upload...");
-      
-      // Show progress dialog
+
       showDialog(
-        context: context,
+        context: scaffoldContext,
         barrierDismissible: false,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -948,11 +939,11 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
           );
         },
       );
-      
+
       final uploadUseCase = ref.read(uploadBusinessDocumentsUseCaseProvider);
-      
+
       await uploadUseCase.execute(
-        businessName: '', // Not sending business info for now
+        businessName: '',
         businessType: '',
         businessRegistrationNumber: '',
         businessAddress: '',
@@ -963,11 +954,10 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
         managerId: _managerId!,
       );
 
-      // Update progress dialog to show submitting
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
+        Navigator.of(scaffoldContext, rootNavigator: true).pop();
         showDialog(
-          context: context,
+          context: scaffoldContext,
           barrierDismissible: false,
           builder: (BuildContext context) {
             return AlertDialog(
@@ -993,37 +983,32 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
         );
       }
 
-      // Submit documents for approval
       await uploadUseCase.submitDocumentsForApproval();
 
-      // Close progress dialog
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
+        Navigator.of(scaffoldContext, rootNavigator: true).pop();
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           const SnackBar(
             content: Text('Documents uploaded and submitted for approval successfully!'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 4),
           ),
         );
-        
-        // Clear the form after successful submission
+
         _clearForm();
-        
-        // Reload documents to show the newly uploaded ones
+
         _loadMyDocuments();
       }
     } catch (e) {
-      // Close progress dialog if it's open
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
+        Navigator.of(scaffoldContext, rootNavigator: true).pop();
       }
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
             content: Text('Error uploading documents: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -1056,7 +1041,7 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
     try {
       final uploadUseCase = ref.read(uploadBusinessDocumentsUseCaseProvider);
       final documents = await uploadUseCase.getMyDocuments();
-      
+
       if (mounted) {
         setState(() {
           _myDocuments = documents;

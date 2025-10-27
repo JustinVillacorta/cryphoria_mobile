@@ -13,7 +13,6 @@ class SubmitSupportTicketUseCase {
     required String priority,
     List<String>? attachments,
   }) async {
-    // Validate required fields
     if (subject.trim().isEmpty) {
       throw Exception('Subject is required');
     }
@@ -27,12 +26,10 @@ class SubmitSupportTicketUseCase {
       throw Exception('Priority is required');
     }
 
-    // Validate subject length
     if (subject.length > 200) {
       throw Exception('Subject must be 200 characters or less');
     }
 
-    // Validate message length
     if (message.length < 10) {
       throw Exception('Message must be at least 10 characters long');
     }

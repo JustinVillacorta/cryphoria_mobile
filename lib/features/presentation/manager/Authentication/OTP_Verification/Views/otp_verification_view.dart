@@ -6,7 +6,7 @@ import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Lo
 
 class OTPVerificationView extends ConsumerStatefulWidget {
   final String email;
-  
+
   const OTPVerificationView({
     super.key,
     required this.email,
@@ -43,7 +43,6 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Title
                     const Text(
                       'Verify Your Email',
                       style: TextStyle(
@@ -54,8 +53,7 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    
-                    // Subtitle
+
                     Text(
                       'We\'ve sent a verification code to\n${widget.email}',
                       style: const TextStyle(
@@ -66,22 +64,17 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
                     ),
                     const SizedBox(height: 40),
 
-                    // OTP Input Field
                     _buildOTPField(),
                     const SizedBox(height: 24),
 
-                    // Verify Button
                     _buildVerifyButton(),
                     const SizedBox(height: 24),
 
-                    // Resend Code
                     _buildResendCode(),
                     const SizedBox(height: 24),
 
-                    // Back to Login
                     _buildBackToLogin(),
 
-                    // Error message
                     _buildErrorMessage(),
                   ],
                 ),
@@ -108,7 +101,7 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
       decoration: InputDecoration(
         labelText: 'Enter OTP Code',
         hintText: '000000',
-        counterText: '', // Hide character counter
+        counterText: '',
         prefixIcon: const Icon(
           Icons.security_outlined,
           color: Colors.black54,
@@ -138,10 +131,10 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
   }
 
   Widget _buildVerifyButton() {
-    final viewModel = ref.watch(otpVerificationViewModelProvider);
-    
+    final state = ref.watch(otpVerificationViewModelProvider);
+
     return ElevatedButton(
-      onPressed: viewModel.isLoading ? null : _verifyOTP,
+      onPressed: state.isLoading ? null : _verifyOTP,
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF8B5CF6),
         foregroundColor: Colors.white,
@@ -151,7 +144,7 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
         ),
         elevation: 0,
       ),
-      child: viewModel.isLoading
+      child: state.isLoading
           ? const SizedBox(
               height: 20,
               width: 20,
@@ -171,8 +164,8 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
   }
 
   Widget _buildResendCode() {
-    final viewModel = ref.watch(otpVerificationViewModelProvider);
-    
+    final state = ref.watch(otpVerificationViewModelProvider);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -184,11 +177,11 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
           ),
         ),
         GestureDetector(
-          onTap: viewModel.isLoading ? null : _resendCode,
+          onTap: state.isLoading ? null : _resendCode,
           child: Text(
             'Resend Code',
             style: TextStyle(
-              color: viewModel.isLoading ? Colors.grey : const Color(0xFF8B5CF6),
+              color: state.isLoading ? Colors.grey : const Color(0xFF8B5CF6),
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -230,9 +223,9 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
   }
 
   Widget _buildErrorMessage() {
-    final viewModel = ref.watch(otpVerificationViewModelProvider);
-    
-    if (viewModel.error != null && viewModel.error!.isNotEmpty) {
+    final state = ref.watch(otpVerificationViewModelProvider);
+
+    if (state.error != null && state.error!.isNotEmpty) {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -241,7 +234,7 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
           border: Border.all(color: Colors.red.shade200),
         ),
         child: Text(
-          viewModel.error!,
+          state.error!,
           style: TextStyle(
             color: Colors.red.shade700,
             fontSize: 14,
@@ -274,24 +267,22 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
       return;
     }
 
-    final viewModel = ref.read(otpVerificationViewModelProvider);
-
-    await viewModel.verifyOTP(
+    await ref.read(otpVerificationViewModelProvider.notifier).verifyOTP(
       widget.email,
       _otpController.text,
     );
-    
+
     if (!mounted) return;
-    
-    if (viewModel.error == null && viewModel.isVerified) {
-      // OTP verification successful - redirect to login screen
+
+    final state = ref.read(otpVerificationViewModelProvider);
+    if (state.error == null && state.isVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Email verified successfully! Please log in.'),
           backgroundColor: Colors.green,
         ),
       );
-      
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LogIn()),
@@ -300,13 +291,12 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
   }
 
   void _resendCode() async {
-    final viewModel = ref.read(otpVerificationViewModelProvider);
-    
-    await viewModel.resendOTP(widget.email);
-    
+    await ref.read(otpVerificationViewModelProvider.notifier).resendOTP(widget.email);
+
     if (!mounted) return;
-    
-    if (viewModel.error == null) {
+
+    final state = ref.read(otpVerificationViewModelProvider);
+    if (state.error == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Verification code resent successfully!'),

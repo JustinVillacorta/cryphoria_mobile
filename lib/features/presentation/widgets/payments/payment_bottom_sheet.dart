@@ -8,8 +8,8 @@ import '../../../../dependency_injection/riverpod_providers.dart';
 
 class PaymentBottomSheet extends ConsumerStatefulWidget {
   final Wallet? wallet;
- 
-  const PaymentBottomSheet({Key? key, this.wallet}) : super(key: key);
+
+  const PaymentBottomSheet({super.key, this.wallet});
 
   @override
   ConsumerState<PaymentBottomSheet> createState() => _PaymentBottomSheetState();
@@ -22,11 +22,9 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   String recipientAddress = '';
   String description = '';
   String category = 'BUSINESS_PAYMENT';
-  
-  // Service dependencies
+
   late EthPaymentService _ethPaymentService;
-  
-  // Gas estimation
+
   GasEstimate? _gasEstimate;
   bool _isEstimatingGas = false;
   bool _isSendingPayment = false;
@@ -62,17 +60,16 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     }
 
     try {
-      print("🔄 Starting gas estimation...");
-      print("📋 From: ${widget.wallet!.address}");
-      print("📋 To: $recipientAddress");
-      print("📋 Amount: $amount");
-      
-      // First check server health
-      print("🏥 Checking server connectivity...");
+      debugPrint("🔄 Starting gas estimation...");
+      debugPrint("📋 From: ${widget.wallet!.address}");
+      debugPrint("📋 To: $recipientAddress");
+      debugPrint("📋 Amount: $amount");
+
+      debugPrint("🏥 Checking server connectivity...");
       final isServerHealthy = await _ethPaymentService.remoteDataSource.checkServerHealth();
-      
+
       if (!isServerHealthy) {
-        print("⚠️ Server health check failed, using default gas estimate");
+        debugPrint("⚠️ Server health check failed, using default gas estimate");
         if (mounted && !_isDisposed) {
           setState(() {
             _isEstimatingGas = false;
@@ -85,7 +82,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
               fastGasPrice: 30.0,
             );
           });
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Server not reachable. Using default gas fee (0.001 ETH). Please check if backend server is running.'),
@@ -100,14 +97,14 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
         }
         return;
       }
-      
+
       final gasEstimate = await _ethPaymentService.estimateGas(
         fromAddress: widget.wallet!.address,
         toAddress: recipientAddress,
         amount: double.parse(amount),
       );
 
-      print("✅ Gas estimation successful: ${gasEstimate.toString()}");
+      debugPrint("✅ Gas estimation successful: ${gasEstimate.toString()}");
       if (mounted && !_isDisposed) {
         setState(() {
           _gasEstimate = gasEstimate;
@@ -115,21 +112,20 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
         });
       }
     } catch (e) {
-      print("❌ Gas estimation failed: $e");
+      debugPrint("❌ Gas estimation failed: $e");
       if (mounted && !_isDisposed) {
         setState(() {
           _isEstimatingGas = false;
-          // Set a default gas estimate so transaction can still proceed
           _gasEstimate = GasEstimate(
-            estimatedCostEth: 0.001, // Default gas fee
-            gasPriceGwei: 20.0, // Default gas price
-            gasLimit: 21000, // Default gas limit for ETH transfer
+            estimatedCostEth: 0.001,
+            gasPriceGwei: 20.0,
+            gasLimit: 21000,
             slowGasPrice: 10.0,
             standardGasPrice: 20.0,
             fastGasPrice: 30.0,
           );
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Gas estimation failed. Using default gas fee (0.001 ETH). You can still proceed.'),
@@ -157,13 +153,13 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     }
 
     try {
-      print('🚀 Starting ETH payment...');
-      print('📋 From: ${widget.wallet!.address}');
-      print('📋 To: $recipientAddress');
-      print('📋 Amount: $amount');
-      print('📋 Company: $recipientName');
-      print('📋 Category: $category');
-      print('📋 Description: $description');
+      debugPrint('🚀 Starting ETH payment...');
+      debugPrint('📋 From: ${widget.wallet!.address}');
+      debugPrint('📋 To: $recipientAddress');
+      debugPrint('📋 Amount: $amount');
+      debugPrint('📋 Company: $recipientName');
+      debugPrint('📋 Category: $category');
+      debugPrint('📋 Description: $description');
 
       final result = await _ethPaymentService.sendEthTransaction(
         fromWallet: widget.wallet!,
@@ -174,7 +170,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
         description: description.isNotEmpty ? description : null,
       );
 
-      print('✅ Payment successful! Transaction hash: ${result.transactionHash}');
+      debugPrint('✅ Payment successful! Transaction hash: ${result.transactionHash}');
 
       if (mounted && !_isDisposed) {
         setState(() {
@@ -191,14 +187,14 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
         );
       }
     } catch (e) {
-      print('🚨 Payment failed with error: $e');
-      print('🚨 Error type: ${e.runtimeType}');
-      
+      debugPrint('🚨 Payment failed with error: $e');
+      debugPrint('🚨 Error type: ${e.runtimeType}');
+
       if (mounted && !_isDisposed) {
         setState(() {
           _isSendingPayment = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Payment failed: $e'),
@@ -221,13 +217,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     return '${(amountValue + gasValue).toStringAsFixed(6)} ETH';
   }
 
-  String _calculateUSDEquivalent() {
-    final amountValue = double.tryParse(amount) ?? 0.0;
-    // ETH to USD conversion - in real app, this would use current exchange rates
-    const double ethUsdRate = 3200.0; // Example ETH price
-    final usdAmount = amountValue * ethUsdRate;
-    return '\$${usdAmount.toStringAsFixed(2)}';
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -283,63 +273,6 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     );
   }
 
-  Widget _buildProgressIndicator() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-      child: Row(
-        children: [
-          _buildStepIndicator('Details', 0),
-          _buildProgressLine(0),
-          _buildStepIndicator('Confirm', 1),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepIndicator(String label, int step) {
-    final isCompleted = step < currentStep;
-    final isCurrent = step == currentStep;
-
-    return Column(
-      children: [
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isCompleted ? const Color(0xFF8B5CF6) : Colors.grey[300],
-            border: isCurrent
-                ? Border.all(color: const Color(0xFF8B5CF6), width: 2)
-                : null,
-          ),
-          child: isCompleted
-              ? const Icon(Icons.check, color: Colors.white, size: 16)
-              : null,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: isCompleted ? const Color(0xFF8B5CF6) : Colors.grey[600],
-            fontWeight: isCompleted ? FontWeight.w500 : FontWeight.normal,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProgressLine(int step) {
-    final isCompleted = step < currentStep;
-
-    return Expanded(
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.only(bottom: 20),
-        color: isCompleted ? const Color(0xFF8B5CF6) : Colors.grey[300],
-      ),
-    );
-  }
 
   Widget _buildCurrentStep() {
     switch (currentStep) {
@@ -359,7 +292,6 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Recipient Information Section
             const Text(
               'Recipient Information',
               style: TextStyle(
@@ -439,7 +371,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
             DropdownButtonFormField<String>(
               value: category,
               onChanged: (value) {
-                print('🔍 Category changed from $category to $value');
+                debugPrint('🔍 Category changed from $category to $value');
                 setState(() => category = value!);
               },
               decoration: InputDecoration(
@@ -464,10 +396,9 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                 child: Text(cat),
               )).toList(),
             ),
-            
+
             const SizedBox(height: 16),
-            
-            // Description Field
+
             const Text(
               'Description',
               style: TextStyle(
@@ -479,7 +410,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
             const SizedBox(height: 8),
             TextFormField(
               onChanged: (value) {
-                print('🔍 Description changed to: $value');
+                debugPrint('🔍 Description changed to: $value');
                 description = value;
               },
               decoration: InputDecoration(
@@ -500,10 +431,9 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
               ),
               maxLines: 2,
             ),
-            
+
             const SizedBox(height: 32),
-            
-            // Amount Section
+
             const Text(
               'Payment Amount',
               style: TextStyle(
@@ -723,7 +653,6 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
 
 
   Widget _buildBottomActions() {
-    // Form validity: require connected wallet, recipient address, and a positive numeric amount.
     final double amountValue = double.tryParse(amount) ?? 0.0;
     final bool isFormValid = widget.wallet != null && recipientAddress.trim().isNotEmpty && amountValue > 0;
 
@@ -761,12 +690,10 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
-              // Disable button when sending, or when on step 0 and form is invalid.
               onPressed: (_isSendingPayment || (currentStep == 0 && !isFormValid))
                   ? null
                   : () async {
                       if (currentStep < 1) {
-                        // If moving to confirmation step (step 1), estimate gas
                         if (widget.wallet != null && amount.isNotEmpty && recipientAddress.isNotEmpty) {
                           await _estimateGas();
                         }
@@ -774,7 +701,6 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                           currentStep++;
                         });
                       } else {
-                        // Handle payment confirmation
                         if (widget.wallet != null && isFormValid) {
                           await _sendPayment();
                         } else {
@@ -789,7 +715,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: (_isSendingPayment || (currentStep == 0 && !isFormValid))
-                    ? Colors.grey // visually indicate disabled state
+                    ? Colors.grey
                     : const Color(0xFF8B5CF6),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -821,4 +747,3 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     );
   }
 }
-

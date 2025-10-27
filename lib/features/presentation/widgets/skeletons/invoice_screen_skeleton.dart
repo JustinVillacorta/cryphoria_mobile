@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
-/// Lightweight shimmer effect without extra dependencies.
 class _Shimmer extends StatefulWidget {
-  const _Shimmer({required this.child, Key? key}) : super(key: key);
+  const _Shimmer({required this.child});
   final Widget child;
 
   @override
@@ -24,8 +23,8 @@ class _ShimmerState extends State<_Shimmer> with SingleTickerProviderStateMixin 
 
   @override
   Widget build(BuildContext context) {
-    final base = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.6);
-    final highlight = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.25);
+    final base = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
+    final highlight = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.25);
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -61,7 +60,7 @@ class _GradientTranslation extends GradientTransform {
 }
 
 class _Bone extends StatelessWidget {
-  const _Bone({this.height = 14, this.width, Key? key}) : super(key: key);
+  const _Bone({this.height = 14, this.width});
   final double height;
   final double? width;
   @override
@@ -70,26 +69,21 @@ class _Bone extends StatelessWidget {
       height: height,
       width: width,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.7),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(12),
       ),
     );
   }
 }
 
-/// Invoice screen skeleton approximating:
-/// - Header with title and description
-/// - Search bar
-/// - Filter tabs
-/// - Invoice cards list
 class InvoiceScreenSkeleton extends StatelessWidget {
-  const InvoiceScreenSkeleton({Key? key, this.invoiceCount = 5}) : super(key: key);
+  const InvoiceScreenSkeleton({super.key, this.invoiceCount = 5});
 
   final int invoiceCount;
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+    final cardColor = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
 
     return Container(
       color: const Color(0xFFF8F9FA),
@@ -100,7 +94,6 @@ class InvoiceScreenSkeleton extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 const _Bone(height: 28, width: 120),
                 const SizedBox(height: 8),
                 const _Bone(height: 14, width: double.infinity),
@@ -108,7 +101,6 @@ class InvoiceScreenSkeleton extends StatelessWidget {
                 const _Bone(height: 14, width: 300),
                 const SizedBox(height: 24),
 
-                // Search Bar
                 Container(
                   height: 48,
                   decoration: BoxDecoration(
@@ -118,7 +110,6 @@ class InvoiceScreenSkeleton extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Filter Tabs
                 Row(
                   children: [
                     _buildFilterTabSkeleton(cardColor),
@@ -130,7 +121,6 @@ class InvoiceScreenSkeleton extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Invoice Cards
                 Expanded(
                   child: ListView.builder(
                     itemCount: invoiceCount,
@@ -169,7 +159,7 @@ class InvoiceScreenSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -178,7 +168,6 @@ class InvoiceScreenSkeleton extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row with invoice number and status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -194,12 +183,10 @@ class InvoiceScreenSkeleton extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          
-          // Client name
+
           const _Bone(height: 16, width: 180),
           const SizedBox(height: 4),
-          
-          // Amount and date row
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -208,8 +195,7 @@ class InvoiceScreenSkeleton extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          
-          // Description line
+
           const _Bone(height: 12, width: 200),
         ],
       ),

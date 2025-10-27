@@ -38,10 +38,9 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final viewModel = ref.watch(employeeViewModelProvider);
-    
-    // Responsive sizing
+
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final verticalPadding = isDesktop ? 20.0 : isTablet ? 16.0 : 14.0;
     final appBarHeight = isDesktop ? 72.0 : isTablet ? 68.0 : 64.0;
@@ -84,7 +83,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF9747FF).withOpacity(0.3),
+                          color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -123,8 +122,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         SizedBox(height: isSmallScreen ? 8 : 12),
-                        
-                        // Search Bar
+
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                           child: TextField(
@@ -169,10 +167,9 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                             onChanged: viewModel.searchEmployees,
                           ),
                         ),
-                        
+
                         SizedBox(height: isSmallScreen ? 16 : 20),
-                        
-                        // Section Header with Filter
+
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                           child: Row(
@@ -197,7 +194,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                                     vertical: isTablet ? 10 : 8,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF9747FF).withOpacity(0.1),
+                                    color: const Color(0xFF9747FF).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(
@@ -230,8 +227,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                             ],
                           ),
                         ),
-                        
-                        // Filter Section
+
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
@@ -247,8 +243,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                             ),
                           ),
                         ),
-                        
-                        // Employee List
+
                         Expanded(
                           child: ListView.builder(
                             padding: EdgeInsets.fromLTRB(
@@ -282,7 +277,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
     final mainIconSize = isDesktop ? 72.0 : isTablet ? 68.0 : 64.0;
     final titleSize = isDesktop ? 22.0 : isTablet ? 21.0 : 20.0;
     final subtitleSize = isDesktop ? 16.0 : isTablet ? 15.5 : 15.0;
-    
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -293,7 +288,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
               width: iconSize,
               height: iconSize,
               decoration: BoxDecoration(
-                color: const Color(0xFF9747FF).withOpacity(0.1),
+                color: const Color(0xFF9747FF).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(iconSize / 2),
               ),
               child: Stack(
@@ -318,7 +313,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
                       width: 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF9747FF).withOpacity(0.5),
+                        color: const Color(0xFF9747FF).withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -453,12 +448,11 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
     final avatarRadius = isTablet ? 26.0 : 24.0;
     final nameFontSize = isTablet ? 17.0 : 16.0;
     final detailsFontSize = isTablet ? 14.0 : 13.0;
-    
-    // Check if profile image is valid
+
     final hasValidImage = employee.profileImage != null && 
                           employee.profileImage!.isNotEmpty &&
                           Uri.tryParse(employee.profileImage!)?.hasAbsolutePath == true;
-    
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -477,7 +471,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -490,13 +484,13 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: const Color(0xFF9747FF).withOpacity(0.2),
+                  color: const Color(0xFF9747FF).withValues(alpha: 0.2),
                   width: 2,
                 ),
               ),
               child: CircleAvatar(
                 radius: avatarRadius,
-                backgroundColor: const Color(0xFF9747FF).withOpacity(0.1),
+                backgroundColor: const Color(0xFF9747FF).withValues(alpha: 0.1),
                 backgroundImage: hasValidImage
                     ? NetworkImage(employee.profileImage!)
                     : null,
@@ -510,7 +504,7 @@ class _EmployeeManagementScreenState extends ConsumerState<EmployeeManagementScr
               ),
             ),
             SizedBox(width: isTablet ? 16 : 14),
-            
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

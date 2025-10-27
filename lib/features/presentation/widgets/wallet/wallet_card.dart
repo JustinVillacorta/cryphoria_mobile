@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet/manager_connect_wallet_bottom_sheet.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_Viewmodel.dart';
+
 
 class WalletCard extends ConsumerStatefulWidget {
   const WalletCard({super.key});
@@ -20,11 +20,9 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
   late AnimationController _animationController;
   late Animation<double> _animation;
 
-  // List of background images for different cards
   final List<String> _cardBackgrounds = [
     'assets/images/wallet_bg.png',
-    'assets/images/wallet_bg2.png', // Add your second background
-    // You can add more backgrounds here
+    'assets/images/wallet_bg2.png',
   ];
 
   @override
@@ -52,7 +50,6 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
   void _onVerticalDragUpdate(DragUpdateDetails details) {
     setState(() {
       _dragOffset += details.delta.dy;
-      // Limit the drag to prevent excessive movement
       _dragOffset = _dragOffset.clamp(-150.0, 150.0);
     });
   }
@@ -61,13 +58,10 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
     const swipeThreshold = 80.0;
 
     if (_dragOffset > swipeThreshold) {
-      // Swiped down - go to previous card
       _switchCard(-1);
     } else if (_dragOffset < -swipeThreshold) {
-      // Swiped up - go to next card
       _switchCard(1);
     } else {
-      // Return to original position
       _animateBackToPosition(0.0);
     }
   }
@@ -134,6 +128,8 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
 
         if (mounted) {
           await Future.delayed(const Duration(milliseconds: 100));
+          if (!mounted) return;
+          if (!context.mounted) return;
 
           final updated = ref.read(walletNotifierProvider);
           debugPrint('🔍 Manager UI - State after switch: wallet=${updated.wallet?.address}');
@@ -152,20 +148,20 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
                 backgroundColor: Colors.blue,
               ),
             );
-            // Show connect wallet bottom sheet after successful switch
             _showConnectWalletBottomSheet(context);
           }
         }
       } catch (e) {
         debugPrint('❌ Manager UI - Switch wallet error: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to switch wallet: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        if (!mounted) return;
+        if (!context.mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to switch wallet: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -202,6 +198,8 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
 
         if (mounted) {
           await Future.delayed(const Duration(milliseconds: 100));
+          if (!mounted) return;
+          if (!context.mounted) return;
 
           final updated = ref.read(walletNotifierProvider);
           debugPrint('🔍 Manager UI - State after disconnect: wallet=${updated.wallet?.address}');
@@ -224,14 +222,15 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
         }
       } catch (e) {
         debugPrint('❌ Manager UI - Disconnect error: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to disconnect: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        if (!mounted) return;
+        if (!context.mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to disconnect: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -281,7 +280,7 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
               child: ElevatedButton(
                 onPressed: notifier.clearError,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: screenHeight * 0.018),
@@ -297,13 +296,11 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
       );
     }
 
-    // Build stacked cards
     return SizedBox(
       height: 260,
       child: Stack(
-        clipBehavior: Clip.none, // allows animation overflow
+        clipBehavior: Clip.none,
         children: [
-          // Background card (next card in stack)
           Positioned(
             top: 8,
             left: 8,
@@ -320,7 +317,6 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
               ),
             ),
           ),
-          // Foreground card (current card)
           Positioned(
             top: _dragOffset * 0.2,
             left: 0,
@@ -385,7 +381,7 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -398,8 +394,6 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
   }
 
   Widget _buildNoWalletView(double screenWidth, double screenHeight, bool isInteractive) {
-    // Mirror the connected wallet layout but show zero values and provide
-    // a "Connect Wallet" option in the three-dot menu when interactive.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -452,7 +446,6 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
 
         const SizedBox(height: 8),
 
-        // Balance (zero) and fiat conversion
         Text(
           '0.000000 ETH',
           style: TextStyle(
@@ -491,7 +484,7 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: DropdownButton<String>(
@@ -500,7 +493,6 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
                   dropdownColor: Colors.white,
                   underline: const SizedBox(),
                   isDense: true,
-                  // Show the selected item in white when the dropdown is closed
                   selectedItemBuilder: (BuildContext context) {
                     return ['PHP', 'USD'].map<Widget>((String item) {
                       return Text(
@@ -575,14 +567,12 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
 
                   switch (value) {
                     case 'refresh':
-                      // Check if widget is still mounted before refreshing
                       if (!mounted) return;
-                      
+
                       await notifier.refreshWallet();
-                      
-                      // Check again after async operation
+
                       if (!mounted) return;
-                      
+
                       final updated = ref.read(walletNotifierProvider);
                       if (mounted && updated.error != null && updated.error!.isNotEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -661,9 +651,9 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
                 vertical: screenHeight * 0.005,
               ),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -679,7 +669,7 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
                   SizedBox(width: screenWidth * 0.015),
                   Icon(
                     Icons.copy,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     size: screenWidth * 0.035,
                   ),
                 ],
@@ -693,9 +683,9 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
               vertical: screenHeight * 0.005,
             ),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
             ),
             child: Text(
               state.wallet!.displayAddress,
@@ -747,7 +737,7 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: DropdownButton<String>(
@@ -756,7 +746,6 @@ class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProvid
                   dropdownColor: Colors.white,
                   underline: const SizedBox(),
                   isDense: true,
-                  // Show the selected item in white when the dropdown is closed
                   selectedItemBuilder: (BuildContext context) {
                     return ['PHP', 'USD'].map<Widget>((String item) {
                       return Text(

@@ -1,4 +1,3 @@
-// lib/features/presentation/widgets/pdf_generation_helper.dart
 
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -8,8 +7,7 @@ import '../../../domain/entities/income_statement.dart';
 class PdfGenerationHelper {
   static Future<String> generateTaxReportPdf(Map<String, dynamic> reportData) async {
     final pdf = pw.Document();
-    
-    // Add Tax Report content
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
@@ -24,8 +22,7 @@ class PdfGenerationHelper {
                 ),
               ),
               pw.SizedBox(height: 20),
-              
-              // Report Information
+
               if (reportData['report_info'] != null) ...[
                 pw.Text(
                   'Report Information',
@@ -39,8 +36,7 @@ class PdfGenerationHelper {
                 pw.Text('Generated: ${reportData['report_info']['generated_at'] ?? 'N/A'}'),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Financial Performance
+
               if (reportData['financial_data'] != null) ...[
                 pw.Text(
                   'Financial Performance',
@@ -54,8 +50,7 @@ class PdfGenerationHelper {
                 pw.Text('Total Expenses: \$${reportData['financial_data']['total_expenses']?.toStringAsFixed(2) ?? '0.00'}'),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Tax Summary
+
               if (reportData['summary'] != null) ...[
                 pw.Text(
                   'Tax Summary',
@@ -70,8 +65,7 @@ class PdfGenerationHelper {
                 pw.Text('Net Tax Owed: \$${reportData['summary']['net_tax_owed']?.toStringAsFixed(2) ?? '0.00'}'),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Metadata
+
               if (reportData['metadata'] != null) ...[
                 pw.Text(
                   'Report Details',
@@ -83,8 +77,7 @@ class PdfGenerationHelper {
                 pw.Text('Tax Year: ${reportData['metadata']['tax_year'] ?? DateTime.now().year}'),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Analysis
+
               if (reportData['analysis'] != null && reportData['analysis'].toString().isNotEmpty) ...[
                 pw.Text(
                   'Analysis',
@@ -101,13 +94,13 @@ class PdfGenerationHelper {
         },
       ),
     );
-    
+
     return await _savePdf(pdf, 'tax_report');
   }
-  
+
   static Future<String> generateBalanceSheetPdf(Map<String, dynamic> reportData) async {
     final pdf = pw.Document();
-    
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
@@ -122,8 +115,7 @@ class PdfGenerationHelper {
                 ),
               ),
               pw.SizedBox(height: 20),
-              
-              // Summary
+
               if (reportData['summary'] != null) ...[
                 pw.Text(
                   'Financial Summary',
@@ -135,8 +127,7 @@ class PdfGenerationHelper {
                 pw.Text('Total Equity: \$${reportData['summary']['total_equity']?.toStringAsFixed(2) ?? '0.00'}'),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Assets
+
               if (reportData['assets'] != null) ...[
                 pw.Text(
                   'Assets',
@@ -162,7 +153,6 @@ class PdfGenerationHelper {
                         ),
                       ],
                     ),
-                    // Current Assets
                     if (reportData['assets']['current_assets'] != null) ...[
                       pw.TableRow(
                       children: [
@@ -202,7 +192,6 @@ class PdfGenerationHelper {
                         ],
                       ),
                     ],
-                    // Non-Current Assets
                     if (reportData['assets']['non_current_assets'] != null) ...[
                       pw.TableRow(
                         children: [
@@ -268,7 +257,6 @@ class PdfGenerationHelper {
                         ],
                       ),
                     ],
-                    // Total Assets
                     pw.TableRow(
                       children: [
                         pw.Padding(
@@ -285,8 +273,7 @@ class PdfGenerationHelper {
                 ),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Liabilities
+
               if (reportData['liabilities'] != null) ...[
                 pw.Text(
                   'Liabilities',
@@ -312,7 +299,6 @@ class PdfGenerationHelper {
                         ),
                       ],
                     ),
-                    // Current Liabilities
                     if (reportData['liabilities']['current_liabilities'] != null) ...[
                       pw.TableRow(
                         children: [
@@ -378,7 +364,6 @@ class PdfGenerationHelper {
                         ],
                       ),
                     ],
-                    // Long-term Liabilities
                     if (reportData['liabilities']['long_term_liabilities'] != null) ...[
                       pw.TableRow(
                         children: [
@@ -444,7 +429,6 @@ class PdfGenerationHelper {
                         ],
                       ),
                     ],
-                    // Total Liabilities
                     pw.TableRow(
                       children: [
                         pw.Padding(
@@ -461,8 +445,7 @@ class PdfGenerationHelper {
                 ),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Equity
+
               if (reportData['equity'] != null) ...[
                 pw.Text(
                   'Equity',
@@ -529,8 +512,7 @@ class PdfGenerationHelper {
                   ],
                 ),
                 pw.SizedBox(height: 20),
-                
-                // Report Information
+
                 pw.Text(
                   'Report Information',
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
@@ -545,13 +527,13 @@ class PdfGenerationHelper {
         },
       ),
     );
-    
+
     return await _savePdf(pdf, 'balance_sheet');
   }
-  
+
   static Future<String> generateCashFlowPdf(Map<String, dynamic> reportData) async {
     final pdf = pw.Document();
-    
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
@@ -566,8 +548,7 @@ class PdfGenerationHelper {
                 ),
               ),
               pw.SizedBox(height: 10),
-              
-              // Period Information
+
               if (reportData['period_info'] != null) ...[
                 pw.Text(
                   'Period: ${reportData['period_info']['period_start']} to ${reportData['period_info']['period_end']}',
@@ -583,8 +564,7 @@ class PdfGenerationHelper {
                 ),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Cash Flow Summary Table
+
               if (reportData['summary'] != null) ...[
                 pw.Text(
                   'Cash Flow Summary',
@@ -687,8 +667,7 @@ class PdfGenerationHelper {
                   ],
                 ),
                 pw.SizedBox(height: 20),
-                
-                // Report Information
+
                 pw.Text(
                   'Report Information',
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
@@ -704,20 +683,19 @@ class PdfGenerationHelper {
         },
       ),
     );
-    
+
     return await _savePdf(pdf, 'cash_flow');
   }
-  
+
   static Future<String> generatePayslipPdf(Map<String, dynamic> payslipData) async {
     final pdf = pw.Document();
-    
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // Header
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(20),
@@ -745,10 +723,9 @@ class PdfGenerationHelper {
                   ],
                 ),
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Employee Information
+
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
@@ -787,16 +764,15 @@ class PdfGenerationHelper {
                   ),
                 ],
               ),
-              
+
               pw.SizedBox(height: 30),
-              
-              // Earnings Section
+
               pw.Text(
                 'Earnings',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
-              
+
               pw.Table(
                 border: pw.TableBorder.all(),
                 columnWidths: {
@@ -844,16 +820,15 @@ class PdfGenerationHelper {
                   ),
                 ],
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Deductions Section
+
               pw.Text(
                 'Deductions',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
-              
+
               pw.Table(
                 border: pw.TableBorder.all(),
                 columnWidths: {
@@ -941,10 +916,9 @@ class PdfGenerationHelper {
                   ),
                 ],
               ),
-              
+
               pw.SizedBox(height: 30),
-              
-              // Net Pay Section
+
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(20),
@@ -965,10 +939,9 @@ class PdfGenerationHelper {
                   ],
                 ),
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Cryptocurrency Payment Details
+
               if (payslipData['crypto_amount'] != null && payslipData['crypto_amount'] > 0) ...[
                 pw.Text(
                   'Cryptocurrency Payment',
@@ -992,10 +965,9 @@ class PdfGenerationHelper {
                   ),
                 ),
               ],
-              
+
               pw.SizedBox(height: 30),
-              
-              // Footer
+
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(15),
@@ -1019,10 +991,10 @@ class PdfGenerationHelper {
         },
       ),
     );
-    
+
     return await _savePdf(pdf, 'payslip');
   }
-  
+
   static String _formatDate(String? dateString) {
     if (dateString == null) return 'N/A';
     try {
@@ -1032,10 +1004,10 @@ class PdfGenerationHelper {
       return 'N/A';
     }
   }
-  
+
   static Future<String> generateIncomeStatementPdf(IncomeStatement incomeStatement) async {
     final pdf = pw.Document();
-    
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
@@ -1050,8 +1022,7 @@ class PdfGenerationHelper {
                 ),
               ),
               pw.SizedBox(height: 20),
-              
-              // Summary
+
               pw.Text(
                 'Financial Summary',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
@@ -1061,8 +1032,7 @@ class PdfGenerationHelper {
               pw.Text('Total Expenses: \$${incomeStatement.expenses.totalExpenses.toStringAsFixed(2)}'),
               pw.Text('Net Income: \$${incomeStatement.netIncome.netIncome.toStringAsFixed(2)}'),
               pw.SizedBox(height: 20),
-              
-              // Report Information
+
               pw.Text(
                 'Report Information',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
@@ -1076,8 +1046,7 @@ class PdfGenerationHelper {
               pw.Text('Period Length: ${incomeStatement.metadata.periodLengthDays} days'),
               pw.Text('Primary Revenue Source: ${incomeStatement.summary.primaryRevenueSource}'),
               pw.SizedBox(height: 20),
-              
-              // Revenue
+
               pw.Text(
                 'Revenue',
                 style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
@@ -1114,7 +1083,6 @@ class PdfGenerationHelper {
                       ),
                     ],
                   ),
-                  // Removed Payroll Income row
                   pw.TableRow(
                     children: [
                       pw.Padding(
@@ -1134,13 +1102,13 @@ class PdfGenerationHelper {
         },
       ),
     );
-    
+
     return await _savePdf(pdf, 'income_statement');
   }
-  
+
   static Future<String> generateInvestmentPerformancePdf(Map<String, dynamic> reportData) async {
     final pdf = pw.Document();
-    
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
@@ -1155,8 +1123,7 @@ class PdfGenerationHelper {
                 ),
               ),
               pw.SizedBox(height: 20),
-              
-              // Summary
+
               if (reportData['summary'] != null) ...[
                 pw.Text(
                   'Portfolio Summary',
@@ -1168,8 +1135,7 @@ class PdfGenerationHelper {
                 pw.Text('Success: ${reportData['summary']['success'] ?? false}'),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Holdings
+
               if (reportData['holdings'] != null) ...[
                 pw.Text(
                   'Portfolio Holdings',
@@ -1224,7 +1190,7 @@ class PdfGenerationHelper {
                           child: pw.Text('\$${(holding['value'] ?? 0).abs().toStringAsFixed(2)}'),
                         ),
                       ],
-                    )).toList(),
+                    )),
                   ],
                 ),
               ],
@@ -1233,13 +1199,13 @@ class PdfGenerationHelper {
         },
       ),
     );
-    
+
     return await _savePdf(pdf, 'investment_performance');
   }
-  
+
   static Future<String> generatePayrollSummaryPdf(Map<String, dynamic> reportData) async {
     final pdf = pw.Document();
-    
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
@@ -1254,8 +1220,7 @@ class PdfGenerationHelper {
                 ),
               ),
               pw.SizedBox(height: 20),
-              
-              // Summary
+
               if (reportData['summary'] != null) ...[
                 pw.Text(
                   'Payroll Summary',
@@ -1267,8 +1232,7 @@ class PdfGenerationHelper {
                 pw.Text('Currency: ${reportData['summary']['currency'] ?? 'USD'}'),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Payslips
+
               if (reportData['payslips'] != null) ...[
                 pw.Text(
                   'Employee Payslips',
@@ -1314,7 +1278,7 @@ class PdfGenerationHelper {
                           child: pw.Text('\$${(payslip['tax_deduction'] ?? 0).toStringAsFixed(2)}'),
                         ),
                       ],
-                    )).toList(),
+                    )),
                   ],
                 ),
               ],
@@ -1323,20 +1287,19 @@ class PdfGenerationHelper {
         },
       ),
     );
-    
+
     return await _savePdf(pdf, 'payroll_summary');
   }
-  
+
   static Future<String> generateAuditReportPdf(dynamic auditReport) async {
     final pdf = pw.Document();
-    
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // Header
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(20),
@@ -1372,16 +1335,15 @@ class PdfGenerationHelper {
                   ],
                 ),
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Security Analysis Section
+
               pw.Text(
                 'Security Analysis',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
-              
+
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(15),
@@ -1399,17 +1361,16 @@ class PdfGenerationHelper {
                   ],
                 ),
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Vulnerabilities Section
+
               if (auditReport.vulnerabilities.isNotEmpty) ...[
                 pw.Text(
                   'Vulnerabilities (${auditReport.vulnerabilities.length})',
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 10),
-                
+
                 pw.Table(
                   border: pw.TableBorder.all(),
                   columnWidths: {
@@ -1464,14 +1425,13 @@ class PdfGenerationHelper {
                 ),
                 pw.SizedBox(height: 20),
               ],
-              
-              // Gas Optimization Section
+
               pw.Text(
                 'Gas Optimization',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
-              
+
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(15),
@@ -1494,16 +1454,15 @@ class PdfGenerationHelper {
                   ],
                 ),
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Code Quality Section
+
               pw.Text(
                 'Code Quality',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
-              
+
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(15),
@@ -1528,17 +1487,16 @@ class PdfGenerationHelper {
                   ],
                 ),
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Recommendations Section
+
               if (auditReport.recommendations.isNotEmpty) ...[
                 pw.Text(
                   'Recommendations (${auditReport.recommendations.length})',
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 10),
-                
+
                 pw.Table(
                   border: pw.TableBorder.all(),
                   columnWidths: {
@@ -1592,10 +1550,9 @@ class PdfGenerationHelper {
                   ],
                 ),
               ],
-              
+
               pw.SizedBox(height: 30),
-              
-              // Footer
+
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(15),
@@ -1618,20 +1575,19 @@ class PdfGenerationHelper {
         },
       ),
     );
-    
+
     return await _savePdf(pdf, 'audit_report');
   }
-  
+
   static Future<String> generateInvoicePdf(dynamic invoice) async {
     final pdf = pw.Document();
-    
+
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // Header
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(20),
@@ -1663,16 +1619,15 @@ class PdfGenerationHelper {
                   ],
                 ),
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Parties Section
+
               pw.Text(
                 'Parties',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
-              
+
               pw.Row(
                 children: [
                   pw.Expanded(
@@ -1699,16 +1654,15 @@ class PdfGenerationHelper {
                   ),
                 ],
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Items Section
+
               pw.Text(
                 'Invoice Items',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
-              
+
               pw.Table(
                 border: pw.TableBorder.all(),
                 columnWidths: {
@@ -1761,10 +1715,9 @@ class PdfGenerationHelper {
                   )).toList(),
                 ],
               ),
-              
+
               pw.SizedBox(height: 20),
-              
-              // Totals Section
+
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(15),
@@ -1810,10 +1763,9 @@ class PdfGenerationHelper {
                   ],
                 ),
               ),
-              
+
               pw.SizedBox(height: 30),
-              
-              // Footer
+
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(15),
@@ -1836,19 +1788,17 @@ class PdfGenerationHelper {
         },
       ),
     );
-    
+
     return await _savePdf(pdf, 'invoice');
   }
-  
+
   static Future<String> _savePdf(pw.Document pdf, String fileName) async {
     final bytes = await pdf.save();
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/${fileName}_${DateTime.now().millisecondsSinceEpoch}.pdf');
     await file.writeAsBytes(bytes);
-    
-    // Don't automatically open the file to avoid loading state issues
-    // Users can manually open the file from the success message
-    
+
+
     return file.path;
   }
 }

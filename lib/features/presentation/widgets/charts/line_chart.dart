@@ -29,8 +29,8 @@ class MiniLineChart extends StatelessWidget {
                 show: true,
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFF1212120).withOpacity(0.1),
-                    const Color(0xFF36EBDC).withOpacity(0.4),
+                    const Color(0xFF12121200).withValues(alpha: 0.1),
+                    const Color(0xFF36EBDC).withValues(alpha: 0.4),
                   ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,

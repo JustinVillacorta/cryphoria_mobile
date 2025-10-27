@@ -13,7 +13,6 @@ class CryptoNewsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header row: title + cached indicator + refresh
         Row(
           children: [
             Expanded(
@@ -47,7 +46,6 @@ class CryptoNewsSection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
 
-        // Info banner (cached notice)
         Container(
           decoration: BoxDecoration(
             color: const Color(0xFFFFF7E6),
@@ -72,7 +70,6 @@ class CryptoNewsSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // Horizontal list of news cards (height adapts to screen size)
                 SizedBox(
                   height: newsHeight,
                   child: ListView(
@@ -180,7 +177,7 @@ class _NewsCard extends StatelessWidget {
               _chip(
                 context,
                 label: sourceLabel,
-                foreground: theme.colorScheme.onSurface.withOpacity(0.7),
+                foreground: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 background: Colors.white,
               ),
             ],
@@ -195,19 +192,19 @@ class _NewsCard extends StatelessWidget {
           Text(
             summary,
             style: textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.75),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           const Spacer(),
-          Divider(color: borderColor.withOpacity(0.8), height: 18),
+          Divider(color: borderColor.withValues(alpha: 0.8), height: 18),
           Row(
             children: [
               Text(
                 timeAgo,
                 style: textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
               const Spacer(),
@@ -272,4 +269,3 @@ class _NewsCard extends StatelessWidget {
     );
   }
 }
-

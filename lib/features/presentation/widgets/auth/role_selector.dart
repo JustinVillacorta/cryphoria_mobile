@@ -7,7 +7,7 @@ class RoleSelector extends StatelessWidget {
   final String selectedRole;
   final RoleSelectedCallback onRoleSelected;
 
-  const RoleSelector({Key? key, required this.selectedRole, required this.onRoleSelected}) : super(key: key);
+  const RoleSelector({super.key, required this.selectedRole, required this.onRoleSelected});
 
   Widget _buildCard({required BuildContext context, required String role, required String assetPath}) {
     final isSelected = selectedRole == role;
@@ -29,9 +29,6 @@ class RoleSelector extends StatelessWidget {
               ),
             ),
             alignment: Alignment.center,
-            // use padding instead of ClipOval to avoid cropping strokes that extend
-            // to the edge of the SVG. The circular border still constrains the
-            // visual area while the icon has breathing room.
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: assetPath.toLowerCase().endsWith('.svg')
@@ -40,7 +37,7 @@ class RoleSelector extends StatelessWidget {
                       width: 32,
                       height: 32,
                       fit: BoxFit.contain,
-                      color: isSelected ? const Color(0xFF8B5CF6) : null,
+                      colorFilter: isSelected ? const ColorFilter.mode(Color(0xFF8B5CF6), BlendMode.srcIn) : null,
                     )
                   : Image.asset(
                       assetPath,

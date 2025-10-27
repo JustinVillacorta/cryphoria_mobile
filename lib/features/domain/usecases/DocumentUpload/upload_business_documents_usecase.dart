@@ -18,8 +18,7 @@ class UploadBusinessDocumentsUseCase {
     required File birForm,
     required File managerId,
   }) async {
-    
-    // Validate files exist
+
     if (!dtiDocument.existsSync()) {
       throw Exception('DTI document file not found');
     }
@@ -30,9 +29,8 @@ class UploadBusinessDocumentsUseCase {
       throw Exception('Manager ID file not found');
     }
 
-        // Validate file sizes (5MB limit to match server)
-        const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
-    
+        const maxFileSize = 5 * 1024 * 1024;
+
     if (dtiDocument.lengthSync() > maxFileSize) {
       throw Exception('DTI document exceeds 5MB limit');
     }

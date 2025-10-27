@@ -1,4 +1,3 @@
-// lib/features/domain/usecases/smart_invest/get_address_book_list_usecase.dart
 
 import '../../entities/smart_invest.dart';
 import '../../repositories/smart_invest_repository.dart';

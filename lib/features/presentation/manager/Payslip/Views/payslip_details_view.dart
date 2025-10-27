@@ -1,4 +1,3 @@
-// lib/features/presentation/manager/Payslip/Views/payslip_details_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +10,7 @@ import '../../../widgets/reports/pdf_generation_helper.dart';
 class PayslipDetailsView extends ConsumerWidget {
   final Payslip payslip;
 
-  const PayslipDetailsView({Key? key, required this.payslip}) : super(key: key);
+  const PayslipDetailsView({super.key, required this.payslip});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -99,7 +98,7 @@ class PayslipDetailsView extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF9747FF).withOpacity(0.25),
+            color: const Color(0xFF9747FF).withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -111,7 +110,7 @@ class PayslipDetailsView extends ConsumerWidget {
             width: isDesktop ? 70 : isTablet ? 65 : 60,
             height: isDesktop ? 70 : isTablet ? 65 : 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -147,7 +146,7 @@ class PayslipDetailsView extends ConsumerWidget {
                   style: GoogleFonts.inter(
                     fontSize: isTablet ? 15 : 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     height: 1.3,
                   ),
                 ),
@@ -157,7 +156,7 @@ class PayslipDetailsView extends ConsumerWidget {
                   style: GoogleFonts.inter(
                     fontSize: isTablet ? 14 : 13,
                     fontWeight: FontWeight.w400,
-                    color: Colors.white.withOpacity(0.75),
+                    color: Colors.white.withValues(alpha: 0.75),
                     height: 1.3,
                   ),
                 ),
@@ -177,7 +176,7 @@ class PayslipDetailsView extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -252,7 +251,7 @@ class PayslipDetailsView extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -292,7 +291,7 @@ class PayslipDetailsView extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -365,7 +364,7 @@ class PayslipDetailsView extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF10B981).withOpacity(0.25),
+            color: const Color(0xFF10B981).withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -378,7 +377,7 @@ class PayslipDetailsView extends ConsumerWidget {
             style: GoogleFonts.inter(
               fontSize: isTablet ? 13 : 12,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               letterSpacing: 0.5,
               height: 1.3,
             ),
@@ -401,7 +400,7 @@ class PayslipDetailsView extends ConsumerWidget {
                 vertical: isTablet ? 8 : 7,
               ),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -428,7 +427,7 @@ class PayslipDetailsView extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -451,10 +450,10 @@ class PayslipDetailsView extends ConsumerWidget {
           Container(
             padding: EdgeInsets.all(isTablet ? 18 : 16),
             decoration: BoxDecoration(
-              color: _getStatusColor(payslip.statusEnum).withOpacity(0.1),
+              color: _getStatusColor(payslip.statusEnum).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: _getStatusColor(payslip.statusEnum).withOpacity(0.3),
+                color: _getStatusColor(payslip.statusEnum).withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -515,9 +514,9 @@ class PayslipDetailsView extends ConsumerWidget {
         horizontal: isTablet ? 14 : 12,
       ),
       decoration: BoxDecoration(
-        color: isTotal ? const Color(0xFF9747FF).withOpacity(0.1) : const Color(0xFFF9FAFB),
+        color: isTotal ? const Color(0xFF9747FF).withValues(alpha: 0.1) : const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(10),
-        border: isTotal ? Border.all(color: const Color(0xFF9747FF).withOpacity(0.3), width: 1.5) : null,
+        border: isTotal ? Border.all(color: const Color(0xFF9747FF).withValues(alpha: 0.3), width: 1.5) : null,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -602,7 +601,7 @@ class PayslipDetailsView extends ConsumerWidget {
 
       final payslipData = payslip.toJson();
       final pdfPath = await PdfGenerationHelper.generatePayslipPdf(payslipData);
-      
+
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
@@ -628,26 +627,29 @@ class PayslipDetailsView extends ConsumerWidget {
               label: 'Open',
               textColor: Colors.white,
               onPressed: () async {
+                final scaffoldContext = context;
                 try {
                   await OpenFile.open(pdfPath);
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Could not open file: $e',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Could not open file: $e',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
+                        backgroundColor: Colors.orange[600],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        margin: const EdgeInsets.all(16),
                       ),
-                      backgroundColor: Colors.orange[600],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      margin: const EdgeInsets.all(16),
-                    ),
-                  );
+                    );
+                  }
                 }
               },
             ),
@@ -676,7 +678,7 @@ class PayslipDetailsView extends ConsumerWidget {
       if (context.mounted && Navigator.of(context, rootNavigator: true).canPop()) {
         Navigator.of(context, rootNavigator: true).pop();
       }
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

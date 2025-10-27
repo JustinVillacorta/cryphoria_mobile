@@ -4,7 +4,7 @@ import '../../../../dependency_injection/riverpod_providers.dart';
 import '../../widgets/payroll/payroll_bottom_sheet.dart';
 
 class PayrollManagementScreen extends ConsumerStatefulWidget {
-  const PayrollManagementScreen({Key? key}) : super(key: key);
+  const PayrollManagementScreen({super.key});
 
   @override
   ConsumerState<PayrollManagementScreen> createState() => _ExistingPayrollManagementScreenState();
@@ -13,7 +13,7 @@ class PayrollManagementScreen extends ConsumerStatefulWidget {
 class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   List<Map<String, dynamic>> employeePayrollList = [];
   bool isLoading = true;
   String? errorMessage;
@@ -38,9 +38,8 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
     });
 
     try {
-      // Use existing backend endpoint: /api/manager/payroll/employees/
       final response = await ref.read(dioClientProvider).dio.get('/api/manager/payroll/employees/');
-      
+
       if (response.statusCode == 200 && response.data['success'] == true) {
         setState(() {
           employeePayrollList = List<Map<String, dynamic>>.from(response.data['employees'] ?? []);
@@ -63,7 +62,6 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
 
   Future<void> _debugWalletFetching() async {
     try {
-      // Show loading dialog
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -78,13 +76,11 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
         ),
       );
 
-      // Get employees with wallet addresses
       final getManagerTeamWithWalletsUseCase = ref.read(getManagerTeamWithWalletsUseCaseProvider);
       final employees = await getManagerTeamWithWalletsUseCase.execute();
 
-      if (mounted) Navigator.pop(context); // Close loading dialog
+      if (mounted) Navigator.pop(context);
 
-      // Debug each employee's wallet situation
       final debugResults = <String>[];
       debugResults.add('=== WALLET DEBUG RESULTS ===');
       debugResults.add('Total employees: ${employees.length}');
@@ -95,12 +91,10 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
         debugResults.add('  - User ID: ${employee.userId}');
         debugResults.add('  - Email: ${employee.email}');
         debugResults.add('  - Current Wallet: ${employee.payrollInfo?.employeeWallet ?? "NULL"}');
-        
-        // Wallet lookup is handled by the existing getManagerTeamWithWalletsUseCase
+
         debugResults.add('');
       }
 
-      // Show debug results
       if (mounted) {
         showDialog(
           context: context,
@@ -119,11 +113,6 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
               ),
               TextButton(
                 onPressed: () {
-                  // Copy to clipboard functionality could be added here
-                  print('=== WALLET DEBUG CONSOLE OUTPUT ===');
-                  for (final line in debugResults) {
-                    print(line);
-                  }
                   Navigator.pop(context);
                 },
                 child: const Text('Print to Console'),
@@ -135,7 +124,7 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
 
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // Close loading dialog
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Debug failed: $e'),
@@ -208,7 +197,6 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
       ),
       body: Column(
         children: [
-          // Summary Cards
           if (!isLoading && employeePayrollList.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(16),
@@ -244,7 +232,6 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
               ),
             ),
 
-          // Error Message
           if (errorMessage != null)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -272,7 +259,6 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
               ),
             ),
 
-          // Content
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -301,7 +287,7 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -390,7 +376,7 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
   Widget _buildEmployeeCard(Map<String, dynamic> employee) {
     final payrollSummary = employee['payroll_summary'] ?? {};
     final isActive = employee['is_active'] ?? true;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -398,7 +384,7 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -439,10 +425,10 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                      color: isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isActive ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+                        color: isActive ? Colors.green.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
@@ -496,7 +482,6 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
   }
 
   Widget _buildPayrollHistory() {
-    // This would show a list of all payroll entries across all employees
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -565,36 +550,39 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
       backgroundColor: Colors.transparent,
       builder: (context) => const PayrollBottomSheet(),
     ).then((_) {
-      // Refresh data after payroll processing
       _loadManagerPayrollData();
     });
   }
 
   void _showEmployeeDetails(Map<String, dynamic> employee) async {
-    // Use existing backend endpoint: /api/manager/payroll/employee-details/
+    final scaffoldContext = context;
     try {
       final response = await ref.read(dioClientProvider).dio.post(
         '/api/manager/payroll/employee-details/',
         data: {'employee_id': employee['employee_id']},
       );
-      
+
       if (response.statusCode == 200 && response.data['success'] == true) {
         _showEmployeeDetailsBottomSheet(response.data);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to load employee details'),
+        if (mounted) {
+          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to load employee details'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+          SnackBar(
+            content: Text('Error loading employee details: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading employee details: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
@@ -611,7 +599,6 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
         ),
         child: Column(
           children: [
-            // Header
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -637,14 +624,12 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
               ),
             ),
 
-            // Content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Employee Info
                     const Text(
                       'Employee Information',
                       style: TextStyle(
@@ -657,10 +642,9 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
                     _buildDetailRow('Email', data['employee_details']?['email'] ?? 'N/A'),
                     _buildDetailRow('Department', data['employee_details']?['department'] ?? 'N/A'),
                     _buildDetailRow('Employee ID', data['employee_details']?['employee_number'] ?? 'N/A'),
-                    
+
                     const SizedBox(height: 24),
-                    
-                    // Payroll Statistics
+
                     const Text(
                       'Payroll Statistics',
                       style: TextStyle(

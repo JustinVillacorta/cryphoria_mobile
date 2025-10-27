@@ -57,7 +57,6 @@ class Wallet {
     return '${address.substring(0, 6)}...${address.substring(address.length - 4)}';
   }
 
-  /// ✅ Add this for updating fields easily
   Wallet copyWith({
     String? id,
     String? name,

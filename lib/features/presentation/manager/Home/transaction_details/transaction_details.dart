@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/transactions/transaction_details.dart';
-/// Screen that supplies FAKE DATA to the widget.
-/// Push this screen with Navigator when you want to preview.
 class TransactionDetailsScreen extends StatelessWidget {
   const TransactionDetailsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // ---- Fake transaction data ----
     const transaction = TransactionData(
       title: 'ETH Received',
       subtitle: '0x1234...5678',

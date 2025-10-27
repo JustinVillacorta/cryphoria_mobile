@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class HelpScreen extends StatefulWidget {
-  const HelpScreen({Key? key}) : super(key: key);
+  const HelpScreen({super.key});
 
   @override
   State<HelpScreen> createState() => _HelpScreenState();
@@ -67,14 +67,13 @@ class _HelpScreenState extends State<HelpScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // FAQ Section
             Row(
               children: [
                 Container(
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: Color(0xFF9747FF).withOpacity(0.1),
+                    color: Color(0xFF9747FF).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -97,7 +96,6 @@ class _HelpScreenState extends State<HelpScreen> {
 
             const SizedBox(height: 16),
 
-            // Search Field
             TextField(
               controller: _searchController,
               onChanged: (value) {
@@ -117,11 +115,11 @@ class _HelpScreenState extends State<HelpScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
+                  borderSide: BorderSide(color: Colors.grey[300] ?? Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Color(0xFF9747FF)!),
+                  borderSide: const BorderSide(color: Color(0xFF9747FF)),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
@@ -129,11 +127,10 @@ class _HelpScreenState extends State<HelpScreen> {
 
             const SizedBox(height: 16),
 
-            // FAQ Items
             ...filteredFAQItems.map((faq) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: ExpandableFAQCard(faq: faq),
-            )).toList(),
+            )),
 
             if (filteredFAQItems.isEmpty)
               Container(
@@ -169,14 +166,13 @@ class _HelpScreenState extends State<HelpScreen> {
 
             const SizedBox(height: 32),
 
-            // Contact Support Section
             Row(
               children: [
                 Container(
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: Color(0xFF9747FF).withOpacity(0.1),
+                    color: Color(0xFF9747FF).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -210,7 +206,6 @@ class _HelpScreenState extends State<HelpScreen> {
 
             const SizedBox(height: 12),
 
-            // Contact Message Field
             TextField(
               controller: _contactController,
               maxLines: 5,
@@ -221,15 +216,15 @@ class _HelpScreenState extends State<HelpScreen> {
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
+                  borderSide: BorderSide(color: Colors.grey[300] ?? Colors.grey),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
+                  borderSide: BorderSide(color: Colors.grey[300] ?? Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Color(0xFF9747FF)!),
+                  borderSide: BorderSide(color: Color(0xFF9747FF)),
                 ),
                 contentPadding: const EdgeInsets.all(16),
               ),
@@ -237,7 +232,6 @@ class _HelpScreenState extends State<HelpScreen> {
 
             const SizedBox(height: 16),
 
-            // Send Message Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -280,7 +274,6 @@ class _HelpScreenState extends State<HelpScreen> {
       return;
     }
 
-    // Handle sending message
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -319,7 +312,7 @@ class FAQItem {
 class ExpandableFAQCard extends StatefulWidget {
   final FAQItem faq;
 
-  const ExpandableFAQCard({Key? key, required this.faq}) : super(key: key);
+  const ExpandableFAQCard({super.key, required this.faq});
 
   @override
   State<ExpandableFAQCard> createState() => _ExpandableFAQCardState();
@@ -369,7 +362,7 @@ class _ExpandableFAQCardState extends State<ExpandableFAQCard>
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 2,
             offset: const Offset(0, 1),

@@ -1,4 +1,3 @@
-// lib/features/data/models/portfolio_model.dart
 
 import '../../domain/entities/portfolio.dart';
 
@@ -35,7 +34,6 @@ class PortfolioModel {
     };
   }
 
-  // Convert to domain entity
   Portfolio toEntity() {
     return Portfolio(
       success: success,
@@ -81,7 +79,6 @@ class PortfolioBreakdownModel {
     };
   }
 
-  // Convert to domain entity
   PortfolioBreakdown toEntity() {
     return PortfolioBreakdown(
       cryptocurrency: cryptocurrency,

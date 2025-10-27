@@ -39,7 +39,6 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Back button
                     Align(
                       alignment: Alignment.centerLeft,
                       child: IconButton(
@@ -52,7 +51,6 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
                     ),
                     const SizedBox(height: 20),
 
-                    // Title
                     const Text(
                       'Forgot Password?',
                       style: TextStyle(
@@ -63,8 +61,7 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    
-                    // Subtitle
+
                     const Text(
                       'Don\'t worry! Enter your email address and we\'ll send you a code to reset your password.',
                       style: TextStyle(
@@ -75,18 +72,14 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
                     ),
                     const SizedBox(height: 40),
 
-                    // Email Input Field
                     _buildEmailField(),
                     const SizedBox(height: 24),
 
-                    // Send Code Button
                     _buildSendCodeButton(),
                     const SizedBox(height: 24),
 
-                    // Back to Login
                     _buildBackToLogin(),
 
-                    // Error message
                     _buildErrorMessage(),
                   ],
                 ),
@@ -139,10 +132,10 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
   }
 
   Widget _buildSendCodeButton() {
-    final viewModel = ref.watch(forgotPasswordRequestViewModelProvider);
-    
+    final state = ref.watch(forgotPasswordRequestViewModelProvider);
+
     return ElevatedButton(
-      onPressed: viewModel.isLoading ? null : _sendResetCode,
+      onPressed: state.isLoading ? null : _sendResetCode,
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF8B5CF6),
         foregroundColor: Colors.white,
@@ -152,7 +145,7 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
         ),
         elevation: 0,
       ),
-      child: viewModel.isLoading
+      child: state.isLoading
           ? const SizedBox(
               height: 20,
               width: 20,
@@ -203,9 +196,9 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
   }
 
   Widget _buildErrorMessage() {
-    final viewModel = ref.watch(forgotPasswordRequestViewModelProvider);
-    
-    if (viewModel.error != null && viewModel.error!.isNotEmpty) {
+    final state = ref.watch(forgotPasswordRequestViewModelProvider);
+
+    if (state.error != null && state.error!.isNotEmpty) {
       return Container(
         margin: const EdgeInsets.only(top: 20),
         padding: const EdgeInsets.all(12),
@@ -215,7 +208,7 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
           border: Border.all(color: Colors.red.shade200),
         ),
         child: Text(
-          viewModel.error!,
+          state.error!,
           style: TextStyle(
             color: Colors.red.shade700,
             fontSize: 14,
@@ -238,7 +231,6 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
       return;
     }
 
-    // Basic email validation
     if (!_emailController.text.contains('@') || !_emailController.text.contains('.')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -249,21 +241,19 @@ class _ForgotPasswordRequestViewState extends ConsumerState<ForgotPasswordReques
       return;
     }
 
-    final viewModel = ref.read(forgotPasswordRequestViewModelProvider);
+    await ref.read(forgotPasswordRequestViewModelProvider.notifier).requestPasswordReset(_emailController.text);
 
-    await viewModel.requestPasswordReset(_emailController.text);
-    
     if (!mounted) return;
-    
-    if (viewModel.error == null && viewModel.isRequestSent) {
-      // Password reset request successful - navigate to confirmation screen
+
+    final state = ref.read(forgotPasswordRequestViewModelProvider);
+    if (state.error == null && state.isRequestSent) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Reset code sent successfully! Check your email.'),
           backgroundColor: Colors.green,
         ),
       );
-      
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

@@ -1,4 +1,3 @@
-// lib/features/data/models/invoice_model.dart
 import '../../domain/entities/invoice.dart';
 
 class InvoiceModel extends Invoice {
@@ -81,6 +80,7 @@ class InvoiceModel extends Invoice {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() => {
     "_id": id,
     "invoice_id": invoiceId,
@@ -112,6 +112,7 @@ class InvoiceModel extends Invoice {
     "sent_at": sentAt,
   };
 
+  @override
   Invoice toEntity() => Invoice(
     id: id,
     invoiceId: invoiceId,

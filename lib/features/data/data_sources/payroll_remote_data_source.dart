@@ -31,7 +31,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
   Future<List<PayrollPeriod>> getPayrollPeriods() async {
     try {
       final response = await dio.get('/api/payroll/periods/');
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> periodsJson = response.data['periods'] ?? [];
         return periodsJson.map((json) => PayrollPeriod.fromJson(json)).toList();
@@ -52,7 +52,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
         '/api/payroll/periods/',
         data: request.toJson(),
       );
-      
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         return PayrollPeriod.fromJson(response.data['period']);
       } else {
@@ -72,7 +72,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
   Future<PayrollPeriod> getPayrollPeriod(String periodId) async {
     try {
       final response = await dio.get('/api/payroll/periods/$periodId/');
-      
+
       if (response.statusCode == 200) {
         return PayrollPeriod.fromJson(response.data['period']);
       } else {
@@ -92,7 +92,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
         '/api/payroll/periods/$periodId/',
         data: updates,
       );
-      
+
       if (response.statusCode == 200) {
         return PayrollPeriod.fromJson(response.data['period']);
       } else {
@@ -112,7 +112,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
   Future<void> deletePayrollPeriod(String periodId) async {
     try {
       final response = await dio.delete('/api/payroll/periods/$periodId/');
-      
+
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to delete payroll period: ${response.statusCode}');
       }
@@ -130,7 +130,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
   Future<PayrollPeriod> processPayrollPeriod(String periodId) async {
     try {
       final response = await dio.post('/api/payroll/periods/$periodId/process/');
-      
+
       if (response.statusCode == 200) {
         return PayrollPeriod.fromJson(response.data['period']);
       } else {
@@ -150,7 +150,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
   Future<List<PayrollEntry>> getPayrollEntries(String periodId) async {
     try {
       final response = await dio.get('/api/payroll/periods/$periodId/entries/');
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> entriesJson = response.data['entries'] ?? [];
         return entriesJson.map((json) => PayrollEntry.fromJson(json)).toList();
@@ -171,7 +171,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
         '/api/payroll/entries/${request.entryId}/',
         data: request.toJson(),
       );
-      
+
       if (response.statusCode == 200) {
         return PayrollEntry.fromJson(response.data['entry']);
       } else {
@@ -191,7 +191,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
   Future<void> processPayrollEntry(String entryId) async {
     try {
       final response = await dio.post('/api/payroll/entries/$entryId/process/');
-      
+
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to process payroll entry: ${response.statusCode}');
       }
@@ -209,7 +209,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
   Future<List<PayrollEntry>> getEmployeePayrollHistory(String employeeId) async {
     try {
       final response = await dio.get('/api/payroll/employees/$employeeId/history/');
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> entriesJson = response.data['entries'] ?? [];
         return entriesJson.map((json) => PayrollEntry.fromJson(json)).toList();
@@ -227,7 +227,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
   Future<PayrollSummary> getPayrollSummary(String periodId) async {
     try {
       final response = await dio.get('/api/payroll/periods/$periodId/summary/');
-      
+
       if (response.statusCode == 200) {
         return PayrollSummary.fromJson(response.data['summary']);
       } else {
@@ -262,7 +262,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
         '/api/payroll/analytics/',
         queryParameters: queryParams,
       );
-      
+
       if (response.statusCode == 200) {
         return response.data['analytics'];
       } else {
@@ -282,7 +282,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
         '/api/payroll/bulk-process/',
         data: {'entry_ids': entryIds},
       );
-      
+
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to bulk process payroll: ${response.statusCode}');
       }
@@ -305,7 +305,7 @@ class PayrollRemoteDataSourceImpl implements PayrollRemoteDataSource {
           'updates': requests.map((r) => r.toJson()).toList(),
         },
       );
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> entriesJson = response.data['entries'] ?? [];
         return entriesJson.map((json) => PayrollEntry.fromJson(json)).toList();

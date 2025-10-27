@@ -4,7 +4,6 @@ import '../../../../domain/entities/balance_sheet.dart';
 import '../../../../domain/repositories/reports_repository.dart';
 
 
-// State classes
 class BalanceSheetState {
   final bool isLoading;
   final BalanceSheet? balanceSheet;
@@ -41,7 +40,6 @@ class BalanceSheetState {
   }
 }
 
-// View Model
 class BalanceSheetViewModel extends StateNotifier<BalanceSheetState> {
   final ReportsRepository _reportsRepository;
 
@@ -49,17 +47,16 @@ class BalanceSheetViewModel extends StateNotifier<BalanceSheetState> {
 
   Future<void> loadAllBalanceSheets() async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final balanceSheets = await _reportsRepository.getAllBalanceSheets();
-      
-      // Select the most recent balance sheet by default
+
       BalanceSheet? selectedSheet;
       if (balanceSheets.isNotEmpty) {
         selectedSheet = balanceSheets.reduce((a, b) => 
           a.generatedAt.isAfter(b.generatedAt) ? a : b);
       }
-      
+
       state = state.copyWith(
         isLoading: false,
         balanceSheets: balanceSheets,
@@ -89,7 +86,6 @@ class BalanceSheetViewModel extends StateNotifier<BalanceSheetState> {
   }
 }
 
-// Provider
 final balanceSheetViewModelProvider = StateNotifierProvider<BalanceSheetViewModel, BalanceSheetState>((ref) {
   final reportsRepository = ref.watch(reportsRepositoryProvider);
   return BalanceSheetViewModel(reportsRepository);

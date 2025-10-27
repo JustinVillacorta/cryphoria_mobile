@@ -6,12 +6,12 @@ import '../../../domain/entities/smart_invest.dart';
 class SendInvestmentEthModal extends ConsumerStatefulWidget {
   final String recipientName;
   final String recipientAddress;
-  
+
   const SendInvestmentEthModal({
-    Key? key,
+    super.key,
     required this.recipientName,
     required this.recipientAddress,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<SendInvestmentEthModal> createState() => _SendInvestmentEthModalState();
@@ -21,15 +21,14 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _companyController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  
+
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _companyController.text = widget.recipientName;
-    
-    // Add listeners to trigger UI rebuilds when field values change
+
     _amountController.addListener(() {
       setState(() {});
     });
@@ -54,7 +53,7 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
     final amount = _amountController.text.trim();
     final company = _companyController.text.trim();
     final description = _descriptionController.text.trim();
-    
+
     return amount.isNotEmpty && 
            company.isNotEmpty && 
            description.isNotEmpty &&
@@ -151,8 +150,7 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
             ),
           ),
           const SizedBox(height: 24),
-          
-          // Recipient Address Field
+
           _buildFormField(
             label: 'Recipient Address',
             controller: TextEditingController(text: widget.recipientAddress),
@@ -163,8 +161,7 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
             ),
           ),
           const SizedBox(height: 20),
-          
-          // Amount Field
+
           _buildFormField(
             label: 'Amount (ETH)',
             controller: _amountController,
@@ -173,16 +170,14 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
             prefixIcon: const Icon(Icons.currency_exchange, color: Colors.grey),
           ),
           const SizedBox(height: 20),
-          
-          // Company Field
+
           _buildFormField(
             label: 'Investor Name / Company',
             controller: _companyController,
             hintText: 'Company name',
           ),
           const SizedBox(height: 20),
-          
-          // Description Field
+
           const Text(
             'Description',
             style: TextStyle(
@@ -208,8 +203,7 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
             ),
           ),
           const SizedBox(height: 24),
-          
-          // Investment Summary
+
           if (_amountController.text.isNotEmpty) _buildInvestmentSummary(),
         ],
       ),
@@ -263,8 +257,8 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
 
   Widget _buildInvestmentSummary() {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
-    final equivalentUsd = amount * 2750; // Assuming 1 ETH = $2750
-    
+    final equivalentUsd = amount * 2750;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -386,7 +380,6 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
   }
 
   void _copyToClipboard(String text) {
-    // In a real app, you'd use Clipboard.setData
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Address copied to clipboard'),
@@ -407,7 +400,6 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
       return;
     }
 
-    // Validate that the amount is a valid number
     final amount = double.tryParse(amountText);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -424,13 +416,7 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
     });
 
     try {
-      print('🚀 _sendInvestment called with:');
-      print('📋 Widget recipientAddress: ${widget.recipientAddress}');
-      print('📋 Widget recipientName: ${widget.recipientName}');
-      print('📋 Amount: ${_amountController.text.trim()}');
-      print('📋 Investor: ${_companyController.text.trim()}');
-      print('📋 Description: ${_descriptionController.text.trim()}');
-      
+
       final request = SmartInvestRequest(
         toAddress: widget.recipientAddress,
         amount: _amountController.text.trim(),
@@ -439,31 +425,23 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
         description: _descriptionController.text.trim(),
       );
 
-      print('📤 Sending investment request');
-      print('📋 Request toAddress: ${request.toAddress}');
-      print('📋 Request amount: ${request.amount}');
-      print('📋 Request investorName: ${request.investorName}');
-      print('📋 Request description: ${request.description}');
-      
-      // Call the notifier and get the response directly
+
       final investment = await ref.read(smartInvestNotifierProvider.notifier).sendInvestment(request);
-      
+
       if (!mounted) return;
 
       setState(() {
         isLoading = false;
       });
 
-      print('🎉 Success handling - Investment: ${investment?.data.transactionHash}');
-      
-      // Show detailed success message
+
       String successMessage = 'Investment sent successfully!';
       if (investment != null) {
         successMessage = 'Investment of ${investment.data.amountEth} ETH sent to ${widget.recipientName}!\n'
             'Transaction Hash: ${investment.data.transactionHash.substring(0, 10)}...\n'
             'Status: ${investment.data.status}';
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(successMessage),
@@ -473,7 +451,6 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
             label: 'View Details',
             textColor: Colors.white,
             onPressed: () {
-              // Show transaction details dialog
               _showTransactionDetails(investment);
             },
           ),
@@ -487,14 +464,12 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
         'transactionHash': investment?.data.transactionHash,
       });
     } catch (e) {
-      print('❌ Error in _sendInvestment: $e');
       if (!mounted) return;
-      
+
       setState(() {
         isLoading = false;
       });
 
-      // Show more detailed error information
       String errorMessage = 'Failed to send investment';
       if (e.toString().contains('500')) {
         errorMessage = 'Server error (500) - but transaction may have succeeded. Please check your wallet.';
@@ -518,7 +493,7 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
 
   void _showTransactionDetails(SmartInvestResponse? investment) {
     if (investment == null) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -554,8 +529,6 @@ class _SendInvestmentEthModalState extends ConsumerState<SendInvestmentEthModal>
           if (investment.data.explorerUrl != null)
             TextButton(
               onPressed: () {
-                // Open explorer URL
-                // You can implement URL launcher here if needed
                 Navigator.pop(context);
               },
               child: const Text('View on Explorer'),

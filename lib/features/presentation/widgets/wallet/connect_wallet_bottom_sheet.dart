@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Unused import removed
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 
 class ConnectPrivateKeyBottomSheet extends ConsumerStatefulWidget {
-  const ConnectPrivateKeyBottomSheet({Key? key}) : super(key: key);
+  const ConnectPrivateKeyBottomSheet({super.key});
 
   @override
   ConsumerState<ConnectPrivateKeyBottomSheet> createState() => _ConnectPrivateKeyBottomSheetState();
@@ -14,7 +13,7 @@ class _ConnectPrivateKeyBottomSheetState extends ConsumerState<ConnectPrivateKey
   final TextEditingController _privateKeyController = TextEditingController();
   bool _isValidFormat = true;
   bool _isLoading = false;
-  String _selectedWallet = 'MetaMask';
+  final String _selectedWallet = 'MetaMask';
 
   @override
   void dispose() {
@@ -65,7 +64,6 @@ class _ConnectPrivateKeyBottomSheetState extends ConsumerState<ConnectPrivateKey
               backgroundColor: Colors.green,
             ),
           );
-          // Force refresh to ensure balance is fetched
           await notifier.refreshWallet();
         }
       }
@@ -142,7 +140,6 @@ class _ConnectPrivateKeyBottomSheetState extends ConsumerState<ConnectPrivateKey
               ),
             ),
             const SizedBox(height: 8),
-            // Wallet type fixed to MetaMask
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

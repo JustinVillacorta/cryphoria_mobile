@@ -8,7 +8,7 @@ class UpdatePayrollEntryUseCase {
 
   Future<PayrollEntry> execute(UpdatePayrollEntryRequest request) async {
     _validateRequest(request);
-    
+
     return await repository.updatePayrollEntry(request);
   }
 
@@ -33,7 +33,6 @@ class UpdatePayrollEntryUseCase {
       throw Exception('Bonus amount cannot be negative');
     }
 
-    // Validate allowances
     if (request.allowances != null) {
       for (final entry in request.allowances!.entries) {
         if (entry.value < 0) {
@@ -42,7 +41,6 @@ class UpdatePayrollEntryUseCase {
       }
     }
 
-    // Validate deductions
     if (request.deductions != null) {
       for (final entry in request.deductions!.entries) {
         if (entry.value < 0) {

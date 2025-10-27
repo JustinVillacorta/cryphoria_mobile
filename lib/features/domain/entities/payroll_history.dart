@@ -1,4 +1,3 @@
-// lib/domain/entities/payroll_history.dart
 class PayrollHistory {
   final String avatarUrl;
   final String name;

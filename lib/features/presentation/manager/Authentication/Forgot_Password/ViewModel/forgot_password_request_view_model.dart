@@ -1,46 +1,45 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/core/error/exceptions.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Forgot_Password/request_password_reset_use_case.dart';
-import 'package:flutter/foundation.dart';
+import 'forgot_password_request_state.dart';
 
-class ForgotPasswordRequestViewModel extends ChangeNotifier {
+class ForgotPasswordRequestViewModel extends StateNotifier<ForgotPasswordRequestState> {
   final RequestPasswordReset requestPasswordResetUseCase;
-
-  bool _isRequestSent = false;
-  bool get isRequestSent => _isRequestSent;
-
-  String? _error;
-  String? get error => _error;
-
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
 
   ForgotPasswordRequestViewModel({
     required this.requestPasswordResetUseCase,
-  });
+  }) : super(ForgotPasswordRequestState.initial());
 
   Future<void> requestPasswordReset(String email) async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: true,
+        error: () => null,
+      );
 
       await requestPasswordResetUseCase.execute(email);
-      _isRequestSent = true;
-      _error = null;
+      
+      state = state.copyWith(
+        isLoading: false,
+        isRequestSent: true,
+        error: () => null,
+      );
     } on ServerException catch (e) {
-      _error = e.message;
-      _isRequestSent = false;
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.message,
+        isRequestSent: false,
+      );
     } catch (e) {
-      _error = "Failed to send reset code: ${e.toString()}";
-      _isRequestSent = false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: false,
+        error: () => "Failed to send reset code: ${e.toString()}",
+        isRequestSent: false,
+      );
     }
   }
 
   void clearError() {
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(error: () => null);
   }
 }

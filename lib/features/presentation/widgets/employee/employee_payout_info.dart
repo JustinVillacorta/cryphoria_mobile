@@ -6,11 +6,11 @@ class PayoutInfoWidget extends StatelessWidget {
   final bool isTablet;
 
   const PayoutInfoWidget({
-    Key? key,
+    super.key,
     required this.nextPayoutDate,
     required this.frequency,
     this.isTablet = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -54,12 +54,11 @@ class PayoutInfoWidget extends StatelessWidget {
     required double screenWidth,
     required double screenHeight,
   }) {
-    // Calculate responsive dimensions
-    final double cardHeight = screenHeight * 0.08; // 8% of screen height
-    final double iconSize = cardHeight * 0.4; // 40% of card height
-    final double titleFontSize = cardHeight * 0.2; // 20% of card height
-    final double valueFontSize = cardHeight * 0.25; // 25% of card height
-    
+    final double cardHeight = screenHeight * 0.08;
+    final double iconSize = cardHeight * 0.4;
+    final double titleFontSize = cardHeight * 0.2;
+    final double valueFontSize = cardHeight * 0.25;
+
     return Container(
       height: cardHeight,
       padding: EdgeInsets.symmetric(
@@ -71,7 +70,7 @@ class PayoutInfoWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

@@ -4,7 +4,6 @@ import '../../../../domain/entities/payslip.dart';
 import '../../../../domain/repositories/reports_repository.dart';
 
 
-// State classes
 class PayrollReportsState {
   final bool isLoading;
   final PayslipsResponse? payslipsResponse;
@@ -33,36 +32,25 @@ class PayrollReportsState {
   }
 }
 
-// View Model
 class PayrollReportsViewModel extends StateNotifier<PayrollReportsState> {
   final ReportsRepository _reportsRepository;
 
   PayrollReportsViewModel(this._reportsRepository) : super(PayrollReportsState());
 
       Future<void> loadPayrollReports() async {
-        print("🔄 Loading payroll reports...");
         state = state.copyWith(isLoading: true, error: null);
-        
+
         try {
-          print("📡 Calling _reportsRepository.getPayslips()");
-          // Using payslips endpoint for payroll reports
           final payslipsResponse = await _reportsRepository.getPayslips();
-          print("📥 Received payslips response: ${payslipsResponse.payslips.length} payslips");
-          print("📊 Response success: ${payslipsResponse.success}");
-          
+
           state = state.copyWith(
             isLoading: false,
             payslipsResponse: payslipsResponse,
             hasData: true,
             error: null,
           );
-          print("✅ Payroll reports loaded successfully");
-        } catch (e, stackTrace) {
-          print("❌ Error loading payroll reports: $e");
-          print("📄 Stack trace: $stackTrace");
-          
-          // Create fallback sample data for testing
-          print("🔄 Creating fallback sample data for testing...");
+        } catch (e) {
+
           final samplePayslipsResponse = PayslipsResponse(
             success: true,
             payslips: [
@@ -141,14 +129,13 @@ class PayrollReportsViewModel extends StateNotifier<PayrollReportsState> {
             ],
             totalCount: 2,
           );
-          
+
           state = state.copyWith(
             isLoading: false,
             payslipsResponse: samplePayslipsResponse,
             hasData: true,
             error: null,
           );
-          print("✅ Using fallback sample data");
         }
       }
 
@@ -161,7 +148,6 @@ class PayrollReportsViewModel extends StateNotifier<PayrollReportsState> {
   }
 }
 
-// Provider
 final payrollReportsViewModelProvider = StateNotifierProvider<PayrollReportsViewModel, PayrollReportsState>((ref) {
   final reportsRepository = ref.watch(reportsRepositoryProvider);
   return PayrollReportsViewModel(reportsRepository);

@@ -1,4 +1,3 @@
-// lib/features/data/models/balance_sheet_model.dart
 
 import '../../domain/entities/balance_sheet.dart';
 
@@ -63,6 +62,7 @@ class BalanceSheetModel extends BalanceSheet {
     return <String, dynamic>{};
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
@@ -128,6 +128,7 @@ class BalanceSheetAssetsModel extends BalanceSheetAssets {
     return <String, dynamic>{};
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'current_assets': (currentAssets as CurrentAssetsModel).toJson(),
@@ -163,6 +164,7 @@ class CurrentAssetsModel extends CurrentAssets {
     return <String, dynamic>{};
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'crypto_holdings': (cryptoHoldings as CryptoHoldingsModel).toJson(),
@@ -194,6 +196,7 @@ class CryptoAssetModel extends CryptoAsset {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'balance': balance,
@@ -214,28 +217,27 @@ class CryptoHoldingsModel extends CryptoHoldings {
 
   factory CryptoHoldingsModel.fromJson(Map<String, dynamic> json) {
     final Map<String, CryptoAsset> holdingsMap = {};
-    
-    // Parse individual crypto holdings (e.g., ETH, BTC, etc.)
+
     json.forEach((key, value) {
       if (key != 'total_value' && value is Map<String, dynamic>) {
         holdingsMap[key] = CryptoAssetModel.fromJson(value);
       }
     });
-    
+
     return CryptoHoldingsModel(
       holdings: holdingsMap,
       totalValue: (json['total_value'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> result = <String, dynamic>{};
-    
-    // Convert holdings to JSON
+
     holdings.forEach((key, value) {
       result[key] = (value as CryptoAssetModel).toJson();
     });
-    
+
     result['total_value'] = totalValue;
     return result;
   }
@@ -258,6 +260,7 @@ class NonCurrentAssetsModel extends NonCurrentAssets {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'long_term_investments': longTermInvestments,
@@ -292,6 +295,7 @@ class BalanceSheetLiabilitiesModel extends BalanceSheetLiabilities {
     return <String, dynamic>{};
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'current_liabilities': (currentLiabilities as CurrentLiabilitiesModel).toJson(),
@@ -320,6 +324,7 @@ class CurrentLiabilitiesModel extends CurrentLiabilities {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'accounts_payable': accountsPayable,
@@ -348,6 +353,7 @@ class LongTermLiabilitiesModel extends LongTermLiabilities {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'long_term_debt': longTermDebt,
@@ -373,6 +379,7 @@ class BalanceSheetEquityModel extends BalanceSheetEquity {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'retained_earnings': retainedEarnings,
@@ -399,6 +406,7 @@ class BalanceSheetTotalsModel extends BalanceSheetTotals {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'total_assets': totalAssets,
@@ -437,6 +445,7 @@ class BalanceSheetSummaryModel extends BalanceSheetSummary {
     return <String, dynamic>{};
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'financial_position': financialPosition,
@@ -461,6 +470,7 @@ class AssetCompositionModel extends AssetComposition {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'crypto_percentage': cryptoPercentage,
@@ -491,6 +501,7 @@ class BalanceSheetMetadataModel extends BalanceSheetMetadata {
     return <String, dynamic>{};
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'transaction_count': transactionCount,
@@ -525,6 +536,7 @@ class DateRangeModel extends DateRange {
     return DateTime.now();
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'earliest_transaction': earliestTransaction.toIso8601String(),

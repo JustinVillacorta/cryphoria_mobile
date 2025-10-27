@@ -10,14 +10,12 @@ class AuditContractViewModel extends ChangeNotifier {
     required this.uploadContractUseCase,
   });
 
-  // State
   bool _isLoading = false;
   String? _error;
   AuditReport? _currentAuditReport;
   String _contractName = '';
   File? _selectedFile;
 
-  // Getters
   bool get isLoading => _isLoading;
   String? get error => _error;
   AuditReport? get currentAuditReport => _currentAuditReport;
@@ -25,14 +23,12 @@ class AuditContractViewModel extends ChangeNotifier {
   File? get selectedFile => _selectedFile;
   bool get canProceed => _contractName.isNotEmpty && _selectedFile != null;
 
-  // Contract name validation
   void updateContractName(String name) {
     _contractName = name.trim();
     _clearError();
     notifyListeners();
   }
 
-  // File selection and validation
   void selectFile(File file) {
     _selectedFile = file;
     _clearError();
@@ -44,7 +40,6 @@ class AuditContractViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Upload contract and get immediate audit report
   Future<bool> uploadContract() async {
     if (!canProceed) {
       _setError('Please fill all required fields');
@@ -56,7 +51,7 @@ class AuditContractViewModel extends ChangeNotifier {
 
     try {
       _currentAuditReport = await uploadContractUseCase.execute(_selectedFile!);
-      
+
       notifyListeners();
       return true;
     } catch (e) {
@@ -67,7 +62,6 @@ class AuditContractViewModel extends ChangeNotifier {
     }
   }
 
-  // Reset state
   void reset() {
     _currentAuditReport = null;
     _contractName = '';
@@ -76,7 +70,6 @@ class AuditContractViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Helper methods
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();

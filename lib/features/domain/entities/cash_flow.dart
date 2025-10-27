@@ -1,4 +1,3 @@
-// lib/features/domain/entities/cash_flow.dart
 
 class CashFlowListResponse {
   final bool success;
@@ -149,6 +148,7 @@ class InvestingActivities {
     );
   }
 
+
   Map<String, dynamic> toJson() {
     return {
       'cash_receipts': cashReceipts.toJson(),
@@ -187,13 +187,11 @@ class FinancingActivities {
 }
 
 class OperatingBreakdown {
-  // Receipts fields
   final double customerPayments;
   final double invoiceCollections;
   final double otherIncome;
   final double total;
 
-  // Payments fields
   final double payrollPayments;
   final double supplierPayments;
   final double operatingExpenses;
@@ -242,13 +240,11 @@ class OperatingBreakdown {
 }
 
 class InvestingBreakdown {
-  // Receipts fields
   final double assetSales;
   final double investmentReturns;
   final double cryptoSales;
   final double total;
 
-  // Payments fields
   final double assetPurchases;
   final double cryptoPurchases;
   final double investmentPurchases;
@@ -289,13 +285,11 @@ class InvestingBreakdown {
 }
 
 class FinancingBreakdown {
-  // Receipts fields
   final double ownerContributions;
   final double loansReceived;
   final double otherFinancing;
   final double total;
 
-  // Payments fields
   final double ownerWithdrawals;
   final double loanPayments;
   final double dividendPayments;

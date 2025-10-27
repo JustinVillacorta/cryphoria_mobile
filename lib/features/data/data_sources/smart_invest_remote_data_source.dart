@@ -1,4 +1,3 @@
-// lib/features/data/data_sources/smart_invest_remote_data_source.dart
 
 import 'package:dio/dio.dart';
 import '../../domain/entities/smart_invest.dart';
@@ -21,8 +20,6 @@ class SmartInvestRemoteDataSourceImpl implements SmartInvestRemoteDataSource {
 
   @override
   Future<SmartInvestResponse> sendInvestment(SmartInvestRequest request) async {
-    // This method is no longer used - we use WalletService.sendEth directly
-    // This is kept for interface compatibility but should not be called
     throw UnimplementedError('Use WalletService.sendEth for smart investments');
   }
 
@@ -33,7 +30,7 @@ class SmartInvestRemoteDataSourceImpl implements SmartInvestRemoteDataSource {
         '/api/address-book/upsert/',
         data: request.toJson(),
       );
-      
+
       if (response.data['success'] == true) {
         return AddressBookUpsertResponse.fromJson(response.data);
       } else {
@@ -52,7 +49,7 @@ class SmartInvestRemoteDataSourceImpl implements SmartInvestRemoteDataSource {
       final response = await dio.get(
         '/api/address-book/list/',
       );
-      
+
       if (response.data['success'] == true) {
         return AddressBookListResponse.fromJson(response.data);
       } else {
@@ -72,7 +69,7 @@ class SmartInvestRemoteDataSourceImpl implements SmartInvestRemoteDataSource {
         '/api/address-book/delete/',
         data: {'address': address},
       );
-      
+
       if (response.data['success'] == true) {
         return AddressBookDeleteResponse.fromJson(response.data);
       } else {
@@ -91,7 +88,7 @@ class SmartInvestRemoteDataSourceImpl implements SmartInvestRemoteDataSource {
       final response = await dio.get(
         '/api/financial/investment-report/statistics/',
       );
-      
+
       if (response.data['success'] == true) {
         return InvestmentStatistics.fromJson(response.data);
       } else {

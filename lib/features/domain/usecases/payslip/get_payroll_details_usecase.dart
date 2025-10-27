@@ -1,4 +1,3 @@
-// lib/features/domain/usecases/get_payroll_details_usecase.dart
 
 import '../../entities/payslip.dart';
 import '../../repositories/payslip_repository.dart';

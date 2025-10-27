@@ -14,7 +14,6 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
   @override
   void initState() {
     super.initState();
-    // Load support messages when the screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(supportViewModelProvider).loadSupportMessages();
     });
@@ -115,7 +114,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -124,7 +123,6 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
           Row(
             children: [
               Expanded(
@@ -140,8 +138,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
             ],
           ),
           const SizedBox(height: 12),
-          
-          // Message Preview
+
           Text(
             message.message,
             style: textTheme.bodyMedium?.copyWith(
@@ -151,8 +148,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 16),
-          
-          // Details Row
+
           Row(
             children: [
               _buildDetailChip(
@@ -175,8 +171,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
               ),
             ],
           ),
-          
-          // Attachments
+
           if (message.attachments.isNotEmpty) ...[
             const SizedBox(height: 12),
             Row(
@@ -200,7 +195,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
 
   Widget _buildStatusChip(String status) {
     Color backgroundColor;
-    
+
     switch (status.toLowerCase()) {
       case 'open':
         backgroundColor = Colors.blue[50]!;
@@ -217,7 +212,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
       default:
         backgroundColor = Colors.grey[50]!;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -239,7 +234,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -323,7 +318,7 @@ class _SupportHistoryViewState extends ConsumerState<SupportHistoryView> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       return 'Today';
     } else if (difference.inDays == 1) {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class NotificationsScreen extends StatelessWidget {
+  const NotificationsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,7 +35,6 @@ class NotificationsScreen extends StatelessWidget {
             ),
             SizedBox(height: 20),
 
-            // Notification Items
             _buildNotificationItem(
               icon: Icons.attach_money,
               iconColor: Colors.green,
@@ -79,11 +80,10 @@ class NotificationsScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon Container
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -94,7 +94,6 @@ class NotificationsScreen extends StatelessWidget {
           ),
           SizedBox(width: 16),
 
-          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

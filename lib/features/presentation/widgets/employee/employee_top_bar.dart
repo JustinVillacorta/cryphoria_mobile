@@ -5,33 +5,33 @@ class EmployeeTobBarWidget extends StatelessWidget {
   final String employeeName;
 
   const EmployeeTobBarWidget({
-    Key? key,
+    super.key,
     required this.employeeName,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final avatarRadius = isDesktop ? 24.0 : isTablet ? 22.0 : 20.0;
     final titleFontSize = isDesktop ? 18.0 : isTablet ? 17.0 : 16.0;
     final subtitleFontSize = isDesktop ? 14.0 : isTablet ? 13.5 : 13.0;
-    
+
     return Row(
       children: [
         Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: const Color(0xFF9747FF).withOpacity(0.2),
+              color: const Color(0xFF9747FF).withValues(alpha: 0.2),
               width: 2,
             ),
           ),
           child: CircleAvatar(
             radius: avatarRadius,
-            backgroundColor: const Color(0xFF9747FF).withOpacity(0.1),
+            backgroundColor: const Color(0xFF9747FF).withValues(alpha: 0.1),
             child: Icon(
               Icons.person_outline,
               color: const Color(0xFF9747FF),

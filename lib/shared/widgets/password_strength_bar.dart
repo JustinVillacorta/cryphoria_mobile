@@ -15,11 +15,17 @@ class PasswordStrengthBar extends StatelessWidget {
     final theme = Theme.of(context);
 
     Color color;
-    if (score < 0.2) color = Colors.red;
-    else if (score < 0.4) color = Colors.orange;
-    else if (score < 0.6) color = Colors.amber;
-    else if (score < 0.8) color = Colors.lightGreen;
-    else color = Colors.green;
+    if (score < 0.2) {
+      color = Colors.red;
+    } else if (score < 0.4) {
+      color = Colors.orange;
+    } else if (score < 0.6) {
+      color = Colors.amber;
+    } else if (score < 0.8) {
+      color = Colors.lightGreen;
+    } else {
+      color = Colors.green;
+    }
 
     return Padding(
       padding: padding ?? const EdgeInsets.only(top: 8.0),
@@ -31,7 +37,7 @@ class PasswordStrengthBar extends StatelessWidget {
             child: LinearProgressIndicator(
               minHeight: 8,
               value: score,
-              backgroundColor: theme.colorScheme.surfaceVariant,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
@@ -87,4 +93,3 @@ class _Dot extends StatelessWidget {
     );
   }
 }
-

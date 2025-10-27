@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
-/// Lightweight shimmer effect without extra dependencies.
 class _Shimmer extends StatefulWidget {
-  const _Shimmer({required this.child, Key? key}) : super(key: key);
+  const _Shimmer({required this.child});
   final Widget child;
 
   @override
@@ -24,8 +23,8 @@ class _ShimmerState extends State<_Shimmer> with SingleTickerProviderStateMixin 
 
   @override
   Widget build(BuildContext context) {
-    final base = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.6);
-    final highlight = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.25);
+    final base = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
+    final highlight = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.25);
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -61,7 +60,7 @@ class _GradientTranslation extends GradientTransform {
 }
 
 class _Bone extends StatelessWidget {
-  const _Bone({this.height = 14, this.width, this.radius = 12, Key? key}) : super(key: key);
+  const _Bone({this.height = 14, this.width, this.radius = 12});
   final double height;
   final double? width;
   final double radius;
@@ -71,32 +70,27 @@ class _Bone extends StatelessWidget {
       height: height,
       width: width,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.7),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(radius),
       ),
     );
   }
 }
 
-/// Employee management skeleton approximating:
-/// - Search bar
-/// - Header with filter button
-/// - Employee cards list
 class EmployeeManagementSkeleton extends StatelessWidget {
-  const EmployeeManagementSkeleton({Key? key, this.employeeCount = 6}) : super(key: key);
+  const EmployeeManagementSkeleton({super.key, this.employeeCount = 6});
 
   final int employeeCount;
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+    final cardColor = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
 
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: _Shimmer(
         child: Column(
           children: [
-            // Search bar
             Padding(
               padding: const EdgeInsets.all(16),
               child: Container(
@@ -108,7 +102,6 @@ class EmployeeManagementSkeleton extends StatelessWidget {
               ),
             ),
 
-            // Header row with filter button
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
@@ -127,7 +120,6 @@ class EmployeeManagementSkeleton extends StatelessWidget {
               ),
             ),
 
-            // Employee cards list
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -155,7 +147,6 @@ class EmployeeManagementSkeleton extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Avatar circle
           Container(
             width: 56,
             height: 56,
@@ -165,8 +156,7 @@ class EmployeeManagementSkeleton extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          
-          // Name and position
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,10 +169,9 @@ class EmployeeManagementSkeleton extends StatelessWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(width: 12),
-          
-          // Status badge and arrow
+
           Column(
             children: [
               Container(

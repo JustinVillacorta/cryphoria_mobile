@@ -1,4 +1,3 @@
-// Employee entity aligned with backend user management API
 class Employee {
   final String userId;
   final String username;
@@ -46,7 +45,6 @@ class Employee {
 
   double get netPay => payrollInfo?.salaryAmount ?? 0.0;
 
-  // Backward compatibility properties for existing UI
   String get name => displayName;
   String get id => userId;
 
@@ -68,7 +66,6 @@ class Employee {
       payrollInfo: json['payroll_info'] != null 
           ? PayrollInfo.fromJson(json['payroll_info'])
           : null,
-      // Handle both individual first_name/last_name and combined full_name
       firstName: json['first_name'] as String? ?? 
                 (json['full_name'] as String?)?.split(' ').first,
       lastName: json['last_name'] as String? ?? 
@@ -98,7 +95,6 @@ class Employee {
   }
 }
 
-// PayrollInfo entity aligned with backend payroll API
 class PayrollInfo {
   final String? entryId;
   final String employeeName;
@@ -173,7 +169,6 @@ class PayrollInfo {
   }
 }
 
-// Payslip entity aligned with backend payslip API
 class Payslip {
   final String payslipId;
   final String payslipNumber;
@@ -290,7 +285,6 @@ class Payslip {
   }
 }
 
-// Request models for API calls
 class EmployeeRegistrationRequest {
   final String username;
   final String email;
@@ -350,7 +344,7 @@ class PayrollCreateRequest {
       'salary_amount': salaryAmount,
       'salary_currency': salaryCurrency,
       'payment_frequency': paymentFrequency,
-      'start_date': startDate.toIso8601String().split('T')[0], // YYYY-MM-DD format
+      'start_date': startDate.toIso8601String().split('T')[0],
     };
   }
 }
@@ -417,7 +411,6 @@ class PayslipCreateRequest {
   }
 }
 
-// New request model for adding existing employees to team
 class AddEmployeeToTeamRequest {
   final String email;
   final String? position;

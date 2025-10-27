@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/features/domain/repositories/auth_repository.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
@@ -47,10 +48,9 @@ class EditProfileNotifier extends StateNotifier<EditProfileState> {
     required String securityAnswer,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null, isSuccess: false);
-    
+
     try {
-      print('👤 [EDIT_PROFILE_VM] Starting profile update...');
-      
+
       final updatedUser = await authRepository.updateProfile(
         firstName: firstName,
         lastName: lastName,
@@ -60,20 +60,19 @@ class EditProfileNotifier extends StateNotifier<EditProfileState> {
         securityQuestion: securityQuestion,
         securityAnswer: securityAnswer,
       );
-      
-      print('👤 [EDIT_PROFILE_VM] ✅ Profile update successful');
-      
+
+
       state = state.copyWith(
         isLoading: false,
         updatedUser: updatedUser,
         isSuccess: true,
         errorMessage: null,
       );
-      
+
       return updatedUser;
     } catch (e) {
-      print('👤 [EDIT_PROFILE_VM] ❌ Profile update failed: $e');
-      
+      debugPrint('⚠️ EditProfileNotifier.updateProfileAndReturn: Error updating profile: $e');
+
       String errorMessage = 'Failed to update profile';
       if (e is ServerException) {
         errorMessage = e.message;
@@ -82,14 +81,14 @@ class EditProfileNotifier extends StateNotifier<EditProfileState> {
       } else {
         errorMessage = 'An unexpected error occurred';
       }
-      
+
       state = state.copyWith(
         isLoading: false,
         errorMessage: errorMessage,
         isSuccess: false,
       );
-      
-      rethrow; // Re-throw the exception so the UI can handle it
+
+      rethrow;
     }
   }
 
@@ -103,10 +102,9 @@ class EditProfileNotifier extends StateNotifier<EditProfileState> {
     required String securityAnswer,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null, isSuccess: false);
-    
+
     try {
-      print('👤 [EDIT_PROFILE_VM] Starting profile update...');
-      
+
       final updatedUser = await authRepository.updateProfile(
         firstName: firstName,
         lastName: lastName,
@@ -116,9 +114,8 @@ class EditProfileNotifier extends StateNotifier<EditProfileState> {
         securityQuestion: securityQuestion,
         securityAnswer: securityAnswer,
       );
-      
-      print('👤 [EDIT_PROFILE_VM] ✅ Profile update successful');
-      
+
+
       state = state.copyWith(
         isLoading: false,
         updatedUser: updatedUser,
@@ -126,8 +123,8 @@ class EditProfileNotifier extends StateNotifier<EditProfileState> {
         errorMessage: null,
       );
     } catch (e) {
-      print('👤 [EDIT_PROFILE_VM] ❌ Profile update failed: $e');
-      
+      debugPrint('⚠️ EditProfileNotifier.updateProfile: Error updating profile: $e');
+
       String errorMessage = 'Failed to update profile';
       if (e is ServerException) {
         errorMessage = e.message;
@@ -136,7 +133,7 @@ class EditProfileNotifier extends StateNotifier<EditProfileState> {
       } else {
         errorMessage = 'An unexpected error occurred';
       }
-      
+
       state = state.copyWith(
         isLoading: false,
         errorMessage: errorMessage,
@@ -154,9 +151,7 @@ class EditProfileNotifier extends StateNotifier<EditProfileState> {
   }
 }
 
-// Provider for the EditProfileNotifier
 final editProfileProvider = StateNotifierProvider<EditProfileNotifier, EditProfileState>((ref) {
-  // Get the auth repository from the dependency injection
   final authRepository = ref.read(authRepositoryProvider);
   return EditProfileNotifier(authRepository);
 });

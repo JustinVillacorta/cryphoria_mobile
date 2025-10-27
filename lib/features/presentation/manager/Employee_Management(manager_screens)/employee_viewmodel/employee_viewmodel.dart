@@ -10,7 +10,7 @@ class EmployeeViewModel extends ChangeNotifier {
   final GetManagerTeamUseCase? _getManagerTeamUseCase;
   final AddEmployeeToTeamUseCase? _addEmployeeToTeamUseCase;
   final RemoveEmployeeFromTeamUseCase? _removeEmployeeFromTeamUseCase;
-  
+
   List<Employee> _employees = [];
   List<Employee> _filteredEmployees = [];
   bool _isLoading = false;
@@ -18,7 +18,6 @@ class EmployeeViewModel extends ChangeNotifier {
   String _selectedDepartment = '';
   String _searchQuery = '';
 
-  // Getters
   List<Employee> get employees => _filteredEmployees;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -33,18 +32,13 @@ class EmployeeViewModel extends ChangeNotifier {
   }) : _getAllEmployeesUseCase = getAllEmployeesUseCase,
        _getManagerTeamUseCase = getManagerTeamUseCase,
        _addEmployeeToTeamUseCase = addEmployeeToTeamUseCase,
-       _removeEmployeeFromTeamUseCase = removeEmployeeFromTeamUseCase {
-    // Comment this out to show empty state initially
-    // _loadInitialData();
-  }
+       _removeEmployeeFromTeamUseCase = removeEmployeeFromTeamUseCase;
 
-  /// Loads initial employee data (mock data for now)
   Future<void> _loadInitialData() async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
-      // Mock data - replace with actual API call
       await Future.delayed(const Duration(milliseconds: 500));
       _employees = [
         Employee(
@@ -100,21 +94,18 @@ class EmployeeViewModel extends ChangeNotifier {
     }
   }
 
-  /// Filters employees by department
   void filterByDepartment(String department) {
     _selectedDepartment = department;
     _applyFilters();
     notifyListeners();
   }
 
-  /// Searches employees by name
   void searchEmployees(String query) {
     _searchQuery = query.toLowerCase();
     _applyFilters();
     notifyListeners();
   }
 
-  /// Applies both department and search filters
   void _applyFilters() {
     _filteredEmployees = _employees.where((employee) {
       bool matchesDepartment = _selectedDepartment.isEmpty || 
@@ -126,7 +117,6 @@ class EmployeeViewModel extends ChangeNotifier {
     }).toList();
   }
 
-  /// Clears all filters
   void clearFilters() {
     _selectedDepartment = '';
     _searchQuery = '';
@@ -134,26 +124,21 @@ class EmployeeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Refreshes employee data
   Future<void> refresh() async {
     await _loadInitialData();
   }
 
-  /// Clears the current error state
   void clearError() {
     _error = null;
     notifyListeners();
   }
 
-  /// Loads sample employee data for demo purposes
   Future<void> loadSampleData() async {
     await _loadInitialData();
   }
 
-  /// Gets manager's team employees (the main list to show)
   Future<void> getManagerTeam() async {
     if (_getManagerTeamUseCase == null) {
-      // Fallback to sample data if use case not available
       await _loadInitialData();
       return;
     }
@@ -175,7 +160,6 @@ class EmployeeViewModel extends ChangeNotifier {
     }
   }
 
-  /// Adds existing employee to manager's team (NEW WORKFLOW)
   Future<void> addEmployeeToTeam({
     required String email,
     String? position,
@@ -201,10 +185,9 @@ class EmployeeViewModel extends ChangeNotifier {
       );
 
       await _addEmployeeToTeamUseCase.execute(request);
-      
-      // Refresh the team list to include the new employee
+
       await getManagerTeam();
-      
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -215,10 +198,8 @@ class EmployeeViewModel extends ChangeNotifier {
     }
   }
 
-  /// Gets all employees from the backend (for admin purposes)
   Future<void> getAllEmployees() async {
     if (_getAllEmployeesUseCase == null) {
-      // Fallback to sample data if use case not available
       await _loadInitialData();
       return;
     }
@@ -240,7 +221,6 @@ class EmployeeViewModel extends ChangeNotifier {
     }
   }
 
-  /// Removes employee from team
   Future<void> removeEmployeeFromTeam(String email) async {
     if (_removeEmployeeFromTeamUseCase == null) {
       throw Exception('Remove employee from team functionality not available');
@@ -251,15 +231,12 @@ class EmployeeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Call the API to remove employee
       await _removeEmployeeFromTeamUseCase.execute(email);
-      
-      // Remove the employee from the local list immediately
+
       _employees.removeWhere((employee) => employee.email == email);
-      
-      // Update filtered list directly
+
       _filteredEmployees = List.from(_employees);
-      
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -270,7 +247,6 @@ class EmployeeViewModel extends ChangeNotifier {
     }
   }
 
-  /// Gets list of unique departments
   List<String> get departments {
     return _employees
         .where((e) => e.department != null && e.department!.isNotEmpty)

@@ -69,10 +69,9 @@ class PayrollViewModel extends StateNotifier<PayrollState> {
     required this.getPayrollAnalyticsUseCase,
   }) : super(const PayrollState());
 
-  /// Load all payroll periods
   Future<void> loadPayrollPeriods() async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final periods = await getPayrollPeriodsUseCase.execute();
       state = state.copyWith(
@@ -87,22 +86,20 @@ class PayrollViewModel extends StateNotifier<PayrollState> {
     }
   }
 
-  /// Create a new payroll period
   Future<bool> createPayrollPeriod(CreatePayrollPeriodRequest request) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final newPeriod = await createPayrollPeriodUseCase.execute(request);
-      
-      // Add the new period to the list
+
       final updatedPeriods = [...state.periods, newPeriod];
-      
+
       state = state.copyWith(
         periods: updatedPeriods,
         isLoading: false,
         successMessage: 'Payroll period created successfully',
       );
-      
+
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -113,7 +110,6 @@ class PayrollViewModel extends StateNotifier<PayrollState> {
     }
   }
 
-  /// Select a payroll period and load its details
   void selectPayrollPeriod(PayrollPeriod period) {
     state = state.copyWith(
       selectedPeriod: period,
@@ -122,18 +118,16 @@ class PayrollViewModel extends StateNotifier<PayrollState> {
     );
   }
 
-  /// Process a payroll period
   Future<bool> processPayrollPeriod(String periodId) async {
     state = state.copyWith(isProcessing: true, error: null);
-    
+
     try {
       final processedPeriod = await processPayrollPeriodUseCase.execute(periodId);
-      
-      // Update the period in the list
+
       final updatedPeriods = state.periods.map((period) {
         return period.periodId == periodId ? processedPeriod : period;
       }).toList();
-      
+
       state = state.copyWith(
         periods: updatedPeriods,
         selectedPeriod: processedPeriod,
@@ -142,7 +136,7 @@ class PayrollViewModel extends StateNotifier<PayrollState> {
         isProcessing: false,
         successMessage: 'Payroll period processed successfully',
       );
-      
+
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -153,24 +147,22 @@ class PayrollViewModel extends StateNotifier<PayrollState> {
     }
   }
 
-  /// Update a payroll entry
   Future<bool> updatePayrollEntry(UpdatePayrollEntryRequest request) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final updatedEntry = await updatePayrollEntryUseCase.execute(request);
-      
-      // Update the entry in the current list
+
       final updatedEntries = state.selectedPeriodEntries.map((entry) {
         return entry.entryId == request.entryId ? updatedEntry : entry;
       }).toList();
-      
+
       state = state.copyWith(
         selectedPeriodEntries: updatedEntries,
         isLoading: false,
         successMessage: 'Payroll entry updated successfully',
       );
-      
+
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -181,21 +173,20 @@ class PayrollViewModel extends StateNotifier<PayrollState> {
     }
   }
 
-  /// Load payroll analytics
   Future<void> loadPayrollAnalytics({
     DateTime? startDate,
     DateTime? endDate,
     String? department,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final analytics = await getPayrollAnalyticsUseCase.execute(
         startDate: startDate,
         endDate: endDate,
         department: department,
       );
-      
+
       state = state.copyWith(
         analytics: analytics,
         isLoading: false,
@@ -208,52 +199,43 @@ class PayrollViewModel extends StateNotifier<PayrollState> {
     }
   }
 
-  /// Clear error message
   void clearError() {
     state = state.copyWith(error: null);
   }
 
-  /// Clear success message
   void clearSuccessMessage() {
     state = state.copyWith(successMessage: null);
   }
 
-  /// Get periods by status
   List<PayrollPeriod> getPeriodsByStatus(PayrollPeriodStatus status) {
     return state.periods.where((period) => period.status == status).toList();
   }
 
-  /// Get total amount for a specific status
   double getTotalAmountByStatus(PayrollPeriodStatus status) {
     return getPeriodsByStatus(status)
         .fold(0.0, (sum, period) => sum + period.totalAmount);
   }
 
-  /// Get pending entries count
   int get pendingEntriesCount {
     return state.selectedPeriodEntries
         .where((entry) => entry.status == PayrollEntryStatus.pending)
         .length;
   }
 
-  /// Get completed entries count
   int get completedEntriesCount {
     return state.selectedPeriodEntries
         .where((entry) => entry.status == PayrollEntryStatus.paid)
         .length;
   }
 
-  /// Check if current period can be processed
   bool get canProcessCurrentPeriod {
     return state.selectedPeriod?.canProcess ?? false;
   }
 
-  /// Get current period total pending amount
   double get currentPeriodPendingAmount {
     return state.selectedPeriod?.totalPending ?? 0.0;
   }
 
-  /// Get current period total paid amount
   double get currentPeriodPaidAmount {
     return state.selectedPeriod?.totalPaid ?? 0.0;
   }

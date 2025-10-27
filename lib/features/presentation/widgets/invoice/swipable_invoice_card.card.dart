@@ -1,4 +1,3 @@
-// lib/features/presentation/widgets/swipeable_invoice_card.dart
 import 'package:flutter/material.dart';
 import '../../../domain/entities/invoice.dart';
 
@@ -24,9 +23,8 @@ class SwipeableInvoiceCard extends StatelessWidget {
       key: Key(invoice.invoiceId),
       direction: DismissDirection.endToStart,
       confirmDismiss: (direction) async {
-        // Don't actually dismiss, just trigger the delete action
         onDelete();
-        return false; // Prevent automatic dismissal
+        return false;
       },
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -64,7 +62,7 @@ class SwipeableInvoiceCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),

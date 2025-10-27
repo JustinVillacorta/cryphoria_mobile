@@ -1,4 +1,3 @@
-// lib/features/presentation/widgets/payment_info_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../domain/entities/invoice.dart';
@@ -13,7 +12,6 @@ class PaymentInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Only show if payment is received
     if (invoice.status.toLowerCase() != 'paid') {
       return const SizedBox.shrink();
     }
@@ -25,7 +23,7 @@ class PaymentInfoWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

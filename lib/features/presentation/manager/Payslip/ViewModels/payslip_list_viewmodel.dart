@@ -1,4 +1,3 @@
-// lib/features/presentation/manager/Payslip/ViewModels/payslip_list_viewmodel.dart
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/entities/create_payslip_request.dart';

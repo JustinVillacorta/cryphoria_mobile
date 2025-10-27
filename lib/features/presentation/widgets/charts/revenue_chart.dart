@@ -38,7 +38,7 @@ class RevenueChart extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withValues(alpha: 0.05),
                 spreadRadius: 1,
                 blurRadius: 10,
                 offset: const Offset(0, 2),
@@ -47,12 +47,10 @@ class RevenueChart extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Y-axis labels
               Expanded(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    // Y-axis
                     SizedBox(
                       width: 40,
                       child: Column(
@@ -69,7 +67,6 @@ class RevenueChart extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
 
-                    // Chart bars
                     Expanded(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -90,10 +87,9 @@ class RevenueChart extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // X-axis labels
               Row(
                 children: [
-                  const SizedBox(width: 50), // Offset for Y-axis labels
+                  const SizedBox(width: 50),
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -112,7 +108,6 @@ class RevenueChart extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // Legend
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

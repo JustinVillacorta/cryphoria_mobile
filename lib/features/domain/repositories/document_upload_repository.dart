@@ -13,8 +13,8 @@ abstract class DocumentUploadRepository {
     required File birForm,
     required File managerId,
   });
-  
+
   Future<Map<String, dynamic>> submitDocumentsForApproval();
-  
+
   Future<List<Document>> getMyDocuments();
 }

@@ -1,4 +1,3 @@
-// lib/features/domain/entities/tax_report.dart
 
 class TaxReport {
   final String id;
@@ -163,7 +162,7 @@ class TaxCategory {
   final String name;
   final String description;
   final double amount;
-  final String type; // 'income', 'deduction', 'tax'
+  final String type;
   final List<TaxSubCategory> subCategories;
 
   const TaxCategory({

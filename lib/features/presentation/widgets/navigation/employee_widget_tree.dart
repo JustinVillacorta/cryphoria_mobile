@@ -14,29 +14,23 @@ class EmployeeWidgetTree extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPage = ref.watch(selectedEmployeePageProvider);
     final user = ref.watch(userProvider);
-    
-    // Get the actual user ID from the logged-in user
+
     final employeeId = user?.userId ?? 'unknown';
-    
-    // Create employee pages with the actual user ID
+
     final employeePages = [
       HomeEmployeeScreen(employeeId: employeeId),
       PayslipScreen(),
       EmployeeUserProfile(),
     ];
-    
+
     return PopScope(
-      canPop: false, // Intercept all back button presses
-      onPopInvoked: (didPop) {
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
-          // Check if we're on a detail screen (pushed route)
           final navigator = Navigator.of(context);
           if (navigator.canPop()) {
-            // We're on a detail screen, allow back navigation
             navigator.pop();
           } else {
-            // We're on main tab, prevent app closure
-            print('Back button pressed on employee main screen - preventing app closure');
           }
         }
       },

@@ -24,7 +24,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   int _currentTabIndex = 0;
-  
+
   List<payslip_entity.Payslip> employeePayslips = [];
   bool isLoadingPayslips = true;
   String? payslipError;
@@ -38,7 +38,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
         _currentTabIndex = _tabController.index;
       });
     });
-    
+
     Future.microtask(() => _loadEmployeePayslips());
   }
 
@@ -61,7 +61,6 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
         });
       }
     } catch (e) {
-      print('Error loading employee payslips: $e');
       if (mounted) {
         setState(() {
           payslipError = 'Failed to load payslips: ${e.toString()}';
@@ -83,9 +82,9 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       body: Column(
@@ -118,12 +117,11 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     final detailSize = isDesktop ? 14.0 : isTablet ? 13.5 : 13.0;
     final avatarRadius = isDesktop ? 40.0 : isTablet ? 36.0 : 32.0;
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
-    
-    // Check if profile image is valid
+
     final hasValidImage = widget.employee.profileImage != null && 
                           widget.employee.profileImage!.isNotEmpty &&
                           Uri.tryParse(widget.employee.profileImage!)?.hasAbsolutePath == true;
-    
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -144,7 +142,6 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Navigation Bar
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -199,8 +196,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                 ],
               ),
               SizedBox(height: isSmallScreen ? 16 : 20),
-              
-              // Employee Profile Section
+
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -213,7 +209,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -235,7 +231,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                     ),
                   ),
                   SizedBox(width: isTablet ? 18 : 16),
-                  
+
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,7 +261,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                                 vertical: isTablet ? 6 : 5,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.2),
+                                color: Colors.green.withValues(alpha: 0.2),
                                 border: Border.all(
                                   color: Colors.green.shade400,
                                   width: 1.5,
@@ -289,7 +285,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                         Text(
                           widget.employee.position ?? 'Employee',
                           style: GoogleFonts.inter(
-                            color: Colors.white.withOpacity(0.95),
+                            color: Colors.white.withValues(alpha: 0.95),
                             fontSize: positionSize,
                             fontWeight: FontWeight.w500,
                             height: 1.3,
@@ -302,7 +298,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                         Text(
                           widget.employee.employeeCode,
                           style: GoogleFonts.inter(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             fontSize: detailSize,
                             fontWeight: FontWeight.w400,
                             height: 1.3,
@@ -315,8 +311,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                 ],
               ),
               SizedBox(height: isSmallScreen ? 14 : 18),
-              
-              // Contact Information Row
+
               Wrap(
                 spacing: isTablet ? 24 : 20,
                 runSpacing: isSmallScreen ? 8 : 10,
@@ -326,7 +321,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                     children: [
                       Icon(
                         Icons.email_outlined,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         size: isTablet ? 18 : 16,
                       ),
                       SizedBox(width: isTablet ? 8 : 6),
@@ -334,7 +329,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                         child: Text(
                           widget.employee.email,
                           style: GoogleFonts.inter(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontSize: detailSize,
                             fontWeight: FontWeight.w400,
                             height: 1.3,
@@ -350,14 +345,14 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                     children: [
                       Icon(
                         Icons.business_outlined,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         size: isTablet ? 18 : 16,
                       ),
                       SizedBox(width: isTablet ? 8 : 6),
                       Text(
                         widget.employee.department ?? 'General',
                         style: GoogleFonts.inter(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: detailSize,
                           fontWeight: FontWeight.w400,
                           height: 1.3,
@@ -376,7 +371,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
 
   Widget _buildTabNavigation(bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 16.0 : 15.0;
-    
+
     return Container(
       color: Colors.white,
       child: Row(
@@ -424,7 +419,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
   Widget _buildDetailsTab(bool isSmallScreen, bool isTablet, bool isDesktop) {
     final padding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final gap = isSmallScreen ? 16.0 : 20.0;
-    
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(padding),
       child: Column(
@@ -473,7 +468,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
   Widget _buildPayrollTab(bool isSmallScreen, bool isTablet, bool isDesktop) {
     final padding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final gap = isSmallScreen ? 16.0 : 20.0;
-    
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(padding),
       child: Column(
@@ -491,12 +486,12 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     final latestPayslip = employeePayslips.isNotEmpty ? employeePayslips.first : null;
     final totalPayslips = employeePayslips.length;
     final totalPaid = employeePayslips
-        .where((p) => p.status == payslip_entity.PayslipStatus.paid)
+        .where((p) => p.status == 'paid')
         .fold(0.0, (sum, payslip) => sum + payslip.finalNetPay);
 
     final amountSize = isDesktop ? 28.0 : isTablet ? 26.0 : 24.0;
     final labelSize = isDesktop ? 15.0 : isTablet ? 14.0 : 13.0;
-    final subAmountSize = isDesktop ? 18.0 : isTablet ? 17.0 : 16.0;
+    final _ = amountSize;
 
     return _buildCard(
       icon: Icons.account_balance_wallet_outlined,
@@ -591,7 +586,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                   Icon(
                     Icons.receipt_long_outlined,
                     size: isTablet ? 64 : 56,
-                    color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                    color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
                   ),
                   SizedBox(height: isSmallScreen ? 16 : 20),
                   Text(
@@ -697,7 +692,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
   Widget _buildPayrollDetailRow(String label, String value, bool isSmallScreen, bool isTablet) {
     final labelSize = isTablet ? 15.0 : 14.0;
     final valueSize = isTablet ? 17.0 : 16.0;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -727,7 +722,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
   Widget _buildPayrollDetailColumn(String label, String value, bool isSmallScreen, bool isTablet) {
     final labelSize = isTablet ? 14.0 : 13.0;
     final valueSize = isTablet ? 17.0 : 16.0;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -867,7 +862,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
           )
         else
           ...employeePayslips.take(5).map((payslip) => _buildPayslipHistoryItem(payslip, isSmallScreen, isTablet)),
-        
+
         if (employeePayslips.length > 5)
           Padding(
             padding: EdgeInsets.only(top: isSmallScreen ? 12 : 16),
@@ -901,7 +896,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     final detailSize = isTablet ? 14.0 : 13.0;
     final amountSize = isTablet ? 18.0 : 17.0;
     final buttonSize = isTablet ? 14.0 : 13.0;
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: isSmallScreen ? 10 : 12),
       padding: EdgeInsets.all(isTablet ? 18 : 16),
@@ -945,10 +940,10 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                     vertical: isTablet ? 5 : 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(payslip.statusEnum).withOpacity(0.1),
+                    color: _getStatusColor(payslip.statusEnum).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: _getStatusColor(payslip.statusEnum).withOpacity(0.3),
+                      color: _getStatusColor(payslip.statusEnum).withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
@@ -990,7 +985,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                   ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  backgroundColor: const Color(0xFF9747FF).withOpacity(0.1),
+                  backgroundColor: const Color(0xFF9747FF).withValues(alpha: 0.1),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -1044,14 +1039,14 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     final cardPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 18.0;
     final titleSize = isDesktop ? 18.0 : isTablet ? 17.0 : 16.0;
     final iconSize = isTablet ? 22.0 : 20.0;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1093,7 +1088,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
 
   Widget _buildInfoRow(String label, String value, bool isSmallScreen, bool isTablet, {bool isLast = false}) {
     final fontSize = isTablet ? 15.0 : 14.0;
-    
+
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : (isSmallScreen ? 12 : 14)),
       child: Row(
@@ -1129,7 +1124,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
 
   Widget _buildDeductionRow(String label, String amount, bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 15.0 : 14.0;
-    
+
     return Padding(
       padding: EdgeInsets.only(bottom: isSmallScreen ? 10 : 12),
       child: Row(
@@ -1214,18 +1209,23 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                       ? null
                       : () async {
                           setState(() => isDeleting = true);
+                          final navContext = context;
 
                           try {
                             final employeeViewModel = ref.read(employeeViewModelProvider.notifier);
                             await employeeViewModel.removeEmployeeFromTeam(widget.employee.email);
-                            
-                            Navigator.pop(context);
+
+                            if (!mounted) return;
+                            Navigator.pop(navContext);
                             await Future.delayed(const Duration(milliseconds: 100));
-                            Navigator.pop(context);
+                            if (!mounted) return;
+                            Navigator.pop(navContext);
                           } catch (e) {
-                            Navigator.pop(context);
-                            
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            if (!mounted) return;
+                            Navigator.pop(navContext);
+
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(navContext).showSnackBar(
                               SnackBar(
                                 content: Text(
                                   'Failed to remove employee: $e',

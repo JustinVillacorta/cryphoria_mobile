@@ -11,11 +11,11 @@ class EmployeePayslipListView extends StatelessWidget {
   final VoidCallback? onRefresh;
 
   const EmployeePayslipListView({
-    Key? key,
+    super.key,
     required this.employee,
     required this.payslips,
     this.onRefresh,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -77,12 +77,10 @@ class EmployeePayslipListView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: isSmallScreen ? 8 : 12),
-                  
-                  // Employee Info Card
+
                   _buildEmployeeInfoCard(employee, isSmallScreen, isTablet, isDesktop),
                   SizedBox(height: isSmallScreen ? 16 : 20),
-                  
-                  // Payslips List
+
                   _buildPayslipsList(payslips, isSmallScreen, isTablet, isDesktop, context),
                   SizedBox(height: isSmallScreen ? 24 : 32),
                 ],
@@ -102,7 +100,7 @@ class EmployeePayslipListView extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -114,7 +112,7 @@ class EmployeePayslipListView extends StatelessWidget {
             width: isTablet ? 60 : 50,
             height: isTablet ? 60 : 50,
             decoration: BoxDecoration(
-              color: const Color(0xFF9747FF).withOpacity(0.1),
+              color: const Color(0xFF9747FF).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -166,7 +164,7 @@ class EmployeePayslipListView extends StatelessWidget {
               vertical: isTablet ? 6 : 5,
             ),
             decoration: BoxDecoration(
-              color: employee.isActive ? const Color(0xFF10B981).withOpacity(0.1) : Colors.red.withOpacity(0.1),
+              color: employee.isActive ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -192,7 +190,7 @@ class EmployeePayslipListView extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -222,7 +220,7 @@ class EmployeePayslipListView extends StatelessWidget {
             ),
           ),
           SizedBox(height: isSmallScreen ? 16 : 20),
-          
+
           if (payslips.isEmpty)
             Center(
               child: Padding(
@@ -232,7 +230,7 @@ class EmployeePayslipListView extends StatelessWidget {
                     Icon(
                       Icons.receipt_long_outlined,
                       size: isTablet ? 56 : 48,
-                      color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                      color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
                     ),
                     SizedBox(height: isTablet ? 16 : 12),
                     Text(
@@ -258,7 +256,7 @@ class EmployeePayslipListView extends StatelessWidget {
               ),
             )
           else
-            ...payslips.map((payslip) => _buildPayslipHistoryItem(payslip, isSmallScreen, isTablet, context)).toList(),
+            ...payslips.map((payslip) => _buildPayslipHistoryItem(payslip, isSmallScreen, isTablet, context)),
         ],
       ),
     );
@@ -268,7 +266,7 @@ class EmployeePayslipListView extends StatelessWidget {
     final String payPeriod = '${DateFormat('MMM dd').format(payslip.payPeriodStart)} - ${DateFormat('MMM dd, yyyy').format(payslip.payPeriodEnd)}';
     final String payDate = DateFormat('MMM dd, yyyy').format(payslip.payDate);
     final String amount = '\$${payslip.finalNetPay.toStringAsFixed(2)}';
-    
+
     final double cardPadding = isTablet ? 18 : 16;
     final double dateSize = isTablet ? 16 : 15;
     final double detailSize = isTablet ? 14 : 13;
@@ -319,10 +317,10 @@ class EmployeePayslipListView extends StatelessWidget {
                     vertical: isTablet ? 5 : 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(payslip.statusEnum).withOpacity(0.1),
+                    color: _getStatusColor(payslip.statusEnum).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: _getStatusColor(payslip.statusEnum).withOpacity(0.3),
+                      color: _getStatusColor(payslip.statusEnum).withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
@@ -364,7 +362,7 @@ class EmployeePayslipListView extends StatelessWidget {
                   ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  backgroundColor: const Color(0xFF9747FF).withOpacity(0.1),
+                  backgroundColor: const Color(0xFF9747FF).withValues(alpha: 0.1),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

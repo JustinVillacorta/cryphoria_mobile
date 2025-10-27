@@ -7,7 +7,7 @@ import '../providers/payroll_history_providers.dart';
 import '../../../../domain/entities/payslip.dart';
 
 class PayslipScreen extends ConsumerWidget {
-  const PayslipScreen({Key? key}) : super(key: key);
+  const PayslipScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -141,13 +141,11 @@ class PayslipScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Summary Cards
               _buildTotalEntriesCard(payrollDetails.payslips, isSmallScreen, isTablet, isDesktop),
               SizedBox(height: isTablet ? 16 : 12),
               _buildFinancialSummaryCard(payrollDetails.payslips, isSmallScreen, isTablet, isDesktop),
               SizedBox(height: isTablet ? 24 : 16),
-              
-              // Payslip Entries
+
               _buildPayslipEntriesCard(context, payrollDetails.payslips, isSmallScreen, isTablet, isDesktop),
               SizedBox(height: isTablet ? 28 : 20),
             ],
@@ -169,7 +167,7 @@ class PayslipScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF9747FF).withOpacity(0.25),
+            color: const Color(0xFF9747FF).withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -186,7 +184,7 @@ class PayslipScreen extends ConsumerWidget {
                   style: GoogleFonts.inter(
                     fontSize: isTablet ? 12 : 11,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.75),
+                    color: Colors.white.withValues(alpha: 0.75),
                     letterSpacing: 0.5,
                     height: 1.3,
                   ),
@@ -207,7 +205,7 @@ class PayslipScreen extends ConsumerWidget {
           Container(
             padding: EdgeInsets.all(isTablet ? 12 : 10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -229,7 +227,7 @@ class PayslipScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -268,7 +266,7 @@ class PayslipScreen extends ConsumerWidget {
         horizontal: isTablet ? 14 : 12,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -307,7 +305,7 @@ class PayslipScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -337,7 +335,7 @@ class PayslipScreen extends ConsumerWidget {
             ),
           ),
           SizedBox(height: isSmallScreen ? 16 : 20),
-          
+
           if (payslips.isEmpty)
             Center(
               child: Padding(
@@ -347,7 +345,7 @@ class PayslipScreen extends ConsumerWidget {
                     Icon(
                       Icons.receipt_long_outlined,
                       size: isTablet ? 56 : 48,
-                      color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                      color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
                     ),
                     SizedBox(height: isTablet ? 16 : 12),
                     Text(
@@ -373,7 +371,7 @@ class PayslipScreen extends ConsumerWidget {
               ),
             )
           else
-            ...payslips.map((payslip) => _buildPayslipEntryCard(context, payslip, isSmallScreen, isTablet)).toList(),
+            ...payslips.map((payslip) => _buildPayslipEntryCard(context, payslip, isSmallScreen, isTablet)),
         ],
       ),
     );

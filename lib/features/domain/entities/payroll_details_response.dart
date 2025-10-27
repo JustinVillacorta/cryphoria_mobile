@@ -1,4 +1,3 @@
-// lib/features/domain/entities/payroll_details_response.dart
 
 import 'payroll_statistics.dart';
 import 'payroll_entry.dart';

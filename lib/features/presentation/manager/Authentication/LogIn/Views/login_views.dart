@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/login_ViewModel.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/login_state.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Forgot_Password/Views/forgot_password_request_view.dart';
 import 'package:cryphoria_mobile/shared/validation/validators.dart';
@@ -28,12 +28,10 @@ class _LogInState extends ConsumerState<LogIn> {
   String? _noAccountEmail;
   bool _obscurePassword = true;
 
-  LoginViewModel get _viewModel => ref.read(loginViewModelProvider);
-
-  void _onViewModelChanged(LoginViewModel viewModel) async {
-    if (viewModel.authUser != null) {
-      ref.read(userProvider.notifier).state = viewModel.authUser;
-      if (viewModel.authUser!.role == 'Manager') {
+  void _onViewModelChanged(LoginState state) async {
+    if (state.authUser != null) {
+      ref.read(userProvider.notifier).state = state.authUser;
+      if (state.authUser!.role == 'Manager') {
         ref.read(selectedPageProvider.notifier).state = 0;
         ref.read(selectedEmployeePageProvider.notifier).state = 0;
         Navigator.pushAndRemoveUntil(
@@ -50,8 +48,8 @@ class _LogInState extends ConsumerState<LogIn> {
           (route) => false,
         );
       }
-    } else if (viewModel.error != null) {
-      final err = viewModel.error!;
+    } else if (state.error != null) {
+      final err = state.error!;
       if (_isNoAccountError(err)) {
         final email = _emailController.text.trim();
         if (!mounted) return;
@@ -109,7 +107,7 @@ class _LogInState extends ConsumerState<LogIn> {
       );
       return;
     }
-    _viewModel.login(
+    ref.read(loginViewModelProvider.notifier).login(
       _emailController.text.trim(),
       _passwordController.text,
     );
@@ -124,11 +122,11 @@ class _LogInState extends ConsumerState<LogIn> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<LoginViewModel>(
+    ref.listen<LoginState>(
       loginViewModelProvider,
       (previous, next) => _onViewModelChanged(next),
     );
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
       body: SafeArea(
@@ -138,9 +136,8 @@ class _LogInState extends ConsumerState<LogIn> {
             final isTablet = size.width > 600;
             final isLargeTablet = size.width > 900;
             final isDesktop = size.width > 1200;
-            
+
             if (isDesktop) {
-              // Desktop: Two-column layout
               return Row(
                 children: [
                   Expanded(
@@ -154,7 +151,7 @@ class _LogInState extends ConsumerState<LogIn> {
                             Icon(
                               Icons.account_balance_wallet,
                               size: 120,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                             const SizedBox(height: 24),
                             Text(
@@ -174,7 +171,7 @@ class _LogInState extends ConsumerState<LogIn> {
                                 style: GoogleFonts.inter(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   height: 1.5,
                                 ),
                                 textAlign: TextAlign.center,
@@ -192,7 +189,6 @@ class _LogInState extends ConsumerState<LogIn> {
                 ],
               );
             } else {
-              // Mobile & Tablet: Single column
               return _buildLoginForm(context, size, isTablet, isLargeTablet, isDesktop);
             }
           },
@@ -202,10 +198,9 @@ class _LogInState extends ConsumerState<LogIn> {
   }
 
   Widget _buildLoginForm(BuildContext context, Size size, bool isTablet, bool isLargeTablet, bool isDesktop) {
-    final viewModel = ref.watch(loginViewModelProvider);
+    final state = ref.watch(loginViewModelProvider);
     final isSmallScreen = size.height < 700;
-    
-    // Responsive sizing
+
     final horizontalPadding = isDesktop ? 60.0 : isLargeTablet ? 48.0 : isTablet ? 36.0 : 24.0;
     final formMaxWidth = isDesktop ? 480.0 : isLargeTablet ? 520.0 : isTablet ? 560.0 : 400.0;
     final titleFontSize = isDesktop ? 36.0 : isLargeTablet ? 34.0 : isTablet ? 32.0 : isSmallScreen ? 28.0 : 32.0;
@@ -213,7 +208,7 @@ class _LogInState extends ConsumerState<LogIn> {
     final fieldSpacing = isSmallScreen ? 16.0 : isTablet ? 22.0 : 20.0;
     final buttonHeight = isTablet ? 56.0 : isSmallScreen ? 50.0 : 52.0;
     final verticalPadding = isSmallScreen ? 20.0 : isTablet ? 40.0 : 32.0;
-    
+
     return Container(
       color: Colors.white,
       padding: EdgeInsets.symmetric(
@@ -233,10 +228,9 @@ class _LogInState extends ConsumerState<LogIn> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Error banners
-                  if (viewModel.error != null && 
-                      viewModel.error!.isNotEmpty && 
-                      _isNoAccountError(viewModel.error!)) ...[
+                  if (state.error != null && 
+                      state.error!.isNotEmpty && 
+                      _isNoAccountError(state.error!)) ...[
                     _buildInfoBanner(
                       message: 'No account exists for \'${_emailController.text.trim()}\'.',
                       onCreateAccount: () {
@@ -249,7 +243,7 @@ class _LogInState extends ConsumerState<LogIn> {
                     ),
                     SizedBox(height: isSmallScreen ? 12 : 16),
                   ],
-                  
+
                   if (_noAccountEmail != null && _noAccountEmail!.trim().isNotEmpty) ...[
                     _buildInfoBanner(
                       message: 'No account exists for $_noAccountEmail.',
@@ -266,8 +260,7 @@ class _LogInState extends ConsumerState<LogIn> {
                     ),
                     SizedBox(height: isSmallScreen ? 12 : 16),
                   ],
-                  
-                  // Title
+
                   Text(
                     'Welcome Back!',
                     style: GoogleFonts.inter(
@@ -279,8 +272,7 @@ class _LogInState extends ConsumerState<LogIn> {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: isSmallScreen ? 8 : 12),
-                  
-                  // Subtitle
+
                   Text(
                     'Log in to manage your crypto finances smarter and faster.',
                     style: GoogleFonts.inter(
@@ -293,7 +285,6 @@ class _LogInState extends ConsumerState<LogIn> {
                   ),
                   SizedBox(height: isSmallScreen ? 32 : isTablet ? 48 : 40),
 
-                  // Email field
                   _buildTextField(
                     controller: _emailController,
                     label: 'Email',
@@ -312,7 +303,6 @@ class _LogInState extends ConsumerState<LogIn> {
                   ),
                   SizedBox(height: fieldSpacing),
 
-                  // Password field
                   _buildTextField(
                     controller: _passwordController,
                     label: 'Password',
@@ -341,7 +331,6 @@ class _LogInState extends ConsumerState<LogIn> {
                   ),
                   SizedBox(height: isSmallScreen ? 16 : 24),
 
-                  // Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -368,21 +357,20 @@ class _LogInState extends ConsumerState<LogIn> {
                   ),
                   SizedBox(height: isSmallScreen ? 24 : 32),
 
-                  // Login Button
                   SizedBox(
                     height: buttonHeight,
                     child: ElevatedButton(
-                      onPressed: viewModel.isLoading ? null : _login,
+                      onPressed: state.isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF9747FF),
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor: const Color(0xFF9747FF).withOpacity(0.6),
+                        disabledBackgroundColor: const Color(0xFF9747FF).withValues(alpha: 0.6),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 0,
                       ),
-                      child: viewModel.isLoading
+                      child: state.isLoading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
@@ -403,7 +391,6 @@ class _LogInState extends ConsumerState<LogIn> {
                   ),
                   SizedBox(height: isSmallScreen ? 24 : 32),
 
-                  // Sign Up link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -434,10 +421,9 @@ class _LogInState extends ConsumerState<LogIn> {
                     ],
                   ),
 
-                  // Error message
-                  if (viewModel.error != null && 
-                      viewModel.error!.isNotEmpty &&
-                      !_isNoAccountError(viewModel.error!)) ...[
+                  if (state.error != null && 
+                      state.error!.isNotEmpty &&
+                      !_isNoAccountError(state.error!)) ...[
                     const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -452,7 +438,7 @@ class _LogInState extends ConsumerState<LogIn> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              viewModel.error!,
+                              state.error!,
                               style: GoogleFonts.inter(
                                 color: Colors.red.shade700,
                                 fontSize: 14,
@@ -564,7 +550,7 @@ class _LogInState extends ConsumerState<LogIn> {
   }) {
     final double fontSize = isSmallScreen ? 14 : isTablet ? 15 : 16;
     final double paddingVertical = isSmallScreen ? 12 : isTablet ? 14 : 16;
-    
+
     return TextFormField(
       controller: controller,
       obscureText: isPassword ? obscureText : false,

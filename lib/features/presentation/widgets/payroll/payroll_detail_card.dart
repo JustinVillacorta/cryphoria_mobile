@@ -1,14 +1,10 @@
-// lib/features/presentation/widgets/employee_card.dart
 
 import 'package:flutter/material.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/common/glass_card.dart'; // your GlassCard
+import 'package:cryphoria_mobile/features/presentation/widgets/common/glass_card.dart';
 
-/// A frosted‐glass ListTile for an employee row.
 class PayrollItemwidget extends StatelessWidget {
-  /// URL for the avatar image
   final String avatarUrl;
 
-  /// Employee name
   final String name;
   final String subtitle;
   final String amount;
@@ -16,14 +12,14 @@ class PayrollItemwidget extends StatelessWidget {
   final VoidCallback? onTap;
 
   const PayrollItemwidget({
-    Key? key,
+    super.key,
     required this.avatarUrl,
     required this.name,
     required this.subtitle,
     required this.amount,
     required this.frequency,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +29,7 @@ class PayrollItemwidget extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center, // vertical centering
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
@@ -44,7 +40,7 @@ class PayrollItemwidget extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Column(
-                    mainAxisAlignment: MainAxisAlignment.center, // center text
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name, style: const TextStyle(color: Colors.white)),
@@ -57,7 +53,7 @@ class PayrollItemwidget extends StatelessWidget {
                 ],
               ),
               Column(
-                mainAxisAlignment: MainAxisAlignment.center, // center trailing
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(

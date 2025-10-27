@@ -1,7 +1,6 @@
-// lib/features/domain/entities/invoice.dart
 
 class Invoice {
-  final String id; // MongoDB _id
+  final String id;
   final String invoiceId;
   final String userId;
   final String invoiceNumber;
@@ -26,7 +25,6 @@ class Invoice {
   final String? createdAt;
   final String? updatedAt;
 
-  // Crypto payment fields
   final String? cryptoPaymentAddress;
   final String? cryptoCurrency;
   final double? cryptoAmount;
@@ -238,7 +236,6 @@ class Invoice {
   }
 }
 
-// Invoice Item entity
 class InvoiceItem {
   final String description;
   final int quantity;

@@ -28,7 +28,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _securityAnswerController = TextEditingController();
   String _password = '';
-  
+
   String _selectedRole = 'Employee';
   late TapGestureRecognizer _termsRecognizer;
   late TapGestureRecognizer _privacyRecognizer;
@@ -93,7 +93,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
             final isTablet = size.width > 600;
             final isLargeTablet = size.width > 900;
             final isDesktop = size.width > 1200;
-            
+
             if (isDesktop) {
               return Row(
                 children: [
@@ -108,7 +108,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                             Icon(
                               Icons.account_balance_wallet,
                               size: 120,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                             const SizedBox(height: 24),
                             Text(
@@ -128,7 +128,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                                 style: GoogleFonts.inter(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   height: 1.5,
                                 ),
                                 textAlign: TextAlign.center,
@@ -155,9 +155,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   }
 
   Widget _buildRegisterForm(BuildContext context, Size size, bool isTablet, bool isLargeTablet, bool isDesktop) {
-    final viewModel = ref.watch(registerViewModelProvider);
+    final state = ref.watch(registerViewModelProvider);
     final isSmallScreen = size.height < 700;
-    
+
     final horizontalPadding = isDesktop ? 60.0 : isLargeTablet ? 48.0 : isTablet ? 36.0 : 24.0;
     final formMaxWidth = isDesktop ? 480.0 : isLargeTablet ? 520.0 : isTablet ? 560.0 : 400.0;
     final titleFontSize = isDesktop ? 36.0 : isLargeTablet ? 34.0 : isTablet ? 32.0 : isSmallScreen ? 28.0 : 32.0;
@@ -165,7 +165,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     final fieldSpacing = isSmallScreen ? 14.0 : isTablet ? 18.0 : 16.0;
     final buttonHeight = isTablet ? 56.0 : isSmallScreen ? 50.0 : 52.0;
     final verticalPadding = isSmallScreen ? 20.0 : isTablet ? 40.0 : 32.0;
-    
+
     return Container(
       color: Colors.white,
       padding: EdgeInsets.symmetric(
@@ -196,7 +196,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: isSmallScreen ? 8 : 12),
-                  
+
                   Text(
                     'Sign up and simplify crypto bookkeeping and invoicing.',
                     style: GoogleFonts.inter(
@@ -208,7 +208,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: isSmallScreen ? 24 : isTablet ? 32 : 28),
-                  
+
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -396,17 +396,17 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                   SizedBox(
                     height: buttonHeight,
                     child: ElevatedButton(
-                      onPressed: viewModel.isLoading ? null : _register,
+                      onPressed: state.isLoading ? null : _register,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF9747FF),
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor: const Color(0xFF9747FF).withOpacity(0.6),
+                        disabledBackgroundColor: const Color(0xFF9747FF).withValues(alpha: 0.6),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 0,
                       ),
-                      child: viewModel.isLoading
+                      child: state.isLoading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
@@ -457,7 +457,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                     ],
                   ),
 
-                  if (viewModel.error != null && viewModel.error!.isNotEmpty) ...[
+                  if (state.error != null && state.error!.isNotEmpty) ...[
                     SizedBox(height: isSmallScreen ? 20 : 24),
                     Container(
                       padding: EdgeInsets.all(isSmallScreen ? 14 : 16),
@@ -472,7 +472,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              viewModel.error!,
+                              state.error!,
                               style: GoogleFonts.inter(
                                 color: Colors.red.shade700,
                                 fontSize: isSmallScreen ? 13 : 14,
@@ -510,7 +510,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     final fontSize = isSmallScreen ? 14.0 : 15.0;
     final iconSize = isSmallScreen ? 18.0 : 20.0;
     final verticalPadding = isSmallScreen ? 14.0 : isTablet ? 18.0 : 16.0;
-    
+
     return TextFormField(
       controller: controller,
       obscureText: isPassword ? obscureText : false,
@@ -573,7 +573,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
   void _register() async {
     setState(() => _submitted = true);
-    
+
     if (!_agreed) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -607,9 +607,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
       return;
     }
 
-    final viewModel = ref.read(registerViewModelProvider);
-
-    await viewModel.register(
+    await ref.read(registerViewModelProvider.notifier).register(
       _usernameController.text.trim(),
       _passwordController.text,
       _confirmPasswordController.text,
@@ -622,7 +620,8 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
     if (!mounted) return;
 
-    if (viewModel.error == null && viewModel.registerResponse != null) {
+    final state = ref.read(registerViewModelProvider);
+    if (state.error == null && state.registerResponse != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -650,7 +649,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
 class _AgreementDialog extends StatefulWidget {
   final String title;
-  const _AgreementDialog({Key? key, required this.title}) : super(key: key);
+  const _AgreementDialog({required this.title});
 
   @override
   State<_AgreementDialog> createState() => _AgreementDialogState();

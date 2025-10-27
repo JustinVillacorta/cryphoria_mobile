@@ -1,4 +1,3 @@
-// lib/features/presentation/screens/invoice_detail_screen.dart
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/reports/pdf_generation_helper.dart';
@@ -18,7 +17,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
 
     return Scaffold(
@@ -145,7 +144,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -202,7 +201,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -291,7 +290,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -479,7 +478,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -594,22 +593,22 @@ class InvoiceDetailScreen extends ConsumerWidget {
 
     switch (status.toLowerCase()) {
       case 'paid':
-        bgColor = const Color(0xFF10B981).withOpacity(0.1);
+        bgColor = const Color(0xFF10B981).withValues(alpha: 0.1);
         textColor = const Color(0xFF10B981);
         icon = Icons.check_circle_outlined;
         break;
       case 'pending':
-        bgColor = const Color(0xFFF59E0B).withOpacity(0.1);
+        bgColor = const Color(0xFFF59E0B).withValues(alpha: 0.1);
         textColor = const Color(0xFFF59E0B);
         icon = Icons.schedule_outlined;
         break;
       case 'overdue':
-        bgColor = const Color(0xFFEF4444).withOpacity(0.1);
+        bgColor = const Color(0xFFEF4444).withValues(alpha: 0.1);
         textColor = const Color(0xFFEF4444);
         icon = Icons.error_outline;
         break;
       default:
-        bgColor = const Color(0xFF6B6B6B).withOpacity(0.1);
+        bgColor = const Color(0xFF6B6B6B).withValues(alpha: 0.1);
         textColor = const Color(0xFF6B6B6B);
         icon = Icons.info_outline;
     }
@@ -669,7 +668,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
       );
 
       final pdfPath = await PdfGenerationHelper.generateInvoicePdf(invoice);
-      
+
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
@@ -695,26 +694,29 @@ class InvoiceDetailScreen extends ConsumerWidget {
               label: 'Open',
               textColor: Colors.white,
               onPressed: () async {
+                final scaffoldContext = context;
                 try {
                   await OpenFile.open(pdfPath);
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Could not open file: $e',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Could not open file: $e',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
+                        backgroundColor: Colors.orange[600],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        margin: const EdgeInsets.all(16),
                       ),
-                      backgroundColor: Colors.orange[600],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      margin: const EdgeInsets.all(16),
-                    ),
-                  );
+                    );
+                  }
                 }
               },
             ),
@@ -743,7 +745,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
       if (context.mounted && Navigator.of(context, rootNavigator: true).canPop()) {
         Navigator.of(context, rootNavigator: true).pop();
       }
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

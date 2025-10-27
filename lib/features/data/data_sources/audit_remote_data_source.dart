@@ -12,7 +12,6 @@ import '../../domain/entities/audit_report.dart';
 abstract class AuditRemoteDataSource {
   Future<AuditReportModel> uploadContract(File contractFile);
   
-  // Financial Reports
   Future<List<TaxReportModel>> getTaxReports();
   Future<List<BalanceSheetModel>> getAllBalanceSheets();
   Future<CashFlowListResponseModel> getCashFlow();
@@ -28,13 +27,9 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
 
   @override
   Future<AuditReportModel> uploadContract(File contractFile) async {
-    print("🌐 AuditRemoteDataSource.uploadContract called");
-    print("📁 File: ${contractFile.path}");
     
     try {
-      print("📤 Making POST request to /api/ai/audit-contract/");
       
-      // Create FormData with file upload
       final formData = FormData.fromMap({
         'contract_file': await MultipartFile.fromFile(
           contractFile.path,
@@ -54,13 +49,10 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         ),
       );
 
-            print("📥 Upload contract response:");
-            print("📊 Status code: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final responseData = response.data as Map<String, dynamic>;
         
-        // Check if the response has the expected format with audit data
         if (responseData['success'] == true && responseData['audit'] != null) {
           final auditData = responseData['audit'] as Map<String, dynamic>;
           return _parseAuditResponse(auditData);
@@ -71,34 +63,25 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         throw Exception('Failed to upload contract: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ DioException in uploadContract: $e");
       throw Exception('Network error: ${e.message}');
     }
   }
 
   AuditReportModel _parseAuditResponse(Map<String, dynamic> auditData) {
-    print("🔍 Parsing audit response data:");
     
-    // Parse vulnerabilities from the API response
     final vulnerabilities = <VulnerabilityModel>[];
     
-    // Check both 'vulnerabilities' and 'ai_vulnerabilities' fields
     List<dynamic> vulnList = [];
     if (auditData['vulnerabilities'] != null) {
       vulnList = auditData['vulnerabilities'] as List<dynamic>;
-      print("🔍 Found ${vulnList.length} vulnerabilities in 'vulnerabilities' field");
     } else if (auditData['ai_vulnerabilities'] != null) {
       vulnList = auditData['ai_vulnerabilities'] as List<dynamic>;
-      print("🔍 Found ${vulnList.length} vulnerabilities in 'ai_vulnerabilities' field");
     }
     
     if (vulnList.isNotEmpty) {
-      print("🔍 Processing ${vulnList.length} vulnerabilities from API");
       for (int i = 0; i < vulnList.length; i++) {
         final vuln = vulnList[i] as Map<String, dynamic>;
-        print("🔍 Processing vulnerability $i: ${vuln['title']}");
         
-        // Map severity from API format to enum
         Severity severity;
         final severityString = (vuln['severity'] as String).toUpperCase();
         switch (severityString) {
@@ -129,15 +112,11 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         );
         
         vulnerabilities.add(vulnerability);
-        print("✅ Added vulnerability: ${vulnerability.title} (${severity.name})");
       }
     } else {
-      print("🔍 No vulnerabilities found in either 'vulnerabilities' or 'ai_vulnerabilities' fields");
     }
     
-    print("🔍 Final vulnerabilities count after parsing: ${vulnerabilities.length}");
 
-    // Calculate security metrics from vulnerabilities
     final criticalIssues = vulnerabilities.where((v) => v.severity == Severity.critical).length;
     final highRiskIssues = vulnerabilities.where((v) => v.severity == Severity.high).length;
     final mediumRiskIssues = vulnerabilities.where((v) => v.severity == Severity.medium).length;
@@ -154,14 +133,11 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       completedChecks: [],
     );
 
-    // Parse recommendations from audit report
     final recommendations = <RecommendationModel>[];
     
-    // Parse recommendations from the recommendations field
     if (auditData['recommendations'] != null) {
       final recString = auditData['recommendations'] as String;
       if (recString.isNotEmpty) {
-        // Split recommendations by newlines and create recommendation objects
         final recLines = recString.split('\n').where((line) => line.trim().isNotEmpty).toList();
         for (int i = 0; i < recLines.length; i++) {
           final line = recLines[i].trim();
@@ -178,7 +154,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       }
     }
     
-    // Also parse AI recommendations if available
     if (auditData['ai_recommendations'] != null) {
       final aiRecs = auditData['ai_recommendations'] as List<dynamic>;
       for (int i = 0; i < aiRecs.length; i++) {
@@ -192,18 +167,14 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       }
     }
 
-    // Parse gas optimization from API response
     final gasScore = _parseGasOptimizationScore(auditData);
     final gasSuggestions = _parseGasOptimizationSuggestions(auditData);
-    print("⛽ Gas optimization score: $gasScore");
-    print("⛽ Gas optimization suggestions count: ${gasSuggestions.length}");
     
     final gasOptimization = GasOptimizationModel(
       optimizationScore: gasScore,
       suggestions: gasSuggestions,
     );
 
-    // Create code quality from API response
     final linesOfCode = auditData['source_code']?.toString().split('\n').length ?? 0;
     final codeQualityScore = _calculateCodeQualityScore(linesOfCode, vulnerabilities.length);
     final complexityScore = _calculateComplexityScore(linesOfCode);
@@ -229,37 +200,10 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       overallScore: _calculateOverallScore(securityScore, gasOptimization.optimizationScore, codeQuality.qualityScore),
     );
     
-    print("✅ Final audit report created:");
-    print("📊 Vulnerabilities: ${vulnerabilities.length}");
-    print("⛽ Gas suggestions: ${gasOptimization.suggestions.length}");
-    print("📝 Recommendations: ${recommendations.length}");
-    print("🎯 Overall score: ${_calculateOverallScore(securityScore, gasOptimization.optimizationScore, codeQuality.qualityScore)}");
     
-    // Debug: Print first few vulnerabilities in detail
-    if (vulnerabilities.isNotEmpty) {
-      print("🔍 First vulnerability details:");
-      final firstVuln = vulnerabilities.first;
-      print("  ID: ${firstVuln.id}");
-      print("  Title: ${firstVuln.title}");
-      print("  Description: ${firstVuln.description}");
-      print("  Severity: ${firstVuln.severity.name}");
-      print("  Category: ${firstVuln.category}");
-      print("  Line Numbers: ${firstVuln.lineNumbers}");
-      print("  Remediation: ${firstVuln.remediation}");
-    }
-    
-    // Debug: Print first few gas optimization suggestions
-    if (gasOptimization.suggestions.isNotEmpty) {
-      print("⛽ First gas optimization suggestion:");
-      final firstSuggestion = gasOptimization.suggestions.first;
-      print("  Function: ${firstSuggestion.function}");
-      print("  Suggestion: ${firstSuggestion.suggestion}");
-      print("  Priority: ${firstSuggestion.priority.name}");
-    }
   }
 
   double _calculateSecurityScore(int critical, int high, int medium, int low) {
-    // Calculate security score based on vulnerability counts
     final totalIssues = critical + high + medium + low;
     if (totalIssues == 0) return 100.0;
     
@@ -272,13 +216,10 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   }
 
   double _calculateCodeQualityScore(int linesOfCode, int vulnerabilityCount) {
-    // Base score starts at 100
     double score = 100.0;
     
-    // Deduct points based on vulnerabilities
     score -= vulnerabilityCount * 5.0;
     
-    // Deduct points for very large files (complexity)
     if (linesOfCode > 500) {
       score -= 10.0;
     } else if (linesOfCode > 1000) {
@@ -305,7 +246,7 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     } else if (lowerRec.contains('low priority') || lowerRec.contains('minor')) {
       return Priority.low;
     }
-    return Priority.medium; // Default
+    return Priority.medium;
   }
 
   String _parseRecommendationCategory(String recommendation) {
@@ -319,38 +260,32 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
     } else if (lowerRec.contains('ai analysis')) {
       return 'AI Analysis';
     }
-    return 'General'; // Default
+    return 'General';
   }
 
   double _parseGasOptimizationScore(Map<String, dynamic> auditData) {
-    // Try to extract gas optimization score from the API response
     if (auditData['gas_optimization'] != null) {
       final gasOptString = auditData['gas_optimization'] as String;
       
-      // If it's an error message, return a low score
       if (gasOptString.toLowerCase().contains('error')) {
-        return 30.0; // Low score for analysis errors
+        return 30.0;
       }
       
-      // Try to parse a numeric score if present
       final scoreMatch = RegExp(r'(\d+(?:\.\d+)?)').firstMatch(gasOptString);
       if (scoreMatch != null) {
         return double.tryParse(scoreMatch.group(1)!) ?? 50.0;
       }
     }
     
-    // Default score if no gas optimization data available
     return 50.0;
   }
 
   List<GasOptimizationSuggestionModel> _parseGasOptimizationSuggestions(Map<String, dynamic> auditData) {
     final suggestions = <GasOptimizationSuggestionModel>[];
     
-    // Check if there are gas optimization suggestions in the API response
     if (auditData['gas_optimization'] != null) {
       final gasOptString = auditData['gas_optimization'] as String;
       
-      // If it's an error message, create a suggestion about the error
       if (gasOptString.toLowerCase().contains('error')) {
         suggestions.add(GasOptimizationSuggestionModel(
           function: 'Gas Analysis',
@@ -358,7 +293,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
           priority: Priority.high,
         ));
       } else if (gasOptString.isNotEmpty && !gasOptString.toLowerCase().contains('error')) {
-        // If there's actual gas optimization data, parse it
         suggestions.add(GasOptimizationSuggestionModel(
           function: 'Gas Optimization',
           suggestion: gasOptString,
@@ -367,7 +301,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
       }
     }
     
-    // Add some general gas optimization suggestions based on vulnerabilities
     List<dynamic> vulnList = [];
     if (auditData['vulnerabilities'] != null) {
       vulnList = auditData['vulnerabilities'] as List<dynamic>;
@@ -388,7 +321,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         ));
       }
       
-      // Add gas optimization suggestions based on AI vulnerabilities
       final gasOptimizationVulns = vulnList.where((vuln) => 
         (vuln['title'] as String?)?.toLowerCase().contains('gas') == true).toList();
       
@@ -408,20 +340,14 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   @override
   Future<List<TaxReportModel>> getTaxReports() async {
     try {
-      print("📤 Getting tax reports from /api/financial/tax-report/list");
       
       final response = await dio.get('/api/financial/tax-report/list');
 
-      print("📥 Tax reports response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
-        // Check if response has the wrapper structure with success and tax_reports
         if (response.data is Map<String, dynamic>) {
           final Map<String, dynamic> responseData = response.data as Map<String, dynamic>;
           
-          // Check if it's the expected wrapper format
           if (responseData.containsKey('success') && responseData.containsKey('tax_reports')) {
             final bool success = responseData['success'] as bool? ?? false;
             if (!success) {
@@ -433,23 +359,19 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
               final List<dynamic> reports = taxReportsData;
               return reports.map((report) => TaxReportModel.fromJson(report as Map<String, dynamic>)).toList();
             } else if (taxReportsData is Map<String, dynamic>) {
-              // Single report object - wrap it in a list
               return [TaxReportModel.fromJson(taxReportsData)];
             } else {
               throw Exception('Unexpected tax_reports format: ${taxReportsData.runtimeType}');
             }
           } else {
-            // Fallback: handle direct array or single object (legacy format)
             if (responseData is List) {
               final List<dynamic> reports = responseData as List<dynamic>;
               return reports.map((report) => TaxReportModel.fromJson(report as Map<String, dynamic>)).toList();
             } else {
-              // Single report object - wrap it in a list
               return [TaxReportModel.fromJson(responseData)];
             }
           }
         } else if (response.data is List) {
-          // Direct array response (legacy format)
           final List<dynamic> reports = response.data as List<dynamic>;
           return reports.map((report) => TaxReportModel.fromJson(report as Map<String, dynamic>)).toList();
         } else {
@@ -459,7 +381,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         throw Exception('Failed to get tax reports: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Error getting tax reports: $e");
       throw Exception('Network error: ${e.message}');
     }
   }
@@ -467,13 +388,9 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   @override
   Future<List<BalanceSheetModel>> getAllBalanceSheets() async {
     try {
-      print("📤 Getting all balance sheets from /api/financial/balance-sheet/list/");
       
       final response = await dio.get('/api/financial/balance-sheet/list/');
 
-      print("📥 All balance sheets response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
         final responseData = response.data as Map<String, dynamic>;
@@ -483,7 +400,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         throw Exception('Failed to get balance sheets: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Error getting all balance sheets: $e");
       throw Exception('Network error: ${e.message}');
     }
   }
@@ -491,13 +407,9 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   @override
   Future<CashFlowListResponseModel> getCashFlow() async {
     try {
-      print("📤 Getting cash flow from /api/financial/cash-flow/list/");
       
       final response = await dio.get('/api/financial/cash-flow/list/');
 
-      print("📥 Cash flow response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
         return CashFlowListResponseModel.fromJson(response.data as Map<String, dynamic>);
@@ -505,7 +417,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         throw Exception('Failed to get cash flow: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Error getting cash flow: $e");
       throw Exception('Network error: ${e.message}');
     }
   }
@@ -513,21 +424,15 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   @override
   Future<PortfolioModel> getPortfolioValue() async {
     try {
-      print("📤 Getting portfolio value from /api/portfolio/value/");
       
       final response = await dio.get('/api/portfolio/value/', queryParameters: {
         'currency': 'USD',
       });
 
-      print("📥 Portfolio value response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
-        // Safely cast the response data
         final responseData = Map<String, dynamic>.from(response.data as Map);
         
-        // Handle the actual API response structure
         if (responseData['success'] == true) {
           return PortfolioModel.fromJson(responseData);
         } else {
@@ -537,7 +442,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         throw Exception('Failed to get portfolio value: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Error getting portfolio value: $e");
       throw Exception('Network error: ${e.message}');
     }
   }
@@ -545,13 +449,9 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   @override
   Future<PayslipsResponseModel> getPayslips() async {
     try {
-      print("📤 Getting payslips from /api/payslips/list/");
       
       final response = await dio.get('/api/payslips/list/');
 
-      print("📥 Payslips response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
         return PayslipsResponseModel.fromJson(response.data as Map<String, dynamic>);
@@ -559,7 +459,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         throw Exception('Failed to get payslips: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Error getting payslips: $e");
       throw Exception('Network error: ${e.message}');
     }
   }
@@ -567,13 +466,9 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
   @override
   Future<IncomeStatementsResponseModel> getIncomeStatements() async {
     try {
-      print("📤 Getting income statements from /api/financial/income-statement/list/");
       
       final response = await dio.get('/api/financial/income-statement/list/');
 
-      print("📥 Income statements response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
         return IncomeStatementsResponseModel.fromJson(response.data as Map<String, dynamic>);
@@ -581,7 +476,6 @@ class AuditRemoteDataSourceImpl implements AuditRemoteDataSource {
         throw Exception('Failed to get income statements: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Error getting income statements: $e");
       throw Exception('Network error: ${e.message}');
     }
   }

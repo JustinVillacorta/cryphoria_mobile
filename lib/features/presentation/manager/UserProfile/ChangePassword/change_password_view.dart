@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ChangePasswordView extends ConsumerStatefulWidget {
   final StateNotifierProvider provider;
-  
+
   const ChangePasswordView({
     super.key,
     required this.provider,
@@ -35,14 +35,11 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to VM state to drive UI dialogs
     ref.listen<AsyncValue<void>>(widget.provider as ProviderListenable<AsyncValue<void>>,
         (previous, next) async {
-      print('🔐 [UI_LISTENER] State changed from ${previous?.whenOrNull(data: (_) => 'data', loading: () => 'loading', error: (_, __) => 'error')} to ${next.whenOrNull(data: (_) => 'data', loading: () => 'loading', error: (_, __) => 'error')}');
-      
+
       next.when(
         data: (_) async {
-          print('🔐 [UI_LISTENER] ✅ Success state received');
           _hideLoading();
           await _showMessageDialog(
             title: 'Success',
@@ -51,14 +48,11 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
           _currentPasswordController.clear();
           _newPasswordController.clear();
           _confirmPasswordController.clear();
-          print('🔐 [UI_LISTENER] Form cleared and success dialog shown');
         },
         loading: () {
-          print('🔐 [UI_LISTENER] Loading state received');
           _showLoading();
         },
         error: (err, _) async {
-          print('🔐 [UI_LISTENER] ❌ Error state received: $err');
           _hideLoading();
           await _showMessageDialog(
             title: 'Error',
@@ -101,7 +95,7 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
                 color: const Color(0xFF6F7787),
               ),
             ),
-          
+
             const SizedBox(height: 20),
             _PasswordField(
               controller: _currentPasswordController,
@@ -231,17 +225,13 @@ class _PasswordFieldState extends State<_PasswordField> {
 
 extension on _ChangePasswordViewState {
   Future<void> _onUpdatePasswordPressed() async {
-    print('🔐 [UI] Change password button pressed');
-    
+
     final current = _currentPasswordController.text.trim();
     final newPw = _newPasswordController.text.trim();
     final confirm = _confirmPasswordController.text.trim();
 
-    print('🔐 [UI] Form data - Current: ${current.length} chars, New: ${newPw.length} chars, Confirm: ${confirm.length} chars');
 
-    // Basic validation
     if (current.isEmpty || newPw.isEmpty || confirm.isEmpty) {
-      print('🔐 [UI] ❌ Validation failed: Missing fields');
       await _showMessageDialog(
         title: 'Missing Information',
         message: 'Please fill in all fields.',
@@ -249,7 +239,6 @@ extension on _ChangePasswordViewState {
       return;
     }
     if (newPw != confirm) {
-      print('🔐 [UI] ❌ Validation failed: Passwords do not match');
       await _showMessageDialog(
         title: 'Passwords Do Not Match',
         message: 'Please make sure both new passwords match.',
@@ -257,7 +246,6 @@ extension on _ChangePasswordViewState {
       return;
     }
     if (newPw.length < 8) {
-      print('🔐 [UI] ❌ Validation failed: Password too short');
       await _showMessageDialog(
         title: 'Weak Password',
         message: 'New password must be at least 8 characters.',
@@ -265,20 +253,16 @@ extension on _ChangePasswordViewState {
       return;
     }
 
-    print('🔐 [UI] ✅ UI validation passed, showing confirmation dialog');
     final confirmed = await _showConfirmDialog(
       title: 'Confirm Change',
       message: 'Are you sure you want to update your password?',
       confirmText: 'Update',
     );
-    
+
     if (confirmed != true) {
-      print('🔐 [UI] User cancelled password change');
       return;
     }
 
-    print('🔐 [UI] User confirmed, calling viewmodel...');
-    // Trigger VM call; UI reacts via ref.listen above
     await (ref.read(widget.provider.notifier) as dynamic).changePassword(
           currentPassword: current,
           newPassword: newPw,

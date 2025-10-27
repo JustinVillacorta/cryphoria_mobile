@@ -20,7 +20,7 @@ class CustomNavBar extends StatelessWidget {
       tablet: 60.0,
       desktop: 65.0,
     );
-    
+
     final navBarMargin = context.responsiveValue(
       mobile: const EdgeInsets.only(bottom: 8.0, left: 16.0, right: 16.0),
       tablet: const EdgeInsets.only(bottom: 10.0, left: 20.0, right: 20.0),
@@ -38,25 +38,23 @@ class CustomNavBar extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30.0),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3), // softer border
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1.0,
               ),
               boxShadow: [
-                // main subtle shadow
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 20,
                   spreadRadius: 2,
                   offset: const Offset(0, 6),
                 ),
-                // faint top highlight for glass effect
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   blurRadius: 4,
                   offset: const Offset(0, -1),
                 ),
               ],
-              color: Colors.white.withOpacity(0.1), // translucent background
+              color: Colors.white.withValues(alpha: 0.1),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -82,7 +80,7 @@ class CustomNavBar extends StatelessWidget {
           tablet: 24.0,
           desktop: 26.0,
         );
-        
+
         return IconButton(
           icon: Icon(icon, size: iconSize),
           color: currentIndex == index ? Color(0xFF9747FF) : Colors.grey,

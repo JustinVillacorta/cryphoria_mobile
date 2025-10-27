@@ -39,10 +39,10 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
@@ -167,7 +167,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
               Icon(
                 Icons.trending_up_outlined,
                 size: isTablet ? 64 : 56,
-                color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
               ),
               SizedBox(height: isSmallScreen ? 16 : 20),
               Text(
@@ -227,9 +227,9 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: _buildPeriodSelector(state),
             ),
-          
+
           SizedBox(height: isSmallScreen ? 12 : 16),
-          
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildHeaderCard(state, isSmallScreen, isTablet, isDesktop),
@@ -247,14 +247,14 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
           isChartView 
             ? _buildChartView(state.selectedCashFlow!, isSmallScreen, isTablet, isDesktop, horizontalPadding)
             : _buildTableView(state.selectedCashFlow!, isSmallScreen, isTablet, isDesktop, horizontalPadding),
-          
+
           SizedBox(height: isSmallScreen ? 20 : 24),
-          
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildActionButtons(state, isSmallScreen, isTablet),
           ),
-          
+
           SizedBox(height: isSmallScreen ? 24 : 32),
         ],
       ),
@@ -266,7 +266,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final subtitleSize = isDesktop ? 15.0 : isTablet ? 14.0 : 13.0;
     final iconSize = isDesktop ? 26.0 : isTablet ? 24.0 : 22.0;
     final iconContainerSize = isDesktop ? 48.0 : isTablet ? 44.0 : 40.0;
-    
+
     return Container(
       padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
       decoration: BoxDecoration(
@@ -274,7 +274,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -289,7 +289,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                 width: iconContainerSize,
                 height: iconContainerSize,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF9747FF).withOpacity(0.1),
+                  color: const Color(0xFF9747FF).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -378,7 +378,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final titleSize = isTablet ? 13.0 : 12.0;
     final valueSize = isTablet ? 17.0 : 16.0;
     final iconSize = isTablet ? 18.0 : 16.0;
-    
+
     return Container(
       padding: EdgeInsets.all(isTablet ? 16 : 14),
       decoration: BoxDecoration(
@@ -433,7 +433,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   Widget _buildViewToggle(bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 15.0 : 14.0;
     final iconSize = isTablet ? 20.0 : 18.0;
-    
+
     return Container(
       height: isTablet ? 54 : 50,
       decoration: BoxDecoration(
@@ -441,7 +441,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -459,7 +459,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: isChartView ? [
                     BoxShadow(
-                      color: const Color(0xFF9747FF).withOpacity(0.3),
+                      color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -500,7 +500,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: !isChartView ? [
                     BoxShadow(
-                      color: const Color(0xFF9747FF).withOpacity(0.3),
+                      color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -547,7 +547,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -582,7 +582,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                         getTooltipItem: (group, groupIndex, rod, rodIndex) {
                           String tooltipText;
                           double tooltipValue;
-                          
+
                           switch (group.x.toInt()) {
                             case 0:
                               tooltipText = 'Beginning Cash';
@@ -608,7 +608,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
                               tooltipText = 'Unknown';
                               tooltipValue = rod.toY;
                           }
-                          
+
                           return BarTooltipItem(
                             '$tooltipText\n\$${tooltipValue.toStringAsFixed(0)}',
                             GoogleFonts.inter(
@@ -691,7 +691,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   Widget _buildTableView(CashFlow cashFlow, bool isSmallScreen, bool isTablet, bool isDesktop, double horizontalPadding) {
     final sectionTitleSize = isTablet ? 17.0 : 16.0;
     final rowSize = isTablet ? 15.0 : 14.0;
-    
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Container(
@@ -701,7 +701,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -721,7 +721,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
               ),
             ),
             SizedBox(height: isSmallScreen ? 18 : 22),
-            
+
             _buildSectionHeader('Operating Activities', '\$${cashFlow.cashSummary.netCashFromOperations.toStringAsFixed(2)}', 
               cashFlow.cashSummary.netCashFromOperations >= 0 ? Colors.green[600]! : Colors.red[600]!, sectionTitleSize, isTablet),
             SizedBox(height: isSmallScreen ? 8 : 10),
@@ -787,7 +787,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
         vertical: isTablet ? 10 : 8,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -884,7 +884,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
 
   Widget _buildActionButtons(CashFlowState state, bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 16.0 : 15.0;
-    
+
     return Row(
       children: [
         Expanded(
@@ -944,7 +944,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
 
   Widget _buildPeriodSelector(CashFlowState state) {
     final cashFlowStatements = state.cashFlowListResponse!.cashFlowStatements;
-    
+
     return ReportPeriodSelector<CashFlow>(
       items: cashFlowStatements,
       selectedItem: state.selectedCashFlow!,
@@ -968,9 +968,10 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   }
 
   Future<void> _exportToExcel(BuildContext context, CashFlow cashFlow) async {
+    final scaffoldContext = context;
     try {
       showDialog(
-        context: context,
+        context: scaffoldContext,
         barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(
@@ -982,12 +983,12 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
 
       final filePath = await ExcelExportHelper.exportCashFlowToExcel(cashFlow);
 
-      if (context.mounted) {
-        Navigator.of(context).pop();
+      if (scaffoldContext.mounted) {
+        Navigator.of(scaffoldContext).pop();
       }
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
             content: Text(
               'Excel file saved successfully!\nTap to open: ${filePath.split('/').last}',
@@ -1062,9 +1063,10 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
   }
 
   Future<void> _downloadPdf(BuildContext context, CashFlow cashFlow) async {
+    final scaffoldContext = context;
     try {
       showDialog(
-        context: context,
+        context: scaffoldContext,
         barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(
@@ -1093,12 +1095,12 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
 
       final filePath = await PdfGenerationHelper.generateCashFlowPdf(reportData);
 
-      if (context.mounted) {
-        Navigator.of(context).pop();
+      if (scaffoldContext.mounted) {
+        Navigator.of(scaffoldContext).pop();
       }
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
             content: Text(
               'PDF saved successfully!\nTap to open: ${filePath.split('/').last}',
@@ -1180,11 +1182,11 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
       cashFlow.cashSummary.netCashFromInvesting.abs(),
       cashFlow.cashSummary.netCashFromFinancing.abs(),
     ].reduce((a, b) => a > b ? a : b);
-    
+
     if (maxValue == 0) {
       return 10000;
     }
-    
+
     return maxValue * 1.2;
   }
 
@@ -1203,7 +1205,7 @@ class _CashFlowScreenState extends ConsumerState<CashFlowScreen> {
     final investingFlow = cashFlow.cashSummary.netCashFromInvesting;
     final financingFlow = cashFlow.cashSummary.netCashFromFinancing;
     final endingCash = cashFlow.cashSummary.endingCash;
-    
+
     return [
       BarChartGroupData(
         x: 0,

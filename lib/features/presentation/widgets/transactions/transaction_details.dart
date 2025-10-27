@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// ===== Model =====
 class TransactionData {
   final String title;
   final String subtitle;
@@ -12,8 +11,7 @@ class TransactionData {
   final String category;
   final String notes;
   final String transactionId;
-  
-  // Crypto-specific fields
+
   final String? transactionHash;
   final String? fromAddress;
   final String? toAddress;
@@ -47,7 +45,6 @@ class TransactionData {
   });
 }
 
-// ===== Widget =====
 class TransactionDetailsWidget extends StatelessWidget {
   final TransactionData transaction;
 
@@ -62,13 +59,13 @@ class TransactionDetailsWidget extends StatelessWidget {
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final verticalPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
     final cardPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
     final titleFontSize = isDesktop ? 20.0 : isTablet ? 19.0 : 18.0;
     final appBarTitleSize = isDesktop ? 20.0 : isTablet ? 19.0 : 18.0;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
@@ -104,17 +101,14 @@ class TransactionDetailsWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Main Transaction Info Card
                 _buildMainTransactionCard(context, size, isSmallScreen, isTablet, isDesktop, cardPadding, titleFontSize),
                 SizedBox(height: isSmallScreen ? 12 : 16),
-                
-                // Crypto Details Card
+
                 if (transaction.transactionHash != null) ...[
                   _buildCryptoDetailsCard(context, size, isSmallScreen, isTablet, isDesktop, cardPadding, titleFontSize),
                   SizedBox(height: isSmallScreen ? 12 : 16),
                 ],
-                
-                // Additional Info Card
+
                 _buildAdditionalInfoCard(context, size, isSmallScreen, isTablet, isDesktop, cardPadding, titleFontSize),
               ],
             ),
@@ -127,7 +121,7 @@ class TransactionDetailsWidget extends StatelessWidget {
   Widget _buildMainTransactionCard(BuildContext context, Size size, bool isSmallScreen, bool isTablet, bool isDesktop, double cardPadding, double titleFontSize) {
     final iconSize = isDesktop ? 28.0 : isTablet ? 26.0 : 24.0;
     final amountFontSize = isDesktop ? 20.0 : isTablet ? 19.0 : 18.0;
-    
+
     return Container(
       padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
@@ -135,7 +129,7 @@ class TransactionDetailsWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -151,8 +145,8 @@ class TransactionDetailsWidget extends StatelessWidget {
                 padding: EdgeInsets.all(isTablet ? 16 : 14),
                 decoration: BoxDecoration(
                   color: transaction.isIncome 
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -264,7 +258,7 @@ class TransactionDetailsWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -293,8 +287,7 @@ class TransactionDetailsWidget extends StatelessWidget {
             ],
           ),
           SizedBox(height: isTablet ? 20 : 16),
-          
-          // Transaction Hash
+
           if (transaction.transactionHash != null) ...[
             _buildCopyableItem(
               label: 'Transaction Hash',
@@ -306,8 +299,7 @@ class TransactionDetailsWidget extends StatelessWidget {
             ),
             SizedBox(height: isSmallScreen ? 12 : 14),
           ],
-          
-          // From Address
+
           if (transaction.fromAddress != null) ...[
             _buildCopyableItem(
               label: 'From Address',
@@ -319,8 +311,7 @@ class TransactionDetailsWidget extends StatelessWidget {
             ),
             SizedBox(height: isSmallScreen ? 12 : 14),
           ],
-          
-          // To Address
+
           if (transaction.toAddress != null) ...[
             _buildCopyableItem(
               label: 'To Address',
@@ -332,20 +323,19 @@ class TransactionDetailsWidget extends StatelessWidget {
             ),
             SizedBox(height: isSmallScreen ? 12 : 14),
           ],
-        
+
         ],
       ),
     );
   }
 
   Widget _buildAdditionalInfoCard(BuildContext context, Size size, bool isSmallScreen, bool isTablet, bool isDesktop, double cardPadding, double titleFontSize) {
-    // Only show if there's relevant additional data
     final hasAdditionalData = (transaction.description != null && transaction.description!.isNotEmpty) ||
                              (transaction.company != null && transaction.company!.isNotEmpty) ||
                              (transaction.notes.isNotEmpty && transaction.notes != '—');
-    
+
     if (!hasAdditionalData) return const SizedBox.shrink();
-    
+
     return Container(
       padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
@@ -353,7 +343,7 @@ class TransactionDetailsWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -382,7 +372,7 @@ class TransactionDetailsWidget extends StatelessWidget {
             ],
           ),
           SizedBox(height: isTablet ? 20 : 16),
-          
+
           if (transaction.description != null && transaction.description!.isNotEmpty) ...[
             _buildInfoItem(
               icon: Icons.description,
@@ -395,7 +385,7 @@ class TransactionDetailsWidget extends StatelessWidget {
                 (transaction.notes.isNotEmpty && transaction.notes != '—'))
               SizedBox(height: isSmallScreen ? 16 : 18),
           ],
-          
+
           if (transaction.company != null && transaction.company!.isNotEmpty) ...[
             _buildInfoItem(
               icon: Icons.business,
@@ -407,7 +397,7 @@ class TransactionDetailsWidget extends StatelessWidget {
             if (transaction.notes.isNotEmpty && transaction.notes != '—')
               SizedBox(height: isSmallScreen ? 16 : 18),
           ],
-          
+
           if (transaction.notes.isNotEmpty && transaction.notes != '—') ...[
             _buildInfoItem(
               icon: Icons.note,

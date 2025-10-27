@@ -4,15 +4,15 @@ import 'package:cryphoria_mobile/features/domain/entities/employee_transaction_s
 
 class TransactionItemWidget extends StatelessWidget {
   final Transaction transaction;
-  final VoidCallback? onTap; // Make onTap nullable since we'll handle it internally
+  final VoidCallback? onTap;
   final bool isTablet;
 
   const TransactionItemWidget({
-    Key? key,
+    super.key,
     required this.transaction,
     this.onTap,
     this.isTablet = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,6 @@ class TransactionItemWidget extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        print('Card tapped!'); // Debug print
         onTap?.call();
         showModalBottomSheet(
           context: context,
@@ -47,7 +46,7 @@ class TransactionItemWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -82,7 +81,7 @@ class TransactionItemWidget extends StatelessWidget {
                       vertical: screenHeight * 0.005,
                     ),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(transaction.status).withOpacity(0.1),
+                      color: _getStatusColor(transaction.status).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(

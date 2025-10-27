@@ -60,48 +60,45 @@ class OverallAssessmentScreen extends ConsumerWidget {
   }
 
   Widget _buildAssessmentContent(BuildContext context, AuditReport auditReport, WidgetRef ref) {
-    // Calculate assessment data from real audit report
     final criticalVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.critical).length;
     final highVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.high).length;
     final mediumVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.medium).length;
     final lowVulns = auditReport.vulnerabilities.where((v) => v.severity == Severity.low).length;
-    
+
     final gasOptimizations = auditReport.gasOptimization.suggestions.length;
-    
-    // Determine risk level based on real data
+
     String riskLevel;
     MaterialColor riskColor;
     String riskMessage;
-    
+
     if (criticalVulns > 0) {
       riskLevel = 'Critical';
       riskColor = Colors.red;
-      riskMessage = 'This contract has ${criticalVulns} critical vulnerabilities that could lead to financial loss.';
+      riskMessage = 'This contract has $criticalVulns critical vulnerabilities that could lead to financial loss.';
     } else if (highVulns > 0) {
       riskLevel = 'High';
       riskColor = Colors.orange;
-      riskMessage = 'This contract has ${highVulns} high-severity vulnerabilities that should be addressed before deployment.';
+      riskMessage = 'This contract has $highVulns high-severity vulnerabilities that should be addressed before deployment.';
     } else if (mediumVulns > 0) {
       riskLevel = 'Medium';
       riskColor = Colors.amber;
-      riskMessage = 'This contract has ${mediumVulns} medium-severity vulnerabilities that should be reviewed and addressed.';
+      riskMessage = 'This contract has $mediumVulns medium-severity vulnerabilities that should be reviewed and addressed.';
     } else if (lowVulns > 0) {
       riskLevel = 'Low';
       riskColor = Colors.blue;
-      riskMessage = 'This contract has ${lowVulns} minor vulnerabilities that pose minimal risk but should be considered.';
+      riskMessage = 'This contract has $lowVulns minor vulnerabilities that pose minimal risk but should be considered.';
     } else {
       riskLevel = 'Secure';
       riskColor = Colors.green;
       riskMessage = 'This contract passed all security checks with no vulnerabilities detected.';
     }
 
-    // Gas optimization level - use actual score from backend
     String gasOptLevel;
     MaterialColor gasOptColor;
     String gasOptMessage;
-    
+
     final gasOptScore = auditReport.gasOptimization.optimizationScore;
-    
+
     if (gasOptScore >= 80) {
       gasOptLevel = 'Excellent';
       gasOptColor = Colors.green;
@@ -122,12 +119,10 @@ class OverallAssessmentScreen extends ConsumerWidget {
 
     return Column(
       children: [
-        // Header with progress
         Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              // Progress indicator
               Row(
                 children: [
                   _buildProgressStep(1, false, true),
@@ -139,10 +134,9 @@ class OverallAssessmentScreen extends ConsumerWidget {
                   _buildProgressStep(4, true, false),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
-              // Progress labels
+
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -152,10 +146,9 @@ class OverallAssessmentScreen extends ConsumerWidget {
                   Text('Assessment', style: TextStyle(fontSize: 12, color: Colors.purple, fontWeight: FontWeight.w600)),
                 ],
               ),
-              
+
               const SizedBox(height: 32),
-              
-              // Header
+
               const Text(
                 'Overall Assessment',
                 style: TextStyle(
@@ -167,47 +160,39 @@ class OverallAssessmentScreen extends ConsumerWidget {
             ],
           ),
         ),
-        
-        // Content
+
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Contract Details Section
                 _buildContractDetailsSection(auditReport),
-                
+
                 const SizedBox(height: 16),
-                
-                // Risk Assessment
+
                 _buildRiskAssessmentCard(auditReport, riskLevel, riskColor, riskMessage, criticalVulns, gasOptimizations),
-                
+
                 const SizedBox(height: 16),
-                
-                // Gas Optimization
+
                 _buildGasOptimizationCard(auditReport, gasOptLevel, gasOptColor, gasOptMessage, gasOptimizations),
-                
+
                 const SizedBox(height: 16),
-                
-                // Code Quality Section
+
                 _buildCodeQualitySection(auditReport),
-                
+
                 const SizedBox(height: 24),
-                
-                // Summary Statistics
+
                 _buildSummaryStatistics(auditReport),
-                
+
                 const SizedBox(height: 16),
-                
-                // Recommendations
+
                 _buildRecommendationsSection(auditReport),
-                
+
                 const SizedBox(height: 32),
-                
-                // Action Buttons
+
                 _buildActionButtons(context, ref),
-                
+
                 const SizedBox(height: 32),
               ],
             ),
@@ -257,9 +242,9 @@ class OverallAssessmentScreen extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Icon(
@@ -280,9 +265,9 @@ class OverallAssessmentScreen extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           const Text(
             'Key Findings',
             style: TextStyle(
@@ -291,19 +276,17 @@ class OverallAssessmentScreen extends ConsumerWidget {
               color: Colors.black,
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           _buildKeyFinding('${auditReport.vulnerabilities.length} vulnerabilities detected${criticalVulns > 0 ? ' ($criticalVulns critical)' : ''}'),
-          
+
           if (gasOptimizations > 0)
             _buildKeyFinding('$gasOptimizations gas optimization opportunities identified'),
-            
-          // Show actual recommendations count
+
           if (auditReport.recommendations.isNotEmpty)
             _buildKeyFinding('${auditReport.recommendations.length} actionable recommendations provided'),
-            
-          // Show code quality score
+
           _buildKeyFinding('Overall security score: ${auditReport.overallScore.toStringAsFixed(1)}/100'),
         ],
       ),
@@ -367,9 +350,9 @@ class OverallAssessmentScreen extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -413,9 +396,9 @@ class OverallAssessmentScreen extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Text(
             gasOptMessage,
             style: const TextStyle(
@@ -424,10 +407,10 @@ class OverallAssessmentScreen extends ConsumerWidget {
               height: 1.4,
             ),
           ),
-          
+
           if (auditReport.gasOptimization.suggestions.isNotEmpty) ...[
             const SizedBox(height: 16),
-            
+
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: auditReport.gasOptimization.suggestions.take(4).map((suggestion) =>
@@ -491,7 +474,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Expanded(
@@ -512,9 +495,9 @@ class OverallAssessmentScreen extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           Row(
             children: [
               Expanded(
@@ -592,8 +575,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        
-        // Display actual recommendations from backend
+
         if (auditReport.recommendations.isNotEmpty) ...[
           ...auditReport.recommendations.map((recommendation) => 
             _buildRecommendationCard(
@@ -603,9 +585,8 @@ class OverallAssessmentScreen extends ConsumerWidget {
               recommendation.category,
               recommendation.priority,
             )
-          ).toList(),
+          )
         ] else ...[
-          // Fallback if no recommendations (should not happen with proper backend)
           _buildRecommendationCard(
             'General Improvements',
             'Review the audit findings and implement necessary security measures.',
@@ -636,7 +617,6 @@ class OverallAssessmentScreen extends ConsumerWidget {
     [String? category,
     Priority? priority]
   ) {
-    // Determine icon based on category
     IconData categoryIcon = Icons.lightbulb_outline;
     if (category != null) {
       switch (category.toLowerCase()) {
@@ -753,7 +733,6 @@ class OverallAssessmentScreen extends ConsumerWidget {
   Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
-        // Back to Results
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
@@ -775,10 +754,9 @@ class OverallAssessmentScreen extends ConsumerWidget {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 12),
-        
-        // Download Full Report
+
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -838,7 +816,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           _buildDetailRow('Contract Name', auditReport.contractName),
           _buildDetailRow('File Name', auditReport.fileName),
           _buildDetailRow('Audit ID', auditReport.id),
@@ -909,7 +887,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Expanded(
@@ -930,9 +908,9 @@ class OverallAssessmentScreen extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           Row(
             children: [
               Expanded(
@@ -953,7 +931,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           if (auditReport.codeQuality.issues.isNotEmpty) ...[
             const SizedBox(height: 16),
             const Text(
@@ -1123,7 +1101,7 @@ class OverallAssessmentScreen extends ConsumerWidget {
   void _showDownloadDialog(BuildContext context, WidgetRef ref) async {
     final mainViewModel = ref.read(auditMainViewModelProvider);
     final auditReport = mainViewModel.currentAuditReport;
-    
+
     if (auditReport == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1134,7 +1112,6 @@ class OverallAssessmentScreen extends ConsumerWidget {
       return;
     }
 
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1148,15 +1125,12 @@ class OverallAssessmentScreen extends ConsumerWidget {
     );
 
     try {
-      // Generate PDF
       final filePath = await PdfGenerationHelper.generateAuditReportPdf(auditReport);
-      
-      // Close loading dialog
+
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
-      // Show success message
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1167,15 +1141,18 @@ class OverallAssessmentScreen extends ConsumerWidget {
               label: 'Open',
               textColor: Colors.white,
               onPressed: () async {
+                final scaffoldContext = context;
                 try {
                   await OpenFile.open(filePath);
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Could not open file: $e'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                      SnackBar(
+                        content: Text('Could not open file: $e'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
                 }
               },
             ),
@@ -1183,12 +1160,10 @@ class OverallAssessmentScreen extends ConsumerWidget {
         );
       }
     } catch (e) {
-      // Close loading dialog if it's still open
       if (context.mounted && Navigator.of(context, rootNavigator: true).canPop()) {
         Navigator.of(context, rootNavigator: true).pop();
       }
-      
-      // Show error message
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -1,4 +1,3 @@
-// lib/features/domain/entities/portfolio.dart
 
 class Portfolio {
   final bool success;

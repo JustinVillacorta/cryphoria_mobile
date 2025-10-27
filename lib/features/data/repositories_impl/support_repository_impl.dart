@@ -17,7 +17,6 @@ class SupportRepositoryImpl implements SupportRepository {
     List<String>? attachments,
   }) async {
     try {
-      // Convert String paths to File objects
       List<File>? attachmentFiles;
       if (attachments != null && attachments.isNotEmpty) {
         attachmentFiles = attachments
@@ -34,7 +33,6 @@ class SupportRepositoryImpl implements SupportRepository {
         attachments: attachmentFiles,
       );
     } catch (e) {
-      print("❌ SupportRepositoryImpl.submitSupportTicket error: $e");
       rethrow;
     }
   }
@@ -44,7 +42,6 @@ class SupportRepositoryImpl implements SupportRepository {
     try {
       return await remoteDataSource.getSupportMessages();
     } catch (e) {
-      print("❌ SupportRepositoryImpl.getSupportMessages error: $e");
       rethrow;
     }
   }

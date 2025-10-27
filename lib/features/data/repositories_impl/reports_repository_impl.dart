@@ -52,23 +52,16 @@ class ReportsRepositoryImpl implements ReportsRepository {
     return await remoteDataSource.deleteReport(reportId);
   }
 
-  // Financial Reports Implementation
 
   @override
   Future<List<TaxReport>> getTaxReports() async {
     try {
-      print("🔄 ReportsRepositoryImpl: Getting tax reports from auditRemoteDataSource");
       final taxReportModels = await auditRemoteDataSource.getTaxReports();
-      print("📥 ReportsRepositoryImpl: Received ${taxReportModels.length} tax report models");
-      
-      // TaxReportModel extends TaxReport, so no conversion needed
+
       final taxReports = taxReportModels.cast<TaxReport>();
-      print("✅ ReportsRepositoryImpl: Successfully cast ${taxReports.length} tax reports to entities");
-      
+
       return taxReports;
-    } catch (e, stackTrace) {
-      print("❌ ReportsRepositoryImpl: Error getting tax reports: $e");
-      print("📄 Stack trace: $stackTrace");
+    } catch (e) {
       throw Exception('Failed to get tax reports: $e');
     }
   }
@@ -106,15 +99,10 @@ class ReportsRepositoryImpl implements ReportsRepository {
   @override
   Future<PayslipsResponse> getPayslips() async {
     try {
-      print("🔄 ReportsRepositoryImpl: Getting payslips from auditRemoteDataSource");
       final payslipsResponseModel = await auditRemoteDataSource.getPayslips();
-      print("📥 ReportsRepositoryImpl: Received payslips response model with ${payslipsResponseModel.payslips.length} payslips");
       final entity = payslipsResponseModel.toEntity();
-      print("✅ ReportsRepositoryImpl: Successfully converted to entity");
       return entity;
-    } catch (e, stackTrace) {
-      print("❌ ReportsRepositoryImpl: Error getting payslips: $e");
-      print("📄 Stack trace: $stackTrace");
+    } catch (e) {
       throw Exception('Failed to get payslips: $e');
     }
   }
@@ -122,18 +110,12 @@ class ReportsRepositoryImpl implements ReportsRepository {
   @override
   Future<List<IncomeStatement>> getIncomeStatements() async {
     try {
-      print("🔄 ReportsRepositoryImpl: Getting income statements from auditRemoteDataSource");
       final responseModel = await auditRemoteDataSource.getIncomeStatements();
-      print("📥 ReportsRepositoryImpl: Received ${responseModel.incomeStatements.length} income statement models");
-      
-      // Convert models to entities
+
       final incomeStatements = responseModel.incomeStatements.cast<IncomeStatement>();
-      print("✅ ReportsRepositoryImpl: Successfully converted ${incomeStatements.length} income statements to entities");
-      
+
       return incomeStatements;
-    } catch (e, stackTrace) {
-      print("❌ ReportsRepositoryImpl: Error getting income statements: $e");
-      print("📄 Stack trace: $stackTrace");
+    } catch (e) {
       throw Exception('Failed to get income statements: $e');
     }
   }

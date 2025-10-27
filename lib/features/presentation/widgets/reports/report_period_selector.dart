@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// A reusable period selector widget that displays a dropdown with date ranges
-/// for selecting different reporting periods across various report screens.
 class ReportPeriodSelector<T> extends StatelessWidget {
   final List<T> items;
   final T selectedItem;
@@ -19,7 +17,7 @@ class ReportPeriodSelector<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentIndex = items.indexOf(selectedItem);
-    
+
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       padding: const EdgeInsets.all(16),
@@ -29,7 +27,7 @@ class ReportPeriodSelector<T> extends StatelessWidget {
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -56,7 +54,7 @@ class ReportPeriodSelector<T> extends StatelessWidget {
               items: items.asMap().entries.map((entry) {
                 final index = entry.key;
                 final item = entry.value;
-                
+
                 return DropdownMenuItem<int>(
                   value: index,
                   child: Text(

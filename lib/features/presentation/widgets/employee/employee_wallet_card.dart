@@ -1,5 +1,4 @@
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet/connect_wallet_bottom_sheet.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
@@ -10,10 +9,10 @@ class EmployeeWalletCardWidget extends ConsumerStatefulWidget {
   final VoidCallback? onWhatIsCryptoWallet;
 
   const EmployeeWalletCardWidget({
-    Key? key,
+    super.key,
     this.isTablet = false,
     this.onWhatIsCryptoWallet,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<EmployeeWalletCardWidget> createState() => _EmployeeWalletCardWidgetState();
@@ -26,8 +25,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
     final screenHeight = MediaQuery.of(context).size.height;
     final state = ref.watch(homeEmployeeNotifierProvider);
     final notifier = ref.read(homeEmployeeNotifierProvider.notifier);
-    
-    debugPrint('🔍 Employee UI - Building with wallet: ${state.wallet?.address}');
+
 
     if (state.isLoading) {
       return Container(
@@ -72,7 +70,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
               child: ElevatedButton(
                 onPressed: notifier.clearError,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: screenHeight * 0.018),
@@ -119,9 +117,9 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         Container(
           padding: EdgeInsets.all(screenWidth * 0.04),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
           ),
           child: Icon(
             Icons.account_balance_wallet_outlined,
@@ -215,8 +213,8 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
               color: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               onSelected: (value) async {
-                if (state.isLoading) return; // Prevent multiple actions during loading
-                
+                if (state.isLoading) return;
+
                 switch (value) {
                   case 'refresh':
                     await notifier.refreshWallet();
@@ -295,9 +293,9 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
             vertical: screenHeight * 0.001,
           ),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -313,12 +311,10 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
               SizedBox(width: screenWidth * 0.015),
               GestureDetector(
                 onTap: () {
-                  // Implement copy to clipboard (e.g., using package:clipboard)
-                  debugPrint('Copying wallet address: ${state.wallet!.address}');
                 },
                 child: Icon(
                   Icons.copy,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   size: widget.isTablet ? 16 : screenWidth * 0.035,
                 ),
               ),
@@ -365,9 +361,9 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
               ),
               child: DropdownButton<String>(
                 value: state.selectedCurrency,
@@ -427,41 +423,38 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
     );
 
     if (result == true && mounted) {
+      final scaffoldContext = context;
       try {
-        debugPrint('🔍 Employee UI - Starting switch wallet from confirmation dialog');
         await notifier.switchWallet();
-        debugPrint('🔍 Employee UI - Switch wallet completed, checking state');
-        
+
         if (mounted) {
-          // Wait a bit to ensure state is updated
           await Future.delayed(const Duration(milliseconds: 100));
-          
-          // Force a rebuild by reading the state after the async operation
+
           final updated = ref.read(homeEmployeeNotifierProvider);
-          debugPrint('🔍 Employee UI - State after switch: wallet=${updated.wallet?.address}');
-          
+
+          if (!mounted) return;
           if (updated.errorMessage.isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(scaffoldContext).showSnackBar(
               SnackBar(
                 content: Text('Failed to switch wallet: ${updated.errorMessage}'),
                 backgroundColor: Colors.red,
               ),
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
+            if (!mounted) return;
+            ScaffoldMessenger.of(scaffoldContext).showSnackBar(
               const SnackBar(
                 content: Text('Wallet disconnected. You can now connect a new wallet.'),
                 backgroundColor: Colors.blue,
               ),
             );
-            // Show connect wallet bottom sheet after successful switch
-            await _showConnectWalletBottomSheet(context);
+            if (!mounted) return;
+            await _showConnectWalletBottomSheet(scaffoldContext);
           }
         }
       } catch (e) {
-        debugPrint('❌ Employee UI - Switch wallet error: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
             SnackBar(
               content: Text('Failed to switch wallet: $e'),
               backgroundColor: Colors.red,
@@ -497,28 +490,27 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
     );
 
     if (result == true && mounted) {
+      final scaffoldContext = context;
       try {
-        debugPrint('🔍 Employee UI - Starting disconnect from confirmation dialog');
         await notifier.disconnectWallet();
-        debugPrint('🔍 Employee UI - Disconnect completed, checking state');
-        
+
         if (mounted) {
-          // Wait a bit to ensure state is updated
           await Future.delayed(const Duration(milliseconds: 100));
-          
-          // Force a rebuild by reading the state after the async operation
+
+          if (!mounted) return;
           final updated = ref.read(homeEmployeeNotifierProvider);
-          debugPrint('🔍 Employee UI - State after disconnect: wallet=${updated.wallet?.address}');
-          
+
+          if (!mounted) return;
           if (updated.errorMessage.isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(scaffoldContext).showSnackBar(
               SnackBar(
                 content: Text('Failed to disconnect: ${updated.errorMessage}'),
                 backgroundColor: Colors.red,
               ),
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
+            if (!mounted) return;
+            ScaffoldMessenger.of(scaffoldContext).showSnackBar(
               const SnackBar(
                 content: Text('Wallet disconnected successfully'),
                 backgroundColor: Colors.green,
@@ -527,9 +519,8 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
           }
         }
       } catch (e) {
-        debugPrint('❌ Employee UI - Disconnect error: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
             SnackBar(
               content: Text('Failed to disconnect: $e'),
               backgroundColor: Colors.red,
@@ -541,6 +532,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
   }
 
   Future<void> _showConnectWalletBottomSheet(BuildContext context) async {
+    final scaffoldContext = context;
     final controller = TextEditingController();
     String selectedWallet = 'MetaMask';
     final notifier = ref.read(homeEmployeeNotifierProvider.notifier);
@@ -559,36 +551,34 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
           walletType: selectedWallet,
         );
 
-        // Always dismiss loading dialog first if widget is still mounted
-        if (mounted && Navigator.canPop(context)) {
-          Navigator.of(context).pop();
+        if (!mounted) return;
+        if (Navigator.canPop(scaffoldContext)) {
+          Navigator.of(scaffoldContext).pop();
         }
 
-        // Check if connection was successful and widget is still mounted
-        if (mounted) {
-          final updatedState = ref.read(homeEmployeeNotifierProvider);
-          if (updatedState.wallet != null && updatedState.errorMessage.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Wallet connected successfully!')),
-            );
-          } else if (updatedState.errorMessage.isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to connect: ${updatedState.errorMessage}')),
-            );
-          }
-        }
-      } catch (e) {
-        // Always dismiss loading dialog first if widget is still mounted
-        if (mounted && Navigator.canPop(context)) {
-          Navigator.of(context).pop();
-        }
-
-        // Show error message if widget is still mounted
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to connect wallet: $e')),
+        if (!mounted) return;
+        final updatedState = ref.read(homeEmployeeNotifierProvider);
+        if (updatedState.wallet != null && updatedState.errorMessage.isEmpty) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+            SnackBar(content: Text('Wallet connected successfully!')),
+          );
+        } else if (updatedState.errorMessage.isNotEmpty) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+            SnackBar(content: Text('Failed to connect: ${updatedState.errorMessage}')),
           );
         }
+      } catch (e) {
+        if (!mounted) return;
+        if (Navigator.canPop(scaffoldContext)) {
+          Navigator.of(scaffoldContext).pop();
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+          SnackBar(content: Text('Failed to connect wallet: $e')),
+        );
       }
     }
   }

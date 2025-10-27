@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
-/// Lightweight shimmer effect without extra dependencies.
 class _Shimmer extends StatefulWidget {
-  const _Shimmer({required this.child, Key? key}) : super(key: key);
+  const _Shimmer({required this.child});
   final Widget child;
 
   @override
@@ -24,8 +23,8 @@ class _ShimmerState extends State<_Shimmer> with SingleTickerProviderStateMixin 
 
   @override
   Widget build(BuildContext context) {
-  final base = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.6);
-  final highlight = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.25);
+  final base = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
+  final highlight = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.25);
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -61,7 +60,7 @@ class _GradientTranslation extends GradientTransform {
 }
 
 class _Bone extends StatelessWidget {
-  const _Bone({this.height = 14, this.width, this.radius = 12, Key? key}) : super(key: key);
+  const _Bone({this.height = 14, this.width, this.radius = 12});
   final double height;
   final double? width;
   final double radius;
@@ -71,20 +70,15 @@ class _Bone extends StatelessWidget {
       height: height,
       width: width,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.7),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(radius),
       ),
     );
   }
 }
 
-/// Manager home skeleton approximating:
-/// - Header (avatar + greeting)
-/// - Wallet card
-/// - Quick actions row
-/// - List items (e.g., recent activity)
 class ManagerHomeSkeleton extends StatelessWidget {
-  const ManagerHomeSkeleton({Key? key, this.actionsCount = 4, this.listCount = 5, this.padding}) : super(key: key);
+  const ManagerHomeSkeleton({super.key, this.actionsCount = 4, this.listCount = 5, this.padding});
 
   final int actionsCount;
   final int listCount;
@@ -93,7 +87,7 @@ class ManagerHomeSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pad = padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 18);
-    final cardColor = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+    final cardColor = Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
 
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
@@ -106,9 +100,8 @@ class ManagerHomeSkeleton extends StatelessWidget {
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              
 
-              // Wallet card
+
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -138,7 +131,6 @@ class ManagerHomeSkeleton extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // Quick actions row
               SizedBox(
                 height: 96,
                 child: Row(
@@ -164,7 +156,6 @@ class ManagerHomeSkeleton extends StatelessWidget {
               const _Bone(height: 16, width: 140),
               const SizedBox(height: 8),
 
-              // List items
               ListView.separated(
                 itemCount: listCount,
                 shrinkWrap: true,
@@ -201,7 +192,6 @@ class ManagerHomeSkeleton extends StatelessWidget {
   }
 }
 
-/// Convenience wrapper to overlay the skeleton above existing content.
 class HomeLoadingOverlay extends StatelessWidget {
   const HomeLoadingOverlay({super.key, required this.loading, required this.child});
   final bool loading;
@@ -217,7 +207,7 @@ class HomeLoadingOverlay extends StatelessWidget {
             child: AbsorbPointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.background.withOpacity(0.02),
+                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.02),
                 ),
                 child: const ManagerHomeSkeleton(),
               ),

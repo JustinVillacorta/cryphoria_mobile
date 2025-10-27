@@ -42,10 +42,10 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
@@ -170,7 +170,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               Icon(
                 Icons.account_balance_outlined,
                 size: isTablet ? 64 : 56,
-                color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
               ),
               SizedBox(height: isSmallScreen ? 16 : 20),
               Text(
@@ -225,16 +225,14 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
       padding: EdgeInsets.only(top: isSmallScreen ? 12 : 16),
       child: Column(
         children: [
-          // Period Selector
           if (state.balanceSheets != null && state.balanceSheets!.length > 1)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: _buildPeriodSelector(state),
             ),
-          
+
           SizedBox(height: isSmallScreen ? 12 : 16),
-          
-          // Header Card
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildHeaderCard(state, isSmallScreen, isTablet, isDesktop),
@@ -242,7 +240,6 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
           SizedBox(height: isSmallScreen ? 16 : 20),
 
-          // View Toggle
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildViewToggle(isSmallScreen, isTablet),
@@ -250,19 +247,17 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
           SizedBox(height: isSmallScreen ? 16 : 20),
 
-          // Content
           isChartView 
             ? _buildChartView(state, isSmallScreen, isTablet, isDesktop, horizontalPadding) 
             : _buildTableView(state.selectedBalanceSheet!, isSmallScreen, isTablet, isDesktop, horizontalPadding),
-          
+
           SizedBox(height: isSmallScreen ? 20 : 24),
-          
-          // Action Buttons
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildActionButtons(state, isSmallScreen, isTablet),
           ),
-          
+
           SizedBox(height: isSmallScreen ? 24 : 32),
         ],
       ),
@@ -274,7 +269,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     final subtitleSize = isDesktop ? 15.0 : isTablet ? 14.0 : 13.0;
     final iconSize = isDesktop ? 26.0 : isTablet ? 24.0 : 22.0;
     final iconContainerSize = isDesktop ? 48.0 : isTablet ? 44.0 : 40.0;
-    
+
     return Container(
       padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
       decoration: BoxDecoration(
@@ -282,7 +277,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -297,7 +292,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                 width: iconContainerSize,
                 height: iconContainerSize,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF9747FF).withOpacity(0.1),
+                  color: const Color(0xFF9747FF).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -386,7 +381,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     final titleSize = isTablet ? 13.0 : 12.0;
     final valueSize = isTablet ? 17.0 : 16.0;
     final iconSize = isTablet ? 18.0 : 16.0;
-    
+
     return Container(
       padding: EdgeInsets.all(isTablet ? 16 : 14),
       decoration: BoxDecoration(
@@ -441,7 +436,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   Widget _buildViewToggle(bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 15.0 : 14.0;
     final iconSize = isTablet ? 20.0 : 18.0;
-    
+
     return Container(
       height: isTablet ? 54 : 50,
       decoration: BoxDecoration(
@@ -449,7 +444,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -467,7 +462,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: isChartView ? [
                     BoxShadow(
-                      color: const Color(0xFF9747FF).withOpacity(0.3),
+                      color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -508,7 +503,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: !isChartView ? [
                     BoxShadow(
-                      color: const Color(0xFF9747FF).withOpacity(0.3),
+                      color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -555,7 +550,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -662,7 +657,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     final sectionTitleSize = isTablet ? 17.0 : 16.0;
     final rowTitleSize = isTablet ? 15.0 : 14.0;
     final subTitleSize = isTablet ? 13.0 : 12.0;
-    
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Container(
@@ -671,7 +666,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -679,7 +674,6 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
         ),
         child: Column(
           children: [
-            // Assets Section
             _buildCollapsibleSectionHeader(
               'Assets', 
               '\$${balanceSheet.totals.totalAssets.toStringAsFixed(2)}', 
@@ -691,14 +685,14 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
             if (isAssetsExpanded) ...[
               _buildSubSection('Current Assets', '(Short-term, highly liquid)', subTitleSize, isTablet),
               _buildBalanceSheetRow('Crypto Holdings', '\$${balanceSheet.assets.currentAssets.cryptoHoldings.totalValue.toStringAsFixed(2)}', rowTitleSize, isTablet),
-              
+
               if (balanceSheet.assets.currentAssets.cryptoHoldings.holdings.isNotEmpty)
                 _buildCryptoBreakdown(balanceSheet.assets.currentAssets.cryptoHoldings, isSmallScreen, isTablet),
-              
+
               _buildTotalRow('Total Current Assets', '\$${balanceSheet.assets.currentAssets.total.toStringAsFixed(2)}', rowTitleSize, isTablet),
-              
+
               SizedBox(height: isSmallScreen ? 16 : 20),
-              
+
               _buildSubSection('Non-Current Assets', '(Long-term investments)', subTitleSize, isTablet),
               _buildBalanceSheetRow('Long-term Investments', '\$${balanceSheet.assets.nonCurrentAssets.longTermInvestments.toStringAsFixed(2)}', rowTitleSize, isTablet),
               _buildBalanceSheetRow('Equipment', '\$${balanceSheet.assets.nonCurrentAssets.equipment.toStringAsFixed(2)}', rowTitleSize, isTablet),
@@ -708,7 +702,6 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
             SizedBox(height: isSmallScreen ? 20 : 24),
 
-            // Liabilities Section
             _buildCollapsibleSectionHeader(
               'Liabilities', 
               '\$${balanceSheet.totals.totalLiabilities.toStringAsFixed(2)}', 
@@ -724,9 +717,9 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               _buildBalanceSheetRow('Short-term Debt', '\$${balanceSheet.liabilities.currentLiabilities.shortTermDebt.toStringAsFixed(2)}', rowTitleSize, isTablet),
               _buildBalanceSheetRow('Tax Liabilities', '\$${balanceSheet.liabilities.currentLiabilities.taxLiabilities.toStringAsFixed(2)}', rowTitleSize, isTablet),
               _buildTotalRow('Total Current Liabilities', '\$${balanceSheet.liabilities.currentLiabilities.total.toStringAsFixed(2)}', rowTitleSize, isTablet),
-              
+
               SizedBox(height: isSmallScreen ? 16 : 20),
-              
+
               _buildSubSection('Long-term Liabilities', '(Due after one year)', subTitleSize, isTablet),
               _buildBalanceSheetRow('Long-term Debt', '\$${balanceSheet.liabilities.longTermLiabilities.longTermDebt.toStringAsFixed(2)}', rowTitleSize, isTablet),
               _buildBalanceSheetRow('Deferred Tax', '\$${balanceSheet.liabilities.longTermLiabilities.deferredTax.toStringAsFixed(2)}', rowTitleSize, isTablet),
@@ -736,7 +729,6 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
             SizedBox(height: isSmallScreen ? 20 : 24),
 
-            // Equity Section
             _buildCollapsibleSectionHeader(
               'Equity', 
               '\$${balanceSheet.totals.totalEquity.toStringAsFixed(2)}', 
@@ -751,10 +743,9 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
               _buildBalanceSheetRow('Unrealized Gains/Losses', '\$${balanceSheet.equity.unrealizedGainsLosses.toStringAsFixed(2)}', rowTitleSize, isTablet),
               _buildTotalRow('Total Equity', '\$${balanceSheet.equity.total.toStringAsFixed(2)}', rowTitleSize, isTablet),
             ],
-            
+
             SizedBox(height: isSmallScreen ? 20 : 24),
 
-            // Summary Section
             Container(
               padding: EdgeInsets.all(isTablet ? 24 : 20),
               decoration: const BoxDecoration(
@@ -1104,7 +1095,7 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
   Widget _buildActionButtons(BalanceSheetState state, bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 16.0 : 15.0;
-    
+
     return Row(
       children: [
         Expanded(
@@ -1185,13 +1176,13 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
     final assets = balanceSheet.totals.totalAssets.abs();
     final liabilities = balanceSheet.totals.totalLiabilities.abs();
     final equity = balanceSheet.totals.totalEquity.abs();
-    
+
     final maxValue = [assets, liabilities, equity].reduce((a, b) => a > b ? a : b) * 1.1;
-    
+
     if (maxValue == 0) {
       return 10000;
     }
-    
+
     return maxValue;
   }
 
@@ -1264,9 +1255,10 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   }
 
   Future<void> _exportToExcel(BuildContext context, BalanceSheet balanceSheet) async {
+    final scaffoldContext = context;
     try {
       showDialog(
-        context: context,
+        context: scaffoldContext,
         barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(
@@ -1278,12 +1270,12 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
       final filePath = await ExcelExportHelper.exportBalanceSheetToExcel(balanceSheet);
 
-      if (context.mounted) {
-        Navigator.of(context).pop();
+      if (scaffoldContext.mounted) {
+        Navigator.of(scaffoldContext).pop();
       }
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
             content: Text(
               'Excel file saved successfully!\nTap to open: ${filePath.split('/').last}',
@@ -1358,9 +1350,10 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
   }
 
   Future<void> _downloadPdf(BuildContext context, BalanceSheet balanceSheet) async {
+    final scaffoldContext = context;
     try {
       showDialog(
-        context: context,
+        context: scaffoldContext,
         barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(
@@ -1416,12 +1409,12 @@ class _BalanceSheetScreenState extends ConsumerState<BalanceSheetScreen> {
 
       final filePath = await PdfGenerationHelper.generateBalanceSheetPdf(reportData);
 
-      if (context.mounted) {
-        Navigator.of(context).pop();
+      if (scaffoldContext.mounted) {
+        Navigator.of(scaffoldContext).pop();
       }
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
             content: Text(
               'PDF saved successfully!\nTap to open: ${filePath.split('/').last}',

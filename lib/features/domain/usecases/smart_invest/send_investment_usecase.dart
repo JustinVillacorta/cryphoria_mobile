@@ -1,4 +1,3 @@
-// lib/features/domain/usecases/smart_invest/send_investment_usecase.dart
 
 import '../../entities/smart_invest.dart';
 import '../../repositories/smart_invest_repository.dart';
@@ -9,23 +8,22 @@ class SendInvestmentUseCase {
   SendInvestmentUseCase({required this.repository});
 
   Future<SmartInvestResponse> execute(SmartInvestRequest request) async {
-    // Validate input
     if (request.toAddress.isEmpty) {
       throw Exception('Recipient address is required');
     }
-    
+
     if (request.amount.isEmpty || double.tryParse(request.amount) == null) {
       throw Exception('Valid amount is required');
     }
-    
+
     if (double.parse(request.amount) <= 0) {
       throw Exception('Amount must be greater than zero');
     }
-    
+
     if (request.investorName.isEmpty) {
       throw Exception('Investor name is required');
     }
-    
+
     if (request.description.isEmpty) {
       throw Exception('Description is required');
     }

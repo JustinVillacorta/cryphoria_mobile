@@ -11,9 +11,8 @@ class ProcessPayrollPeriodUseCase {
       throw Exception('Period ID cannot be empty');
     }
 
-    // Get the period first to validate it can be processed
     final period = await repository.getPayrollPeriod(periodId);
-    
+
     if (!period.canProcess) {
       throw Exception('Payroll period cannot be processed in its current state');
     }

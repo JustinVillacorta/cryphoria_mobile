@@ -19,7 +19,6 @@ class AppValidators {
   static final RegExp _hasDigit = RegExp(r"\d");
   static final RegExp _hasSymbol = RegExp(r"[^A-Za-z0-9]");
 
-  // Input formatters
   static final List<TextInputFormatter> nameInputFormatters = [
     FilteringTextInputFormatter.allow(RegExp(r"[A-Za-zÀ-ÖØ-öø-ÿ' -]")),
   ];
@@ -88,7 +87,6 @@ class AppValidators {
     if (_hasDigit.hasMatch(password)) categories++;
     if (_hasSymbol.hasMatch(password)) categories++;
 
-    // Base on categories and length
     double score = 0;
     score += (categories / 4) * 0.6;
     final len = password.length.clamp(0, 20);
@@ -96,12 +94,17 @@ class AppValidators {
     if (password.isEmpty) score = 0;
 
     String label;
-    if (score < 0.2) label = '';
-    else if (score < 0.4) label = 'Weak';
-    else if (score < 0.6) label = 'Fair';
-    else if (score < 0.8) label = 'Strong';
-    else label = 'Very Strong';
+    if (score < 0.2) {
+      label = '';
+    } else if (score < 0.4) {
+      label = 'Weak';
+    } else if (score < 0.6) {
+      label = 'Fair';
+    } else if (score < 0.8) {
+      label = 'Strong';
+    } else {
+      label = 'Very Strong';
+    }
     return (score: score, label: label, met: categories);
   }
 }
-

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/common/glass_card.dart';
 
-/// A reusable “glass” invoice‑item card.
 class InvoiceItemCard extends StatelessWidget {
   final String title;
   final String description;
@@ -10,13 +9,13 @@ class InvoiceItemCard extends StatelessWidget {
   final VoidCallback? onViewReceipt;
 
   const InvoiceItemCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.description,
     required this.status,
     required this.amount,
     this.onViewReceipt,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +25,6 @@ class InvoiceItemCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // left column
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,11 +35,9 @@ class InvoiceItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Description and amount on same row, wraps if needed
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Flexible description
                       Expanded(
                         child: Text(
                           description,
@@ -51,7 +47,6 @@ class InvoiceItemCard extends StatelessWidget {
 
                       const SizedBox(width: 8),
 
-                      // Aligned amount (top right)
                       Text(
                         amount,
                         style: const TextStyle(
@@ -86,7 +81,6 @@ class InvoiceItemCard extends StatelessWidget {
   }
 }
 
-/// Tiny helper for the pill‑style badges
 class _Badge extends StatelessWidget {
   final String label;
   const _Badge({required this.label});

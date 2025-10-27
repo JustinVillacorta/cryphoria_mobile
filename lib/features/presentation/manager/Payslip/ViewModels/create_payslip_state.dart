@@ -1,4 +1,3 @@
-// lib/features/presentation/manager/Payslip/ViewModels/create_payslip_state.dart
 
 import '../../../../domain/entities/payslip.dart';
 

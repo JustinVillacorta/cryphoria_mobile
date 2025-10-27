@@ -1,4 +1,3 @@
-// lib/features/data/models/payroll_entry_model.dart
 
 import '../../domain/entities/payroll_entry.dart';
 
@@ -63,6 +62,7 @@ class PayrollEntryModel extends PayrollEntry {
     );
   }
 
+  @override
   @override
   Map<String, dynamic> toJson() {
     return {

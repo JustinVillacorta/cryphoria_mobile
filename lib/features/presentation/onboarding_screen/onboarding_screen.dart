@@ -6,7 +6,7 @@ import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Lo
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Register/Views/register_view.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({Key? key}) : super(key: key);
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -43,10 +43,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final isTablet = size.width > 600;
     final isLargeTablet = size.width > 900;
 
-    // Responsive Lottie sizing
     final lottieSize = _calculateLottieSize(size, isLandscape, isSmallScreen, isTablet, isLargeTablet);
-    
-    // Responsive padding and spacing
+
     final horizontalPadding = _calculateHorizontalPadding(isTablet, isLargeTablet);
     final headlineFontSize = _calculateHeadlineFontSize(size, isSmallScreen, isTablet, isLargeTablet);
     final subtitleFontSize = _calculateSubtitleFontSize(isSmallScreen, isTablet, isLargeTablet);
@@ -82,7 +80,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // Calculate responsive sizes
   double _calculateLottieSize(Size size, bool isLandscape, bool isSmallScreen, bool isTablet, bool isLargeTablet) {
     if (isLandscape) {
       return isTablet ? size.height * 0.5 : size.height * 0.45;
@@ -119,7 +116,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return size.height * 0.08;
   }
 
-  // Portrait layout
   Widget _buildPortraitLayout(
     Size size,
     double lottieSize,
@@ -142,7 +138,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
         return Stack(
           children: [
-            // Lottie animation
             Positioned(
               top: lottieTopPadding,
               left: 0,
@@ -157,7 +152,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Content
             Column(
               children: [
                 SizedBox(height: lottieTopPadding + lottieSize + (isSmallScreen ? 20 : 40)),
@@ -181,7 +175,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // Landscape layout
   Widget _buildLandscapeLayout(
     Size size,
     double lottieSize,
@@ -194,7 +187,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   ) {
     return Row(
       children: [
-        // Lottie side
         Expanded(
           flex: 4,
           child: Center(
@@ -206,8 +198,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ),
-        
-        // Content side
+
         Expanded(
           flex: 6,
           child: SingleChildScrollView(
@@ -228,7 +219,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // Content builder
   Widget _buildContent(
     double headlineFontSize,
     double subtitleFontSize,
@@ -239,7 +229,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Headline
         Text(
           'Smarter Crypto Finance for',
           style: GoogleFonts.inter(
@@ -288,8 +277,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
 
         SizedBox(height: isSmallScreen ? 16 : 20),
-        
-        // Subtitle
+
         Text(
           'Designed to simplify accounting and accelerate crypto-native growth.',
           style: GoogleFonts.inter(
@@ -300,10 +288,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             letterSpacing: 0,
           ),
         ),
-        
+
         SizedBox(height: isSmallScreen ? 32 : 40),
 
-        // Get Started Button
         SizedBox(
           width: double.infinity,
           height: buttonHeight,
@@ -333,10 +320,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 20),
 
-        // Login redirect
         Center(
           child: GestureDetector(
             onTap: () {
@@ -370,7 +356,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ),
-        
+
         SizedBox(height: bottomSpacing),
       ],
     );

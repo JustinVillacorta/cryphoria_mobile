@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class CurrencyConversionService {
   final Dio _dio;
@@ -13,7 +14,7 @@ class CurrencyConversionService {
       final rate = await getETHToPHPRate();
       return ethAmount * rate;
     } catch (e) {
-      print('Error converting ETH to PHP: $e');
+      debugPrint('Error converting ETH to PHP: $e');
       return 0.0;
     }
   }
@@ -24,14 +25,14 @@ class CurrencyConversionService {
       final rate = await getETHToUSDRate();
       return ethAmount * rate;
     } catch (e) {
-      print('Error converting ETH to USD: $e');
+      debugPrint('Error converting ETH to USD: $e');
       return 0.0;
     }
   }
 
   /// Gets both PHP and USD rates for ETH in a single API call from backend
   Future<Map<String, double>> getETHRates() async {
-    print('🔄 Fetching real-time ETH rates from backend...');
+    debugPrint('🔄 Fetching real-time ETH rates from backend...');
     
     try {
       // Call backend exchange rate endpoint with correct parameters
@@ -47,15 +48,15 @@ class CurrencyConversionService {
         ),
       );
 
-      print('💰 Backend exchange rate response: ${response.statusCode}');
-      print('📊 Response data: ${response.data}');
+      debugPrint('💰 Backend exchange rate response: ${response.statusCode}');
+      debugPrint('📊 Response data: ${response.data}');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         final rates = response.data['rates'] as Map<String, dynamic>? ?? {};
         final usdRate = rates['ETH']?.toDouble() ?? 3200.0;
         final phpRate = usdRate * 56.0; // Convert USD to PHP (1 USD ≈ 56 PHP)
         
-        print('✅ Real-time rates from backend: USD: \$${usdRate}, PHP: ₱${phpRate}');
+        debugPrint('✅ Real-time rates from backend: USD: \$$usdRate, PHP: ₱$phpRate');
         
         return {
           'php': phpRate,
@@ -65,17 +66,17 @@ class CurrencyConversionService {
         throw Exception('Backend response: ${response.data}');
       }
     } catch (e) {
-      print('🚨 Error fetching ETH rates from backend: $e');
+      debugPrint('🚨 Error fetching ETH rates from backend: $e');
       
       // Fallback: Try PHP rate directly
       try {
-        print('🔄 Trying PHP conversion endpoint...');
+        debugPrint('🔄 Trying PHP conversion endpoint...');
         return await _getETHRatesFromConversionEndpoint();
       } catch (conversionError) {
-        print('🚨 Error with conversion endpoint fallback: $conversionError');
+        debugPrint('🚨 Error with conversion endpoint fallback: $conversionError');
         
         // Use fallback rates as last resort
-        print('⚠️ Using fallback rates - backend unavailable');
+        debugPrint('⚠️ Using fallback rates - backend unavailable');
         return {
           'php': 179200.0, // Fallback: 1 ETH ≈ 179,200 PHP  
           'usd': 3200.0,   // Fallback: 1 ETH ≈ 3,200 USD
@@ -86,7 +87,7 @@ class CurrencyConversionService {
 
   /// Alternative method using backend conversion endpoint
   Future<Map<String, double>> _getETHRatesFromConversionEndpoint() async {
-    print('🔄 Using conversion endpoint fallback...');
+    debugPrint('🔄 Using conversion endpoint fallback...');
     
     final responses = await Future.wait([
       _dio.post(
@@ -110,13 +111,13 @@ class CurrencyConversionService {
     final phpResponse = responses[0];
     final usdResponse = responses[1];
 
-    print('💰 PHP conversion response: ${phpResponse.data}');
-    print('💰 USD conversion response: ${usdResponse.data}');
+    debugPrint('💰 PHP conversion response: ${phpResponse.data}');
+    debugPrint('💰 USD conversion response: ${usdResponse.data}');
 
     final phpRate = phpResponse.data['converted_amount']?.toDouble() ?? 179200.0;
     final usdRate = usdResponse.data['converted_amount']?.toDouble() ?? 3200.0;
 
-    print('✅ Conversion endpoint rates: USD: \$${usdRate}, PHP: ₱${phpRate}');
+    debugPrint('✅ Conversion endpoint rates: USD: \$$usdRate, PHP: ₱$phpRate');
 
     return {
       'php': phpRate,
@@ -173,7 +174,7 @@ class CurrencyConversionService {
     required String from,
     required String to,
   }) async {
-    print('🔄 Converting $value $from to $to using /api/conversion/crypto-to-fiat/');
+    debugPrint('🔄 Converting $value $from to $to using /api/conversion/crypto-to-fiat/');
     
     try {
       final response = await _dio.post(
@@ -189,9 +190,9 @@ class CurrencyConversionService {
         ),
       );
 
-      print('💰 Crypto to fiat conversion response: ${response.statusCode}');
-      print('📊 Full response data: ${response.data}');
-      print('📊 Response data type: ${response.data.runtimeType}');
+      debugPrint('💰 Crypto to fiat conversion response: ${response.statusCode}');
+      debugPrint('📊 Full response data: ${response.data}');
+      debugPrint('📊 Response data type: ${response.data.runtimeType}');
 
       if (response.statusCode == 200) {
         // Check if response has success field
@@ -209,8 +210,8 @@ class CurrencyConversionService {
                 'crypto': conversionData['crypto'],
                 'fiat': conversionData['fiat'],
               };
-              print('✅ Conversion successful: $value $from = $totalValue $to');
-              print('📊 Result data: $result');
+              debugPrint('✅ Conversion successful: $value $from = $totalValue $to');
+              debugPrint('📊 Result data: $result');
               return result;
             } else {
               throw Exception('Conversion failed: No content in response');
@@ -221,15 +222,15 @@ class CurrencyConversionService {
         } else {
           // Response doesn't have success field, assume it's successful if status is 200
           final result = response.data is Map ? response.data : {'converted_amount': response.data};
-          print('✅ Conversion successful (no success field): $value $from = ${result['converted_amount']} $to');
-          print('📊 Result data: $result');
+          debugPrint('✅ Conversion successful (no success field): $value $from = ${result['converted_amount']} $to');
+          debugPrint('📊 Result data: $result');
           return result;
         }
       } else {
         throw Exception('Conversion failed with status ${response.statusCode}: ${response.data}');
       }
     } catch (e) {
-      print('🚨 Error converting crypto to fiat: $e');
+      debugPrint('🚨 Error converting crypto to fiat: $e');
       rethrow;
     }
   }

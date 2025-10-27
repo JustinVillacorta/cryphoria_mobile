@@ -9,7 +9,7 @@ class EthTransaction {
   final int gasUsed;
   final double gasCostEth;
   final double totalCostEth;
-  final String status; // confirmed, pending, failed
+  final String status;
   final DateTime createdAt;
   final DateTime? confirmedAt;
   final String? fromWalletName;

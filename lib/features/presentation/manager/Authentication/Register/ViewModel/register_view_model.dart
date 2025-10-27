@@ -1,35 +1,23 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/core/error/exceptions.dart';
-import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
-import 'package:cryphoria_mobile/features/domain/entities/login_response.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Register/register_use_case.dart';
-import 'package:flutter/foundation.dart';
+import 'register_state.dart';
 
-class RegisterViewModel extends ChangeNotifier {
+class RegisterViewModel extends StateNotifier<RegisterState> {
   final Register registerUseCase;
-
-  AuthUser? _authUser;
-  AuthUser? get authUser => _authUser;
-
-  LoginResponse? _registerResponse;
-  LoginResponse? get registerResponse => _registerResponse;
-
-  String? _error;
-  String? get error => _error;
-
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
 
   RegisterViewModel({
     required this.registerUseCase,
-  });
+  }) : super(RegisterState.initial());
 
   Future<void> register(String username, String password, String passwordConfirm, String email, String firstName, String lastName, String securityAnswer, String role) async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: true,
+        error: () => null,
+      );
 
-      _registerResponse = await registerUseCase.execute(
+      final registerResponse = await registerUseCase.execute(
         username, 
         password,
         passwordConfirm, 
@@ -39,17 +27,28 @@ class RegisterViewModel extends ChangeNotifier {
         securityAnswer,
         role: role,
       );
-      _authUser = _registerResponse!.data;
-      _error = null;
+      
+      state = state.copyWith(
+        isLoading: false,
+        authUser: () => registerResponse.data,
+        registerResponse: () => registerResponse,
+        registerMessage: () => registerResponse.message,
+        error: () => null,
+      );
     } on ServerException catch (e) {
-      _error = e.message;
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.message,
+      );
     } catch (e) {
-      _error = "Registration failed: ${e.toString()}";
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: false,
+        error: () => "Registration failed: ${e.toString()}",
+      );
     }
   }
 
-  String get registerMessage => _registerResponse?.message ?? '';
+  void clearError() {
+    state = state.copyWith(error: () => null);
+  }
 }

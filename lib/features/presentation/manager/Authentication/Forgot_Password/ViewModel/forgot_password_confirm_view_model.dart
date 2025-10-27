@@ -1,67 +1,74 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/core/error/exceptions.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Forgot_Password/reset_password_use_case.dart';
 import 'package:cryphoria_mobile/features/domain/usecases/Forgot_Password/resend_password_reset_use_case.dart';
-import 'package:flutter/foundation.dart';
+import 'forgot_password_confirm_state.dart';
 
-class ForgotPasswordConfirmViewModel extends ChangeNotifier {
+class ForgotPasswordConfirmViewModel extends StateNotifier<ForgotPasswordConfirmState> {
   final ResetPassword resetPasswordUseCase;
   final ResendPasswordReset resendPasswordResetUseCase;
-
-  bool _isPasswordReset = false;
-  bool get isPasswordReset => _isPasswordReset;
-
-  String? _error;
-  String? get error => _error;
-
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
 
   ForgotPasswordConfirmViewModel({
     required this.resetPasswordUseCase,
     required this.resendPasswordResetUseCase,
-  });
+  }) : super(ForgotPasswordConfirmState.initial());
 
   Future<void> resetPassword(String email, String otp, String newPassword) async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: true,
+        error: () => null,
+      );
 
       await resetPasswordUseCase.execute(email, otp, newPassword);
-      _isPasswordReset = true;
-      _error = null;
+      
+      state = state.copyWith(
+        isLoading: false,
+        isPasswordReset: true,
+        error: () => null,
+      );
     } on ServerException catch (e) {
-      _error = e.message;
-      _isPasswordReset = false;
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.message,
+        isPasswordReset: false,
+      );
     } catch (e) {
-      _error = "Password reset failed: ${e.toString()}";
-      _isPasswordReset = false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: false,
+        error: () => "Password reset failed: ${e.toString()}",
+        isPasswordReset: false,
+      );
     }
   }
 
   Future<void> resendResetCode(String email) async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: true,
+        error: () => null,
+      );
 
       await resendPasswordResetUseCase.execute(email);
-      _error = null;
+      
+      state = state.copyWith(
+        isLoading: false,
+        error: () => null,
+      );
     } on ServerException catch (e) {
-      _error = e.message;
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.message,
+      );
     } catch (e) {
-      _error = "Failed to resend reset code: ${e.toString()}";
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(
+        isLoading: false,
+        error: () => "Failed to resend reset code: ${e.toString()}",
+      );
     }
   }
 
   void clearError() {
-    _error = null;
-    notifyListeners();
+    state = state.copyWith(error: () => null);
   }
 }

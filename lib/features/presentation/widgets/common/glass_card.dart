@@ -22,16 +22,16 @@ class GlassCard extends StatelessWidget {
     return ClipRRect(
       borderRadius: borderRadius,
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // blur effect
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           width: width,
           height: height,
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: borderRadius,
-            color: Colors.white.withOpacity(0.1), // semi-transparent
+            color: Colors.white.withValues(alpha: 0.1),
             border: Border.all(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               width: 1.2,
             ),
           ),

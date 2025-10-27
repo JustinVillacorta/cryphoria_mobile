@@ -31,9 +31,9 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
   Future<void> _loadUserId() async {
     try {
       final authLocalDataSource = ref.read(authLocalDataSourceProvider);
-      final id = await authLocalDataSource.getToken();
+      final authUser = await authLocalDataSource.getAuthUser();
       setState(() {
-        userId = id;
+        userId = authUser?.userId;
         isLoadingUser = false;
       });
     } catch (e) {
@@ -48,7 +48,7 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
 
@@ -74,7 +74,7 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
               Icon(
                 Icons.login_outlined,
                 size: isTablet ? 64 : 56,
-                color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
               ),
               SizedBox(height: isTablet ? 20 : 16),
               Text(
@@ -134,7 +134,7 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: Colors.black.withValues(alpha: 0.04),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -202,7 +202,7 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
                                 Icon(
                                   Icons.receipt_long_outlined,
                                   size: isTablet ? 64 : 56,
-                                  color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                                  color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
                                 ),
                                 SizedBox(height: isTablet ? 20 : 16),
                                 Text(
@@ -338,7 +338,7 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF9747FF).withOpacity(0.3),
+                    color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -391,8 +391,6 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
 
     if (confirmed == true) {
       try {
-        // TODO: Implement delete invoice use case
-        // await ref.read(deleteInvoiceProvider(invoice.invoiceId).future);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -423,7 +421,6 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
           );
         }
 
-        // ref.invalidate(invoicesByUserProvider(userId!));
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

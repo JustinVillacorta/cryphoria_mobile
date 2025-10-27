@@ -1,4 +1,3 @@
-// lib/features/presentation/manager/Payslip/Widgets/payslip_filter_widget.dart
 
 import 'package:flutter/material.dart';
 import '../../../../domain/entities/create_payslip_request.dart';
@@ -9,10 +8,10 @@ class PayslipFilterWidget extends StatelessWidget {
   final Function(PayslipFilter) onFilterChanged;
 
   const PayslipFilterWidget({
-    Key? key,
+    super.key,
     required this.currentFilter,
     required this.onFilterChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +20,6 @@ class PayslipFilterWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Status filter
         Text(
           'Filter by Status',
           style: TextStyle(

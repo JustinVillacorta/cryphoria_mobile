@@ -147,7 +147,6 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     try {
       return await remoteDataSource.getEmployeeWalletAddress(userId);
     } catch (e) {
-      // Don't throw error for wallet lookup failures
       return null;
     }
   }

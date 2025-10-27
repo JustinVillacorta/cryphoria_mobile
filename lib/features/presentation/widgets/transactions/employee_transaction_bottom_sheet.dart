@@ -9,17 +9,17 @@ class EmployeeTransactionDetails extends StatefulWidget {
   final IconData statusIcon;
 
   const EmployeeTransactionDetails({
-    Key? key,
+    super.key,
     required this.date,
     required this.amount,
     required this.usdAmount,
     required this.status,
     required this.statusColor,
     required this.statusIcon,
-  }) : super(key: key);
+  });
 
   @override
-  _EmployeeTransactionDetailsState createState() => _EmployeeTransactionDetailsState();
+  State<EmployeeTransactionDetails> createState() => _EmployeeTransactionDetailsState();
 }
 
 class _EmployeeTransactionDetailsState extends State<EmployeeTransactionDetails> {
@@ -33,7 +33,6 @@ class _EmployeeTransactionDetailsState extends State<EmployeeTransactionDetails>
       ),
       child: Column(
         children: [
-          // Header
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -58,7 +57,6 @@ class _EmployeeTransactionDetailsState extends State<EmployeeTransactionDetails>
             ),
           ),
 
-          // Transaction Summary
           Padding(
             padding: EdgeInsets.all(16),
             child: Column(
@@ -81,7 +79,7 @@ class _EmployeeTransactionDetailsState extends State<EmployeeTransactionDetails>
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'September 2025 Salary Payment', // Dynamic description could be added if needed
+                  'September 2025 Salary Payment',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -91,7 +89,7 @@ class _EmployeeTransactionDetailsState extends State<EmployeeTransactionDetails>
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: widget.statusColor.withOpacity(0.2),
+                    color: widget.statusColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -118,7 +116,6 @@ class _EmployeeTransactionDetailsState extends State<EmployeeTransactionDetails>
             ),
           ),
 
-          // Transaction Details Section
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Column(
@@ -143,7 +140,6 @@ class _EmployeeTransactionDetailsState extends State<EmployeeTransactionDetails>
               ],
             ),
           ),
-          // Back Button
           Padding(
             padding: EdgeInsets.all(16),
             child: ElevatedButton(

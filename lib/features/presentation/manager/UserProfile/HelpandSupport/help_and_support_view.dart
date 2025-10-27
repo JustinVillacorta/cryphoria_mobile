@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/UserProfile_Views/userProfile_Views.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/UserProfile_Views/user_profile_views.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'support_history_view.dart';
 
@@ -21,7 +21,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
   bool _subjectHasText = false;
   String _selectedCategory = 'technical';
   String _selectedPriority = 'medium';
-  List<File> _selectedFiles = [];
+  final List<File> _selectedFiles = [];
   final List<_FaqItem> _faqs = const [
     _FaqItem(
       question: 'How do I connect my wallet?',
@@ -77,7 +77,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
             } else {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                  builder: (_) => const userProfile(),
+                  builder: (_) => const UserProfile(),
                 ),
               );
             }
@@ -150,8 +150,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Subject Field
+
                   TextField(
                     controller: _subjectController,
                     onChanged: (value) =>
@@ -179,11 +178,9 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Category and Priority Row
+
                   Row(
                     children: [
-                      // Category Dropdown
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +224,6 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      // Priority Dropdown
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,8 +269,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Message Field
+
                   TextField(
                     controller: _messageController,
                     maxLines: 5,
@@ -307,8 +302,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // File Attachments Section
+
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -392,8 +386,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  
-                  // Action Buttons Row
+
                   Row(
                     children: [
                       Expanded(
@@ -441,8 +434,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
                       ),
                     ],
                   ),
-                  
-                  // Error/Success Messages
+
                   if (ref.watch(supportViewModelProvider).errorMessage != null) ...[
                     const SizedBox(height: 12),
                     Container(
@@ -507,6 +499,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
   }
 
   Future<void> _pickFiles() async {
+    final scaffoldContext = context;
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.any,
@@ -523,12 +516,14 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking files: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+          SnackBar(
+            content: Text('Error picking files: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -546,10 +541,9 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
 
   Future<void> _submitSupportTicket() async {
     final supportViewModel = ref.read(supportViewModelProvider);
-    
-    // Clear previous messages
+
     supportViewModel.clearMessages();
-    
+
     final success = await supportViewModel.submitSupportTicket(
       subject: _subjectController.text.trim(),
       message: _messageController.text.trim(),
@@ -559,7 +553,6 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
     );
 
     if (success) {
-      // Clear form on success
       _subjectController.clear();
       _messageController.clear();
       _selectedFiles.clear();
@@ -567,8 +560,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
         _subjectHasText = false;
         _messageHasText = false;
       });
-      
-      // Auto-clear success message after 5 seconds
+
       Future.delayed(const Duration(seconds: 5), () {
         if (mounted) {
           supportViewModel.clearMessages();
@@ -611,7 +603,7 @@ class _SectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -624,7 +616,7 @@ class _SectionCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: iconColor.withOpacity(0.12),
+                backgroundColor: iconColor.withValues(alpha: 0.12),
                 child: Icon(icon, color: iconColor, size: 20),
               ),
               const SizedBox(width: 10),
@@ -672,7 +664,7 @@ class _FaqTileState extends State<_FaqTile> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.01),
+            color: Colors.black.withValues(alpha: 0.01),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),

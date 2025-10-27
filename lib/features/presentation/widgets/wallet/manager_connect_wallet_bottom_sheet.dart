@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 
 class ManagerConnectWalletBottomSheet extends ConsumerStatefulWidget {
-  const ManagerConnectWalletBottomSheet({Key? key}) : super(key: key);
+  const ManagerConnectWalletBottomSheet({super.key});
 
   @override
   ConsumerState<ManagerConnectWalletBottomSheet> createState() => _ManagerConnectWalletBottomSheetState();
@@ -13,8 +13,7 @@ class _ManagerConnectWalletBottomSheetState extends ConsumerState<ManagerConnect
   final TextEditingController _privateKeyController = TextEditingController();
   bool _isValidFormat = true;
   bool _isLoading = false;
-  String _selectedWallet = 'MetaMask';
-  // Wallet type fixed to MetaMask
+  final String _selectedWallet = 'MetaMask';
 
   @override
   void dispose() {
@@ -47,11 +46,11 @@ class _ManagerConnectWalletBottomSheetState extends ConsumerState<ManagerConnect
         walletName: _selectedWallet,
         walletType: _selectedWallet,
       );
-      
+
       if (mounted) {
         setState(() => _isLoading = false);
         Navigator.pop(context);
-        
+
         final state = ref.read(walletNotifierProvider);
         if (state.error != null && state.error!.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -67,7 +66,6 @@ class _ManagerConnectWalletBottomSheetState extends ConsumerState<ManagerConnect
               backgroundColor: Colors.green,
             ),
           );
-          // Force refresh to ensure balance is fetched
           await notifier.refreshWallet();
         }
       }
@@ -139,7 +137,6 @@ class _ManagerConnectWalletBottomSheetState extends ConsumerState<ManagerConnect
               ),
             ),
             const SizedBox(height: 8),
-            // Wallet type fixed to MetaMask
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -299,4 +296,3 @@ class _ManagerConnectWalletBottomSheetState extends ConsumerState<ManagerConnect
     );
   }
 }
-

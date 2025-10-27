@@ -6,28 +6,20 @@ import '../entities/payslip.dart';
 import '../entities/income_statement.dart';
 
 abstract class ReportsRepository {
-  /// Generate a report with specified parameters
   Future<String> generateReport(ReportGenerationRequest request);
 
-  /// Get report generation status
   Future<ReportStatus> getReportStatus(String reportId);
 
-  /// Get generated report data
   Future<ReportData> getReport(String reportId);
 
-  /// Get list of user's generated reports
   Future<List<ReportData>> getUserReports();
 
-  /// Download report file
   Future<String> downloadReport(String reportId);
 
-  /// Email report to user
   Future<void> emailReport(String reportId);
 
-  /// Delete a report
   Future<bool> deleteReport(String reportId);
 
-  /// Financial Reports
   Future<List<TaxReport>> getTaxReports();
   Future<List<BalanceSheet>> getAllBalanceSheets();
   Future<CashFlowListResponse> getCashFlow();
@@ -36,11 +28,10 @@ abstract class ReportsRepository {
   Future<List<IncomeStatement>> getIncomeStatements();
 }
 
-// Request model for report generation
 class ReportGenerationRequest {
-  final String type; // 'Payroll', 'Tax', 'Summary'
-  final String timePeriod; // 'Current Period', 'Previous Period', etc.
-  final String format; // 'PDF', 'EXCEL', 'CSV'
+  final String type;
+  final String timePeriod;
+  final String format;
   final bool includeDetailedBreakdown;
   final bool emailWhenGenerated;
 
@@ -63,10 +54,9 @@ class ReportGenerationRequest {
   }
 }
 
-// Status of report generation
 class ReportStatus {
   final String reportId;
-  final String status; // 'pending', 'processing', 'completed', 'failed'
+  final String status;
   final String? errorMessage;
   final DateTime createdAt;
   final DateTime? completedAt;
@@ -90,7 +80,6 @@ class ReportStatus {
   }
 }
 
-// Report data model
 class ReportData {
   final String id;
   final String type;

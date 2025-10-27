@@ -88,6 +88,7 @@ class RevenueData extends Revenue {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'total_revenue': totalRevenue,
@@ -136,6 +137,7 @@ class ExpensesData extends Expenses {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'total_expenses': totalExpenses,
@@ -166,6 +168,7 @@ class GrossProfitData extends GrossProfit {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'gross_profit': grossProfit,
@@ -195,6 +198,7 @@ class NetIncomeData extends NetIncome {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'net_income': netIncome,
@@ -229,6 +233,7 @@ class SummaryData extends Summary {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'period_summary': periodSummary,
@@ -255,6 +260,7 @@ class MetadataData extends Metadata {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'transaction_count': transactionCount,

@@ -1,7 +1,6 @@
-// lib/features/domain/entities/transaction_report.dart
 class TransactionReport {
   final String id;
-  final String type; // 'buy' or 'sell'
+  final String type;
   final String symbol;
   final double amount;
   final DateTime date;
@@ -18,9 +17,9 @@ class TransactionReport {
 
   bool get isSell => type.toLowerCase() == 'sell';
   bool get isBuy => type.toLowerCase() == 'buy' || type.toLowerCase() == 'bought';
-  
+
   String get formattedAmount => '\$${amount.toStringAsFixed(2)}';
-  
+
   String get formattedDate {
     final months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

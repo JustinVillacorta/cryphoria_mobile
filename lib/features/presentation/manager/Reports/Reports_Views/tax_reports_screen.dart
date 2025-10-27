@@ -39,10 +39,10 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
@@ -167,7 +167,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
               Icon(
                 Icons.receipt_long_outlined,
                 size: isTablet ? 64 : 56,
-                color: const Color(0xFF6B6B6B).withOpacity(0.4),
+                color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
               ),
               SizedBox(height: isSmallScreen ? 16 : 20),
               Text(
@@ -227,9 +227,9 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: _buildPeriodSelector(state),
             ),
-          
+
           SizedBox(height: isSmallScreen ? 12 : 16),
-          
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildHeaderCard(state, isSmallScreen, isTablet, isDesktop),
@@ -247,14 +247,14 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
           isChartView 
             ? _buildChartView(state.selectedReport!, isSmallScreen, isTablet, isDesktop, horizontalPadding)
             : _buildTableView(state.selectedReport!, isSmallScreen, isTablet, isDesktop, horizontalPadding),
-          
+
           SizedBox(height: isSmallScreen ? 20 : 24),
-          
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: _buildActionButtons(state, isSmallScreen, isTablet),
           ),
-          
+
           SizedBox(height: isSmallScreen ? 24 : 32),
         ],
       ),
@@ -266,7 +266,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     final subtitleSize = isDesktop ? 15.0 : isTablet ? 14.0 : 13.0;
     final iconSize = isDesktop ? 26.0 : isTablet ? 24.0 : 22.0;
     final iconContainerSize = isDesktop ? 48.0 : isTablet ? 44.0 : 40.0;
-    
+
     return Container(
       padding: EdgeInsets.all(isDesktop ? 24 : isTablet ? 20 : 18),
       decoration: BoxDecoration(
@@ -274,7 +274,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -289,7 +289,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                 width: iconContainerSize,
                 height: iconContainerSize,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF9747FF).withOpacity(0.1),
+                  color: const Color(0xFF9747FF).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -398,7 +398,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     final titleSize = isTablet ? 13.0 : 12.0;
     final valueSize = isTablet ? 17.0 : 16.0;
     final iconSize = isTablet ? 18.0 : 16.0;
-    
+
     return Container(
       padding: EdgeInsets.all(isTablet ? 16 : 14),
       decoration: BoxDecoration(
@@ -453,7 +453,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
   Widget _buildViewToggle(bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 15.0 : 14.0;
     final iconSize = isTablet ? 20.0 : 18.0;
-    
+
     return Container(
       height: isTablet ? 54 : 50,
       decoration: BoxDecoration(
@@ -461,7 +461,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -479,7 +479,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: isChartView ? [
                     BoxShadow(
-                      color: const Color(0xFF9747FF).withOpacity(0.3),
+                      color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -520,7 +520,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: !isChartView ? [
                     BoxShadow(
-                      color: const Color(0xFF9747FF).withOpacity(0.3),
+                      color: const Color(0xFF9747FF).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -569,7 +569,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -687,7 +687,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -725,7 +725,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
   Widget _buildTableView(TaxReport taxReport, bool isSmallScreen, bool isTablet, bool isDesktop, double horizontalPadding) {
     final rowSize = isTablet ? 15.0 : 14.0;
-    
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Container(
@@ -735,7 +735,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -755,7 +755,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
               ),
             ),
             SizedBox(height: isSmallScreen ? 18 : 22),
-            
+
             _buildTableRow('Capital Gains', '\$${(taxReport.totalGains ?? 0).toStringAsFixed(2)}', rowSize),
             _buildTableRow('Capital Losses', '\$${(taxReport.totalLosses ?? 0).toStringAsFixed(2)}', rowSize),
             _buildTableRow('Net P&L', '\$${(taxReport.netPnl ?? 0).toStringAsFixed(2)}', rowSize),
@@ -851,7 +851,7 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
   Widget _buildActionButtons(TaxReportsState state, bool isSmallScreen, bool isTablet) {
     final fontSize = isTablet ? 16.0 : 15.0;
-    
+
     return Row(
       children: [
         Expanded(
@@ -937,9 +937,10 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
   }
 
   Future<void> _exportToExcel(BuildContext context, TaxReport taxReport) async {
+    final scaffoldContext = context;
     try {
       showDialog(
-        context: context,
+        context: scaffoldContext,
         barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(
@@ -951,12 +952,12 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
       final filePath = await ExcelExportHelper.exportTaxReportToExcel(taxReport);
 
-      if (context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
+      if (scaffoldContext.mounted) {
+        Navigator.of(scaffoldContext, rootNavigator: true).pop();
       }
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
             content: Text(
               'Excel file saved successfully!\nTap to open: ${filePath.split('/').last}',
@@ -1031,9 +1032,10 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
   }
 
   Future<void> _downloadPdf(BuildContext context, TaxReport taxReport) async {
+    final scaffoldContext = context;
     try {
       showDialog(
-        context: context,
+        context: scaffoldContext,
         barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(
@@ -1075,12 +1077,12 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
 
       final filePath = await PdfGenerationHelper.generateTaxReportPdf(reportData);
 
-      if (context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
+      if (scaffoldContext.mounted) {
+        Navigator.of(scaffoldContext, rootNavigator: true).pop();
       }
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
             content: Text(
               'PDF saved successfully!\nTap to open: ${filePath.split('/').last}',
@@ -1159,13 +1161,13 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     final losses = (taxReport.totalLosses ?? 0).abs();
     final netPnl = (taxReport.netPnl ?? 0).abs();
     final expenses = (taxReport.totalExpenses ?? 0).abs();
-    
+
     final maxValue = [gains, losses, netPnl, expenses].reduce((a, b) => a > b ? a : b) * 1.2;
-    
+
     if (maxValue == 0) {
       return 1000;
     }
-    
+
     return maxValue;
   }
 
@@ -1250,4 +1252,3 @@ class _TaxReportsScreenState extends ConsumerState<TaxReportsScreen> {
     }
   }
 }
-

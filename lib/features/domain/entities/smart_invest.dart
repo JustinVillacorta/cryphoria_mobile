@@ -1,4 +1,3 @@
-// lib/features/domain/entities/smart_invest.dart
 
 class SmartInvestRequest {
   final String toAddress;
@@ -16,15 +15,14 @@ class SmartInvestRequest {
   });
 
   Map<String, dynamic> toJson() {
-    // Validate and parse amount
     final parsedAmount = double.tryParse(amount);
     if (parsedAmount == null) {
       throw Exception('Invalid amount format: $amount');
     }
-    
+
     return {
       'to_address': toAddress,
-      'amount': parsedAmount, // Convert string to double to match backend expectation
+      'amount': parsedAmount,
       'is_investing': isInvesting,
       'investor_name': investorName,
       'description': description,
@@ -226,20 +224,17 @@ class AddressBookListResponse {
   });
 
   factory AddressBookListResponse.fromJson(Map<String, dynamic> json) {
-    // Handle both single object and array responses
     final dataField = json['data'];
     List<AddressBookEntry> entries = [];
-    
+
     if (dataField is List) {
-      // If data is an array
       entries = dataField
           .map((item) => AddressBookEntry.fromJson(item as Map<String, dynamic>))
           .toList();
     } else if (dataField is Map<String, dynamic>) {
-      // If data is a single object, wrap it in a list
       entries = [AddressBookEntry.fromJson(dataField)];
     }
-    
+
     return AddressBookListResponse(
       success: json['success'] as bool? ?? false,
       message: json['message'] as String? ?? '',

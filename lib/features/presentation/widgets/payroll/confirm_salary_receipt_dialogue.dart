@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SalaryReceiptDialog extends StatelessWidget {
-  const SalaryReceiptDialog({Key? key}) : super(key: key);
+  const SalaryReceiptDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,6 @@ class SalaryReceiptDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Close button
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -34,7 +33,6 @@ class SalaryReceiptDialog extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Title
             const Text(
               'Confirm Salary Receipt',
               style: TextStyle(
@@ -46,7 +44,6 @@ class SalaryReceiptDialog extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            // Subtitle
             const Text(
               'Please confirm that you\'ve received your\nsalary payment.',
               textAlign: TextAlign.center,
@@ -59,7 +56,6 @@ class SalaryReceiptDialog extends StatelessWidget {
 
             const SizedBox(height: 32),
 
-            // Amount
             const Text(
               '0.374 ETH',
               style: TextStyle(
@@ -71,7 +67,6 @@ class SalaryReceiptDialog extends StatelessWidget {
 
             const SizedBox(height: 4),
 
-            // USD equivalent
             const Text(
               '\$718.50 USD',
               style: TextStyle(
@@ -82,10 +77,8 @@ class SalaryReceiptDialog extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            // Action buttons
             Row(
               children: [
-                // Cancel button
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
@@ -120,13 +113,10 @@ class SalaryReceiptDialog extends StatelessWidget {
 
                 const SizedBox(width: 12),
 
-                // Confirm button
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // Handle confirmation
                       Navigator.of(context).pop();
-                      // Add your confirmation logic here
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Salary receipt confirmed!'),

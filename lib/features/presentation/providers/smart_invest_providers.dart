@@ -1,4 +1,3 @@
-// lib/features/presentation/providers/smart_invest_providers.dart
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/data_sources/smart_invest_remote_data_source.dart';
@@ -13,14 +12,12 @@ import '../../domain/entities/smart_invest.dart';
 import '../../domain/entities/investment_report.dart';
 import '../../../dependency_injection/riverpod_providers.dart';
 
-// Data Source Provider
 final smartInvestRemoteDataSourceProvider = Provider<SmartInvestRemoteDataSource>((ref) {
   return SmartInvestRemoteDataSourceImpl(
     dio: ref.watch(dioClientProvider).dio,
   );
 });
 
-// Repository Provider
 final smartInvestRepositoryProvider = Provider<SmartInvestRepositoryImpl>((ref) {
   final remoteDataSource = ref.watch(smartInvestRemoteDataSourceProvider);
   return SmartInvestRepositoryImpl(
@@ -28,14 +25,12 @@ final smartInvestRepositoryProvider = Provider<SmartInvestRepositoryImpl>((ref) 
   );
 });
 
-// Smart Invest Service Provider
 final smartInvestServiceProvider = Provider<SmartInvestService>((ref) {
   return SmartInvestService(
     walletService: ref.watch(walletServiceProvider),
   );
 });
 
-// Use Case Providers
 final sendInvestmentUseCaseProvider = Provider<SendInvestmentUseCase>((ref) {
   final repository = ref.watch(smartInvestRepositoryProvider);
   return SendInvestmentUseCase(repository: repository);
@@ -61,7 +56,6 @@ final getInvestmentStatisticsUseCaseProvider = Provider<GetInvestmentStatisticsU
   return GetInvestmentStatisticsUseCase(remoteDataSource: remoteDataSource);
 });
 
-// State Providers
 class SmartInvestState {
   final bool isLoading;
   final String? error;
@@ -127,33 +121,25 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
 
   Future<SmartInvestResponse?> sendInvestment(SmartInvestRequest request) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
-      print('📤 SmartInvestNotifier.sendInvestment called');
-      print('📋 Recipient: ${request.toAddress}');
-      print('📋 Amount: ${request.amount}');
-      print('📋 Investor: ${request.investorName}');
-      print('📋 Description: ${request.description}');
-      
-      // Use SmartInvestService which calls WalletService.sendEth
+
       final response = await smartInvestService.sendInvestment(
         recipientAddress: request.toAddress,
         amount: request.amount,
         investorName: request.investorName,
         description: request.description,
-        category: 'INVESTMENT', // Default category for smart investments
+        category: 'INVESTMENT',
       );
-      
-      print('✅ SmartInvestNotifier.sendInvestment successful: ${response.data.transactionHash}');
+
       state = state.copyWith(
         isLoading: false,
         lastInvestment: response,
         error: null,
       );
-      
+
       return response;
     } catch (e) {
-      print('❌ SmartInvestNotifier.sendInvestment failed: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -164,18 +150,15 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
 
   Future<void> upsertAddressBookEntry(AddressBookUpsertRequest request) async {
     state = state.copyWith(isAddressBookLoading: true, addressBookError: null);
-    
+
     try {
       await upsertAddressBookUseCase.execute(request);
-      // Refresh address book list after upsert
       final response = await getAddressBookListUseCase.execute();
-      print('📋 Upsert: Got ${response.data.length} address book entries');
       state = state.copyWith(
         isAddressBookLoading: false,
         addressBookEntries: List<AddressBookEntry>.from(response.data),
         addressBookError: null,
       );
-      print('📋 Upsert: State updated with ${state.addressBookEntries.length} entries');
     } catch (e) {
       state = state.copyWith(
         isAddressBookLoading: false,
@@ -186,7 +169,7 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
 
   Future<void> getAddressBookList() async {
     state = state.copyWith(isAddressBookLoading: true, addressBookError: null);
-    
+
     try {
       final response = await getAddressBookListUseCase.execute();
       state = state.copyWith(
@@ -204,18 +187,15 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
 
   Future<void> deleteAddressBookEntry(String address) async {
     state = state.copyWith(isAddressBookLoading: true, addressBookError: null);
-    
+
     try {
       await deleteAddressBookUseCase.execute(address);
-      // Refresh address book list after deletion
       final response = await getAddressBookListUseCase.execute();
-      print('📋 Delete: Got ${response.data.length} address book entries');
       state = state.copyWith(
         isAddressBookLoading: false,
         addressBookEntries: List<AddressBookEntry>.from(response.data),
         addressBookError: null,
       );
-      print('📋 Delete: State updated with ${state.addressBookEntries.length} entries');
     } catch (e) {
       state = state.copyWith(
         isAddressBookLoading: false,
@@ -234,7 +214,7 @@ class SmartInvestNotifier extends StateNotifier<SmartInvestState> {
 
   Future<void> getInvestmentStatistics() async {
     state = state.copyWith(isStatisticsLoading: true, statisticsError: null);
-    
+
     try {
       final statistics = await getInvestmentStatisticsUseCase.execute();
       state = state.copyWith(
@@ -261,7 +241,7 @@ final smartInvestNotifierProvider = StateNotifierProvider<SmartInvestNotifier, S
   final getAddressBookListUseCase = ref.watch(getAddressBookListUseCaseProvider);
   final deleteAddressBookUseCase = ref.watch(deleteAddressBookUseCaseProvider);
   final getInvestmentStatisticsUseCase = ref.watch(getInvestmentStatisticsUseCaseProvider);
-  
+
   return SmartInvestNotifier(
     smartInvestService: smartInvestService,
     upsertAddressBookUseCase: upsertAddressBookUseCase,

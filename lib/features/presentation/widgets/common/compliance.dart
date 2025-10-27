@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
-// Document Status Enum
 enum DocumentStatus {
   verified,
   pending,
   required,
 }
 
-// Compliance Document Card Widget
 class ComplianceDocumentCard extends StatelessWidget {
   final String title;
   final String? submittedDate;
@@ -18,7 +16,7 @@ class ComplianceDocumentCard extends StatelessWidget {
   final VoidCallback? onReupload;
 
   const ComplianceDocumentCard({
-    Key? key,
+    super.key,
     required this.title,
     this.submittedDate,
     this.expiryDate,
@@ -26,7 +24,7 @@ class ComplianceDocumentCard extends StatelessWidget {
     this.onDownload,
     this.onUpload,
     this.onReupload,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +34,7 @@ class ComplianceDocumentCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

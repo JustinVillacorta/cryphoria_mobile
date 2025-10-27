@@ -25,7 +25,7 @@ class SmartContractModel extends SmartContract {
       uploadedAt: _parseDateTime(json['uploaded_at'] as String? ?? json['uploadedAt'] as String?),
     );
   }
-  
+
   static ContractType _parseContractType(String? typeStr) {
     if (typeStr == null) return ContractType.custom;
     return ContractType.values.firstWhere(
@@ -33,7 +33,7 @@ class SmartContractModel extends SmartContract {
       orElse: () => ContractType.custom,
     );
   }
-  
+
   static DateTime _parseDateTime(String? dateStr) {
     if (dateStr == null) return DateTime.now();
     try {

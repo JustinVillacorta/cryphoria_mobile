@@ -6,7 +6,7 @@ import '../../../domain/entities/smart_invest.dart';
 import '../../../domain/entities/investment_report.dart';
 
 class SmartInvestBottomSheet extends ConsumerStatefulWidget {
-  const SmartInvestBottomSheet({Key? key}) : super(key: key);
+  const SmartInvestBottomSheet({super.key});
 
   @override
   ConsumerState<SmartInvestBottomSheet> createState() => _SmartInvestBottomSheetState();
@@ -23,9 +23,8 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   String newRole = 'Investor';
   String newNotes = '';
   int selectedTabIndex = 0;
-  String selectedTransactionFilter = 'ALL'; // ALL, RECEIVED, SENT
+  String selectedTransactionFilter = 'ALL';
 
-  // Persistent controllers — avoid recreating controllers in build (prevents cursor jumping / reversed typing)
   final TextEditingController _walletController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
@@ -42,8 +41,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         selectedTabIndex = _tabController.index;
       });
     });
-    
-    // Load address book entries when the bottom sheet opens
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(smartInvestNotifierProvider.notifier).getAddressBookList();
       ref.read(smartInvestNotifierProvider.notifier).getInvestmentStatistics();
@@ -77,9 +75,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
             child: TabBarView(
               controller: _tabController,
               children: [
-                // Address Book Tab
                 isAddingEntry || isEditingEntry ? _buildEntryForm() : _buildAddressBookList(state),
-                // Investment Report Tab
                 _buildInvestmentReportView(state),
               ],
             ),
@@ -225,7 +221,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   }
 
   Widget _buildAddressBookList(SmartInvestState state) {
-    // Show loading state
     if (state.isAddressBookLoading) {
       return const Center(
         child: Column(
@@ -242,7 +237,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       );
     }
 
-    // Show error state
     if (state.addressBookError != null) {
       return Center(
         child: Column(
@@ -270,7 +264,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       );
     }
 
-    // Convert API data to display format
     final entries = state.addressBookEntries.map((entry) => {
       'id': entry.address,
       'name': entry.name,
@@ -279,12 +272,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       'subRole': entry.notes,
       'icon': Icons.business,
     }).toList();
-
-    print('📋 Widget: Building address book with ${state.addressBookEntries.length} entries');
-    print('📋 Address book entries:');
-    for (var entry in entries) {
-      print('📋 - ${entry['name']}: ${entry['walletAddress']}');
-    }
 
     final filteredEntries = entries.where((entry) {
       if (searchQuery.isEmpty) return true;
@@ -331,7 +318,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row with icon, name, and role
             Row(
               children: [
                 Container(
@@ -390,7 +376,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
             ),
             const SizedBox(height: 12),
 
-            // Wallet address
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
@@ -421,13 +406,11 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
             ),
             const SizedBox(height: 12),
 
-            // Action buttons
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      print('📤 User clicked on entry: ${entry['name']} (${entry['walletAddress']})');
                       _sendEthToEntry(entry);
                     },
                     style: ElevatedButton.styleFrom(
@@ -500,7 +483,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 24),
 
-          // Wallet Address Field
           const Text(
             'Wallet Address',
             style: TextStyle(
@@ -523,7 +505,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 20),
 
-          // Name Field
           const Text(
             'Name',
             style: TextStyle(
@@ -546,7 +527,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 20),
 
-          // Role Field
           const Text(
             'Role',
             style: TextStyle(
@@ -591,7 +571,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 20),
 
-          // Notes Field
           const Text(
             'Notes',
             style: TextStyle(
@@ -615,7 +594,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
           ),
           const SizedBox(height: 32),
 
-          // Action Buttons
           Row(
             children: [
               Expanded(
@@ -689,18 +667,13 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     newName = '';
     newRole = 'Investor';
     newNotes = '';
-    // clear persistent controllers to keep caret behaviour stable
     _walletController.text = '';
     _nameController.text = '';
     _notesController.text = '';
   }
 
   void _sendEthToEntry(Map<String, dynamic> entry) {
-    print('📤 _sendEthToEntry called with entry: $entry');
-    print('📋 Recipient Name: ${entry['name']}');
-    print('📋 Recipient Address: ${entry['walletAddress']}');
 
-    // Show the Send Investment ETH modal
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -719,10 +692,8 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       editingEntryId = entry['id'];
       newWalletAddress = entry['walletAddress'];
       newName = entry['name'];
-      // Convert lowercase role to capitalized for dropdown
       newRole = _capitalizeFirst(entry['role'] as String);
       newNotes = entry['subRole'];
-      // set controller texts (do this after updating state so build uses correct controllers)
       _walletController.text = entry['walletAddress'];
       _nameController.text = entry['name'];
       _notesController.text = entry['subRole'];
@@ -759,7 +730,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
 
                           try {
                             await ref.read(smartInvestNotifierProvider.notifier).deleteAddressBookEntry(entry['walletAddress']);
-                            // Use the original context instead of the dialog context
                             if (mounted) {
                               ScaffoldMessenger.of(this.context).showSnackBar(
                                 const SnackBar(
@@ -769,7 +739,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
                               );
                             }
                           } catch (e) {
-                            // Use the original context instead of the dialog context
                             if (mounted) {
                               ScaffoldMessenger.of(this.context).showSnackBar(
                                 SnackBar(
@@ -821,11 +790,13 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
 
       await ref.read(smartInvestNotifierProvider.notifier).upsertAddressBookEntry(request);
 
+      if (!mounted) return;
       setState(() {
         _resetForm();
         isAddingEntry = false;
       });
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Entry added successfully'),
@@ -833,6 +804,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to add entry: $e'),
@@ -867,11 +839,13 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
 
       await ref.read(smartInvestNotifierProvider.notifier).upsertAddressBookEntry(request);
 
+      if (!mounted) return;
       setState(() {
         _resetForm();
         isEditingEntry = false;
       });
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Entry updated successfully'),
@@ -879,6 +853,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to update entry: $e'),
@@ -949,15 +924,12 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Summary Cards
           _buildSummaryCards(statistics),
           const SizedBox(height: 24),
-          
-          // Transaction Filter Tabs
+
           _buildTransactionFilterTabs(),
           const SizedBox(height: 16),
-          
-          // Transaction List
+
           _buildTransactionList(filteredTransactions),
         ],
       ),
@@ -1006,7 +978,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -1020,7 +992,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
@@ -1114,7 +1086,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
     final isReceived = transaction.direction == 'RECEIVED';
     final color = isReceived ? const Color(0xFF10B981) : const Color(0xFFEF4444);
     final icon = isReceived ? Icons.arrow_downward : Icons.arrow_upward;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -1124,7 +1096,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -1138,7 +1110,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -1239,7 +1211,7 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
       final dateTime = DateTime.parse(timestamp);
       final now = DateTime.now();
       final difference = now.difference(dateTime);
-      
+
       if (difference.inDays > 0) {
         return '${difference.inDays}d ago';
       } else if (difference.inHours > 0) {
@@ -1255,7 +1227,6 @@ class _SmartInvestBottomSheetState extends ConsumerState<SmartInvestBottomSheet>
   }
 
   void _copyToClipboard(String text) {
-    // Note: You'll need to add clipboard functionality
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Copied: ${text.substring(0, 10)}...'),

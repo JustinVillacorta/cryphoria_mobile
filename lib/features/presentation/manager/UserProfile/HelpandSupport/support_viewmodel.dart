@@ -12,28 +12,24 @@ class SupportViewModel extends ChangeNotifier {
     required this.getSupportMessagesUseCase,
   });
 
-  // State variables
   bool _isSubmitting = false;
   bool _isLoadingMessages = false;
   String? _errorMessage;
   String? _successMessage;
   List<SupportMessage> _supportMessages = [];
 
-  // Getters
   bool get isSubmitting => _isSubmitting;
   bool get isLoadingMessages => _isLoadingMessages;
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
   List<SupportMessage> get supportMessages => _supportMessages;
 
-  // Clear messages
   void clearMessages() {
     _errorMessage = null;
     _successMessage = null;
     notifyListeners();
   }
 
-  // Submit support ticket
   Future<bool> submitSupportTicket({
     required String subject,
     required String message,
@@ -67,7 +63,6 @@ class SupportViewModel extends ChangeNotifier {
     }
   }
 
-  // Get support messages
   Future<void> loadSupportMessages() async {
     _isLoadingMessages = true;
     _errorMessage = null;
@@ -85,13 +80,10 @@ class SupportViewModel extends ChangeNotifier {
     }
   }
 
-  // Refresh support messages
   Future<void> refreshSupportMessages() async {
     await loadSupportMessages();
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
+  void dispose() => super.dispose();
 }

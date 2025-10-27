@@ -20,7 +20,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final verticalPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 20.0;
     final maxContentWidth = isDesktop ? 1000.0 : isTablet ? 800.0 : double.infinity;
@@ -39,7 +39,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
                   Text(
                     'Reports',
                     style: GoogleFonts.inter(
@@ -52,25 +51,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ),
                   SizedBox(height: isSmallScreen ? 20 : 24),
 
-                  // Scrollable content with all report sections
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Financial Reports Section
                           _buildSectionHeader('Financial Reports', isTablet, isDesktop),
                           SizedBox(height: isSmallScreen ? 14 : 16),
                           _buildFinancialStatementsContent(isSmallScreen, isTablet, isDesktop),
                           SizedBox(height: isSmallScreen ? 28 : 32),
 
-                          // Payroll Reports Section
                           _buildSectionHeader('Payroll Reports', isTablet, isDesktop),
                           SizedBox(height: isSmallScreen ? 14 : 16),
                           _buildPayrollReportsContent(isSmallScreen, isTablet, isDesktop),
                           SizedBox(height: isSmallScreen ? 28 : 32),
 
-                          // Tax Reports Section
                           _buildSectionHeader('Tax Reports', isTablet, isDesktop),
                           SizedBox(height: isSmallScreen ? 14 : 16),
                           _buildTaxReportsContent(isSmallScreen, isTablet, isDesktop),
@@ -104,7 +99,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget _buildFinancialStatementsContent(bool isSmallScreen, bool isTablet, bool isDesktop) {
     return Column(
       children: [
-        // Balance Sheet Card
         _buildReportCard(
           title: 'Balance Sheet',
           subtitle: 'Last updated: Today',
@@ -123,8 +117,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           isDesktop: isDesktop,
         ),
         SizedBox(height: isSmallScreen ? 12 : 16),
-        
-        // Income Statement Card
+
         _buildReportCard(
           title: 'Income Statement',
           subtitle: 'Last updated: Today',
@@ -143,8 +136,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           isDesktop: isDesktop,
         ),
         SizedBox(height: isSmallScreen ? 12 : 16),
-        
-        // Cash Flow Card
+
         _buildReportCard(
           title: 'Cash Flow',
           subtitle: 'Last updated: Today',
@@ -233,7 +225,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -245,7 +237,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               width: iconContainerSize,
               height: iconContainerSize,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(

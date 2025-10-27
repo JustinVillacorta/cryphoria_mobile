@@ -4,7 +4,6 @@ import '../../../../domain/entities/cash_flow.dart';
 import '../../../../domain/repositories/reports_repository.dart';
 
 
-// State classes
 class CashFlowState {
   final bool isLoading;
   final CashFlowListResponse? cashFlowListResponse;
@@ -37,7 +36,6 @@ class CashFlowState {
   }
 }
 
-// View Model
 class CashFlowViewModel extends StateNotifier<CashFlowState> {
   final ReportsRepository _reportsRepository;
 
@@ -45,13 +43,13 @@ class CashFlowViewModel extends StateNotifier<CashFlowState> {
 
   Future<void> loadCashFlow() async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final cashFlowListResponse = await _reportsRepository.getCashFlow();
       final selectedCashFlow = cashFlowListResponse.cashFlowStatements.isNotEmpty 
           ? cashFlowListResponse.cashFlowStatements.first 
           : null;
-      
+
       state = state.copyWith(
         isLoading: false,
         cashFlowListResponse: cashFlowListResponse,
@@ -81,7 +79,6 @@ class CashFlowViewModel extends StateNotifier<CashFlowState> {
   }
 }
 
-// Provider
 final cashFlowViewModelProvider = StateNotifierProvider<CashFlowViewModel, CashFlowState>((ref) {
   final reportsRepository = ref.watch(reportsRepositoryProvider);
   return CashFlowViewModel(reportsRepository);

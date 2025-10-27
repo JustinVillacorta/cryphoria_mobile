@@ -1,4 +1,3 @@
-// lib/features/presentation/widgets/invoice_items_widget.dart
 import 'package:flutter/material.dart';
 import '../../../domain/entities/invoice.dart';
 
@@ -18,7 +17,7 @@ class InvoiceItemsWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -38,7 +37,6 @@ class InvoiceItemsWidget extends StatelessWidget {
               ),
             ),
           ),
-          // Table Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
@@ -112,7 +110,6 @@ class InvoiceItemsWidget extends StatelessWidget {
               ],
             ),
           ),
-          // Items
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -203,7 +200,6 @@ class InvoiceItemsWidget extends StatelessWidget {
               );
             },
           ),
-          // Totals Section
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(

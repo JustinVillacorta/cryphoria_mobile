@@ -48,69 +48,38 @@ class PayslipModel extends Payslip {
   });
 
       factory PayslipModel.fromJson(Map<String, dynamic> json) {
-        print("🔍 Parsing payslip JSON: $json");
-        print("🔍 JSON keys: ${json.keys.toList()}");
-        
+
         try {
-          // Log each field parsing
-          print("📋 Parsing payslip fields:");
-          print("  - _id: ${json['_id']} (${json['_id'].runtimeType})");
-          print("  - payslip_id: ${json['payslip_id']} (${json['payslip_id'].runtimeType})");
-          print("  - employee_name: ${json['employee_name']} (${json['employee_name'].runtimeType})");
-          print("  - employee_wallet: ${json['employee_wallet']} (${json['employee_wallet'].runtimeType})");
-          print("  - department: ${json['department']} (${json['department'].runtimeType})");
-          print("  - position: ${json['position']} (${json['position'].runtimeType})");
-          print("  - salary_currency: ${json['salary_currency']} (${json['salary_currency'].runtimeType})");
-          print("  - cryptocurrency: ${json['cryptocurrency']} (${json['cryptocurrency'].runtimeType})");
-          print("  - status: ${json['status']} (${json['status'].runtimeType})");
-          print("  - notes: ${json['notes']} (${json['notes'].runtimeType})");
-          print("  - payment_processed: ${json['payment_processed']} (${json['payment_processed'].runtimeType})");
-          print("  - pdf_generated: ${json['pdf_generated']} (${json['pdf_generated'].runtimeType})");
-          
-          // Additional safety checks for null values
+
           if (json['employee_wallet'] == null) {
-            print("⚠️ employee_wallet is null, will be set to null");
           }
           if (json['payment_processed'] == null) {
-            print("⚠️ payment_processed is null, will be set to null");
           }
           if (json['pdf_generated'] == null) {
-            print("⚠️ pdf_generated is null, will be set to null");
           }
           if (json['pay_period_start'] == null) {
-            print("⚠️ pay_period_start is null, will use current date");
           }
           if (json['pay_period_end'] == null) {
-            print("⚠️ pay_period_end is null, will use current date");
           }
           if (json['pay_date'] == null) {
-            print("⚠️ pay_date is null, will use current date");
           }
           if (json['created_at'] == null) {
-            print("⚠️ created_at is null, will use current date");
           }
           if (json['issued_at'] == null) {
-            print("⚠️ issued_at is null, will use current date");
           }
           if (json['base_salary'] == null) {
-            print("⚠️ base_salary is null, will use 0.0");
           }
           if (json['overtime_pay'] == null) {
-            print("⚠️ overtime_pay is null, will use 0.0");
           }
           if (json['bonus'] == null) {
-            print("⚠️ bonus is null, will use 0.0");
           }
           if (json['allowances'] == null) {
-            print("⚠️ allowances is null, will use 0.0");
           }
           if (json['total_earnings'] == null) {
-            print("⚠️ total_earnings is null, will use 0.0");
           }
           if (json['final_net_pay'] == null) {
-            print("⚠️ final_net_pay is null, will use 0.0");
           }
-          
+
           final payslip = PayslipModel(
             id: json['_id'] as String? ?? 'unknown_id',
             payslipId: json['payslip_id'] as String? ?? 'unknown_payslip_id',
@@ -160,16 +129,14 @@ class PayslipModel extends Payslip {
                 ? DateTime.parse(json['sent_at'] as String) 
                 : null,
           );
-          
-          print("✅ Successfully parsed payslip: ${payslip.employeeName}");
+
           return payslip;
-        } catch (e, stackTrace) {
-          print("❌ Error parsing payslip: $e");
-          print("📄 Stack trace: $stackTrace");
+        } catch (e) {
           rethrow;
         }
       }
 
+  @override
   @override
   Map<String, dynamic> toJson() {
     return {
@@ -267,12 +234,9 @@ class PayslipsResponseModel extends PayslipsResponse {
   });
 
       factory PayslipsResponseModel.fromJson(Map<String, dynamic> json) {
-        print("🔍 Parsing PayslipsResponse JSON: $json");
-        
+
         try {
-          print("📊 Response success: ${json['success']} (${json['success'].runtimeType})");
-          print("📋 Payslips count: ${(json['payslips'] as List).length}");
-          
+
           final response = PayslipsResponseModel(
             success: json['success'] as bool,
             payslips: (json['payslips'] as List<dynamic>)
@@ -280,16 +244,14 @@ class PayslipsResponseModel extends PayslipsResponse {
                 .toList(),
             totalCount: json['total_count'] as int? ?? 0,
           );
-          
-          print("✅ Successfully parsed PayslipsResponse with ${response.payslips.length} payslips");
+
           return response;
-        } catch (e, stackTrace) {
-          print("❌ Error parsing PayslipsResponse: $e");
-          print("📄 Stack trace: $stackTrace");
+        } catch (e) {
           rethrow;
         }
       }
 
+  @override
   @override
   Map<String, dynamic> toJson() {
     return {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/wallet/manager_connect_wallet_bottom_sheet.dart';
 
 class ManagerWalletConnectScreen extends StatelessWidget {
-  const ManagerWalletConnectScreen({Key? key}) : super(key: key);
+  const ManagerWalletConnectScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -48,17 +48,16 @@ class ManagerWalletConnectScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // Connect with Private Key Option
             GestureDetector(
               onTap: () => _showPrivateKeyBottomSheet(context),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.0),
+                  color: Colors.grey.withValues(alpha: 0.0),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.grey.withOpacity(0.2),
+                    color: Colors.grey.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Row(
@@ -67,7 +66,7 @@ class ManagerWalletConnectScreen extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
@@ -111,4 +110,3 @@ class ManagerWalletConnectScreen extends StatelessWidget {
     );
   }
 }
-

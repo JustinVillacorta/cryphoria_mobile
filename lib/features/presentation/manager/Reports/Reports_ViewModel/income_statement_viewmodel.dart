@@ -48,11 +48,8 @@ class IncomeStatementViewModel extends StateNotifier<IncomeStatementState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      print("🔄 IncomeStatementViewModel: Loading income statements...");
       final incomeStatements = await _reportsRepository.getIncomeStatements();
-      print("📥 IncomeStatementViewModel: Received ${incomeStatements.length} income statements");
 
-      // Select the most recent income statement by default
       IncomeStatement? selectedStatement;
       if (incomeStatements.isNotEmpty) {
         selectedStatement = incomeStatements.reduce((a, b) => 
@@ -66,9 +63,7 @@ class IncomeStatementViewModel extends StateNotifier<IncomeStatementState> {
         error: null,
       );
 
-      print("✅ IncomeStatementViewModel: Successfully loaded income statements");
     } catch (e) {
-      print("❌ IncomeStatementViewModel: Error loading income statements: $e");
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -82,11 +77,8 @@ class IncomeStatementViewModel extends StateNotifier<IncomeStatementState> {
     state = state.copyWith(isRefreshing: true, error: null);
 
     try {
-      print("🔄 IncomeStatementViewModel: Refreshing income statements...");
       final incomeStatements = await _reportsRepository.getIncomeStatements();
-      print("📥 IncomeStatementViewModel: Refreshed ${incomeStatements.length} income statements");
 
-      // Select the most recent income statement by default
       IncomeStatement? selectedStatement;
       if (incomeStatements.isNotEmpty) {
         selectedStatement = incomeStatements.reduce((a, b) => 
@@ -100,9 +92,7 @@ class IncomeStatementViewModel extends StateNotifier<IncomeStatementState> {
         error: null,
       );
 
-      print("✅ IncomeStatementViewModel: Successfully refreshed income statements");
     } catch (e) {
-      print("❌ IncomeStatementViewModel: Error refreshing income statements: $e");
       state = state.copyWith(
         isRefreshing: false,
         error: e.toString(),

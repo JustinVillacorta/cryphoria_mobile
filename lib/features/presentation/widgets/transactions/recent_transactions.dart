@@ -14,11 +14,10 @@ class RecentTransactions extends ConsumerWidget {
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
-    // Responsive sizing
+
     final titleFontSize = isDesktop ? 20.0 : isTablet ? 19.0 : 18.0;
     final seeAllFontSize = isSmallScreen ? 13.0 : 14.0;
-    
+
     final state = ref.watch(walletNotifierProvider);
     final notifier = ref.read(walletNotifierProvider.notifier);
 
@@ -173,7 +172,7 @@ class RecentTransactions extends ConsumerWidget {
                       Icon(
                         Icons.receipt_long_outlined,
                         size: isTablet ? 56 : 48,
-                        color: const Color(0xFF6B6B6B).withOpacity(0.5),
+                        color: const Color(0xFF6B6B6B).withValues(alpha: 0.5),
                       ),
                       SizedBox(height: isSmallScreen ? 12 : 16),
                       Text(
@@ -275,7 +274,7 @@ class RecentTransactions extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -287,7 +286,7 @@ class RecentTransactions extends ConsumerWidget {
                 width: containerSize,
                 height: containerSize,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(

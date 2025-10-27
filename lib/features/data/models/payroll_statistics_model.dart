@@ -1,4 +1,3 @@
-// lib/features/data/models/payroll_statistics_model.dart
 
 import '../../domain/entities/payroll_statistics.dart';
 
@@ -26,6 +25,7 @@ class PayrollStatisticsModel extends PayrollStatistics {
     );
   }
 
+  @override
   @override
   Map<String, dynamic> toJson() {
     return {

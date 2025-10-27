@@ -1,4 +1,3 @@
-// lib/features/presentation/widgets/delete_confirmation_dialog.dart
 import 'package:flutter/material.dart';
 
 class DeleteConfirmationDialog extends StatelessWidget {
@@ -39,7 +38,6 @@ class DeleteConfirmationDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -54,7 +52,6 @@ class DeleteConfirmationDialog extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Title
             const Text(
               'Delete Invoice?',
               style: TextStyle(
@@ -65,7 +62,6 @@ class DeleteConfirmationDialog extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Description
             Text(
               'Are you sure you want to delete invoice $invoiceNumber? This action cannot be undone.',
               textAlign: TextAlign.center,
@@ -77,7 +73,6 @@ class DeleteConfirmationDialog extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Buttons
             Row(
               children: [
                 Expanded(

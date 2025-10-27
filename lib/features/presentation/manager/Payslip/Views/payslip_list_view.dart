@@ -1,4 +1,3 @@
-// lib/features/presentation/manager/Payslip/Views/payslip_list_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +9,7 @@ import '../Widgets/payslip_filter_widget.dart';
 import 'payslip_details_view.dart';
 
 class PayslipListView extends ConsumerStatefulWidget {
-  const PayslipListView({Key? key}) : super(key: key);
+  const PayslipListView({super.key});
 
   @override
   ConsumerState<PayslipListView> createState() => _PayslipListViewState();
@@ -20,7 +19,6 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
   @override
   void initState() {
     super.initState();
-    // Load payslips on first build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(payslipListViewModelProvider.notifier).loadPayslips();
     });
@@ -30,7 +28,7 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
   Widget build(BuildContext context) {
     final state = ref.watch(payslipListViewModelProvider);
     final viewModel = ref.read(payslipListViewModelProvider.notifier);
-    
+
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
@@ -73,7 +71,6 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
       ),
       body: Column(
         children: [
-          // Filter section
           Container(
             color: Colors.white,
             padding: EdgeInsets.all(isDesktop ? 20 : isTablet ? 18 : 16),
@@ -82,8 +79,7 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
               onFilterChanged: (filter) => viewModel.updateFilter(filter),
             ),
           ),
-          
-          // Content
+
           Expanded(
             child: _buildContent(state, viewModel, isTablet, isDesktop),
           ),
@@ -190,7 +186,7 @@ class _PayslipListViewState extends ConsumerState<PayslipListView> {
             Icon(
               Icons.receipt_long_outlined,
               size: isTablet ? 64 : 56,
-              color: const Color(0xFF6B6B6B).withOpacity(0.4),
+              color: const Color(0xFF6B6B6B).withValues(alpha: 0.4),
             ),
             SizedBox(height: isTablet ? 20 : 16),
             Text(

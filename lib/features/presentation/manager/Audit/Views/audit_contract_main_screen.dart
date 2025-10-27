@@ -30,7 +30,6 @@ class AuditContractMainScreen extends StatelessWidget {
         padding: context.safePadding(all: 24),
         child: Column(
           children: [
-            // Progress indicator
             Row(
               children: [
                 _buildProgressStep(1, true, true),
@@ -42,10 +41,9 @@ class AuditContractMainScreen extends StatelessWidget {
                 _buildProgressStep(4, false, false),
               ],
             ),
-            
+
             SizedBox(height: context.spacing(12)),
-            
-            // Progress labels
+
             const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -55,10 +53,9 @@ class AuditContractMainScreen extends StatelessWidget {
                 Text('Assessment', style: TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
-            
+
             const SizedBox(height: 40),
-            
-            // Start audit button
+
             Expanded(
               child: Center(
                 child: Column(
@@ -69,9 +66,9 @@ class AuditContractMainScreen extends StatelessWidget {
                       size: 80,
                       color: Color(0xFFB373FF),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     const Text(
                       'Smart Contract Audit',
                       style: TextStyle(
@@ -81,9 +78,9 @@ class AuditContractMainScreen extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     const Text(
                       'Secure and analyze your smart contract for vulnerabilities, security risks, and optimization opportunities.',
                       style: TextStyle(
@@ -93,9 +90,9 @@ class AuditContractMainScreen extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    
+
                     const SizedBox(height: 40),
-                    
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -142,7 +139,7 @@ class AuditContractMainScreen extends StatelessWidget {
           tablet: 32.0,
           desktop: 36.0,
         );
-        
+
         return Container(
           width: stepSize,
           height: stepSize,

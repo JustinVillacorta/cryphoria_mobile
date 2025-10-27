@@ -1,4 +1,3 @@
-// lib/features/data/models/tax_report_model.dart
 
 import '../../domain/entities/tax_report.dart';
 
@@ -90,23 +89,18 @@ class TaxReportModel extends TaxReport {
   }
 
   static TaxSummaryModel _createDefaultSummary(Map<String, dynamic> json) {
-    // Extract data from top-level fields
     final totalIncome = _safeToDouble(json['total_income']);
-    
-    // Extract data from metadata.calculations if available
+
     final metadata = _safeConvertMap(json['metadata']);
     final calculations = _safeConvertMap(metadata['calculations']);
     final metadataTotalIncome = _safeToDouble(calculations['total_income']);
-    
-    // Use metadata values if top-level values are 0 or null
+
     final finalTotalIncome = totalIncome > 0 ? totalIncome : metadataTotalIncome;
-    
-    // Extract tax deduction data
+
     final taxDeductionSummary = _safeConvertMap(json['tax_deduction_summary']);
     final periodSummary = _safeConvertMap(taxDeductionSummary['period_summary']);
     final totalDeductionsMap = _safeConvertMap(periodSummary['total_deductions']);
-    
-    // Calculate total deductions from all deduction types
+
     double totalDeductions = 0.0;
     if (totalDeductionsMap.isNotEmpty) {
       totalDeductions = totalDeductionsMap.values
@@ -114,22 +108,20 @@ class TaxReportModel extends TaxReport {
           .map((value) => _safeToDouble(value))
           .fold(0.0, (sum, value) => sum + value);
     }
-    
-    // Extract total tax amount
+
     final totalTaxAmount = _safeToDouble(periodSummary['total_tax_amount']);
-    
-    // Calculate taxable income
+
     final taxableIncome = finalTotalIncome - totalDeductions;
-    
+
     return TaxSummaryModel(
       totalIncome: finalTotalIncome,
       totalDeductions: totalDeductions,
       taxableIncome: taxableIncome,
       totalTaxOwed: totalTaxAmount,
-      totalTaxPaid: 0.0, // Default value - not provided in API
-      netTaxOwed: totalTaxAmount, // Same as totalTaxOwed for now
-      taxBreakdown: <String, double>{}, // Could be populated from tax_deduction_summary
-      incomeBreakdown: <String, double>{}, // Could be populated from metadata.calculations
+      totalTaxPaid: 0.0,
+      netTaxOwed: totalTaxAmount,
+      taxBreakdown: <String, double>{},
+      incomeBreakdown: <String, double>{},
       deductionBreakdown: totalDeductionsMap.map((key, value) => MapEntry(key, _safeToDouble(value))),
     );
   }
@@ -178,6 +170,7 @@ class TaxReportModel extends TaxReport {
     return <TaxTransactionModel>[];
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -266,6 +259,7 @@ class TaxSummaryModel extends TaxSummary {
     return <String, double>{};
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'total_income': totalIncome,
@@ -304,6 +298,7 @@ class TaxCategoryModel extends TaxCategory {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -333,6 +328,7 @@ class TaxSubCategoryModel extends TaxSubCategory {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -370,6 +366,7 @@ class TaxTransactionModel extends TaxTransaction {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,

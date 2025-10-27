@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ResponsiveHelper {
-  // Screen size breakpoints
   static const double mobileBreakpoint = 480;
   static const double tabletBreakpoint = 768;
   static const double desktopBreakpoint = 1024;
 
-  // Check device type
   static bool isMobile(BuildContext context) {
     return MediaQuery.of(context).size.width < mobileBreakpoint;
   }
@@ -20,7 +18,6 @@ class ResponsiveHelper {
     return MediaQuery.of(context).size.width >= desktopBreakpoint;
   }
 
-  // Safe responsive padding
   static EdgeInsets safePadding(BuildContext context, {
     double? horizontal,
     double? vertical,
@@ -28,33 +25,29 @@ class ResponsiveHelper {
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    
-    // Calculate safe padding based on screen size
+
     double basePadding = all ?? 16.0;
     double horizontalPadding = horizontal ?? basePadding;
     double verticalPadding = vertical ?? basePadding;
-    
-    // Adjust for small screens
+
     if (screenWidth < 360) {
       horizontalPadding = horizontalPadding * 0.75;
       verticalPadding = verticalPadding * 0.75;
     }
-    
-    // Adjust for very small heights
+
     if (screenHeight < 640) {
       verticalPadding = verticalPadding * 0.5;
     }
-    
+
     return EdgeInsets.symmetric(
       horizontal: horizontalPadding,
       vertical: verticalPadding,
     );
   }
 
-  // Responsive font sizes
   static double fontSize(BuildContext context, double baseSize) {
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     if (screenWidth < 360) {
       return baseSize * 0.9;
     } else if (screenWidth > 600) {
@@ -63,50 +56,44 @@ class ResponsiveHelper {
     return baseSize;
   }
 
-  // Responsive spacing
   static double spacing(BuildContext context, double baseSpacing) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    
-    // Reduce spacing on small screens
+
     if (screenWidth < 360 || screenHeight < 640) {
       return baseSpacing * 0.7;
     }
-    
+
     return baseSpacing;
   }
 
-  // Safe container height
   static double safeContainerHeight(BuildContext context, double baseHeight) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final maxHeight = screenHeight * 0.8; // Max 80% of screen height
-    
+    final maxHeight = screenHeight * 0.8;
+
     return baseHeight > maxHeight ? maxHeight : baseHeight;
   }
 
-  // Responsive button padding
   static EdgeInsets buttonPadding(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     if (screenWidth < 360) {
       return const EdgeInsets.symmetric(horizontal: 12, vertical: 12);
     }
-    
+
     return const EdgeInsets.symmetric(horizontal: 16, vertical: 16);
   }
 
-  // Responsive icon size
   static double iconSize(BuildContext context, double baseSize) {
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     if (screenWidth < 360) {
       return baseSize * 0.85;
     }
-    
+
     return baseSize;
   }
 
-  // Get responsive breakpoint value
   static T responsiveValue<T>(
     BuildContext context, {
     required T mobile,
@@ -122,19 +109,18 @@ class ResponsiveHelper {
   }
 }
 
-// Extension for easy access
 extension ResponsiveContext on BuildContext {
   bool get isMobile => ResponsiveHelper.isMobile(this);
   bool get isTablet => ResponsiveHelper.isTablet(this);
   bool get isDesktop => ResponsiveHelper.isDesktop(this);
-  
+
   EdgeInsets safePadding({double? horizontal, double? vertical, double? all}) =>
       ResponsiveHelper.safePadding(this, horizontal: horizontal, vertical: vertical, all: all);
-      
+
   double fontSize(double baseSize) => ResponsiveHelper.fontSize(this, baseSize);
   double spacing(double baseSpacing) => ResponsiveHelper.spacing(this, baseSpacing);
   double iconSize(double baseSize) => ResponsiveHelper.iconSize(this, baseSize);
-  
+
   T responsiveValue<T>({
     required T mobile,
     T? tablet,

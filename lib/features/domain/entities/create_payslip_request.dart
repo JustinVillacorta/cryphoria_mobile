@@ -1,4 +1,3 @@
-// lib/features/domain/entities/create_payslip_request.dart
 
 import 'payslip.dart';
 
@@ -12,9 +11,9 @@ class CreatePayslipRequest {
   final double salaryAmount;
   final String? salaryCurrency;
   final String? cryptocurrency;
-  final String payPeriodStart; // Format: YYYY-MM-DD
-  final String payPeriodEnd;   // Format: YYYY-MM-DD
-  final String? payDate;       // Format: YYYY-MM-DD
+  final String payPeriodStart;
+  final String payPeriodEnd;
+  final String? payDate;
   final double? taxDeduction;
   final double? insuranceDeduction;
   final double? retirementDeduction;

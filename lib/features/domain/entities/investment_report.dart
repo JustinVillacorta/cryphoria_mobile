@@ -3,7 +3,7 @@ class InvestmentTransaction {
   final String timestamp;
   final String fromAddress;
   final String toAddress;
-  final String direction; // "RECEIVED" or "SENT"
+  final String direction;
   final double amount;
   final String currency;
   final String investorName;
@@ -95,7 +95,6 @@ class InvestmentStatistics {
     };
   }
 
-  // Helper methods for summary calculations
   double get totalReceived {
     return investments
         .where((transaction) => transaction.direction == 'RECEIVED')

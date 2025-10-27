@@ -1,4 +1,3 @@
-// lib/features/domain/entities/balance_sheet.dart
 
 class BalanceSheet {
   final String id;
@@ -187,14 +186,13 @@ class CryptoHoldings {
 
   factory CryptoHoldings.fromJson(Map<String, dynamic> json) {
     final Map<String, CryptoAsset> holdingsMap = {};
-    
-    // Parse individual crypto holdings (e.g., ETH, BTC, etc.)
+
     json.forEach((key, value) {
       if (key != 'total_value' && value is Map<String, dynamic>) {
         holdingsMap[key] = CryptoAsset.fromJson(value);
       }
     });
-    
+
     return CryptoHoldings(
       holdings: holdingsMap,
       totalValue: (json['total_value'] as num?)?.toDouble() ?? 0.0,

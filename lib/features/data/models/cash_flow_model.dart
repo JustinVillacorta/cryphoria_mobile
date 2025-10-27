@@ -1,4 +1,3 @@
-// lib/features/data/models/cash_flow_model.dart
 
 import '../../domain/entities/cash_flow.dart';
 
@@ -19,6 +18,7 @@ class CashFlowListResponseModel extends CashFlowListResponse {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'success': success,
@@ -55,24 +55,21 @@ class CashFlowModel extends CashFlow {
   });
 
   factory CashFlowModel.fromJson(Map<String, dynamic> json) {
-    // Handle different API response structures
     Map<String, dynamic> operatingActivitiesData;
     Map<String, dynamic> investingActivitiesData;
     Map<String, dynamic> financingActivitiesData;
-    
-    // Check if it's the CUMULATIVE/TRANSACTION structure with cash_flows
+
     if (json.containsKey('cash_flows')) {
       final cashFlows = json['cash_flows'] as Map<String, dynamic>? ?? {};
       operatingActivitiesData = cashFlows['operating_activities'] as Map<String, dynamic>? ?? {};
       investingActivitiesData = cashFlows['investing_activities'] as Map<String, dynamic>? ?? {};
       financingActivitiesData = cashFlows['financing_activities'] as Map<String, dynamic>? ?? {};
     } else {
-      // PERIODIC structure with activities at root level
       operatingActivitiesData = json['operating_activities'] as Map<String, dynamic>? ?? {};
       investingActivitiesData = json['investing_activities'] as Map<String, dynamic>? ?? {};
       financingActivitiesData = json['financing_activities'] as Map<String, dynamic>? ?? {};
     }
-    
+
     return CashFlowModel(
       id: json['_id'] as String? ?? '',
       cashFlowId: json['cash_flow_id'] as String? ?? '',
@@ -91,6 +88,7 @@ class CashFlowModel extends CashFlow {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
@@ -145,6 +143,7 @@ class OperatingActivitiesModel extends OperatingActivities {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'cash_receipts': (cashReceipts as OperatingBreakdownModel).toJson(),
@@ -177,6 +176,7 @@ class InvestingActivitiesModel extends InvestingActivities {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'cash_receipts': (cashReceipts as InvestingBreakdownModel).toJson(),
@@ -209,6 +209,7 @@ class FinancingActivitiesModel extends FinancingActivities {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'cash_receipts': (cashReceipts as FinancingBreakdownModel).toJson(),
@@ -253,6 +254,7 @@ class OperatingBreakdownModel extends OperatingBreakdown {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'customer_payments': customerPayments,
@@ -305,6 +307,7 @@ class InvestingBreakdownModel extends InvestingBreakdown {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'asset_sales': assetSales,
@@ -353,6 +356,7 @@ class FinancingBreakdownModel extends FinancingBreakdown {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'owner_contributions': ownerContributions,
@@ -412,6 +416,7 @@ class CashSummaryModel extends CashSummary {
     return 0.0;
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'beginning_cash': beginningCash,
@@ -467,6 +472,7 @@ class CashFlowAnalysisModel extends CashFlowAnalysis {
     return 0.0;
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'cash_flow_health': cashFlowHealth,
@@ -516,6 +522,7 @@ class CashFlowCompositionModel extends CashFlowComposition {
     return 0.0;
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'operating_percentage': operatingPercentage,
@@ -550,6 +557,7 @@ class CashFlowMetadataModel extends CashFlowMetadata {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'transaction_count': transactionCount,

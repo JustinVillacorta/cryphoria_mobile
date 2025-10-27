@@ -1,5 +1,6 @@
 // lib/features/data/services/smart_invest_service.dart
 
+
 import 'wallet_service.dart';
 import '../../domain/entities/smart_invest.dart';
 
@@ -17,14 +18,6 @@ class SmartInvestService {
     String? category,
   }) async {
     try {
-      print('🌐 SmartInvestService.sendInvestment called');
-      print('📋 Recipient: $recipientAddress');
-      print('📋 Amount: $amount');
-      print('📋 Investor: $investorName');
-      print('📋 Description: $description');
-      print('📋 Category: $category');
-      print('📋 Recipient address length: ${recipientAddress.length}');
-      print('📋 Recipient address starts with 0x: ${recipientAddress.startsWith('0x')}');
 
       // Parse amount to double
       final parsedAmount = double.tryParse(amount);
@@ -33,14 +26,6 @@ class SmartInvestService {
       }
 
       // Use the existing sendEth method with investment parameters
-      print('📤 SmartInvestService calling walletService.sendEth with:');
-      print('📋 toAddress: $recipientAddress');
-      print('📋 amount: $parsedAmount');
-      print('📋 company: $investorName');
-      print('📋 category: ${category ?? 'INVESTMENT'}');
-      print('📋 description: $description');
-      print('📋 isInvesting: true');
-      print('📋 investorName: $investorName');
       
       final result = await walletService.sendEth(
         toAddress: recipientAddress,
@@ -52,7 +37,6 @@ class SmartInvestService {
         investorName: investorName, // Pass investor name separately
       );
 
-      print('📥 Send investment result: $result');
 
       // Convert the result to SmartInvestResponse format
       return SmartInvestResponse(
@@ -84,7 +68,6 @@ class SmartInvestService {
         ),
       );
     } catch (e) {
-      print('❌ SmartInvestService.sendInvestment failed: $e');
       rethrow;
     }
   }

@@ -16,15 +16,15 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
   double fee = 0.0;
   double netPayout = 0.0;
   bool isProcessing = false;
-  
+
   final TextEditingController shareController = TextEditingController();
-  
+
   final List<Map<String, dynamic>> availableCompanies = [
     {'symbol': 'AMZN', 'name': 'Amazon.com Inc.', 'shares': 21, 'value': 3250.75},
     {'symbol': 'MSFT', 'name': 'Microsoft Corporation', 'shares': 15, 'value': 4180.25},
     {'symbol': 'JPM', 'name': 'JPMorgan Chase & Co.', 'shares': 8, 'value': 1890.50},
   ];
-  
+
   final List<Map<String, dynamic>> wallets = [
     {
       'name': 'MetaMask',
@@ -55,7 +55,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85, // Reduced height to prevent overflow
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -65,7 +65,6 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
       ),
       child: Column(
         children: [
-          // Handle
           Container(
             margin: const EdgeInsets.only(top: 12),
             width: 40,
@@ -75,8 +74,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
-          // Header with progress
+
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -103,15 +101,14 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 48), // Balance the back button
+                    const SizedBox(width: 48),
                   ],
                 ),
                 const SizedBox(height: 16),
-                
-                // Progress indicator
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(3, (index) { // Changed to 3 steps as per Figma
+                  children: List.generate(3, (index) {
                     return Row(
                       children: [
                         Container(
@@ -138,7 +135,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
                             ),
                           ),
                         ),
-                        if (index < 2) // Only show line between steps
+                        if (index < 2)
                           Container(
                             width: 60,
                             height: 2,
@@ -150,8 +147,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
                   }),
                 ),
                 const SizedBox(height: 8),
-                
-                // Step labels
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -198,16 +194,14 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
               ],
             ),
           ),
-          
-          // Content
+
           Expanded(
-            child: SingleChildScrollView( // Added scroll to prevent overflow
+            child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: _buildStepContent(),
             ),
           ),
-          
-          // Bottom action
+
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: _buildBottomAction(),
@@ -237,7 +231,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
   Widget _buildSelectCompanyStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min, // Prevent overflow
+      mainAxisSize: MainAxisSize.min,
       children: [
         const Text(
           'Sell Shares',
@@ -256,8 +250,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
           ),
         ),
         const SizedBox(height: 20),
-        
-        // Company selection
+
         Row(
           children: availableCompanies.map((company) {
             return Expanded(
@@ -294,7 +287,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
           }).toList(),
         ),
         const SizedBox(height: 20),
-        
+
         if (selectedCompany.isNotEmpty) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -317,7 +310,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -339,7 +332,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           const Text(
             'Shares to Sell',
             style: TextStyle(
@@ -370,7 +363,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
             },
           ),
           const SizedBox(height: 12),
-          
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -392,7 +385,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           const Text(
             'Sale Value',
             style: TextStyle(
@@ -419,7 +412,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
             ),
           ),
         ],
-        const SizedBox(height: 20), // Extra space at bottom
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -438,7 +431,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
           ),
         ),
         const SizedBox(height: 24),
-        
+
         ...wallets.map((wallet) => GestureDetector(
           onTap: () => setState(() => selectedWallet = wallet['name']),
           child: Container(
@@ -531,17 +524,16 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
           ),
         ),
         const SizedBox(height: 24),
-        
-        // Transaction details
+
         _buildDetailRow('Company', 'Amazon Co.'),
         _buildDetailRow('Shares to Sell', '21'),
         _buildDetailRow('Price per Share', '\$0.00'),
         _buildDetailRow('Sale Value', '\$NaN'),
         _buildDetailRow('Fee (0.5%)', '\$NaN'),
         _buildDetailRow('Net Payout', '\$NaN', isTotal: true),
-        
+
         const SizedBox(height: 24),
-        
+
         const Text(
           'Payout Wallet',
           style: TextStyle(
@@ -551,7 +543,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
           ),
         ),
         const SizedBox(height: 12),
-        
+
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -590,10 +582,9 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
             ],
           ),
         ),
-        
+
         const SizedBox(height: 24),
-        
-        // Important information
+
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -701,8 +692,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
           ),
         ),
         const SizedBox(height: 32),
-        
-        // Transaction summary
+
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -751,7 +741,6 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
 
   Widget _buildBottomAction() {
     if (currentStep == 4) {
-      // Auto-advance from processing to success after delay
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           setState(() => currentStep = 5);
@@ -838,7 +827,6 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
 
   void _handleContinue() {
     if (currentStep == 3) {
-      // After confirming, go to processing (step 4)
       setState(() => currentStep = 4);
     } else if (currentStep < 3) {
       setState(() => currentStep++);
@@ -850,7 +838,7 @@ class _SellSharesBottomSheetState extends State<SellSharesBottomSheet> {
       final company = availableCompanies.firstWhere((c) => c['symbol'] == selectedCompany);
       final pricePerShare = company['value'] / company['shares'];
       saleValue = pricePerShare * sharesToSell;
-      fee = saleValue * 0.005; // 0.5% fee
+      fee = saleValue * 0.005;
       netPayout = saleValue - fee;
     }
   }

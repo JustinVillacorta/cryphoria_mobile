@@ -10,7 +10,6 @@ class GetPayrollAnalyticsUseCase {
     DateTime? endDate,
     String? department,
   }) async {
-    // Validate date range if both dates are provided
     if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
       throw Exception('Start date cannot be after end date');
     }

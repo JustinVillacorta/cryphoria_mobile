@@ -1,4 +1,4 @@
-import 'dart:ui';
+
 import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/employee_userprofile_cards/edit_profile/edit_profile_view/edit_profile_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/HelpandSupport/help_and_support_view.dart';
@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_state.dart';
 
 class EmployeeUserProfile extends ConsumerStatefulWidget {
   const EmployeeUserProfile({super.key});
@@ -22,7 +22,6 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
   @override
   void initState() {
     super.initState();
-    // Load user data after the widget is fully initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserData();
     });
@@ -48,10 +47,9 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
   }
 
   Future<void> _logout() async {
-    final logoutViewModel = ref.read(logoutViewModelProvider);
-    
+    final logoutViewModel = ref.read(logoutViewModelProvider.notifier);
+
     try {
-      // Show confirmation dialog
       final shouldLogout = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -74,8 +72,7 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
         ),
       );
 
-      if (shouldLogout == true) {
-        // Show loading dialog
+      if (shouldLogout == true && mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -86,20 +83,15 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
           ),
         );
 
-        // Use simple logout
         final success = await logoutViewModel.logout();
 
-        // Close loading dialog
         if (mounted) Navigator.of(context).pop();
 
         if (success) {
-          // Check if widget is still mounted before modifying providers and navigating
           if (mounted) {
-            // Reset provider states
             ref.read(selectedPageProvider.notifier).state = 0;
             ref.read(selectedEmployeePageProvider.notifier).state = 0;
-            
-            // Navigate to login screen
+
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const LogIn()),
@@ -107,16 +99,15 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
             );
           }
         } else {
-          // Show error message only if mounted
           if (mounted) {
+            final logoutState = ref.read(logoutViewModelProvider);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(logoutViewModel.error ?? 'Logout failed')),
+              SnackBar(content: Text(logoutState.error ?? 'Logout failed')),
             );
           }
         }
       }
     } catch (e) {
-      // Close loading dialog if open
       if (mounted) Navigator.of(context).pop();
 
       if (mounted) {
@@ -132,8 +123,7 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
 
   @override
   Widget build(BuildContext context) {
-    // Use ref.listen for side effects (navigation)
-    ref.listen<LogoutViewModel>(
+    ref.listen<LogoutState>(
       logoutViewModelProvider,
       (previous, next) {
         if (!mounted) return;
@@ -148,7 +138,6 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
         }
 
         if (next.message != null) {
-          // Logout successful, navigate to login
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && Navigator.canPop(context)) {
               ref.read(selectedPageProvider.notifier).state = 0;
@@ -159,7 +148,6 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                 (route) => false,
               );
             } else if (mounted) {
-              // If no routes to pop, just push replacement
               ref.read(selectedPageProvider.notifier).state = 0;
               ref.read(selectedEmployeePageProvider.notifier).state = 0;
               Navigator.pushReplacement(
@@ -174,13 +162,12 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
 
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final paddingValue = screenWidth * 0.05; // 5% of screen width for padding
-    final headerHeight = screenHeight * 0.22; // 22% of screen height for gradient header
+    final paddingValue = screenWidth * 0.05;
+    final headerHeight = screenHeight * 0.22;
 
     return Scaffold(
       body: Column(
         children: [
-          // Gradient Header Section
           Container(
             height: headerHeight,
             width: double.infinity,
@@ -189,8 +176,8 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF8B5CF6), // Purple top
-                  Color(0xFF7C3AED), // Slightly darker purple
+                  Color(0xFF8B5CF6),
+                  Color(0xFF7C3AED),
                 ],
               ),
             ),
@@ -200,7 +187,6 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // Profile Card
                     _buildProfileCard(context, screenWidth, screenHeight),
                   ],
                 ),
@@ -208,7 +194,6 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
             ),
           ),
 
-          // White Content Section
           Expanded(
             child: Container(
               width: double.infinity,
@@ -219,11 +204,10 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                 padding: EdgeInsets.all(paddingValue),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.02), // 2% of screen height
+                    SizedBox(height: screenHeight * 0.02),
 
                     SizedBox(height: screenHeight * 0.015),
 
-                    // Privacy Settings
                     _buildMenuItem(
                       context: context,
                       icon: Icons.privacy_tip_outlined,
@@ -244,7 +228,6 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
 
                     SizedBox(height: screenHeight * 0.015),
 
-                    // Security Settings
                     _buildMenuItem(
                       context: context,
                       icon: Icons.security_outlined,
@@ -261,7 +244,6 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                       },
                     ),
 
-                    // Sign Out Button
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
@@ -274,7 +256,7 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                         child: Text(
                           'Sign Out',
                           style: TextStyle(
-                            fontSize: screenWidth * 0.04, // 4% of screen width
+                            fontSize: screenWidth * 0.04,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -300,11 +282,10 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
       ),
       child: Row(
         children: [
-          // Profile Image with Status Indicator
           Stack(
             children: [
               Container(
-                width: screenWidth * 0.20, // 20% of screen width
+                width: screenWidth * 0.20,
                 height: screenWidth * 0.20,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -321,7 +302,6 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                   ),
                 ),
               ),
-              // Online Status Indicator
               Positioned(
                 bottom: 0,
                 right: 0,
@@ -341,9 +321,8 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
             ],
           ),
 
-          SizedBox(width: screenWidth * 0.04), // 4% of screen width
+          SizedBox(width: screenWidth * 0.04),
 
-          // Profile Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,16 +330,16 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                 Text(
                   _username ?? 'Loading...',
                   style: TextStyle(
-                    fontSize: screenWidth * 0.045, // 4.5% of screen width
+                    fontSize: screenWidth * 0.045,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.005), // 0.5% of screen height
+                SizedBox(height: screenHeight * 0.005),
                 Text(
                   _email ?? '',
                   style: TextStyle(
-                    fontSize: screenWidth * 0.035, // 3.5% of screen width
+                    fontSize: screenWidth * 0.035,
                     color: Colors.white70,
                     fontWeight: FontWeight.w400,
                   ),
@@ -369,25 +348,29 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
             ),
           ),
 
-          // Edit Icon
           GestureDetector(
             onTap: () async {
               final authDataSource = ref.read(authLocalDataSourceProvider);
               final authUser = await authDataSource.getAuthUser();
+
+              if (!mounted) return;
               
               if (authUser != null) {
+                if (!mounted) return;
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => EditProfileScreen(currentUser: authUser),
                   ),
                 );
-                
-                // If profile was updated, refresh the user data
+
+                if (!mounted) return;
+
                 if (result != null) {
                   _loadUserData();
                 }
               } else {
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('User data not found. Please log in again.'),
@@ -399,7 +382,7 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
             child: Container(
               padding: EdgeInsets.all(screenWidth * 0.02),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.4),
+                color: Colors.grey.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -429,7 +412,7 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.all(screenWidth * 0.04), // 4% of screen width
+        padding: EdgeInsets.all(screenWidth * 0.04),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -444,19 +427,19 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
         child: Row(
           children: [
             Container(
-              width: screenWidth * 0.1, // 10% of screen width
+              width: screenWidth * 0.1,
               height: screenWidth * 0.1,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
                 color: iconColor,
-                size: screenWidth * 0.05, // 5% of screen width
+                size: screenWidth * 0.05,
               ),
             ),
-            SizedBox(width: screenWidth * 0.04), // 4% of screen width
+            SizedBox(width: screenWidth * 0.04),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,17 +447,17 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: screenWidth * 0.04, // 4% of screen width
+                      fontSize: screenWidth * 0.04,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,
                     ),
                   ),
                   if (subtitle != null) ...[
-                    SizedBox(height: screenHeight * 0.005), // 0.5% of screen height
+                    SizedBox(height: screenHeight * 0.005),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: screenWidth * 0.035, // 3.5% of screen width
+                        fontSize: screenWidth * 0.035,
                         color: Colors.grey,
                       ),
                     ),
@@ -485,7 +468,7 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
             Icon(
               Icons.chevron_right,
               color: Colors.grey,
-              size: screenWidth * 0.045, // 4.5% of screen width
+              size: screenWidth * 0.045,
             ),
           ],
         ),

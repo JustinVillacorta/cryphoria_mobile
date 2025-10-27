@@ -1,14 +1,13 @@
 import 'dart:ui';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class glassHistoryIcon extends StatelessWidget {
+class GlassHistoryIcon extends StatelessWidget {
   final double width;
   final double height;
   final IconData icon;
   final VoidCallback? onTap;
 
-  const glassHistoryIcon({
+  const GlassHistoryIcon({
     super.key,
     this.width = 32,
     this.height = 32,
@@ -28,16 +27,16 @@ class glassHistoryIcon extends StatelessWidget {
             width: width,
             height: height,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.07), // glass effect
+              color: Colors.white.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
               ),
             ),
             child: Center(
               child: Icon(
                 icon,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ),

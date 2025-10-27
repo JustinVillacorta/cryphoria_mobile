@@ -1,4 +1,3 @@
-// lib/features/presentation/manager/Payslip/Widgets/payslip_list_item.dart
 
 import 'package:flutter/material.dart';
 import '../../../../domain/entities/payslip.dart';
@@ -9,10 +8,10 @@ class PayslipListItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const PayslipListItem({
-    Key? key,
+    super.key,
     required this.payslip,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +32,8 @@ class PayslipListItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header row
                 Row(
                   children: [
-                    // Employee info
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,15 +57,14 @@ class PayslipListItem extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
-                    // Status badge
+
                     Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(payslip.statusEnum).withOpacity(0.1),
+                        color: _getStatusColor(payslip.statusEnum).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: _getStatusColor(payslip.statusEnum),
@@ -86,10 +82,9 @@ class PayslipListItem extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 SizedBox(height: 16),
-                
-                // Pay period
+
                 Row(
                   children: [
                     Icon(
@@ -107,14 +102,12 @@ class PayslipListItem extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 SizedBox(height: 8),
-                
-                // Amount row
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Net pay
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -135,8 +128,7 @@ class PayslipListItem extends StatelessWidget {
                         ),
                       ],
                     ),
-                    
-                    // Crypto amount
+
                     if (payslip.cryptoAmount > 0) ...[
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -149,7 +141,7 @@ class PayslipListItem extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${payslip.cryptoAmount.toStringAsFixed(6)}',
+                            payslip.cryptoAmount.toStringAsFixed(6),
                             style: TextStyle(
                               fontSize: screenWidth * 0.035,
                               fontWeight: FontWeight.w600,
@@ -161,10 +153,9 @@ class PayslipListItem extends StatelessWidget {
                     ],
                   ],
                 ),
-                
+
                 SizedBox(height: 12),
-                
-                // Pay date
+
                 Row(
                   children: [
                     Icon(

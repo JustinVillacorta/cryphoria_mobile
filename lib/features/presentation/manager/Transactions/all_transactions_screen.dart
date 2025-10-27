@@ -12,20 +12,17 @@ class AllTransactionsScreen extends ConsumerStatefulWidget {
 
 class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
   final ScrollController _scrollController = ScrollController();
-  
-  // Filter and sort state
+
   String _selectedTransactionType = 'All';
   String _selectedSortBy = 'Date';
   final List<String> _transactionTypes = ['All', 'Sent', 'Received'];
   final List<String> _sortOptions = ['Date', 'Value'];
-  
-  // Search state
+
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  
-  // Filter visibility state
+
   bool _showFilters = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -34,11 +31,9 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
         _searchQuery = _searchController.text;
       });
     });
-    
-    // Set up scroll listener for pagination
+
     _scrollController.addListener(_onScroll);
-    
-    // Load initial transactions
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notifier = ref.read(walletNotifierProvider.notifier);
       notifier.resetAllTransactions();
@@ -56,7 +51,6 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >= 
         _scrollController.position.maxScrollExtent * 0.8) {
-      // Load more when scrolled to 80% of the list
       final notifier = ref.read(walletNotifierProvider.notifier);
       notifier.loadMoreTransactions();
     }
@@ -65,8 +59,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
   List<Map<String, dynamic>> get _filteredTransactions {
     final walletState = ref.watch(walletNotifierProvider);
     List<Map<String, dynamic>> transactions = List.from(walletState.allTransactions);
-    
-    // Apply transaction type filter
+
     if (_selectedTransactionType != 'All') {
       transactions = transactions.where((transaction) {
         if (_selectedTransactionType == 'Sent') {
@@ -86,8 +79,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
         return true;
       }).toList();
     }
-    
-    // Apply search filter
+
     if (_searchQuery.isNotEmpty) {
       transactions = transactions.where((transaction) {
         return transaction['title'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -97,19 +89,17 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                transaction['to_address']?.toString().toLowerCase().contains(_searchQuery.toLowerCase()) == true;
       }).toList();
     }
-    
-    // Apply sorting
+
     switch (_selectedSortBy) {
       case 'Value':
         transactions.sort((a, b) {
           double valueA = _parseAmount(a['amount']?.toString() ?? '0');
           double valueB = _parseAmount(b['amount']?.toString() ?? '0');
-          return valueB.compareTo(valueA); // Descending order
+          return valueB.compareTo(valueA);
         });
         break;
       case 'Date':
       default:
-        // Sort by timestamp (most recent first)
         transactions.sort((a, b) {
           final aTime = a['created_at'] ?? a['timestamp'] ?? '';
           final bTime = b['created_at'] ?? b['timestamp'] ?? '';
@@ -117,7 +107,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
         });
         break;
     }
-    
+
     return transactions;
   }
 
@@ -131,7 +121,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
   Widget build(BuildContext context) {
     final walletState = ref.watch(walletNotifierProvider);
     final filteredTransactions = _filteredTransactions;
-    
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -153,13 +143,11 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
       ),
       body: Column(
         children: [
-          // Search and filters section
           Container(
             color: Colors.white,
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Search bar
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
@@ -177,8 +165,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
-                // Filter & Sort row
+
                 Row(
                   children: [
                     Expanded(
@@ -238,12 +225,10 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                     ),
                   ],
                 ),
-                
-                // Expandable filters section
+
                 if (_showFilters) ...[
                   const SizedBox(height: 16),
-                  
-                  // Transaction Type filters
+
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -293,8 +278,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Sort By section
+
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -357,8 +341,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
               ],
             ),
           ),
-          
-          // Transactions section
+
           Expanded(
             child: Container(
               color: Colors.grey[50],
@@ -376,8 +359,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                       ),
                     ),
                   ),
-                  
-                  // Transactions list or empty state
+
                   Expanded(
                     child: walletState.isLoading && walletState.allTransactions.isEmpty
                         ? _buildLoadingState()
@@ -460,7 +442,6 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
       itemCount: transactions.length + (walletState.isLoadingMore ? 1 : 0),
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        // Show loading indicator at the bottom when loading more
         if (index == transactions.length) {
           return const Padding(
             padding: EdgeInsets.all(16.0),
@@ -471,7 +452,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
             ),
           );
         }
-        
+
         final transaction = transactions[index];
         return _buildTransactionItem(transaction);
       },
@@ -485,24 +466,22 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
         transaction['title'].toString().toLowerCase().contains('purchase') ||
         transaction['title'].toString().toLowerCase().contains('buy') ||
         transaction['type'] == 'buy';
-    
+
     final bool isReceivedTransaction = transaction['transaction_category'] == 'RECEIVED' ||
         transaction['title'].toString().toLowerCase().contains('received') ||
         transaction['title'].toString().toLowerCase().contains('sell') ||
         transaction['title'].toString().toLowerCase().contains('sold') ||
         transaction['type'] == 'sell';
-    
-    // Parse amount for display
+
     final String amountText = (transaction['amount'] ?? '').toString();
     final double numericAmount = _parseAmount(amountText);
     final bool isPositive = (transaction['isPositive'] as bool?) ?? (numericAmount >= 0);
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // Construct TransactionData from the map with all available fields
           final tx = TransactionData(
             title: (transaction['title'] ?? 'Transaction').toString(),
             subtitle: (transaction['subtitle'] ?? '').toString(),
@@ -512,7 +491,6 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
             category: (transaction['category'] ?? (isPositive ? 'Income' : 'Expense')).toString(),
             notes: (transaction['notes'] ?? '—').toString(),
             transactionId: (transaction['id'] ?? transaction['transactionId'] ?? 'TX-${DateTime.now().millisecondsSinceEpoch}').toString(),
-            // Crypto-specific fields
             transactionHash: transaction['transaction_hash']?.toString(),
             fromAddress: transaction['from_address']?.toString(),
             toAddress: transaction['to_address']?.toString(),
@@ -539,7 +517,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withValues(alpha: 0.05),
                 spreadRadius: 1,
                 blurRadius: 10,
                 offset: const Offset(0, 2),
@@ -548,16 +526,15 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
           ),
           child: Row(
             children: [
-              // Transaction icon with buy/sell indicator
               Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
                   color: isSentTransaction 
-                      ? Colors.red.withOpacity(0.1)
+                      ? Colors.red.withValues(alpha: 0.1)
                       : isReceivedTransaction
-                        ? Colors.green.withOpacity(0.1)
-                        : (transaction['color'] as Color?)?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : (transaction['color'] as Color?)?.withValues(alpha: 0.1) ?? Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -575,8 +552,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              
-              // Transaction details
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -607,7 +583,6 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // Subtitle constrained to avoid overflow; show ellipsis when long
                         Flexible(
                           child: Text(
                             transaction['subtitle']?.toString() ?? '',
@@ -634,9 +609,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
                   ],
                 ),
               ),
-              
-              // Amount and details
-              // Constrain right column to prevent row overflow on narrow screens
+
               ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.32),
                 child: Column(

@@ -1,4 +1,3 @@
-// lib/features/presentation/widgets/transaction_list_header_widget.dart
 import 'package:flutter/material.dart';
 
 class TransactionListHeaderWidget extends StatelessWidget {
@@ -6,10 +5,10 @@ class TransactionListHeaderWidget extends StatelessWidget {
   final bool isTablet;
 
   const TransactionListHeaderWidget({
-    Key? key,
+    super.key,
     required this.onViewAllTapped,
     this.isTablet = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -51,4 +50,3 @@ class TransactionListHeaderWidget extends StatelessWidget {
     );
   }
 }
-

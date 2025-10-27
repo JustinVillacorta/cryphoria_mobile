@@ -6,7 +6,7 @@ import 'package:cryphoria_mobile/features/presentation/manager/Authentication/Lo
 
 class ForgotPasswordConfirmView extends ConsumerStatefulWidget {
   final String email;
-  
+
   const ForgotPasswordConfirmView({
     super.key,
     required this.email,
@@ -20,11 +20,11 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
   final TextEditingController _otpController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  
+
   final FocusNode _otpFocusNode = FocusNode();
   final FocusNode _newPasswordFocusNode = FocusNode();
   final FocusNode _confirmPasswordFocusNode = FocusNode();
-  
+
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
@@ -55,7 +55,6 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Back button
                     Align(
                       alignment: Alignment.centerLeft,
                       child: IconButton(
@@ -68,7 +67,6 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
                     ),
                     const SizedBox(height: 20),
 
-                    // Title
                     const Text(
                       'Reset Password',
                       style: TextStyle(
@@ -79,8 +77,7 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    
-                    // Subtitle
+
                     Text(
                       'Enter the code sent to\n${widget.email}',
                       style: const TextStyle(
@@ -91,30 +88,23 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
                     ),
                     const SizedBox(height: 40),
 
-                    // OTP Input Field
                     _buildOTPField(),
                     const SizedBox(height: 20),
 
-                    // New Password Field
                     _buildNewPasswordField(),
                     const SizedBox(height: 20),
 
-                    // Confirm Password Field
                     _buildConfirmPasswordField(),
                     const SizedBox(height: 24),
 
-                    // Reset Password Button
                     _buildResetPasswordButton(),
                     const SizedBox(height: 24),
 
-                    // Resend Code
                     _buildResendCode(),
                     const SizedBox(height: 24),
 
-                    // Back to Login
                     _buildBackToLogin(),
 
-                    // Error message
                     _buildErrorMessage(),
                   ],
                 ),
@@ -141,7 +131,7 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
       decoration: InputDecoration(
         labelText: 'Enter OTP Code',
         hintText: '000000',
-        counterText: '', // Hide character counter
+        counterText: '',
         prefixIcon: const Icon(
           Icons.security_outlined,
           color: Colors.black54,
@@ -273,10 +263,10 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
   }
 
   Widget _buildResetPasswordButton() {
-    final viewModel = ref.watch(forgotPasswordConfirmViewModelProvider);
-    
+    final state = ref.watch(forgotPasswordConfirmViewModelProvider);
+
     return ElevatedButton(
-      onPressed: viewModel.isLoading ? null : _resetPassword,
+      onPressed: state.isLoading ? null : _resetPassword,
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF8B5CF6),
         foregroundColor: Colors.white,
@@ -286,7 +276,7 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
         ),
         elevation: 0,
       ),
-      child: viewModel.isLoading
+      child: state.isLoading
           ? const SizedBox(
               height: 20,
               width: 20,
@@ -306,8 +296,8 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
   }
 
   Widget _buildResendCode() {
-    final viewModel = ref.watch(forgotPasswordConfirmViewModelProvider);
-    
+    final state = ref.watch(forgotPasswordConfirmViewModelProvider);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -319,11 +309,11 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
           ),
         ),
         GestureDetector(
-          onTap: viewModel.isLoading ? null : _resendCode,
+          onTap: state.isLoading ? null : _resendCode,
           child: Text(
             'Resend Code',
             style: TextStyle(
-              color: viewModel.isLoading ? Colors.grey : const Color(0xFF8B5CF6),
+              color: state.isLoading ? Colors.grey : const Color(0xFF8B5CF6),
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -365,9 +355,9 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
   }
 
   Widget _buildErrorMessage() {
-    final viewModel = ref.watch(forgotPasswordConfirmViewModelProvider);
-    
-    if (viewModel.error != null && viewModel.error!.isNotEmpty) {
+    final state = ref.watch(forgotPasswordConfirmViewModelProvider);
+
+    if (state.error != null && state.error!.isNotEmpty) {
       return Container(
         margin: const EdgeInsets.only(top: 20),
         padding: const EdgeInsets.all(12),
@@ -377,7 +367,7 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
           border: Border.all(color: Colors.red.shade200),
         ),
         child: Text(
-          viewModel.error!,
+          state.error!,
           style: TextStyle(
             color: Colors.red.shade700,
             fontSize: 14,
@@ -390,7 +380,6 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
   }
 
   void _resetPassword() async {
-    // Validation
     if (_otpController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -451,25 +440,23 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
       return;
     }
 
-    final viewModel = ref.read(forgotPasswordConfirmViewModelProvider);
-
-    await viewModel.resetPassword(
+    await ref.read(forgotPasswordConfirmViewModelProvider.notifier).resetPassword(
       widget.email,
       _otpController.text,
       _newPasswordController.text,
     );
-    
+
     if (!mounted) return;
-    
-    if (viewModel.error == null && viewModel.isPasswordReset) {
-      // Password reset successful - redirect to login screen
+
+    final state = ref.read(forgotPasswordConfirmViewModelProvider);
+    if (state.error == null && state.isPasswordReset) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password reset successfully! Please log in with your new password.'),
           backgroundColor: Colors.green,
         ),
       );
-      
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LogIn()),
@@ -478,13 +465,12 @@ class _ForgotPasswordConfirmViewState extends ConsumerState<ForgotPasswordConfir
   }
 
   void _resendCode() async {
-    final viewModel = ref.read(forgotPasswordConfirmViewModelProvider);
-    
-    await viewModel.resendResetCode(widget.email);
-    
+    await ref.read(forgotPasswordConfirmViewModelProvider.notifier).resendResetCode(widget.email);
+
     if (!mounted) return;
-    
-    if (viewModel.error == null) {
+
+    final state = ref.read(forgotPasswordConfirmViewModelProvider);
+    if (state.error == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Reset code resent successfully!'),

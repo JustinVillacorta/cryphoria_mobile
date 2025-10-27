@@ -12,9 +12,9 @@ class HomeEmployeeScreen extends ConsumerStatefulWidget {
   final String employeeId;
 
   const HomeEmployeeScreen({
-    Key? key,
+    super.key,
     required this.employeeId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<HomeEmployeeScreen> createState() => _HomeEmployeeScreenState();
@@ -25,7 +25,6 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      debugPrint('Initializing HomeEmployeeScreen with employeeId: ${widget.employeeId}');
       ref.read(homeEmployeeNotifierProvider.notifier)
           .getDashboardData(widget.employeeId);
     });
@@ -37,12 +36,11 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
-    // Responsive sizing
+
     final horizontalPadding = isDesktop ? 32.0 : isTablet ? 24.0 : 20.0;
     final verticalPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
     final sectionGap = isDesktop ? 28.0 : isTablet ? 24.0 : 20.0;
-    
+
     final state = ref.watch(homeEmployeeNotifierProvider);
     final notifier = ref.read(homeEmployeeNotifierProvider.notifier);
     final payrollDetailsAsync = ref.watch(payrollDetailsProvider);
@@ -89,7 +87,6 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () {
-                        debugPrint('Retrying dashboard data load');
                         notifier.refreshData(widget.employeeId);
                       },
                       style: ElevatedButton.styleFrom(
@@ -115,7 +112,6 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
 
             return RefreshIndicator(
               onRefresh: () async {
-                debugPrint('Refresh triggered');
                 await notifier.refreshData(widget.employeeId);
                 ref.invalidate(payrollDetailsProvider);
               },
@@ -136,8 +132,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                       SizedBox(height: sectionGap),
                       const WalletCard(),
                       SizedBox(height: sectionGap),
-                      
-                      // Recent Payslips Section
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -166,12 +161,11 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                         ],
                       ),
                       SizedBox(height: isSmallScreen ? 12 : 16),
-                      
-                      // Display recent payslips
+
                       payrollDetailsAsync.when(
                         data: (payrollDetails) {
                           final recentPayslips = payrollDetails.payslips.take(5).toList();
-                          
+
                           if (recentPayslips.isEmpty) {
                             return Container(
                               padding: EdgeInsets.symmetric(
@@ -183,7 +177,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
+                                    color: Colors.black.withValues(alpha: 0.04),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -195,7 +189,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                                     Icon(
                                       Icons.receipt_long_outlined,
                                       size: isTablet ? 56 : 48,
-                                      color: const Color(0xFF6B6B6B).withOpacity(0.5),
+                                      color: const Color(0xFF6B6B6B).withValues(alpha: 0.5),
                                     ),
                                     SizedBox(height: isSmallScreen ? 12 : 16),
                                     Text(
@@ -211,7 +205,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                               ),
                             );
                           }
-                          
+
                           return Column(
                             children: recentPayslips.map((payslip) {
                               return _buildPayslipCard(context, payslip, size, isSmallScreen, isTablet);
@@ -252,7 +246,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                           ),
                         ),
                       ),
-                      
+
                       SizedBox(height: sectionGap),
                     ],
                   ),
@@ -277,7 +271,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -300,7 +294,7 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
                 width: isTablet ? 52 : 48,
                 height: isTablet ? 52 : 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF9747FF).withOpacity(0.1),
+                  color: const Color(0xFF9747FF).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -355,4 +349,3 @@ class _HomeEmployeeScreenState extends ConsumerState<HomeEmployeeScreen> {
   }
 
 }
-

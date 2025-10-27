@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class BackgroundProcessingDialog extends StatelessWidget {
-  const BackgroundProcessingDialog({Key? key}) : super(key: key);
+  const BackgroundProcessingDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,6 @@ class BackgroundProcessingDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon with background
             Container(
               width: 64,
               height: 64,
@@ -22,8 +21,8 @@ class BackgroundProcessingDialog extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFF9747FF).withOpacity(0.1),
-                    Color(0xFF9747FF).withOpacity(0.2),
+                    Color(0xFF9747FF).withValues(alpha: 0.1),
+                    Color(0xFF9747FF).withValues(alpha: 0.2),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -36,8 +35,7 @@ class BackgroundProcessingDialog extends StatelessWidget {
               ),
             ),
             SizedBox(height: 24),
-            
-            // Title
+
             Text(
               'Run in Background?',
               style: TextStyle(
@@ -48,8 +46,7 @@ class BackgroundProcessingDialog extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 12),
-            
-            // Description
+
             Text(
               'This payroll operation may take some time to complete. Would you like to continue processing in the background while you do other things?',
               style: TextStyle(
@@ -60,16 +57,15 @@ class BackgroundProcessingDialog extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24),
-            
-            // Info card
+
             Container(
               width: double.infinity,
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Color(0xFF9747FF).withOpacity(0.08),
+                color: Color(0xFF9747FF).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Color(0xFF9747FF).withOpacity(0.2),
+                  color: Color(0xFF9747FF).withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -96,8 +92,7 @@ class BackgroundProcessingDialog extends StatelessWidget {
               ),
             ),
             SizedBox(height: 28),
-            
-            // Action buttons
+
             Row(
               children: [
                 Expanded(

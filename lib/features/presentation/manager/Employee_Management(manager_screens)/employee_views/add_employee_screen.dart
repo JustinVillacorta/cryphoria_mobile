@@ -13,13 +13,11 @@ class AddEmployeeScreen extends ConsumerStatefulWidget {
 class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Form Controllers - only the required fields
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _positionController = TextEditingController();
 
-  // Department dropdown
   String _selectedDepartment = 'IT Department';
   final List<String> _departments = [
     'IT Department',
@@ -47,18 +45,15 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
     final isSmallScreen = size.height < 700;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       body: Column(
         children: [
-          // Custom Header with gradient
           _buildHeader(isSmallScreen, isTablet, isDesktop),
-          // Combined Form Content
           Expanded(
             child: _buildCombinedForm(isSmallScreen, isTablet, isDesktop),
           ),
-          // Bottom Action Buttons
           _buildBottomActions(isSmallScreen, isTablet, isDesktop),
         ],
       ),
@@ -70,7 +65,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
     final headingSize = isDesktop ? 26.0 : isTablet ? 24.0 : 22.0;
     final subtitleSize = isDesktop ? 17.0 : isTablet ? 16.0 : 15.0;
     final iconSize = isDesktop ? 68.0 : isTablet ? 64.0 : 60.0;
-    
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -89,7 +84,6 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
           ),
           child: Column(
             children: [
-              // Top Navigation
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -110,17 +104,16 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                       letterSpacing: -0.3,
                     ),
                   ),
-                  SizedBox(width: isTablet ? 52 : 48), // Balance the back button
+                  SizedBox(width: isTablet ? 52 : 48),
                 ],
               ),
               SizedBox(height: isSmallScreen ? 16 : 20),
-              // Add Employee Icon and Description
               Column(
                 children: [
                   Container(
                     padding: EdgeInsets.all(isTablet ? 18 : 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Icon(
@@ -145,7 +138,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                     'Fill in the employee details below',
                     style: GoogleFonts.inter(
                       fontSize: subtitleSize,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontWeight: FontWeight.w400,
                       height: 1.3,
                     ),
@@ -162,7 +155,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
   Widget _buildCombinedForm(bool isSmallScreen, bool isTablet, bool isDesktop) {
     final padding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
     final maxWidth = isDesktop ? 700.0 : isTablet ? 600.0 : double.infinity;
-    
+
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
@@ -268,7 +261,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
     final cardPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 18.0;
     final titleSize = isDesktop ? 19.0 : isTablet ? 18.0 : 17.0;
     final iconSize = isTablet ? 24.0 : 22.0;
-    
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -276,7 +269,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -292,7 +285,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                 Container(
                   padding: EdgeInsets.all(isTablet ? 10 : 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF9747FF).withOpacity(0.1),
+                    color: const Color(0xFF9747FF).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -333,7 +326,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
     final labelSize = isTablet ? 16.0 : 15.0;
     final hintSize = isTablet ? 15.0 : 14.0;
     final iconSize = isTablet ? 22.0 : 20.0;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -405,7 +398,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
     final labelSize = isTablet ? 16.0 : 15.0;
     final dropdownSize = isTablet ? 15.0 : 14.0;
     final iconSize = isTablet ? 22.0 : 20.0;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -485,7 +478,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
     final buttonPadding = isTablet ? 16.0 : 14.0;
     final fontSize = isTablet ? 17.0 : 16.0;
     final horizontalPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
-    
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         horizontalPadding,
@@ -497,7 +490,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -539,13 +532,13 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                 onPressed: _isSubmitting ? null : () => _submitForm(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9747FF),
-                  disabledBackgroundColor: const Color(0xFF9747FF).withOpacity(0.5),
+                  disabledBackgroundColor: const Color(0xFF9747FF).withValues(alpha: 0.5),
                   padding: EdgeInsets.symmetric(vertical: buttonPadding),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 0,
-                  shadowColor: const Color(0xFF9747FF).withOpacity(0.3),
+                  shadowColor: const Color(0xFF9747FF).withValues(alpha: 0.3),
                 ),
                 child: _isSubmitting
                     ? SizedBox(
@@ -554,7 +547,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white.withOpacity(0.8),
+                            Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
                       )
@@ -577,9 +570,9 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
   void _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isSubmitting = true);
-      
+
       final employeeViewModel = ref.read(employeeViewModelProvider.notifier);
-      
+
       try {
         await employeeViewModel.addEmployeeToTeam(
           email: _emailController.text.trim(),
@@ -611,7 +604,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
         }
       } catch (e) {
         setState(() => _isSubmitting = false);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

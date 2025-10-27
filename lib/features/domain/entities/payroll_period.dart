@@ -1,4 +1,3 @@
-// Payroll Period entity aligned with backend specification
 class PayrollPeriod {
   final String periodId;
   final String periodNumber;
@@ -117,11 +116,11 @@ class PayrollPeriod {
   }
 
   int get totalEmployees => entries.length;
-  
+
   double get totalPending => entries
       .where((e) => e.status == PayrollEntryStatus.pending)
       .fold(0.0, (sum, e) => sum + e.netAmount);
-  
+
   double get totalPaid => entries
       .where((e) => e.status == PayrollEntryStatus.paid)
       .fold(0.0, (sum, e) => sum + e.netAmount);
@@ -161,7 +160,6 @@ enum PayrollPeriodStatus {
   }
 }
 
-// Payroll Entry within a period
 class PayrollEntry {
   final String entryId;
   final String employeeId;
@@ -305,7 +303,6 @@ enum PayrollEntryStatus {
   }
 }
 
-// Payroll Summary
 class PayrollSummary {
   final int totalEmployees;
   final double totalGrossSalary;
@@ -354,7 +351,6 @@ class PayrollSummary {
   }
 }
 
-// Request models
 class CreatePayrollPeriodRequest {
   final String periodNumber;
   final DateTime startDate;

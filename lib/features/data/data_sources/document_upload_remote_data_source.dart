@@ -14,9 +14,9 @@ abstract class DocumentUploadRemoteDataSource {
     required File birForm,
     required File managerId,
   });
-  
+
   Future<Map<String, dynamic>> submitDocumentsForApproval();
-  
+
   Future<List<Document>> getMyDocuments();
 }
 
@@ -38,12 +38,9 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
     required File managerId,
   }) async {
     try {
-      print("📤 Uploading business documents - making 3 separate requests");
 
       final results = <String, dynamic>{};
-      
-      // Upload DTI Document
-      print("📤 Uploading DTI Document...");
+
       final dtiFormData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
           dtiDocument.path,
@@ -51,7 +48,7 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         ),
         'document_type': 'business_registration',
       });
-      
+
       final dtiResponse = await dio.post(
         '/api/documents/upload/',
         data: dtiFormData,
@@ -63,16 +60,13 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
           receiveTimeout: const Duration(minutes: 5),
         ),
       );
-      
+
       if (dtiResponse.statusCode == 200 || dtiResponse.statusCode == 201) {
         results['dti_document'] = dtiResponse.data;
-        print("✅ DTI Document uploaded successfully");
       } else {
         throw Exception('Failed to upload DTI document: ${dtiResponse.statusMessage}');
       }
 
-      // Upload BIR Form
-      print("📤 Uploading BIR Form...");
       final birFormData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
           birForm.path,
@@ -80,7 +74,7 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         ),
         'document_type': 'tax_id',
       });
-      
+
       final birResponse = await dio.post(
         '/api/documents/upload/',
         data: birFormData,
@@ -92,16 +86,13 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
           receiveTimeout: const Duration(minutes: 5),
         ),
       );
-      
+
       if (birResponse.statusCode == 200 || birResponse.statusCode == 201) {
         results['bir_form'] = birResponse.data;
-        print("✅ BIR Form uploaded successfully");
       } else {
         throw Exception('Failed to upload BIR form: ${birResponse.statusMessage}');
       }
 
-      // Upload Manager Government ID
-      print("📤 Uploading Manager Government ID...");
       final managerIdFormData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
           managerId.path,
@@ -109,7 +100,7 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         ),
         'document_type': 'company_license',
       });
-      
+
       final managerIdResponse = await dio.post(
         '/api/documents/upload/',
         data: managerIdFormData,
@@ -121,19 +112,16 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
           receiveTimeout: const Duration(minutes: 5),
         ),
       );
-      
+
       if (managerIdResponse.statusCode == 200 || managerIdResponse.statusCode == 201) {
         results['manager_government_id'] = managerIdResponse.data;
-        print("✅ Manager Government ID uploaded successfully");
       } else {
         throw Exception('Failed to upload Manager Government ID: ${managerIdResponse.statusMessage}');
       }
 
-      print("✅ All documents uploaded successfully");
       return results;
     } on DioException catch (e) {
-      print("❌ Upload failed: ${e.message}");
-      
+
       if (e.type == DioExceptionType.connectionTimeout) {
         throw Exception('Connection timeout. Please check your internet connection.');
       } else if (e.type == DioExceptionType.receiveTimeout) {
@@ -157,7 +145,6 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         throw Exception('Network error: ${e.message ?? 'Unknown error occurred'}');
       }
     } catch (e) {
-      print("❌ Unexpected error uploading documents: $e");
       throw Exception('Unexpected error: ${e.toString()}');
     }
   }
@@ -165,7 +152,6 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
   @override
   Future<Map<String, dynamic>> submitDocumentsForApproval() async {
     try {
-      print("📤 Submitting documents for approval...");
 
       final response = await dio.post(
         '/api/documents/submit/',
@@ -178,7 +164,6 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         ),
       );
 
-      print("✅ Submit successful: ${response.statusCode}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = response.data;
@@ -190,8 +175,7 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         throw Exception('Failed to submit documents: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Submit failed: ${e.message}");
-      
+
       if (e.type == DioExceptionType.connectionTimeout) {
         throw Exception('Connection timeout. Please check your internet connection.');
       } else if (e.type == DioExceptionType.receiveTimeout) {
@@ -213,7 +197,6 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         throw Exception('Network error: ${e.message ?? 'Unknown error occurred'}');
       }
     } catch (e) {
-      print("❌ Unexpected error submitting documents: $e");
       throw Exception('Unexpected error: ${e.toString()}');
     }
   }
@@ -221,7 +204,6 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
   @override
   Future<List<Document>> getMyDocuments() async {
     try {
-      print("📥 Fetching user documents...");
 
       final response = await dio.get(
         '/api/documents/my-documents/',
@@ -234,41 +216,36 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         ),
       );
 
-      print("✅ Get documents successful: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final responseData = response.data;
-        
+
         if (responseData is Map<String, dynamic>) {
-          // Handle response with 'documents' key (the actual API format)
           if (responseData.containsKey('documents') && responseData['documents'] is List) {
             final List<dynamic> documentsJson = responseData['documents'];
             return documentsJson.map((json) => Document.fromJson(json)).toList();
           }
-          
-          // Handle single document response
+
           if (responseData.containsKey('id')) {
             return [Document.fromJson(responseData)];
           }
-          
-          // Handle list response with 'results' key
+
           if (responseData.containsKey('results') && responseData['results'] is List) {
             final List<dynamic> documentsJson = responseData['results'];
             return documentsJson.map((json) => Document.fromJson(json)).toList();
           }
         }
-        
+
         if (responseData is List) {
           return responseData.map((json) => Document.fromJson(json)).toList();
         }
-        
+
         throw Exception('Invalid response format from server');
       } else {
         throw Exception('Failed to fetch documents: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ Get documents failed: ${e.message}");
-      
+
       if (e.type == DioExceptionType.connectionTimeout) {
         throw Exception('Connection timeout. Please check your internet connection.');
       } else if (e.type == DioExceptionType.receiveTimeout) {
@@ -292,7 +269,6 @@ class DocumentUploadRemoteDataSourceImpl implements DocumentUploadRemoteDataSour
         throw Exception('Network error: ${e.message ?? 'Unknown error occurred'}');
       }
     } catch (e) {
-      print("❌ Unexpected error fetching documents: $e");
       throw Exception('Unexpected error: ${e.toString()}');
     }
   }

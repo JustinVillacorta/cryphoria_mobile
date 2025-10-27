@@ -1,4 +1,3 @@
-// lib/features/domain/entities/payroll_statistics.dart
 
 class PayrollStatistics {
   final int totalEntries;

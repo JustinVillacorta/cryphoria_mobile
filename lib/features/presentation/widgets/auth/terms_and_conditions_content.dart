@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Static Terms & Conditions content widget.
 class TermsAndConditionsContent extends StatelessWidget {
   const TermsAndConditionsContent({super.key});
 
@@ -48,11 +47,11 @@ class TermsAndConditionsContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-      
+
           paragraph(
             'Welcome to Cryphoria. By downloading, accessing, or using our application, you agree to the following Terms and Conditions. Please read them carefully before using our services.',
           ),
-          
+
           sectionTitle('Acceptance of Terms'),
           paragraph(
             'By creating an account or accessing the application, you enter into a binding agreement to comply with these Terms and Conditions and all applicable laws and regulations governing your use of the services. Your continued use of the application constitutes ongoing acceptance of these terms as they may be modified from time to time.',
@@ -118,7 +117,7 @@ class TermsAndConditionsContent extends StatelessWidget {
                 fontSize: isTablet ? 15 : isSmallScreen ? 13 : 14,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF9747FF),
-            
+
               ),
             ),
           ),
@@ -127,4 +126,3 @@ class TermsAndConditionsContent extends StatelessWidget {
     );
   }
 }
-

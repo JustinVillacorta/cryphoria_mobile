@@ -11,9 +11,9 @@ class PayslipEntryDetailsView extends ConsumerWidget {
   final String entryId;
 
   const PayslipEntryDetailsView({
-    Key? key,
+    super.key,
     required this.entryId,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,14 +22,6 @@ class PayslipEntryDetailsView extends ConsumerWidget {
     final isTablet = size.width > 600;
     final isDesktop = size.width > 1024;
 
-    // Debug logging
-    print('PayslipEntryDetailsView - entryId: $entryId');
-    print('PayslipEntryDetailsView - async state: ${entryDetailsAsync.runtimeType}');
-    entryDetailsAsync.when(
-      data: (entry) => print('PayslipEntryDetailsView - data state: ${entry.entryId}'),
-      loading: () => print('PayslipEntryDetailsView - loading state'),
-      error: (error, stackTrace) => print('PayslipEntryDetailsView - error state: $error'),
-    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
@@ -50,7 +42,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
     return Column(
       children: [
         _buildHeader(context, isTablet, isDesktop),
-        
+
         Expanded(
           child: Center(
             child: ConstrainedBox(
@@ -187,7 +179,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
           Container(
             padding: EdgeInsets.all(isTablet ? 14 : 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -216,7 +208,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
                   'Complete transaction information',
                   style: GoogleFonts.inter(
                     fontSize: isTablet ? 15 : 14,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w400,
                     height: 1.4,
                   ),
@@ -229,7 +221,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
             child: Container(
               padding: EdgeInsets.all(isTablet ? 10 : 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -252,7 +244,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -307,7 +299,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
             ],
           ),
           SizedBox(height: isSmallScreen ? 18 : 22),
-          
+
           Row(
             children: [
               Expanded(
@@ -331,9 +323,9 @@ class PayslipEntryDetailsView extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           SizedBox(height: isTablet ? 14 : 12),
-          
+
           _buildInfoCard(
             icon: Icons.access_time_outlined,
             label: 'Processed At',
@@ -344,9 +336,9 @@ class PayslipEntryDetailsView extends ConsumerWidget {
             isFullWidth: true,
             isTablet: isTablet,
           ),
-          
+
           SizedBox(height: isTablet ? 14 : 12),
-          
+
           Row(
             children: [
               Expanded(
@@ -355,7 +347,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
                   label: 'Amount',
                   value: '${entry.amount.toStringAsFixed(6)} ${entry.cryptocurrency ?? 'ETH'}',
                   iconColor: const Color(0xFF3B82F6),
-                  backgroundColor: const Color(0xFF3B82F6).withOpacity(0.1),
+                  backgroundColor: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                   isTablet: isTablet,
                 ),
               ),
@@ -366,15 +358,15 @@ class PayslipEntryDetailsView extends ConsumerWidget {
                   label: 'USD Equivalent',
                   value: '\$${entry.usdEquivalent.toStringAsFixed(2)}',
                   iconColor: const Color(0xFF10B981),
-                  backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+                  backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.1),
                   isTablet: isTablet,
                 ),
               ),
             ],
           ),
-          
+
           SizedBox(height: isTablet ? 14 : 12),
-          
+
           _buildInfoCard(
             icon: Icons.credit_card_outlined,
             label: 'Payment Method',
@@ -396,7 +388,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -416,7 +408,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
             ),
           ),
           SizedBox(height: isSmallScreen ? 18 : 22),
-          
+
           _buildInfoCard(
             icon: Icons.tag_outlined,
             label: 'Transaction Hash',
@@ -425,9 +417,9 @@ class PayslipEntryDetailsView extends ConsumerWidget {
             isFullWidth: true,
             isTablet: isTablet,
           ),
-          
+
           SizedBox(height: isTablet ? 14 : 12),
-          
+
           Row(
             children: [
               Expanded(
@@ -688,6 +680,7 @@ class PayslipEntryDetailsView extends ConsumerWidget {
                 try {
                   await OpenFile.open(filePath);
                 } catch (e) {
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(

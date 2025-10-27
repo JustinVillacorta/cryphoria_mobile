@@ -17,10 +17,9 @@ class FinancialPerformanceChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate the maximum value for scaling
     final maxValue = [capitalGains, capitalLosses, netPnl.abs(), totalExpenses]
         .reduce((a, b) => a > b ? a : b);
-    
+
     return Container(
       height: 320,
       padding: const EdgeInsets.all(20),
@@ -30,7 +29,7 @@ class FinancialPerformanceChart extends StatelessWidget {
         border: Border.all(color: Colors.grey[200]!, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

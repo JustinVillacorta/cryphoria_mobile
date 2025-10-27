@@ -23,23 +23,21 @@ class EmployeeNavBar extends StatelessWidget {
           child: Container(
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1), // Match navbar_widget background
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(30.0),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1.0,
               ),
               boxShadow: [
-                // main subtle shadow
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 20,
                   spreadRadius: 2,
                   offset: const Offset(0, 6),
                 ),
-                // faint top highlight for glass effect
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   blurRadius: 4,
                   offset: const Offset(0, -1),
                 ),
@@ -49,8 +47,8 @@ class EmployeeNavBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildNavItem(CupertinoIcons.house, 0),
-                _buildNavItem(CupertinoIcons.doc_text, 1), // Payslip icon
-                _buildNavItem(CupertinoIcons.person, 2), // User Profile
+                _buildNavItem(CupertinoIcons.doc_text, 1),
+                _buildNavItem(CupertinoIcons.person, 2),
               ],
             ),
           ),

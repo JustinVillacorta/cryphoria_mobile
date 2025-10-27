@@ -62,8 +62,8 @@ class ProfileHeader extends StatelessWidget {
               ringColor: effectiveRingColor,
               imageUrl: imageUrl,
               initials: initials ?? _initialsFrom(title),
-              child: customAvatar,
               onEdit: onEdit,
+              child: customAvatar,
             ),
             const SizedBox(height: 16),
             Text(
@@ -80,7 +80,7 @@ class ProfileHeader extends StatelessWidget {
               Text(
                 subtitle!,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -130,11 +130,11 @@ class _Avatar extends StatelessWidget {
           padding: EdgeInsets.all(ringWidth),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             border: Border.all(color: ringColor, width: ringWidth),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),

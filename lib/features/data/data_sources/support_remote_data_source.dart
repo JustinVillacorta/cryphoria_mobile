@@ -28,13 +28,9 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
     required String priority,
     List<File>? attachments,
   }) async {
-    print("🌐 SupportRemoteDataSource.submitSupportTicket called");
-    print("📋 Support ticket: subject=$subject, category=$category, priority=$priority");
-    
+
     try {
-      print("📤 Making POST request to /api/support/submit/");
-      
-      // Build FormData for multipart request
+
       final formData = FormData.fromMap({
         'subject': subject,
         'message': message,
@@ -42,9 +38,7 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
         'priority': priority,
       });
 
-      // Add attachments if provided
       if (attachments != null && attachments.isNotEmpty) {
-        print("📎 Adding ${attachments.length} attachment(s)");
         for (int i = 0; i < attachments.length; i++) {
           final file = attachments[i];
           if (file.existsSync()) {
@@ -71,9 +65,6 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
         ),
       );
 
-      print("📥 Submit support ticket response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = response.data;
@@ -82,22 +73,17 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
         throw Exception('Failed to submit support ticket: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ DioException in submitSupportTicket: $e");
       if (e.response != null) {
-        print("❌ Response data: ${e.response?.data}");
-        print("❌ Response status: ${e.response?.statusCode}");
-        
-        // Parse API error response format
+
         final responseData = e.response?.data;
         if (responseData is Map<String, dynamic>) {
           if (responseData.containsKey('message')) {
             final message = responseData['message'] as String;
-            
-            // Parse validation errors if they exist
+
             if (responseData.containsKey('errors') && responseData['errors'] is Map<String, dynamic>) {
               final errors = responseData['errors'] as Map<String, dynamic>;
               final errorMessages = <String>[];
-              
+
               errors.forEach((field, fieldErrors) {
                 if (fieldErrors is List) {
                   for (final error in fieldErrors) {
@@ -107,12 +93,12 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
                   errorMessages.add('$field: $fieldErrors');
                 }
               });
-              
+
               if (errorMessages.isNotEmpty) {
-                throw Exception('${message}: ${errorMessages.join(', ')}');
+                throw Exception('$message: ${errorMessages.join(', ')}');
               }
             }
-            
+
             throw Exception(message);
           }
         }
@@ -123,11 +109,9 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
 
   @override
   Future<List<SupportMessage>> getSupportMessages() async {
-    print("🌐 SupportRemoteDataSource.getSupportMessages called");
-    
+
     try {
-      print("📤 Making GET request to /api/support/messages/");
-      
+
       final response = await dio.get(
         '/api/support/messages/',
         options: Options(
@@ -136,14 +120,10 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
         ),
       );
 
-      print("📥 Get support messages response:");
-      print("📊 Status code: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
 
       if (response.statusCode == 200) {
         final responseData = response.data;
         if (responseData is Map<String, dynamic>) {
-          // Handle the actual API response format: {success: true, data: {messages: [...], total: 1, offset: 0, limit: 50}}
           if (responseData.containsKey('success') && responseData.containsKey('data')) {
             final data = responseData['data'] as Map<String, dynamic>;
             if (data.containsKey('messages')) {
@@ -153,7 +133,6 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
                   .toList();
             }
           }
-          // Handle paginated response format
           else if (responseData.containsKey('results')) {
             final results = responseData['results'] as List;
             return results
@@ -170,10 +149,7 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
         throw Exception('Failed to get support messages: ${response.statusMessage}');
       }
     } on DioException catch (e) {
-      print("❌ DioException in getSupportMessages: $e");
       if (e.response != null) {
-        print("❌ Response data: ${e.response?.data}");
-        print("❌ Response status: ${e.response?.statusCode}");
       }
       throw Exception('Network error: ${e.message}');
     }

@@ -46,6 +46,7 @@ class SupportTicketModel extends SupportTicket {
   }
 
   @override
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -120,6 +121,7 @@ class SupportMessageModel extends SupportMessage {
     );
   }
 
+  @override
   @override
   Map<String, dynamic> toJson() {
     return {

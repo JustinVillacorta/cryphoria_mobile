@@ -1,4 +1,3 @@
-// lib/features/domain/entities/payroll_entry.dart
 
 class PayrollEntry {
   final String? id;

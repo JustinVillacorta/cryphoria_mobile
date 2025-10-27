@@ -6,11 +6,11 @@ import 'package:cryphoria_mobile/core/error/exceptions.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   final AuthUser currentUser;
-  
+
   const EditProfileScreen({
-    Key? key,
+    super.key,
     required this.currentUser,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -71,7 +71,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // Form Fields
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -96,7 +95,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               ),
 
-              // Action Buttons
               Row(
                 children: [
                   Expanded(
@@ -201,7 +199,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   void _saveChanges() async {
     if (!mounted) return;
-    
+
     if (_formKey.currentState!.validate()) {
       try {
         final updatedUser = await ref.read(editProfileProvider.notifier).updateProfileAndReturn(
@@ -213,7 +211,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           securityQuestion: _securityQuestionController.text.trim(),
           securityAnswer: _securityAnswerController.text.trim(),
         );
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -233,7 +231,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           } else {
             errorMessage = 'An unexpected error occurred';
           }
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(errorMessage),
