@@ -33,12 +33,10 @@ class _AuditResultsScreenState extends ConsumerState<AuditResultsScreen>
     _tabController = TabController(length: 2, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // If an audit report was passed directly, use it
       if (widget.auditReport != null) {
         _currentAuditReport = widget.auditReport;
         setState(() {});
       } else {
-        // Otherwise, check the state from the provider
         final mainState = ref.read(auditFlowViewModelProvider);
         if (mainState.currentAuditReport != null) {
           _currentAuditReport = mainState.currentAuditReport;

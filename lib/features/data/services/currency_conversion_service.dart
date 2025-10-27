@@ -5,10 +5,8 @@ class CurrencyConversionService {
   final Dio _dio;
   static const String _backendBaseUrl = 'http://localhost:8000/api';
 
-  /// Constructor accepts Dio instance for backend API calls
   CurrencyConversionService({Dio? dio}) : _dio = dio ?? Dio();
 
-  /// Converts ETH amount to PHP
   Future<double> convertETHToPHP(double ethAmount) async {
     try {
       final rate = await getETHToPHPRate();
@@ -19,7 +17,6 @@ class CurrencyConversionService {
     }
   }
 
-  /// Converts ETH amount to USD
   Future<double> convertETHToUSD(double ethAmount) async {
     try {
       final rate = await getETHToUSDRate();
@@ -30,17 +27,15 @@ class CurrencyConversionService {
     }
   }
 
-  /// Gets both PHP and USD rates for ETH in a single API call from backend
   Future<Map<String, double>> getETHRates() async {
     debugPrint('🔄 Fetching real-time ETH rates from backend...');
     
     try {
-      // Call backend exchange rate endpoint with correct parameters
       final response = await _dio.get(
         '$_backendBaseUrl/rates/current/',
         queryParameters: {
-          'symbols': 'ETH',  // Backend expects 'symbols' not 'crypto_symbol'
-          'currency': 'USD', // Get USD first, then convert to PHP
+          'symbols': 'ETH',
+          'currency': 'USD',
         },
         options: Options(
           sendTimeout: const Duration(seconds: 10),
@@ -54,7 +49,7 @@ class CurrencyConversionService {
       if (response.statusCode == 200 && response.data['success'] == true) {
         final rates = response.data['rates'] as Map<String, dynamic>? ?? {};
         final usdRate = rates['ETH']?.toDouble() ?? 3200.0;
-        final phpRate = usdRate * 56.0; // Convert USD to PHP (1 USD ≈ 56 PHP)
+        final phpRate = usdRate * 56.0;
         
         debugPrint('✅ Real-time rates from backend: USD: \$$usdRate, PHP: ₱$phpRate');
         
@@ -68,24 +63,21 @@ class CurrencyConversionService {
     } catch (e) {
       debugPrint('🚨 Error fetching ETH rates from backend: $e');
       
-      // Fallback: Try PHP rate directly
       try {
         debugPrint('🔄 Trying PHP conversion endpoint...');
         return await _getETHRatesFromConversionEndpoint();
       } catch (conversionError) {
         debugPrint('🚨 Error with conversion endpoint fallback: $conversionError');
         
-        // Use fallback rates as last resort
         debugPrint('⚠️ Using fallback rates - backend unavailable');
         return {
-          'php': 179200.0, // Fallback: 1 ETH ≈ 179,200 PHP  
-          'usd': 3200.0,   // Fallback: 1 ETH ≈ 3,200 USD
+          'php': 179200.0,
+          'usd': 3200.0,
         };
       }
     }
   }
 
-  /// Alternative method using backend conversion endpoint
   Future<Map<String, double>> _getETHRatesFromConversionEndpoint() async {
     debugPrint('🔄 Using conversion endpoint fallback...');
     
@@ -93,7 +85,7 @@ class CurrencyConversionService {
       _dio.post(
         '$_backendBaseUrl/conversion/crypto-to-fiat/',
         data: {
-          'value': '1',  // Updated to use new API format
+          'value': '1',
           'from': 'ETH',
           'to': 'PHP',
         },
@@ -101,7 +93,7 @@ class CurrencyConversionService {
       _dio.post(
         '$_backendBaseUrl/conversion/crypto-to-fiat/',
         data: {
-          'value': '1',  // Updated to use new API format
+          'value': '1',
           'from': 'ETH',
           'to': 'USD',
         },
@@ -125,19 +117,16 @@ class CurrencyConversionService {
     };
   }
 
-  /// Gets the current ETH to PHP exchange rate
   Future<double> getETHToPHPRate() async {
     final rates = await getETHRates();
     return rates['php'] ?? 200000.0;
   }
 
-  /// Gets the current ETH to USD exchange rate
   Future<double> getETHToUSDRate() async {
     final rates = await getETHRates();
     return rates['usd'] ?? 3200.0;
   }
 
-  /// Formats PHP amount with proper currency formatting
   String formatPHPAmount(double amount) {
     if (amount >= 1000000) {
       return '₱${(amount / 1000000).toStringAsFixed(2)}M';
@@ -148,7 +137,6 @@ class CurrencyConversionService {
     }
   }
 
-  /// Formats USD amount with proper currency formatting
   String formatUSDAmount(double amount) {
     if (amount >= 1000000) {
       return '\$${(amount / 1000000).toStringAsFixed(2)}M';
@@ -159,7 +147,6 @@ class CurrencyConversionService {
     }
   }
 
-  /// Formats ETH amount with proper decimal places
   String formatETHAmount(double amount) {
     if (amount >= 1.0) {
       return '${amount.toStringAsFixed(4)} ETH';
@@ -168,7 +155,6 @@ class CurrencyConversionService {
     }
   }
 
-  /// Convert cryptocurrency to fiat using the new API format
   Future<Map<String, dynamic>> convertCryptoToFiat({
     required String value,
     required String from,
@@ -195,10 +181,8 @@ class CurrencyConversionService {
       debugPrint('📊 Response data type: ${response.data.runtimeType}');
 
       if (response.statusCode == 200) {
-        // Check if response has success field
         if (response.data is Map && response.data.containsKey('success')) {
           if (response.data['success'] == true) {
-            // Parse the actual response structure: {"success":true,"content":[{"crypto":"ETH","fiat":"PHP","quantity":1.0,"unit_price":259466.0,"total_value":259466.0}]}
             final content = response.data['content'] as List?;
             if (content != null && content.isNotEmpty) {
               final conversionData = content[0] as Map<String, dynamic>;
@@ -220,7 +204,6 @@ class CurrencyConversionService {
             throw Exception('Conversion failed: ${response.data['error'] ?? 'Unknown error'}');
           }
         } else {
-          // Response doesn't have success field, assume it's successful if status is 200
           final result = response.data is Map ? response.data : {'converted_amount': response.data};
           debugPrint('✅ Conversion successful (no success field): $value $from = ${result['converted_amount']} $to');
           debugPrint('📊 Result data: $result');

@@ -1,6 +1,3 @@
-// lib/features/data/services/smart_invest_service.dart
-
-
 import 'wallet_service.dart';
 import '../../domain/entities/smart_invest.dart';
 
@@ -9,7 +6,6 @@ class SmartInvestService {
 
   SmartInvestService({required this.walletService});
 
-  /// Send investment using the existing sendEth method with investment parameters
   Future<SmartInvestResponse> sendInvestment({
     required String recipientAddress,
     required String amount,
@@ -19,26 +15,22 @@ class SmartInvestService {
   }) async {
     try {
 
-      // Parse amount to double
       final parsedAmount = double.tryParse(amount);
       if (parsedAmount == null) {
         throw Exception('Invalid amount format: $amount');
       }
 
-      // Use the existing sendEth method with investment parameters
-      
       final result = await walletService.sendEth(
         toAddress: recipientAddress,
         amount: parsedAmount,
-        company: investorName, // Use investor name as company
-        category: category ?? 'INVESTMENT', // Default to 'INVESTMENT' if not provided
+        company: investorName,
+        category: category ?? 'INVESTMENT',
         description: description,
-        isInvesting: true, // Always true for smart investments
-        investorName: investorName, // Pass investor name separately
+        isInvesting: true,
+        investorName: investorName,
       );
 
 
-      // Convert the result to SmartInvestResponse format
       return SmartInvestResponse(
         success: true,
         message: 'Investment sent successfully',

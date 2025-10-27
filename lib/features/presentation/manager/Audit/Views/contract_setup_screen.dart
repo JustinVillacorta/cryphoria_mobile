@@ -707,7 +707,6 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
         );
       }
 
-      // Use the provider's notifier
       final contractViewModel = ref.read(auditUploadViewModelProvider.notifier);
       
       contractViewModel.updateContractName(_contractNameController.text.trim());
@@ -724,7 +723,6 @@ class _ContractSetupScreenState extends ConsumerState<ContractSetupScreen> {
         throw Exception(state.error ?? 'Upload failed');
       }
 
-      // Get the current state to access the audit report
       final state = ref.read(auditUploadViewModelProvider);
       if (state.currentAuditReport != null) {
         ref.read(auditFlowViewModelProvider.notifier).setCurrentAuditReport(state.currentAuditReport!);

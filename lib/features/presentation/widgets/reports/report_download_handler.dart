@@ -10,7 +10,6 @@ class ReportDownloadHandler {
   }) async {
     final scaffoldContext = context;
     try {
-      // Show loading dialog
       showDialog(
         context: scaffoldContext,
         barrierDismissible: false,
@@ -22,15 +21,12 @@ class ReportDownloadHandler {
         ),
       );
 
-      // Generate file
       final filePath = await generateFile();
 
-      // Close loading dialog
       if (scaffoldContext.mounted) {
         Navigator.of(scaffoldContext, rootNavigator: true).pop();
       }
 
-      // Show success snackbar
       if (scaffoldContext.mounted) {
         ScaffoldMessenger.of(scaffoldContext).showSnackBar(
           SnackBar(
@@ -80,12 +76,10 @@ class ReportDownloadHandler {
         );
       }
     } catch (e) {
-      // Close loading dialog if still showing
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
-      // Show error snackbar
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

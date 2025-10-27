@@ -472,7 +472,6 @@ class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
           employees.add(updatedEmployee);
         } catch (e) {
           debugPrint('⚠️ EmployeeRemoteDataSource.getManagerTeamWithWallets: Failed to add employee to list: $e');
-          // Skip this employee and continue with the rest
         }
       }
 

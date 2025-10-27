@@ -55,8 +55,6 @@ import '../features/domain/usecases/Employee_management/get_all_employees_usecas
 import '../features/domain/usecases/Employee_management/get_manager_team_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_manager_team_with_wallets_usecase.dart';
 import '../features/domain/usecases/Employee_management/get_payslips_usecase.dart';
-
-// Payslip imports
 import '../features/data/data_sources/payslip_remote_data_source.dart';
 import '../features/data/repositories_impl/payslip_repository_impl.dart';
 import '../features/domain/repositories/payslip_repository.dart';
@@ -68,8 +66,6 @@ import '../features/presentation/manager/Payslip/ViewModels/payslip_list_viewmod
 import '../features/presentation/manager/Payslip/ViewModels/payslip_list_state.dart';
 import '../features/presentation/manager/Payslip/ViewModels/create_payslip_viewmodel.dart';
 import '../features/presentation/manager/Payslip/ViewModels/create_payslip_state.dart';
-
-// Payroll imports
 import '../features/data/data_sources/payroll_remote_data_source.dart';
 import '../features/data/repositories/payroll_repository_impl.dart';
 import '../features/domain/repositories/payroll_repository.dart';
@@ -134,9 +130,8 @@ final baseUrlProvider = Provider<String>((ref) {
 final flutterSecureStorageProvider =
     Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
 
-// for username fetching
 final userProvider = StateProvider<AuthUser?>((ref) {
-  ref.keepAlive(); // Cache user state to prevent recreation on navigation
+  ref.keepAlive();
   return null;
 });
 
@@ -150,9 +145,9 @@ final dioClientProvider = Provider<DioClient>((ref) {
   final dio = Dio()
     ..options = BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 480),  // Increased to 60 seconds
-      receiveTimeout: const Duration(seconds: 480),  // Increased to 60 seconds
-      sendTimeout: const Duration(seconds: 480),     // Add send timeout too
+      connectTimeout: const Duration(seconds: 480),
+      receiveTimeout: const Duration(seconds: 480),
+      sendTimeout: const Duration(seconds: 480),
     );
 
   return DioClient(
@@ -263,7 +258,6 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   );
 });
 
-// Profile use cases
 final getProfileUseCaseProvider = Provider<GetProfile>((ref) {
   return GetProfile(ref.watch(authRepositoryProvider));
 });
@@ -380,10 +374,6 @@ final getUserReportsUseCaseProvider = Provider<GetUserReportsUseCase>((ref) {
   return GetUserReportsUseCase(ref.watch(reportsRepositoryProvider));
 });
 
-// -----------------------------------------------------------------------------
-// ViewModels / Controllers / Notifiers
-// -----------------------------------------------------------------------------
-
 final loginViewModelProvider =
     StateNotifierProvider<LoginViewModel, LoginState>((ref) {
   return LoginViewModel(
@@ -432,7 +422,6 @@ final logoutViewModelProvider =
 
 final homeEmployeeNotifierProvider =
     StateNotifierProvider<HomeEmployeeNotifier, HomeEmployeeState>((ref) {
-  // Home employee provider refreshes to get real-time data
   return HomeEmployeeNotifier(
     walletService: ref.watch(walletServiceProvider),
     transactionsDataSource: ref.watch(transactionsDataSourceProvider),
@@ -442,14 +431,13 @@ final homeEmployeeNotifierProvider =
 
 final walletNotifierProvider =
     StateNotifierProvider<WalletNotifier, WalletState>((ref) {
-  ref.keepAlive(); // Keep wallet provider alive to prevent recreation
+  ref.keepAlive();
   return WalletNotifier(
     walletService: ref.watch(walletServiceProvider),
     ethTransactionDataSource: ref.watch(ethTransactionDataSourceProvider),
   );
 });
 
-// Audit Upload ViewModel - Handles contract upload form & validation
 final auditUploadViewModelProvider =
     StateNotifierProvider<AuditUploadViewModel, AuditUploadState>((ref) {
   return AuditUploadViewModel(
@@ -457,7 +445,6 @@ final auditUploadViewModelProvider =
   );
 });
 
-// Audit Flow ViewModel - Handles multi-step workflow navigation
 final auditFlowViewModelProvider =
     StateNotifierProvider<AuditFlowViewModel, AuditFlowState>((ref) {
   return AuditFlowViewModel();
@@ -478,8 +465,6 @@ final employeeViewModelProvider =
 final selectedPageProvider = StateProvider<int>((ref) => 0);
 final selectedEmployeePageProvider = StateProvider<int>((ref) => 0);
 
-
-// Data Sources
 final payslipRemoteDataSourceProvider = Provider<PayslipRemoteDataSource>((ref) {
   return PayslipRemoteDataSourceImpl(
     dio: ref.watch(dioClientProvider).dio,
@@ -511,7 +496,6 @@ final processPayslipPaymentUseCaseProvider = Provider<ProcessPayslipPaymentUseCa
   return ProcessPayslipPaymentUseCase(ref.watch(payslipRepositoryProvider));
 });
 
-// ViewModels
 final payslipListViewModelProvider = StateNotifierProvider<PayslipListViewModel, PayslipListState>((ref) {
   return PayslipListViewModel(ref.watch(getUserPayslipsUseCaseProvider));
 });
@@ -533,7 +517,6 @@ final payrollRepositoryProvider = Provider<PayrollRepository>((ref) {
   );
 });
 
-// Use Cases
 final createPayrollPeriodUseCaseProvider = Provider<CreatePayrollPeriodUseCase>((ref) {
   return CreatePayrollPeriodUseCase(repository: ref.watch(payrollRepositoryProvider));
 });
@@ -554,7 +537,6 @@ final getPayrollAnalyticsUseCaseProvider = Provider<GetPayrollAnalyticsUseCase>(
   return GetPayrollAnalyticsUseCase(repository: ref.watch(payrollRepositoryProvider));
 });
 
-// ViewModel
 final payrollViewModelProvider = StateNotifierProvider<PayrollViewModel, PayrollState>((ref) {
   return PayrollViewModel(
     getPayrollPeriodsUseCase: ref.watch(getPayrollPeriodsUseCaseProvider),
@@ -576,27 +558,23 @@ final invoiceRepositoryProvider = Provider<InvoiceRepository>((ref) {
   );
 });
 
-// --- UseCase providers ---
 final getInvoicesByUserUseCaseProvider = Provider<GetInvoicesByUser>((ref) {
   return GetInvoicesByUser(ref.read(invoiceRepositoryProvider));
 });
 
-final getInvoiceByIdUseCaseProvider = Provider<GetInvoiceById>((ref) {  // Renamed
+final getInvoiceByIdUseCaseProvider = Provider<GetInvoiceById>((ref) {
   return GetInvoiceById(ref.read(invoiceRepositoryProvider));
 });
 
-// --- Async providers used by the UI ---
-// Fetch invoices for a given userId
 final invoicesByUserProvider = FutureProvider.family<List<Invoice>, String>((ref, userId) async {
-  ref.keepAlive(); // Cache data to prevent unnecessary refetches on navigation
+  ref.keepAlive();
   final getInvoices = ref.read(getInvoicesByUserUseCaseProvider);
   return await getInvoices(userId);
 });
 
-// Fetch a single invoice by invoiceId
 final invoiceByIdProvider = FutureProvider.family<Invoice, String>((ref, invoiceId) async {
-  ref.keepAlive(); // Cache data to prevent unnecessary refetches on navigation
-  final getInvoice = ref.read(getInvoiceByIdUseCaseProvider);  // Now references the correct provider
+  ref.keepAlive();
+  final getInvoice = ref.read(getInvoiceByIdUseCaseProvider);
   return await getInvoice(invoiceId);
 });
 
@@ -618,7 +596,6 @@ final supportRemoteDataSourceProvider = Provider<SupportRemoteDataSource>((ref) 
   return SupportRemoteDataSourceImpl(dio: ref.watch(dioClientProvider).dio);
 });
 
-// Repository
 final supportRepositoryProvider = Provider<SupportRepository>((ref) {
   return SupportRepositoryImpl(
     remoteDataSource: ref.watch(supportRemoteDataSourceProvider),
