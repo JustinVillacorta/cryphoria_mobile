@@ -356,7 +356,6 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
               if (!mounted) return;
               
               if (authUser != null) {
-                if (!mounted) return;
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -370,13 +369,14 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                   _loadUserData();
                 }
               } else {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('User data not found. Please log in again.'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('User data not found. Please log in again.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             child: Container(

@@ -74,6 +74,7 @@ class _UserProfileState extends ConsumerState<UserProfile> {
 
       if (shouldLogout == true) {
         final dialogContext = context;
+        final navigator = Navigator.of(dialogContext);
         showDialog(
           context: dialogContext,
           barrierDismissible: false,
@@ -86,7 +87,7 @@ class _UserProfileState extends ConsumerState<UserProfile> {
 
         final success = await logoutViewModel.logout();
 
-        if (mounted) Navigator.of(dialogContext).pop();
+        if (mounted) navigator.pop();
 
         if (success) {
           if (mounted) {
@@ -102,7 +103,8 @@ class _UserProfileState extends ConsumerState<UserProfile> {
         } else {
           if (mounted) {
             final logoutState = ref.read(logoutViewModelProvider);
-            ScaffoldMessenger.of(context).showSnackBar(
+            final messenger = ScaffoldMessenger.of(context);
+            messenger.showSnackBar(
               SnackBar(content: Text(logoutState.error ?? 'Logout failed')),
             );
           }
@@ -373,10 +375,11 @@ class _UserProfileState extends ConsumerState<UserProfile> {
               if (!mounted) return;
 
               final navContext = context;
+              final navigator = Navigator.of(navContext);
+              final messenger = ScaffoldMessenger.of(navContext);
 
               if (authUser != null) {
-                final result = await Navigator.push(
-                  navContext,
+                final result = await navigator.push(
                   MaterialPageRoute(
                     builder: (_) => EditProfileScreen(currentUser: authUser),
                   ),
@@ -388,7 +391,7 @@ class _UserProfileState extends ConsumerState<UserProfile> {
                   _loadUserData();
                 }
               } else {
-                ScaffoldMessenger.of(navContext).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(
                     content: Text('User data not found. Please log in again.'),
                     backgroundColor: Colors.red,

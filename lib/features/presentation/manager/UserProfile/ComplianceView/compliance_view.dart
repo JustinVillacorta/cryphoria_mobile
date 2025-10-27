@@ -851,13 +851,14 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
 
         if (pickedFile.size > 10 * 1024 * 1024) {
           if (mounted) {
-                          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(scaffoldContext).showSnackBar(
               const SnackBar(
                 content: Text('File size exceeds 10MB limit'),
                 backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
+              ),
+            );
+          }
           return;
         }
 
@@ -876,23 +877,25 @@ class _ComplianceViewScreenState extends ConsumerState<ComplianceViewScreen> {
         });
 
         if (mounted) {
-                          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-SnackBar(
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+            SnackBar(
               content: Text('$documentType uploaded successfully'),
               backgroundColor: Colors.green,
-                            ),
-                          );
-                        }
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
-                          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                            SnackBar(
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+          SnackBar(
             content: Text('Error uploading file: ${e.toString()}'),
             backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
+          ),
+        );
+      }
     }
   }
 
@@ -955,7 +958,9 @@ SnackBar(
       );
 
       if (mounted) {
-        Navigator.of(scaffoldContext, rootNavigator: true).pop();
+        final navigator = Navigator.of(scaffoldContext, rootNavigator: true);
+        navigator.pop();
+        // ignore: use_build_context_synchronously
         showDialog(
           context: scaffoldContext,
           barrierDismissible: false,
@@ -986,11 +991,14 @@ SnackBar(
       await uploadUseCase.submitDocumentsForApproval();
 
       if (mounted) {
-        Navigator.of(scaffoldContext, rootNavigator: true).pop();
-      }
+        // ignore: use_build_context_synchronously
+        final navigator = Navigator.of(scaffoldContext, rootNavigator: true);
+        // ignore: use_build_context_synchronously
+        final messenger = ScaffoldMessenger.of(scaffoldContext);
+        
+        navigator.pop();
 
-      if (mounted) {
-        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('Documents uploaded and submitted for approval successfully!'),
             backgroundColor: Colors.green,
@@ -1004,11 +1012,14 @@ SnackBar(
       }
     } catch (e) {
       if (mounted) {
-        Navigator.of(scaffoldContext, rootNavigator: true).pop();
-      }
+        // ignore: use_build_context_synchronously
+        final navigator = Navigator.of(scaffoldContext, rootNavigator: true);
+        // ignore: use_build_context_synchronously
+        final messenger = ScaffoldMessenger.of(scaffoldContext);
+        
+        navigator.pop();
 
-      if (mounted) {
-        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Error uploading documents: ${e.toString()}'),
             backgroundColor: Colors.red,

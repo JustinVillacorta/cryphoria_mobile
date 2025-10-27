@@ -1091,10 +1091,11 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
               label: 'Open',
               textColor: Colors.white,
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 try {
                   await OpenFile.open(filePath);
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text(
                         'Could not open file: $e',
@@ -1199,10 +1200,11 @@ class _PayrollSummaryScreenState extends ConsumerState<PayrollSummaryScreen> {
               label: 'Open',
               textColor: Colors.white,
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 try {
                   await OpenFile.open(filePath);
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text(
                         'Could not open file: $e',

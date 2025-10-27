@@ -381,7 +381,7 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
                               ],
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ],
                   ),
@@ -532,7 +532,8 @@ class _HelpAndSupportViewState extends ConsumerState<HelpAndSupportView> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        final messenger = ScaffoldMessenger.of(scaffoldContext);
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Error picking files: $e'),
             backgroundColor: Colors.red,

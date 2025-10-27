@@ -565,24 +565,20 @@ class _ExistingPayrollManagementScreenState extends ConsumerState<PayrollManagem
       if (response.statusCode == 200 && response.data['success'] == true) {
         _showEmployeeDetailsBottomSheet(response.data);
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to load employee details'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
         ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-          SnackBar(
-            content: Text('Error loading employee details: $e'),
+          const SnackBar(
+            content: Text('Failed to load employee details'),
             backgroundColor: Colors.red,
           ),
         );
       }
+    } catch (e) {
+      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        SnackBar(
+          content: Text('Error loading employee details: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

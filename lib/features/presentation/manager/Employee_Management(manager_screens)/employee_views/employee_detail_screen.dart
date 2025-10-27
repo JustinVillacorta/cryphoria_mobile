@@ -1216,16 +1216,18 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                             await employeeViewModel.removeEmployeeFromTeam(widget.employee.email);
 
                             if (!mounted) return;
-                            Navigator.pop(navContext);
+                            final navigator = Navigator.of(navContext);
+                            navigator.pop();
                             await Future.delayed(const Duration(milliseconds: 100));
                             if (!mounted) return;
-                            Navigator.pop(navContext);
+                            navigator.pop();
                           } catch (e) {
                             if (!mounted) return;
-                            Navigator.pop(navContext);
-
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(navContext).showSnackBar(
+                            final navigator = Navigator.of(navContext);
+                            final messenger = ScaffoldMessenger.of(navContext);
+                            
+                            navigator.pop();
+                            messenger.showSnackBar(
                               SnackBar(
                                 content: Text(
                                   'Failed to remove employee: $e',

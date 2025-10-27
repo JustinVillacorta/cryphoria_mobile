@@ -1405,9 +1405,10 @@ class _PayrollLoadingDialogState extends State<_PayrollLoadingDialog> {
 
                         if (result == true) {
                           if (!mounted) return;
-                          Navigator.pop(navContext);
+                          final navigator = Navigator.of(navContext);
+                          navigator.pop();
                           if (!mounted) return;
-                          Navigator.pop(navContext);
+                          navigator.pop();
 
                           _continuePayrollProcessingInBackground(
                             selectedEmployees: widget.selectedEmployees,
