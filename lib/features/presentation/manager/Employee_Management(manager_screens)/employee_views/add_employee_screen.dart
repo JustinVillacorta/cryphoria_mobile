@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
+import '../../../widgets/employee/employee_form_header.dart';
+import '../../../widgets/employee/employee_form_section_card.dart';
+import '../../../widgets/employee/employee_form_input_field.dart';
+import '../../../widgets/employee/employee_form_dropdown_field.dart';
+import '../../../widgets/employee/employee_form_bottom_actions.dart';
 
 class AddEmployeeScreen extends ConsumerStatefulWidget {
   const AddEmployeeScreen({super.key});
@@ -50,109 +55,34 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
       backgroundColor: const Color(0xFFF9FAFB),
       body: Column(
         children: [
-          _buildHeader(isSmallScreen, isTablet, isDesktop),
-          Expanded(
-            child: _buildCombinedForm(isSmallScreen, isTablet, isDesktop),
+          EmployeeFormHeader(
+            isSmallScreen: isSmallScreen,
+            isTablet: isTablet,
+            isDesktop: isDesktop,
+            onBackPressed: () => Navigator.pop(context),
+            title: 'Add Employee',
+            heading: 'Add New Employee',
+            subtitle: 'Fill in the employee details below',
+            icon: Icons.person_add_outlined,
           ),
-          _buildBottomActions(isSmallScreen, isTablet, isDesktop),
+          Expanded(
+            child: _buildForm(isSmallScreen, isTablet, isDesktop),
+          ),
+          EmployeeFormBottomActions(
+            isSubmitting: _isSubmitting,
+            isSmallScreen: isSmallScreen,
+            isTablet: isTablet,
+            isDesktop: isDesktop,
+            onCancel: () => Navigator.pop(context),
+            onSubmit: _submitForm,
+            submitButtonText: 'Add Employee',
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(bool isSmallScreen, bool isTablet, bool isDesktop) {
-    final titleSize = isDesktop ? 20.0 : isTablet ? 19.0 : 18.0;
-    final headingSize = isDesktop ? 26.0 : isTablet ? 24.0 : 22.0;
-    final subtitleSize = isDesktop ? 17.0 : isTablet ? 16.0 : 15.0;
-    final iconSize = isDesktop ? 68.0 : isTablet ? 64.0 : 60.0;
-
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF9747FF), Color(0xFF7B1FA2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            isDesktop ? 24 : isTablet ? 20 : 16,
-            isSmallScreen ? 4 : 8,
-            isDesktop ? 24 : isTablet ? 20 : 16,
-            isSmallScreen ? 16 : 20,
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: isTablet ? 26 : 24,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Text(
-                    'Add Employee',
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: titleSize,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  SizedBox(width: isTablet ? 52 : 48),
-                ],
-              ),
-              SizedBox(height: isSmallScreen ? 16 : 20),
-              Column(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(isTablet ? 18 : 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Icon(
-                      Icons.person_add_outlined,
-                      size: iconSize,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: isSmallScreen ? 12 : 14),
-                  Text(
-                    'Add New Employee',
-                    style: GoogleFonts.inter(
-                      fontSize: headingSize,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                      height: 1.2,
-                    ),
-                  ),
-                  SizedBox(height: isSmallScreen ? 4 : 6),
-                  Text(
-                    'Fill in the employee details below',
-                    style: GoogleFonts.inter(
-                      fontSize: subtitleSize,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontWeight: FontWeight.w400,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCombinedForm(bool isSmallScreen, bool isTablet, bool isDesktop) {
+  Widget _buildForm(bool isSmallScreen, bool isTablet, bool isDesktop) {
     final padding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
     final maxWidth = isDesktop ? 700.0 : isTablet ? 600.0 : double.infinity;
 
@@ -166,7 +96,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionCard(
+                EmployeeFormSectionCard(
                   icon: Icons.person_outline,
                   title: 'Employee Information',
                   isSmallScreen: isSmallScreen,
@@ -174,13 +104,14 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                   isDesktop: isDesktop,
                   children: [
                     SizedBox(height: isSmallScreen ? 14 : 16),
-                    _buildInputField(
+                    EmployeeFormInputField(
                       controller: _fullNameController,
                       label: 'Full Name',
                       hint: 'Enter employee full name',
                       icon: Icons.person_outline,
                       isSmallScreen: isSmallScreen,
                       isTablet: isTablet,
+                      enabled: !_isSubmitting,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Full name is required';
@@ -189,7 +120,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                       },
                     ),
                     SizedBox(height: isSmallScreen ? 16 : 20),
-                    _buildInputField(
+                    EmployeeFormInputField(
                       controller: _emailController,
                       label: 'Email Address',
                       hint: 'Enter employee email',
@@ -197,6 +128,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                       keyboardType: TextInputType.emailAddress,
                       isSmallScreen: isSmallScreen,
                       isTablet: isTablet,
+                      enabled: !_isSubmitting,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Email is required';
@@ -208,7 +140,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                       },
                     ),
                     SizedBox(height: isSmallScreen ? 16 : 20),
-                    _buildInputField(
+                    EmployeeFormInputField(
                       controller: _phoneController,
                       label: 'Phone Number',
                       hint: 'Enter phone number',
@@ -216,6 +148,7 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                       keyboardType: TextInputType.phone,
                       isSmallScreen: isSmallScreen,
                       isTablet: isTablet,
+                      enabled: !_isSubmitting,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Phone number is required';
@@ -224,13 +157,14 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                       },
                     ),
                     SizedBox(height: isSmallScreen ? 16 : 20),
-                    _buildInputField(
+                    EmployeeFormInputField(
                       controller: _positionController,
                       label: 'Job Position',
                       hint: 'Enter job position',
                       icon: Icons.work_outline,
                       isSmallScreen: isSmallScreen,
                       isTablet: isTablet,
+                      enabled: !_isSubmitting,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Position is required';
@@ -239,329 +173,27 @@ class _AddEmployeeScreenState extends ConsumerState<AddEmployeeScreen> {
                       },
                     ),
                     SizedBox(height: isSmallScreen ? 16 : 20),
-                    _buildDropdownField(isSmallScreen, isTablet),
+                    EmployeeFormDropdownField(
+                      label: 'Department',
+                      value: _selectedDepartment,
+                      items: _departments,
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedDepartment = value;
+                          });
+                        }
+                      },
+                      icon: Icons.business_outlined,
+                      isSmallScreen: isSmallScreen,
+                      isTablet: isTablet,
+                      enabled: !_isSubmitting,
+                    ),
                   ],
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionCard({
-    required IconData icon,
-    required String title,
-    required bool isSmallScreen,
-    required bool isTablet,
-    required bool isDesktop,
-    required List<Widget> children,
-  }) {
-    final cardPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 18.0;
-    final titleSize = isDesktop ? 19.0 : isTablet ? 18.0 : 17.0;
-    final iconSize = isTablet ? 24.0 : 22.0;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(isTablet ? 10 : 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF9747FF).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: const Color(0xFF9747FF),
-                    size: iconSize,
-                  ),
-                ),
-                SizedBox(width: isTablet ? 14 : 12),
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: titleSize,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1A1A1A),
-                    letterSpacing: -0.3,
-                  ),
-                ),
-              ],
-            ),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    required bool isSmallScreen,
-    required bool isTablet,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-  }) {
-    final labelSize = isTablet ? 16.0 : 15.0;
-    final hintSize = isTablet ? 15.0 : 14.0;
-    final iconSize = isTablet ? 22.0 : 20.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: labelSize,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1A1A1A),
-            height: 1.3,
-          ),
-        ),
-        SizedBox(height: isSmallScreen ? 6 : 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          validator: validator,
-          enabled: !_isSubmitting,
-          style: GoogleFonts.inter(
-            fontSize: hintSize,
-            fontWeight: FontWeight.w400,
-            color: const Color(0xFF1A1A1A),
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: GoogleFonts.inter(
-              color: const Color(0xFF6B6B6B),
-              fontSize: hintSize,
-              fontWeight: FontWeight.w400,
-            ),
-            prefixIcon: Icon(icon, color: const Color(0xFF9747FF), size: iconSize),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF9747FF), width: 2),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 1.5),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 2),
-            ),
-            filled: true,
-            fillColor: const Color(0xFFF9FAFB),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 18 : 16,
-              vertical: isTablet ? 16 : 14,
-            ),
-            errorStyle: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownField(bool isSmallScreen, bool isTablet) {
-    final labelSize = isTablet ? 16.0 : 15.0;
-    final dropdownSize = isTablet ? 15.0 : 14.0;
-    final iconSize = isTablet ? 22.0 : 20.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Department',
-          style: GoogleFonts.inter(
-            fontSize: labelSize,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1A1A1A),
-            height: 1.3,
-          ),
-        ),
-        SizedBox(height: isSmallScreen ? 6 : 8),
-        DropdownButtonFormField<String>(
-          value: _selectedDepartment,
-          items: _departments.map((department) {
-            return DropdownMenuItem(
-              value: department,
-              child: Text(
-                department,
-                style: GoogleFonts.inter(
-                  fontSize: dropdownSize,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFF1A1A1A),
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: _isSubmitting ? null : (value) {
-            if (value != null) {
-              setState(() {
-                _selectedDepartment = value;
-              });
-            }
-          },
-          decoration: InputDecoration(
-            prefixIcon: Icon(
-              Icons.business_outlined,
-              color: const Color(0xFF9747FF),
-              size: iconSize,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF9747FF), width: 2),
-            ),
-            filled: true,
-            fillColor: const Color(0xFFF9FAFB),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 18 : 16,
-              vertical: isTablet ? 16 : 14,
-            ),
-          ),
-          icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: const Color(0xFF6B6B6B),
-            size: isTablet ? 26 : 24,
-          ),
-          style: GoogleFonts.inter(
-            fontSize: dropdownSize,
-            fontWeight: FontWeight.w400,
-            color: const Color(0xFF1A1A1A),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomActions(bool isSmallScreen, bool isTablet, bool isDesktop) {
-    final buttonPadding = isTablet ? 16.0 : 14.0;
-    final fontSize = isTablet ? 17.0 : 16.0;
-    final horizontalPadding = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        horizontalPadding,
-        isSmallScreen ? 14 : 16,
-        horizontalPadding,
-        isSmallScreen ? 14 : 16,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: _isSubmitting ? null : () => Navigator.pop(context),
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: buttonPadding),
-                  side: BorderSide(
-                    color: _isSubmitting 
-                        ? const Color(0xFFE5E5E5) 
-                        : const Color(0xFF9747FF),
-                    width: 1.5,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.inter(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.w600,
-                    color: _isSubmitting 
-                        ? const Color(0xFF6B6B6B) 
-                        : const Color(0xFF9747FF),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: isTablet ? 16 : 14),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : () => _submitForm(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9747FF),
-                  disabledBackgroundColor: const Color(0xFF9747FF).withValues(alpha: 0.5),
-                  padding: EdgeInsets.symmetric(vertical: buttonPadding),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                  shadowColor: const Color(0xFF9747FF).withValues(alpha: 0.3),
-                ),
-                child: _isSubmitting
-                    ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white.withValues(alpha: 0.8),
-                          ),
-                        ),
-                      )
-                    : Text(
-                        'Add Employee',
-                        style: GoogleFonts.inter(
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-              ),
-            ),
-          ],
         ),
       ),
     );
