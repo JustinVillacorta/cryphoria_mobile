@@ -22,8 +22,6 @@ class InvoiceFilterTabs extends StatelessWidget {
           _buildFilterTab('All'),
           SizedBox(width: isTablet ? 14 : 12),
           _buildFilterTab('Paid'),
-          SizedBox(width: isTablet ? 14 : 12),
-          _buildFilterTab('Pending'),
         ],
       ),
     );

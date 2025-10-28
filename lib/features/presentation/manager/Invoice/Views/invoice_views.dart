@@ -5,7 +5,6 @@ import 'package:cryphoria_mobile/features/presentation/widgets/dialogs/delete_co
 import 'package:cryphoria_mobile/features/presentation/widgets/invoice/swipable_invoice_card.card.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/skeletons/invoice_screen_skeleton.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/invoice/invoice_search_bar.dart';
-import 'package:cryphoria_mobile/features/presentation/widgets/invoice/invoice_filter_tabs.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/invoice/invoice_empty_state.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/invoice/invoice_error_state.dart';
 import 'package:cryphoria_mobile/features/presentation/widgets/invoice/invoice_loading_state.dart';
@@ -23,7 +22,6 @@ class InvoiceScreen extends ConsumerStatefulWidget {
 }
 
 class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
-  String selectedFilter = 'All';
   String searchQuery = '';
   final TextEditingController searchController = TextEditingController();
   String? userId;
@@ -102,16 +100,6 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
                     isTablet: isTablet,
                   ),
                   SizedBox(height: isTablet ? 24 : 20),
-                  InvoiceFilterTabs(
-                    selectedFilter: selectedFilter,
-                    onFilterChanged: (filter) {
-                      setState(() {
-                        selectedFilter = filter;
-                      });
-                    },
-                    isTablet: isTablet,
-                  ),
-                  SizedBox(height: isTablet ? 24 : 20),
                   Expanded(
                     child: invoicesAsync.when(
                       data: (invoices) {
@@ -148,40 +136,21 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
   }
 
   List<Invoice> _filterInvoices(List<Invoice> invoices) {
-    List<Invoice> filtered = invoices;
+    if (searchQuery.isEmpty) return invoices;
 
-    if (searchQuery.isNotEmpty) {
-      filtered = filtered
-          .where((invoice) =>
-              invoice.clientName
-                  .toLowerCase()
-                  .contains(searchQuery.toLowerCase()) ||
-              invoice.invoiceNumber
-                  .toLowerCase()
-                  .contains(searchQuery.toLowerCase()))
-          .toList();
-    }
-
-    if (selectedFilter != 'All') {
-      if (selectedFilter == 'Paid') {
-        filtered = filtered
-            .where((invoice) => invoice.status.toUpperCase() == 'PAID')
-            .toList();
-      } else if (selectedFilter == 'Pending') {
-        filtered = filtered
-            .where((invoice) =>
-                invoice.status.toUpperCase() == 'SENT' ||
-                invoice.status.toUpperCase() == 'DRAFT')
-            .toList();
-      }
-    }
-
-    return filtered;
+    return invoices
+        .where((invoice) =>
+            invoice.clientName
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase()) ||
+            invoice.invoiceNumber
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase()))
+        .toList();
   }
 
   Widget _buildInvoiceCard(Invoice invoice, bool isTablet) {
-    String displayStatus =
-        invoice.status.toUpperCase() == 'PAID' ? 'Paid' : 'Pending';
+    String displayStatus = 'Paid';
 
     String description = invoice.items.isNotEmpty
         ? invoice.items.first.description

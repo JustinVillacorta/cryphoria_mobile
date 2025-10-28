@@ -185,7 +185,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
                 ),
               ),
               SizedBox(width: 12),
-              _buildStatusBadge(invoice.status, isTablet),
+              _buildStatusBadge('paid', isTablet),
             ],
           ),
         ],
