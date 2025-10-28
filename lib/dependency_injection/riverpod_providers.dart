@@ -4,8 +4,8 @@ import 'package:cryphoria_mobile/features/data/data_sources/invoice_remote_data_
 import 'package:cryphoria_mobile/features/data/repositories_impl/invoice_repository_impl.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/UserProfileEmployee/ChangePassword/change_password_viewmodel.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/HomeManager/ViewModels/home_manager_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/UserProfile/ChangePassword/change_password_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Home/ViewModels/home_manager_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -87,7 +87,7 @@ import '../features/domain/usecases/Reports/generate_report_usecase.dart';
 import '../features/domain/usecases/Reports/get_report_status_usecase.dart';
 import '../features/domain/usecases/Reports/get_user_reports_usecase.dart';
 
-import '../features/presentation/employee/HomeEmployee/home_employee_viewmodel/home_employee_viewmodel.dart';
+import '../features/presentation/employee/Home/home_employee_viewmodel/home_employee_viewmodel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_view_model.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_state.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';

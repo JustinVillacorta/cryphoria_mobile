@@ -1,4 +1,4 @@
-import 'package:cryphoria_mobile/features/presentation/employee/UserProfileEmployee/employee_userprofile_cards/edit_profile/edit_profile_view/edit_profile_view.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/UserProfile/employee_userprofile_cards/edit_profile/edit_profile_view/edit_profile_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ComplianceView/Views/compliance_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/HelpandSupport/Views/help_and_support_view.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/HomeManager/Views/home_manager_view.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/Home/Views/home_manager_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Employee_Management(manager_screens)/employee_views/employee_management_screen.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Invoice/Views/invoice_views.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Reports/Views/reports_screen.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/UserProfileEmployee/employee_userprofile_cards/edit_profile/edit_profile_viewmodel/edit_profile_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/UserProfile/employee_userprofile_cards/edit_profile/edit_profile_viewmodel/edit_profile_viewmodel.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/core/error/exceptions.dart';
 

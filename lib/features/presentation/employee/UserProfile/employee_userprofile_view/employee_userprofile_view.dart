@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cryphoria_mobile/dependency_injection/riverpod_providers.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/UserProfileEmployee/employee_userprofile_cards/edit_profile/edit_profile_view/edit_profile_view.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/UserProfile/employee_userprofile_cards/edit_profile/edit_profile_view/edit_profile_view.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/Views/login_views.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/Authentication/LogIn/ViewModel/logout_state.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_view.dart';
