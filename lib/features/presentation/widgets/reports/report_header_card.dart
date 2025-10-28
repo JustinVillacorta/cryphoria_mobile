@@ -135,15 +135,8 @@ class ReportHeaderCard extends StatelessWidget {
         }
       }
 
-      if (rowMetrics.length < metricsPerRow) {
-        while (rowChildren.length < metricsPerRow * 2 - 1) {
-          rowChildren.add(SizedBox(width: isTablet ? 14 : 12));
-          rowChildren.add(const Expanded(child: SizedBox.shrink()));
-          if (rowChildren.length < metricsPerRow * 2 - 1) {
-            rowChildren.add(SizedBox(width: isTablet ? 14 : 12));
-          }
-        }
-      }
+      // If the last row has a single metric, let it occupy full width
+      // by not adding placeholder Expanded children.
 
       rows.add(Row(children: rowChildren));
 

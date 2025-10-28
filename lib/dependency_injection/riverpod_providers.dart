@@ -17,7 +17,7 @@ import '../features/data/data_sources/auth_remote_data_source.dart';
 import '../features/data/data_sources/audit_remote_data_source.dart';
 import '../features/data/data_sources/eth_payment_remote_data_source.dart';
 import '../features/data/data_sources/eth_transaction_data_source.dart';
-import '../features/data/data_sources/fake_transactions_data.dart';
+import '../features/data/data_sources/transactions_data.dart';
 import '../features/data/data_sources/reports_remote_data_source.dart';
 import '../features/data/data_sources/wallet_remote_data_source.dart';
 import '../features/data/data_sources/document_upload_remote_data_source.dart';
@@ -124,7 +124,7 @@ final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
     return 'http://192.168.0.12:8000';
   }
-  return 'http://192.168.0.12:8000';
+  return 'http://192.168.100.60:8000';
 });
 
 final flutterSecureStorageProvider =
