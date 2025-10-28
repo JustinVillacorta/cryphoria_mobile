@@ -11,7 +11,7 @@ class EmployeeFormBottomActions extends StatelessWidget {
   final String submitButtonText;
 
   const EmployeeFormBottomActions({
-    Key? key,
+    super.key,
     required this.isSubmitting,
     required this.isSmallScreen,
     required this.isTablet,
@@ -19,7 +19,7 @@ class EmployeeFormBottomActions extends StatelessWidget {
     required this.onCancel,
     required this.onSubmit,
     required this.submitButtonText,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

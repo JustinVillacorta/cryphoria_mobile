@@ -10,14 +10,14 @@ class EmployeeFilterSection extends StatelessWidget {
   final VoidCallback onClearFilter;
 
   const EmployeeFilterSection({
-    Key? key,
+    super.key,
     required this.departments,
     required this.selectedDepartment,
     required this.isSmallScreen,
     required this.isTablet,
     required this.onDepartmentSelected,
     required this.onClearFilter,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

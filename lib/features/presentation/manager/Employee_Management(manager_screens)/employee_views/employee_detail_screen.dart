@@ -305,6 +305,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                             await employeeViewModel.removeEmployeeFromTeam(widget.employee.email);
 
                             if (!mounted) return;
+                            // ignore: use_build_context_synchronously
                             final navigator = Navigator.of(navContext);
                             navigator.pop();
                             await Future.delayed(const Duration(milliseconds: 100));
@@ -312,7 +313,9 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                             navigator.pop();
                           } catch (e) {
                             if (!mounted) return;
+                            // ignore: use_build_context_synchronously
                             final navigator = Navigator.of(context);
+                            // ignore: use_build_context_synchronously
                             final messenger = ScaffoldMessenger.of(context);
                             
                             navigator.pop();

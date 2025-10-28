@@ -359,6 +359,7 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
               if (authUser != null) {
                 if (!mounted) return;
                 final result = await Navigator.push(
+                  // ignore: use_build_context_synchronously
                   context,
                   MaterialPageRoute(
                     builder: (_) => EditProfileScreen(currentUser: authUser),
@@ -372,6 +373,7 @@ class _EmployeeUserProfileState extends ConsumerState<EmployeeUserProfile> {
                 }
               } else {
                 if (!mounted) return;
+                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('User data not found. Please log in again.'),

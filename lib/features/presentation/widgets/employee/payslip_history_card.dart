@@ -16,7 +16,7 @@ class PayslipHistoryCard extends StatelessWidget {
   final VoidCallback onViewAll;
 
   const PayslipHistoryCard({
-    Key? key,
+    super.key,
     required this.employeePayslips,
     required this.isLoadingPayslips,
     this.payslipError,
@@ -26,7 +26,7 @@ class PayslipHistoryCard extends StatelessWidget {
     required this.onRefresh,
     required this.onViewPayslip,
     required this.onViewAll,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

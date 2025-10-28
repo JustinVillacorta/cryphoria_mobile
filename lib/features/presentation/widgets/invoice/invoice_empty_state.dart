@@ -5,9 +5,9 @@ class InvoiceEmptyState extends StatelessWidget {
   final bool isTablet;
 
   const InvoiceEmptyState({
-    Key? key,
+    super.key,
     this.isTablet = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

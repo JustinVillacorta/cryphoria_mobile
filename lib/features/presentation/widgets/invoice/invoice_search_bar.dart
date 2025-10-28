@@ -7,11 +7,11 @@ class InvoiceSearchBar extends StatelessWidget {
   final bool isTablet;
 
   const InvoiceSearchBar({
-    Key? key,
+    super.key,
     required this.controller,
     required this.onChanged,
     this.isTablet = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

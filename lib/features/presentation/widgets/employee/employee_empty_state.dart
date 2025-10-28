@@ -7,11 +7,11 @@ class EmployeeEmptyState extends StatelessWidget {
   final bool isDesktop;
 
   const EmployeeEmptyState({
-    Key? key,
+    super.key,
     required this.isSmallScreen,
     required this.isTablet,
     required this.isDesktop,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

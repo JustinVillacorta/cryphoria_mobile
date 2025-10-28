@@ -10,12 +10,12 @@ class PayslipSummaryCard extends StatelessWidget {
   final bool isDesktop;
 
   const PayslipSummaryCard({
-    Key? key,
+    super.key,
     required this.employeePayslips,
     required this.isSmallScreen,
     required this.isTablet,
     required this.isDesktop,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -6,10 +6,10 @@ class EmployeeSearchField extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
 
   const EmployeeSearchField({
-    Key? key,
+    super.key,
     required this.isTablet,
     required this.onSearchChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

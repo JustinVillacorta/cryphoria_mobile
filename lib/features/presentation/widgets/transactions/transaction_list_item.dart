@@ -6,11 +6,11 @@ class TransactionListItem extends StatelessWidget {
   final double Function(String) parseAmount;
 
   const TransactionListItem({
-    Key? key,
+    super.key,
     required this.transaction,
     required this.onTap,
     required this.parseAmount,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

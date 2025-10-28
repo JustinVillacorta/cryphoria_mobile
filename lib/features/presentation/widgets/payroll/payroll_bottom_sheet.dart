@@ -1405,6 +1405,7 @@ class _PayrollLoadingDialogState extends State<_PayrollLoadingDialog> {
 
                         if (result == true) {
                           if (!mounted) return;
+                          // ignore: use_build_context_synchronously
                           final navigator = Navigator.of(context);
                           navigator.pop();
                           if (!mounted) return;

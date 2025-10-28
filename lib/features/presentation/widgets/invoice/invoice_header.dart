@@ -6,10 +6,10 @@ class InvoiceHeader extends StatelessWidget {
   final bool isDesktop;
 
   const InvoiceHeader({
-    Key? key,
+    super.key,
     this.isTablet = false,
     this.isDesktop = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

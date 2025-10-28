@@ -8,12 +8,12 @@ class EmployeeDetailTabNavigation extends StatelessWidget {
   final bool isTablet;
 
   const EmployeeDetailTabNavigation({
-    Key? key,
+    super.key,
     required this.currentTabIndex,
     required this.onTabChanged,
     required this.isSmallScreen,
     required this.isTablet,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

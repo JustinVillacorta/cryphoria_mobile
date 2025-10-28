@@ -4,9 +4,9 @@ class TransactionEmptyState extends StatelessWidget {
   final VoidCallback onBackPressed;
 
   const TransactionEmptyState({
-    Key? key,
+    super.key,
     required this.onBackPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -12,7 +12,7 @@ class EmployeeFormHeader extends StatelessWidget {
   final IconData icon;
 
   const EmployeeFormHeader({
-    Key? key,
+    super.key,
     required this.isSmallScreen,
     required this.isTablet,
     required this.isDesktop,
@@ -21,7 +21,7 @@ class EmployeeFormHeader extends StatelessWidget {
     required this.heading,
     required this.subtitle,
     required this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

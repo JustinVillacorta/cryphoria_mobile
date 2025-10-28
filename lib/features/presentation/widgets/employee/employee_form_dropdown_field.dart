@@ -12,7 +12,7 @@ class EmployeeFormDropdownField extends StatelessWidget {
   final bool enabled;
 
   const EmployeeFormDropdownField({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.items,
@@ -21,7 +21,7 @@ class EmployeeFormDropdownField extends StatelessWidget {
     required this.isSmallScreen,
     required this.isTablet,
     this.enabled = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

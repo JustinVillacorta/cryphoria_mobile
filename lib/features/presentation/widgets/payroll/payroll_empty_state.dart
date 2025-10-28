@@ -7,12 +7,12 @@ class PayrollEmptyState extends StatelessWidget {
   final VoidCallback? onRefresh;
 
   const PayrollEmptyState({
-    Key? key,
+    super.key,
     required this.title,
     required this.subtitle,
     required this.icon,
     this.onRefresh,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

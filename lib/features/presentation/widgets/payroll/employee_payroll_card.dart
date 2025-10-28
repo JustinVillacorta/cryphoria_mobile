@@ -5,10 +5,10 @@ class EmployeePayrollCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const EmployeePayrollCard({
-    Key? key,
+    super.key,
     required this.employee,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

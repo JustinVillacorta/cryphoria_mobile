@@ -8,12 +8,12 @@ class PayslipAmountRow extends StatelessWidget {
   final bool isTablet;
 
   const PayslipAmountRow({
-    Key? key,
+    super.key,
     required this.label,
     required this.amount,
     required this.isTotal,
     required this.isTablet,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -9,12 +9,12 @@ class PayslipEarningsCard extends StatelessWidget {
   final bool isDesktop;
 
   const PayslipEarningsCard({
-    Key? key,
+    super.key,
     required this.payslip,
     required this.isSmallScreen,
     required this.isTablet,
     required this.isDesktop,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +66,7 @@ class PayslipEarningsCard extends StatelessWidget {
   }
   
   // Helper widget for displaying a label and amount row
+  // ignore: non_constant_identifier_names
   Widget payslip_amount_row({
     required String label,
     required double amount,

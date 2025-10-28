@@ -13,7 +13,7 @@ class EmployeeFormInputField extends StatelessWidget {
   final bool enabled;
 
   const EmployeeFormInputField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.label,
     required this.hint,
@@ -23,7 +23,7 @@ class EmployeeFormInputField extends StatelessWidget {
     this.keyboardType,
     this.validator,
     this.enabled = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

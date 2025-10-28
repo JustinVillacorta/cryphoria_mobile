@@ -5,9 +5,9 @@ class InvoiceLoginRequiredState extends StatelessWidget {
   final bool isTablet;
 
   const InvoiceLoginRequiredState({
-    Key? key,
+    super.key,
     this.isTablet = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

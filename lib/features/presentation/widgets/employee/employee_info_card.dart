@@ -10,14 +10,14 @@ class EmployeeInfoCard extends StatelessWidget {
   final List<Widget> children;
 
   const EmployeeInfoCard({
-    Key? key,
+    super.key,
     this.icon,
     required this.title,
     required this.isSmallScreen,
     required this.isTablet,
     required this.isDesktop,
     required this.children,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

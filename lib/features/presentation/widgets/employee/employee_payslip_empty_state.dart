@@ -5,9 +5,9 @@ class EmployeePayslipEmptyState extends StatelessWidget {
   final bool isTablet;
 
   const EmployeePayslipEmptyState({
-    Key? key,
+    super.key,
     required this.isTablet,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

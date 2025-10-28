@@ -7,11 +7,11 @@ class PayrollSummaryCardsRow extends StatelessWidget {
   final double totalPaid;
 
   const PayrollSummaryCardsRow({
-    Key? key,
+    super.key,
     required this.totalEmployees,
     required this.activeEmployees,
     required this.totalPaid,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

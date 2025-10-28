@@ -11,7 +11,7 @@ class TransactionFilterSection extends StatelessWidget {
   final Function(String) onSortByChanged;
 
   const TransactionFilterSection({
-    Key? key,
+    super.key,
     required this.showFilters,
     required this.onToggleFilters,
     required this.selectedTransactionType,
@@ -20,7 +20,7 @@ class TransactionFilterSection extends StatelessWidget {
     required this.selectedSortBy,
     required this.sortOptions,
     required this.onSortByChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

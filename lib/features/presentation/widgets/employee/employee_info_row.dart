@@ -9,13 +9,13 @@ class EmployeeInfoRow extends StatelessWidget {
   final bool isLast;
 
   const EmployeeInfoRow({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.isSmallScreen,
     required this.isTablet,
     this.isLast = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

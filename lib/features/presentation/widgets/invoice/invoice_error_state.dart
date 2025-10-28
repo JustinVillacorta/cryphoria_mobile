@@ -7,11 +7,11 @@ class InvoiceErrorState extends StatelessWidget {
   final double horizontalPadding;
 
   const InvoiceErrorState({
-    Key? key,
+    super.key,
     required this.error,
     this.isTablet = false,
     this.horizontalPadding = 20.0,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

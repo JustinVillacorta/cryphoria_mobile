@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class TransactionLoadingState extends StatelessWidget {
-  const TransactionLoadingState({Key? key}) : super(key: key);
+  const TransactionLoadingState({super.key});
 
   @override
   Widget build(BuildContext context) {

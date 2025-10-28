@@ -10,14 +10,14 @@ class EmployeeManagementAppBar extends StatelessWidget implements PreferredSizeW
   final VoidCallback onAddPressed;
 
   const EmployeeManagementAppBar({
-    Key? key,
+    super.key,
     required this.appBarHeight,
     required this.titleFontSize,
     required this.horizontalPadding,
     required this.verticalPadding,
     required this.isTablet,
     required this.onAddPressed,
-  }) : super(key: key);
+  });
 
   @override
   Size get preferredSize => Size.fromHeight(appBarHeight);

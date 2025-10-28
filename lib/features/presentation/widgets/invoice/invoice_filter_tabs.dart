@@ -7,11 +7,11 @@ class InvoiceFilterTabs extends StatelessWidget {
   final bool isTablet;
 
   const InvoiceFilterTabs({
-    Key? key,
+    super.key,
     required this.selectedFilter,
     required this.onFilterChanged,
     this.isTablet = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -10,12 +10,12 @@ class PayslipHistoryItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const PayslipHistoryItem({
-    Key? key,
+    super.key,
     required this.payslip,
     required this.isSmallScreen,
     required this.isTablet,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

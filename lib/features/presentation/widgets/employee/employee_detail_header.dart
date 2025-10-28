@@ -12,7 +12,7 @@ class EmployeeDetailHeader extends StatelessWidget {
   final VoidCallback onEditPressed;
 
   const EmployeeDetailHeader({
-    Key? key,
+    super.key,
     required this.employee,
     required this.isSmallScreen,
     required this.isTablet,
@@ -20,7 +20,7 @@ class EmployeeDetailHeader extends StatelessWidget {
     required this.onBackPressed,
     required this.onDeletePressed,
     required this.onEditPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

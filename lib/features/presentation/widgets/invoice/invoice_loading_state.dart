@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class InvoiceLoadingState extends StatelessWidget {
-  const InvoiceLoadingState({Key? key}) : super(key: key);
+  const InvoiceLoadingState({super.key});
 
   @override
   Widget build(BuildContext context) {

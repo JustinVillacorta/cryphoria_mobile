@@ -4,9 +4,9 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
   final Map<String, dynamic> data;
 
   const EmployeeDetailsBottomSheet({
-    Key? key,
+    super.key,
     required this.data,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

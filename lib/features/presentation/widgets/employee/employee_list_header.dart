@@ -8,12 +8,12 @@ class EmployeeListHeader extends StatelessWidget {
   final VoidCallback onFilterToggle;
 
   const EmployeeListHeader({
-    Key? key,
+    super.key,
     required this.sectionTitleSize,
     required this.isTablet,
     required this.isFilterExpanded,
     required this.onFilterToggle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

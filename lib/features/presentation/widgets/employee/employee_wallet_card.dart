@@ -427,6 +427,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         await notifier.switchWallet();
 
         if (!mounted) return;
+        // ignore: use_build_context_synchronously
         final messenger = ScaffoldMessenger.of(context);
         await Future.delayed(const Duration(milliseconds: 100));
 
@@ -448,10 +449,12 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
             ),
           );
           if (!mounted) return;
+          // ignore: use_build_context_synchronously
           await _showConnectWalletBottomSheet(context);
         }
       } catch (e) {
         if (!mounted) return;
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to switch wallet: $e'),
@@ -491,6 +494,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         await notifier.disconnectWallet();
 
         if (!mounted) return;
+        // ignore: use_build_context_synchronously
         final messenger = ScaffoldMessenger.of(context);
         await Future.delayed(const Duration(milliseconds: 100));
 
@@ -515,6 +519,7 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         }
       } catch (e) {
         if (!mounted) return;
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to disconnect: $e'),
@@ -545,7 +550,9 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         );
 
         if (!mounted) return;
+        // ignore: use_build_context_synchronously
         final navigator = Navigator.of(context);
+        // ignore: use_build_context_synchronously
         final messenger = ScaffoldMessenger.of(context);
         
         if (navigator.canPop()) {
@@ -565,7 +572,9 @@ class _EmployeeWalletCardWidgetState extends ConsumerState<EmployeeWalletCardWid
         }
       } catch (e) {
         if (!mounted) return;
+        // ignore: use_build_context_synchronously
         final navigator = Navigator.of(context);
+        // ignore: use_build_context_synchronously
         final messenger = ScaffoldMessenger.of(context);
         
         if (navigator.canPop()) {

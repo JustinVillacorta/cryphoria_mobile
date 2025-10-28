@@ -10,13 +10,13 @@ class EmployeePayslipListAppBar extends StatelessWidget implements PreferredSize
   final VoidCallback? onRefresh;
 
   const EmployeePayslipListAppBar({
-    Key? key,
+    super.key,
     required this.employee,
     required this.isTablet,
     required this.isDesktop,
     required this.onBackPressed,
     this.onRefresh,
-  }) : super(key: key);
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);

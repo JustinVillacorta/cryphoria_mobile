@@ -6,10 +6,10 @@ class EmployeePayslipListHeader extends StatelessWidget {
   final bool isTablet;
 
   const EmployeePayslipListHeader({
-    Key? key,
+    super.key,
     required this.payslipCount,
     required this.isTablet,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -12,13 +12,13 @@ class EmployeePayslipListContainer extends StatelessWidget {
   final Function(Payslip) onViewPayslip;
 
   const EmployeePayslipListContainer({
-    Key? key,
+    super.key,
     required this.payslips,
     required this.isSmallScreen,
     required this.isTablet,
     required this.isDesktop,
     required this.onViewPayslip,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
