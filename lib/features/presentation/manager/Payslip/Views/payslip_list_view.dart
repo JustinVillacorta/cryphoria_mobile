@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../dependency_injection/riverpod_providers.dart';
 import '../../../../domain/entities/payslip.dart';
-import '../Widgets/payslip_list_item.dart';
-import '../Widgets/payslip_filter_widget.dart';
+import '../../../widgets/payslip/payslip_list_item.dart';
+import '../../../widgets/payslip/payslip_filter_widget.dart';
 import 'payslip_details_view.dart';
 
 class PayslipListView extends ConsumerStatefulWidget {

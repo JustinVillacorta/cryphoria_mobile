@@ -1,125 +1,42 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/invoice.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class InvoiceHeaderWidget extends StatelessWidget {
-  final Invoice invoice;
+class InvoiceHeader extends StatelessWidget {
+  final bool isTablet;
+  final bool isDesktop;
 
-  const InvoiceHeaderWidget({
-    super.key,
-    required this.invoice,
-  });
+  const InvoiceHeader({
+    Key? key,
+    this.isTablet = false,
+    this.isDesktop = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Invoices',
+          style: GoogleFonts.inter(
+            fontSize: isDesktop ? 28 : isTablet ? 26 : 24,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
+            height: 1.2,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    invoice.invoiceNumber,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Issued on  ${_formatDate(invoice.issueDate)}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-              _buildStatusBadge(invoice.status),
-            ],
+        ),
+        SizedBox(height: isTablet ? 10 : 8),
+        Text(
+          'Invoices are automatically generated from transactions like payroll, payments sent through "Send Payment", and client payments received.',
+          style: GoogleFonts.inter(
+            fontSize: isTablet ? 15 : 14,
+            color: const Color(0xFF6B6B6B),
+            fontWeight: FontWeight.w400,
+            height: 1.4,
           ),
-        ],
-      ),
+        ),
+      ],
     );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    Color bgColor;
-    Color textColor;
-    IconData icon;
-
-    switch (status.toLowerCase()) {
-      case 'paid':
-        bgColor = const Color(0xFFD1FAE5);
-        textColor = const Color(0xFF059669);
-        icon = Icons.check_circle;
-        break;
-      case 'pending':
-        bgColor = const Color(0xFFFEF3C7);
-        textColor = const Color(0xFFD97706);
-        icon = Icons.schedule;
-        break;
-      case 'overdue':
-        bgColor = const Color(0xFFFEE2E2);
-        textColor = const Color(0xFFDC2626);
-        icon = Icons.error;
-        break;
-      default:
-        bgColor = const Color(0xFFE5E7EB);
-        textColor = const Color(0xFF6B7280);
-        icon = Icons.info;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 6),
-          Text(
-            status.toUpperCase(),
-            style: TextStyle(
-              color: textColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(String date) {
-    try {
-      final DateTime parsedDate = DateTime.parse(date);
-      final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ];
-      return '${months[parsedDate.month - 1]} ${parsedDate.day}, ${parsedDate.year}';
-    } catch (e) {
-      return date;
-    }
   }
 }

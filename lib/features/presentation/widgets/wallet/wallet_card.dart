@@ -1,4 +1,4 @@
-import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_view_model.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/HomeManager/ViewModels/home_manager_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

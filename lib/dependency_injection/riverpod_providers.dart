@@ -4,8 +4,8 @@ import 'package:cryphoria_mobile/features/data/data_sources/invoice_remote_data_
 import 'package:cryphoria_mobile/features/data/repositories_impl/invoice_repository_impl.dart';
 import 'package:cryphoria_mobile/features/domain/entities/auth_user.dart';
 import 'package:cryphoria_mobile/features/domain/entities/invoice.dart';
-import 'package:cryphoria_mobile/features/presentation/employee/EmployeeUserProfile/ChangePassword/change_password_viewmodel.dart';
-import 'package:cryphoria_mobile/features/presentation/manager/Home/home_ViewModel/home_view_model.dart';
+import 'package:cryphoria_mobile/features/presentation/employee/UserProfileEmployee/ChangePassword/change_password_viewmodel.dart';
+import 'package:cryphoria_mobile/features/presentation/manager/HomeManager/ViewModels/home_manager_viewmodel.dart';
 import 'package:cryphoria_mobile/features/presentation/manager/UserProfile/ChangePassword/change_password_viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,8 +26,8 @@ import '../features/data/repositories_impl/support_repository_impl.dart';
 import '../features/domain/repositories/support_repository.dart';
 import '../features/domain/usecases/Support/submit_support_ticket_usecase.dart';
 import '../features/domain/usecases/Support/get_support_messages_usecase.dart';
-import '../features/presentation/manager/UserProfile/HelpandSupport/support_viewmodel.dart';
-import '../features/presentation/manager/UserProfile/HelpandSupport/support_state.dart';
+import '../features/presentation/manager/UserProfile/HelpandSupport/ViewModels/support_viewmodel.dart';
+import '../features/presentation/manager/UserProfile/HelpandSupport/ViewModels/support_state.dart';
 import '../features/presentation/manager/Audit/ViewModels/audit_upload_viewmodel.dart';
 import '../features/presentation/manager/Audit/ViewModels/audit_upload_state.dart';
 import '../features/presentation/manager/Audit/ViewModels/audit_flow_viewmodel.dart';
@@ -92,7 +92,7 @@ import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_vi
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/login_state.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_viewmodel.dart';
 import '../features/presentation/manager/Authentication/LogIn/ViewModel/logout_state.dart';
-import '../features/presentation/manager/Reports/Reports_ViewModel/income_statement_viewmodel.dart';
+import '../features/presentation/manager/Reports/ViewModels/income_statement_viewmodel.dart';
 import '../features/presentation/manager/Authentication/Register/ViewModel/register_view_model.dart';
 import '../features/presentation/manager/Authentication/Register/ViewModel/register_state.dart';
 import '../features/presentation/manager/Authentication/OTP_Verification/ViewModel/otp_verification_view_model.dart';
@@ -122,9 +122,9 @@ import '../features/domain/usecases/Profile/update_profile_usecase.dart';
 
 final baseUrlProvider = Provider<String>((ref) {
   if (Platform.isAndroid) {
-    return 'http://10.0.2.2:8000';
+    return 'http://192.168.0.12:8000';
   }
-  return 'http://192.168.5.53:8000';
+  return 'http://192.168.0.12:8000';
 });
 
 final flutterSecureStorageProvider =
